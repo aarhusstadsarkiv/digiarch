@@ -29,7 +29,7 @@ jobs:
           # Saves the new cache if the checksum of poetry.lock has changed.
           key: deps-{{checksum "poetry.lock"}}
           paths:
-            - /home/circleci/.cache/pypoetry/virtualenvs
+            - /
 
   format:
     docker:
