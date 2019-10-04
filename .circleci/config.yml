@@ -2,20 +2,29 @@
 version: 2.1
 jobs:
 
-  build:
-
+  init:
+    # Initialises the docker image and updates dependencies using poetry.
     docker:
       - image: circleci/python:3.7 
-    steps:
 
-      - checkout 
-      - restore_cache:
+    steps:
+      - checkout # Get current code base
+      - restore_cache: # Restore installed dependencies from cache
           keys:
-            - deps-{{checksum "poetry.lock"}}
+            - deps-{{checksum "poetry.lock"}} # If the checksum of poetry.lock changed, generate a new cache.
+
       - run: 
           name: Install Python Dependencies
-          command: poetry install
+          command: poetry install # Install dependencies using poetry. This looks at the poetry.lock file and installs new dependencies only when updates occur.
+
       - save_cache:
-          key: deps-{{checksum "poetry.lock"}}
+          key: deps-{{checksum "poetry.lock"}} # Saves the new cache if the checksum of poetry.lock has changed.
           paths: 
             - /home/circleci/.cache/pypoetry/virtualenvs
+
+workflows:
+  version: 2.1
+
+  development:
+    jobs:
+      - init
