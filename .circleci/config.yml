@@ -35,6 +35,11 @@ jobs:
     docker:
       - image: circleci/python:3.7
     steps:
+      # Restore cache
+      - restore_cache:
+          keys:
+            - deps-{{checksum "poetry.lock"}}
+
       # Check formatting using Black via Poetry
       - run:
           name: Check formatting using Black
@@ -46,6 +51,11 @@ jobs:
     docker:
       - image: circleci/python:3.7
     steps:
+      # Restore cache
+      - restore_cache:
+          keys:
+            - deps-{{checksum "poetry.lock"}}
+
       # Check linting using flake8 via Poetry
       - run:
           name: Check linting using flake8
