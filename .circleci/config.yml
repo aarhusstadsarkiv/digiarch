@@ -1,30 +1,66 @@
+---
 # Python CircleCI 2.1 configuration using Poetry
+
 version: 2.1
 jobs:
 
+  # Initialises the docker image and updates dependencies using poetry.
   init:
-    # Initialises the docker image and updates dependencies using poetry.
     docker:
-      - image: circleci/python:3.7 
+      - image: circleci/python:3.7
 
     steps:
-      - checkout # Get current code base
-      - restore_cache: # Restore installed dependencies from cache
-          keys:
-            - deps-{{checksum "poetry.lock"}} # If the checksum of poetry.lock changed, generate a new cache.
+      # Get current code base
+      - checkout
 
-      - run: 
-          name: Install Python Dependencies
-          command: poetry install # Install dependencies using poetry. This looks at the poetry.lock file and installs new dependencies only when updates occur.
+      # Restore installed dependencies from cache
+      - restore_cache:
+          keys:
+            # If the checksum of poetry.lock changed, generate a new cache.
+            - deps-{{checksum "poetry.lock"}}
+
+      - run:
+          name: Install Python dependencies
+          # Install dependencies using poetry. This looks at the poetry.lock
+          # file and installs new dependencies only when updates occur.
+          command: poetry install
 
       - save_cache:
-          key: deps-{{checksum "poetry.lock"}} # Saves the new cache if the checksum of poetry.lock has changed.
-          paths: 
+          # Saves the new cache if the checksum of poetry.lock has changed.
+          key: deps-{{checksum "poetry.lock"}}
+          paths:
             - /home/circleci/.cache/pypoetry/virtualenvs
+
+  format:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      # Check formatting using Black via Poetry
+      - run:
+          name: Check formatting using Black
+          command: |
+            poetry black --check digital-archive/
+            poetry black --check tests/
+
+  lint:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      # Check linting using flake8 via Poetry
+      - run:
+          name: Check linting using flake8
+          command: |
+            poetry flake8 digital-archive/
+            poetry flake8 tests/
 
 workflows:
   version: 2.1
-
   development:
     jobs:
       - init
+      - format:
+          requires:
+            - init
+      - lint:
+          requires:
+            - init
