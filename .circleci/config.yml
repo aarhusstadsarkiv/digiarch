@@ -5,10 +5,13 @@ jobs:
     docker:
       - image: circleci/python:3.7
     steps:
-      - checkout # Get current code
-      - run # Installs poetry
+      # Get current code
+      - checkout 
+      # Install poetry
+      - run
         name: install poetry
         command: curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
-      - run # Installs Python dependencies using poetry
+      # Install Python dependencies using poetry
+      - run 
         name: install py deps
         command: poetry install
