@@ -39,8 +39,8 @@ jobs:
       - run:
           name: Check formatting using Black
           command: |
-            poetry black --check digital-archive/
-            poetry black --check tests/
+            poetry run black --check digital-archive/
+            poetry run black --check tests/
 
   lint:
     docker:
@@ -50,8 +50,8 @@ jobs:
       - run:
           name: Check linting using flake8
           command: |
-            poetry flake8 digital-archive/
-            poetry flake8 tests/
+            poetry run flake8 digital-archive/
+            poetry run flake8 tests/
 
 workflows:
   version: 2.1
