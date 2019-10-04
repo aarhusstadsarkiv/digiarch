@@ -6,9 +6,6 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - checkout 
-      - run:
-          name: Install Poetry
-          command: curl -sSL https://raw.githubusercontent.com/sdispater/poetry/master/get-poetry.py | python
       - run: 
           name: Install Python Dependencies
           command: poetry install
