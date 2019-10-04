@@ -12,6 +12,8 @@ Hi! :)
 Please be as precise as possible when submitting bug reports!
 The markdown syntax for adding links to text is `[text](url)`
 -->
+# Bug Description
+<!-- Give a short description of the bug you are experiencing -->
 
 # Expected Behaviour
 <!-- Please describe the behaviour you are expecting -->
