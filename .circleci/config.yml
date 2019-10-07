@@ -51,7 +51,7 @@ jobs:
           name: Test and generate report using pytest with coverage
           command: poetry run pytest --cov=. --junitxml tests/results/pytest/results.xml
       - store_test_results:
-        path: tests/results
+          path: tests/results
 
 workflows:
   version: 2.1
@@ -59,3 +59,4 @@ workflows:
     jobs:
       - format
       - lint
+      - test
