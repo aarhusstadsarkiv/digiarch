@@ -2,6 +2,10 @@
 # Python CircleCI 2.1 configuration using Poetry
 
 version: 2.1
+
+orbs:
+  codecov: codecov/codecov@1.0.2
+
 commands:
   # Initialises the docker image and updates dependencies using poetry
   init:
@@ -49,9 +53,10 @@ jobs:
       - init
       - run:
           name: Test and generate report using pytest with coverage
-          command: poetry run pytest --cov=. --junitxml tests/results/pytest/results.xml
-      - store_test_results:
-          path: tests/results
+          command: |
+            poetry run pytest --cov=. --junitxml tests/results/pytest.xml
+      - codecov/upload:
+          file: tests/results/pytest.xml
 
 workflows:
   version: 2.1
