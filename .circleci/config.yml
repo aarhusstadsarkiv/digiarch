@@ -3,6 +3,10 @@
 
 version: 2.1
 
+orbs:
+  # Use the codecov orb for code coverage reports
+  codecov: codecov/codecov@1.0.5
+
 commands:
   # Initialises the docker image and updates dependencies using poetry
   init:
@@ -23,9 +27,6 @@ jobs:
     steps:
       - init
       # Check formatting using Black via Poetry
-      - run:
-          name: test dir
-          command: poetry run ls -a
       - run:
           name: Check formatting using Black
           command: |
@@ -52,11 +53,8 @@ jobs:
           name: Test and generate report using pytest with coverage
           command: |
             poetry run pytest --cov=digital_archive --cov-report=xml
-      - run:
-          name: Upload to codecov
-          command: |
-            pip install codecov --user
-            codecov
+      - codecov/upload:
+          file: coverage.xml
 
 workflows:
   version: 2.1
