@@ -54,7 +54,9 @@ jobs:
             poetry run pytest --cov=. --junitxml coverage.xml
       - run:
           name: Upload to codecov
-          command: codecov -X gcov
+          command: |
+            pip install codecov
+            codecov -X gcov
 
 workflows:
   version: 2.1
