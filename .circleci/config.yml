@@ -60,6 +60,10 @@ workflows:
   version: 2.1
   development:
     jobs:
-      # - format
-      # - lint
-      - test
+      - format
+      - lint
+      - test:
+          requires:
+            - format
+            - lint
+# tbd: deploy workflow
