@@ -54,7 +54,7 @@ jobs:
       - run:
           name: Test and generate report using pytest with coverage
           command: |
-            poetry run pytest --cov=. --junitxml tests/results/pytest.xml
+            poetry run pytest --cov=. --junitxml coverage.xml
       - codecov/upload:
           file: tests/results/pytest.xml
 

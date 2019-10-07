@@ -1,1 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite errors="0" failures="0" hostname="jnik-linux" name="pytest" skipped="0" tests="1" time="0.063" timestamp="2019-10-07T11:06:58.241297"><testcase classname="tests.test_digital_archive" file="tests/test_digital_archive.py" line="3" name="test_version" time="0.002"></testcase></testsuite></testsuites>
