@@ -23,26 +23,29 @@ jobs:
       - init
       # Check formatting using Black via Poetry
       - run:
+          name: test dir
+          command: ls -a
+      - run:
           name: Check formatting using Black
           command: |
             poetry run black --check digital-archive/
             poetry run black --check tests/
 
-  lint:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - init
-      # Check linting using flake8 via Poetry
-      - run:
-          name: Check linting using flake8
-          command: |
-            poetry run flake8 digital-archive/
-            poetry run flake8 tests/
+  # lint:
+  #   docker:
+  #     - image: circleci/python:3.7
+  #   steps:
+  #     - init
+  #     # Check linting using flake8 via Poetry
+  #     - run:
+  #         name: Check linting using flake8
+  #         command: |
+  #           poetry run flake8 digital-archive/
+  #           poetry run flake8 tests/
 
 workflows:
   version: 2.1
   development:
     jobs:
       - format
-      - lint
+      # - lint
