@@ -27,9 +27,10 @@ jobs:
           command: ls -a
       - run:
           name: Check formatting using Black
-          command: |
-            poetry run black --check digital-archive/
-            poetry run black --check tests/
+          command: poetry run black --check digital-archive/
+          # command: |
+          #   poetry run black --check digital-archive/
+          #   poetry run black --check tests/
 
   # lint:
   #   docker:
