@@ -55,7 +55,7 @@ jobs:
       - run:
           name: Upload to codecov
           command: |
-            pip install codecov
+            pip install codecov --user
             codecov -X gcov
 
 workflows:
