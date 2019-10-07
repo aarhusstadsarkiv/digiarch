@@ -17,3 +17,6 @@ pytest-cov = "^2.8"
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.poetry.scripts]
+filestats = "digital_archive.filestats:main"
