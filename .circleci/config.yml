@@ -56,7 +56,7 @@ jobs:
           command: |
             poetry run pytest --cov=. --junitxml coverage.xml
       - codecov/upload:
-          file: tests/results/pytest.xml
+          file: coverage.xml
 
 workflows:
   version: 2.1
