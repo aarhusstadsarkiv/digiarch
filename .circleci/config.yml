@@ -9,23 +9,11 @@ commands:
       # Get current code base
       - checkout
 
-      # Restore installed dependencies from cache
-      - restore_cache:
-          keys:
-            # If the checksum of poetry.lock changed, generate a new cache.
-            - deps-{{checksum "poetry.lock"}}
-
       - run:
           name: Install Python dependencies
           # Install dependencies using poetry. This looks at the poetry.lock
           # file and installs new dependencies only when updates occur.
           command: poetry install
-
-      - save_cache:
-          # Saves the new cache if the checksum of poetry.lock has changed.
-          key: deps-{{checksum "poetry.lock"}}
-          paths:
-            - /home/circleci/.cache/pypoetry/virtualenvs
 
 jobs:
   format:
