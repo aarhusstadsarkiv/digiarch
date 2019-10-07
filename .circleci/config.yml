@@ -2,13 +2,9 @@
 # Python CircleCI 2.1 configuration using Poetry
 
 version: 2.1
-jobs:
-
-  # Initialises the docker image and updates dependencies using poetry.
+commands:
+  # Initialises the docker image and updates dependencies using poetry
   init:
-    docker:
-      - image: circleci/python:3.7
-
     steps:
       # Get current code base
       - checkout
@@ -29,17 +25,14 @@ jobs:
           # Saves the new cache if the checksum of poetry.lock has changed.
           key: deps-{{checksum "poetry.lock"}}
           paths:
-            - /
+            - /home/circleci/.cache/pypoetry/virtualenvs
 
+jobs:
   format:
     docker:
       - image: circleci/python:3.7
     steps:
-      # Restore cache
-      - restore_cache:
-          keys:
-            - deps-{{checksum "poetry.lock"}}
-
+      - init
       # Check formatting using Black via Poetry
       - run:
           name: Check formatting using Black
@@ -51,11 +44,7 @@ jobs:
     docker:
       - image: circleci/python:3.7
     steps:
-      # Restore cache
-      - restore_cache:
-          keys:
-            - deps-{{checksum "poetry.lock"}}
-
+      - init
       # Check linting using flake8 via Poetry
       - run:
           name: Check linting using flake8
@@ -67,10 +56,5 @@ workflows:
   version: 2.1
   development:
     jobs:
-      - init
-      - format:
-          requires:
-            - init
-      - lint:
-          requires:
-            - init
+      - format
+      - lint
