@@ -48,15 +48,15 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - init
-      # - run:
-      #     name: Test and generate report using pytest with coverage
-      #     command: |
-      #       poetry run pytest --cov=. --junitxml coverage.xml
+      - run:
+          name: Test and generate report using pytest with coverage
+          command: |
+            poetry run pytest --cov=digital_archive --cov-report=xml
       - run:
           name: Upload to codecov
           command: |
             pip install codecov --user
-            codecov -X gcov
+            codecov
 
 workflows:
   version: 2.1
