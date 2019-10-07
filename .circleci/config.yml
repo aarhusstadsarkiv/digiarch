@@ -54,7 +54,7 @@ jobs:
             poetry run pytest --cov=. --junitxml coverage.xml
       - run:
           name: Upload to codecov
-          command: poetry run codecov -t $cc_token -X gcov
+          command: codecov -X gcov
 
 workflows:
   version: 2.1
