@@ -115,10 +115,16 @@ def report_results(file_exts: list, empty_dirs: list, save_path: str) -> None:
     """
     if file_exts:
         save_file = os.path.join(save_path, "file_exts.csv")
-        file_exts_df = pd.DataFrame(data=file_exts, columns=["FileExt", "Root"])
-        file_exts_group = file_exts_df.groupby("FileExt", as_index=False).count()
+        file_exts_df = pd.DataFrame(
+            data=file_exts, columns=["FileExt", "Root"]
+        )
+        file_exts_group = file_exts_df.groupby(
+            "FileExt", as_index=False
+        ).count()
         file_exts_group = file_exts_group.rename(columns={"Root": "Count"})
-        file_exts_group.to_csv(save_file, header=True, index=False, encoding="utf-8")
+        file_exts_group.to_csv(
+            save_file, header=True, index=False, encoding="utf-8"
+        )
         print("Wrote file ext report to {}".format(save_file))
 
     if empty_dirs:
