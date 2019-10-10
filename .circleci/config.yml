@@ -44,6 +44,17 @@ jobs:
           command: |
             poetry run flake8 digital_archive/
             poetry run flake8 tests/
+  type-check:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - init
+      # Check types using mypy via Poetry
+      - run:
+          name: Check types using mypy
+          command: |
+            poetry run mypy digital_archive/
+            poetry run mypy tests/
   test:
     docker:
       - image: circleci/python:3.7
@@ -62,8 +73,10 @@ workflows:
     jobs:
       - format
       - lint
+      - type-check
       - test:
           requires:
             - format
             - lint
+            - type-check
 # tbd: deploy workflow
