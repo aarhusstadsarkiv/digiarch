@@ -141,8 +141,6 @@ def report_results(file_exts: list, empty_dirs: list, save_path: str) -> None:
 
 def main(args) -> None:
     file_exts, empty_dirs = explore_dir(args.path)
-    print(type(file_exts))
-    print(type(empty_dirs))
     report_results(file_exts, empty_dirs, args.path)
 
 
