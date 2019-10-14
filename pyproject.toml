@@ -7,18 +7,22 @@ license = "GPL-3.0"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-black = {version = "^18.3-alpha.0", allows-prereleases = true}
-flake8 = "^3.7"
 pandas = "^0.25.1"
-mypy = "^0.730.0"
+
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 pytest-cov = "^2.8"
+mypy = "^0.730.0"
+black = {version = "^18.3-alpha.0", allows-prereleases = true}
+flake8 = "^3.7"
+sphinx = "^2.2"
+sphinx_rtd_theme = "^0.4.3"
+
+[tool.black]
+line-length = 79
 
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
 
-[tool.black]
-line-length = 79
