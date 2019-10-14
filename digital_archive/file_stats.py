@@ -125,7 +125,7 @@ def report_results(file_exts: list, empty_dirs: list, save_path: str) -> None:
         file_exts_group.to_csv(
             save_file, header=True, index=False, encoding="utf-8"
         )
-        print("Wrote file ext report to {}".format(save_file))
+        print(f"Wrote file ext report to {save_file}")
 
     if empty_dirs:
         save_file = os.path.join(save_path, "empty_dirs.txt")
@@ -133,7 +133,7 @@ def report_results(file_exts: list, empty_dirs: list, save_path: str) -> None:
             for dir in empty_dirs:
                 f.write(dir + "\n")
         print("There are empty directories!")
-        print("Consult {} for more information".format(save_file))
+        print(f"Consult {save_file} for more information")
 
     if not file_exts and not empty_dirs:
         print("Base directory is empty. No reports produced.")
@@ -148,7 +148,7 @@ if __name__ == "__main__":
     try:
         parser = create_parser()
         args = parser.parse_args()
-    except NotADirectoryError as e:
-        print("{} is not a directory!".format(e))
+    except NotADirectoryError as not_dir:
+        print(f"{not_dir} is not a directory!")
 
     main(args)
