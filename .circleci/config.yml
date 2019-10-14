@@ -16,12 +16,11 @@ commands:
 
       - run:
           name: Install Python dependencies
-          # Install dependencies using poetry. This looks at the poetry.lock
-          # file and installs new dependencies only when updates occur.
+          # Install dependencies using poetry.
           command: poetry install
 
 jobs:
-  format:
+  check-and-test:
     docker:
       - image: circleci/python:3.7
     steps:
@@ -32,34 +31,18 @@ jobs:
           command: |
             poetry run black --check digital_archive/
             poetry run black --check tests/
-
-  lint:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - init
       # Check linting using flake8 via Poetry
       - run:
           name: Check linting using flake8
           command: |
             poetry run flake8 digital_archive/
             poetry run flake8 tests/
-  type-check:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - init
       # Check types using mypy via Poetry
       - run:
           name: Check types using mypy
           command: |
             poetry run mypy digital_archive/
-            poetry run mypy tests/
-  test:
-    docker:
-      - image: circleci/python:3.7
-    steps:
-      - init
+      # Run tests, generate coverage report & upload to codecov
       - run:
           name: Test and generate report using pytest with coverage
           command: |
@@ -71,12 +54,5 @@ workflows:
   version: 2.1
   development:
     jobs:
-      - format
-      - lint
-      - type-check
-      - test:
-          requires:
-            - format
-            - lint
-            - type-check
+      - check-and-test
 # tbd: deploy workflow
