@@ -20,6 +20,9 @@ flake8 = "^3.7"
 sphinx = "^2.2"
 sphinx_rtd_theme = "^0.4.3"
 
+[tool.poetry.scripts]
+digiarch = "digital_archive.console:cli"
+
 [tool.black]
 line-length = 79
 
