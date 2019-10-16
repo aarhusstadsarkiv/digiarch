@@ -1,40 +1,5 @@
-import pytest
-from typing import List
-from digital_archive.file_stats import (
-    create_parser,
-    explore_dir,
-    report_results,
-    main,
-)
-
-
-@pytest.fixture
-def parser():
-    return create_parser()
-
-
-class TestCreateArgs:
-    """Class for testing the `create_args` function."""
-
-    def test_empty_input(self, parser):
-        """User inputs no arguments.
-        Should fail with `SystemExit` Error."""
-
-        with pytest.raises(SystemExit):
-            parser.parse_args([])
-
-    def test_not_a_path(self, parser, tmpdir):
-        """User input is not a directory.
-        Should fail with `NotADirectory` Error."""
-
-        with pytest.raises(NotADirectoryError):
-            parser.parse_args(["this_is_not_a_path"])
-
-    def test_is_a_path(self, parser, tmpdir):
-        """User input is a directory.
-        Should pass with no exceptions."""
-
-        parser.parse_args([str(tmpdir)])
+# import pytest
+from digital_archive.utils.path_utils import explore_dir
 
 
 class TestExploreDir:
@@ -102,45 +67,3 @@ class TestExploreDir:
         # `empty_dirs` should have `len = 1`
         assert len(file_exts) == 2
         assert len(empty_dirs) == 1
-
-
-class TestReportResults:
-    """Class for testing the `report_results` function."""
-
-    no_files: List = []
-    no_folders: List = []
-    files: List[List[str]] = [
-        [".txt", "/root/"],
-        [".png", "/root/"],
-        [".pdf", "/root/"],
-    ]
-    folders: List[str] = ["/path/to/empty/folder1", "/path/to/empty/folder2"]
-
-    def test_no_files_no_folders(self, tmpdir):
-        """`report_results` is invoked with empty files and folders lists.
-        No files expected."""
-        report_results(self.no_files, self.no_folders, tmpdir)
-        assert len(tmpdir.listdir()) == 0
-
-    def test_files_no_folders(self, tmpdir):
-        """`report_results` is invoked with a populated file list
-        and an empty folders list.
-        1 file expected to be written."""
-        report_results(self.files, self.no_folders, tmpdir)
-        assert len(tmpdir.listdir()) == 1
-
-    def test_files_and_folders(self, tmpdir):
-        """`report_results` is invoked with a populated file list
-        and a populated folders list.
-        2 files expected to be written."""
-        report_results(self.files, self.folders, tmpdir)
-        assert len(tmpdir.listdir()) == 2
-
-
-class TestMain:
-    """Class for testing the `main` function."""
-
-    def test_main(self, parser, tmpdir):
-        args = parser.parse_args([str(tmpdir)])
-        result = main(args)
-        assert result is None
