@@ -9,7 +9,12 @@ def cli_run():
 
 
 class TestCli:
-    def test(self, cli_run):
+    """Class for testing the `cli` function."""
+
+    def test_report(self, cli_run):
+        """The `report` command is called with a valid path.
+        This should be successful, i.e. have exit code 0."""
         with cli_run.isolated_filesystem():
-            result = cli_run.invoke(cli, ["report", "--path", "."])
+            args = ["report", "--path", "."]
+            result = cli_run.invoke(cli, args)
             assert result.exit_code == 0
