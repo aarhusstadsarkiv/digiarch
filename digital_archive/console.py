@@ -23,7 +23,9 @@ def cli():
 
 
 @cli.command()
-@click.option("--path", type=click.Path(exists=True, file_okay=False))
+@click.option(
+    "--path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
+)
 def report(path):
     """This command invokes `report_results` on files and
     subdirectories found in the given `--path`."""
