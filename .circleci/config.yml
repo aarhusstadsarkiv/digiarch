@@ -42,6 +42,7 @@ jobs:
           name: Check types using mypy
           command: |
             poetry run mypy digital_archive/
+            poetry run mypy tests/
       # Run tests, generate coverage report & upload to codecov
       - run:
           name: Test and generate report using pytest with coverage
