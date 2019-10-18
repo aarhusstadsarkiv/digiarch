@@ -21,5 +21,5 @@ class FileInfo:
     mime_type: str = ""
     guessed_ext: str = ""
 
-    def as_dict(self):
+    def to_dict(self) -> dict:
         return asdict(self)
