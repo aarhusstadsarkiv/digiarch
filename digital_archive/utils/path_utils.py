@@ -5,42 +5,48 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
-from typing import Tuple, List
+from tqdm import tqdm
+from digital_archive.data import FileInfo
+from typing import List
+
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def explore_dir(path: str) -> Tuple[list, list]:
-    """Finds files and empty directories in the given path.
+def explore_dir(path: str) -> List[FileInfo]:
+    """Finds files and empty directories in the given path,
+    and collects them into a list of FileInfo objects.
 
     Parameters
     ----------
     path : str
-        The path in which to find files
+        The path in which to find files.
 
     Returns
     -------
-    file_exts : list
-        Two-dimensional array of file extensions and their root directories.
-    empty_dirs : list
-        List of empty directories found in the search.
+    List[FileInfo]
+        List of :class:`~digital_archive.data.FileInfo` objects.
 
     """
-    empty_dirs: List[str] = []
-    file_exts: List[List[str]] = []
+    # Type declarations
+    dir_info: List[FileInfo] = []
+    info: FileInfo
+    ext: str
 
-    if not os.listdir(path):
-        # Function was called on empty directory
-        # Return empty lists
-        return file_exts, empty_dirs
-
-    for root, dirs, files in os.walk(path):
-        for f in files:
-            ext = os.path.splitext(f)[1]
-            file_exts.append([ext.lower(), root])
+    # Traverse given path, collect results.
+    # tqdm is used to show progress of os.walk
+    for root, dirs, files in tqdm(
+        os.walk(path), unit=" folders", desc="Processed"
+    ):
         if not dirs and not files:
-            empty_dirs.append(root)
+            # We found an empty subdirectory.
+            info = FileInfo(is_empty_sub=True, path=root)
+            dir_info.append(info)
+        for file in files:
+            ext = os.path.splitext(file)[1].lower()
+            info = FileInfo(name=file, ext=ext, path=root)
+            dir_info.append(info)
 
-    return file_exts, empty_dirs
+    return dir_info
