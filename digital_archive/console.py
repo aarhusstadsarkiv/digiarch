@@ -16,16 +16,6 @@ from .identify import reports
 # -----------------------------------------------------------------------------
 
 
-def click_ok(message: str) -> None:
-    click.secho("🗸 ", fg="green", nl=False)
-    click.echo(message)
-
-
-def click_warn(message: str) -> None:
-    click.secho("⚠️ ", fg="red", nl=False)
-    click.echo(message)
-
-
 @click.group()
 def cli() -> None:
     """Command Line Tool for handling Aarhus Digital Archive handins."""
@@ -45,8 +35,4 @@ def report(path: str) -> None:
     click.secho("Collecting file information...", bold=True)
     dir_info = path_utils.explore_dir(path)
     click.secho("Done!", bold=True, fg="green")
-    report_file, empty_subs = reports.report_results(dir_info, path)
-    click_ok(f"Wrote file extension report to {report_file}")
-    if empty_subs:
-        click_warn("There are empty subdirectories!")
-        click_warn(f"Consult {empty_subs} for more information.")
+    reports.report_results(dir_info, path)
