@@ -1,4 +1,5 @@
-"""Implements data classes used throughout the package.
+"""Implements data classes and related utilities used throughout
+Digital Archive.
 
 """
 
@@ -7,14 +8,14 @@
 # -----------------------------------------------------------------------------
 import dataclasses
 import json
-from typing import Optional
+from typing import Any
 
 # -----------------------------------------------------------------------------
 # Classes
 # -----------------------------------------------------------------------------
 @dataclasses.dataclass
 class FileInfo:
-    """Class for keeping track of file information"""
+    """Dataclass for keeping track of file information"""
 
     name: str = ""
     ext: str = ""
@@ -24,15 +25,19 @@ class FileInfo:
     guessed_ext: str = ""
 
     def to_dict(self) -> dict:
+        """Avoid having to import dataclasses all the time."""
         return dataclasses.asdict(self)
 
     def to_json(self) -> str:
-        return json.dumps(self, cls=FileInfoEncoder)
+        """Return json dump using
+        :class:`~digital_archive.data.DataclassEncoder`"""
+        return json.dumps(self, cls=EnhancedEnconder)
 
 
-class FileInfoEncoder(json.JSONEncoder):
-    def default(self, file_info: FileInfo) -> Optional[dict]:
-        # Since type checking is not enforced at runtime
-        if isinstance(file_info, FileInfo):
-            return file_info.to_dict()
-        return super().default(file_info)
+class EnhancedEnconder(json.JSONEncoder):
+    """JSONEncoder subclass supporting dataclass serialization."""
+
+    def default(self, obj: object) -> Any:
+        if dataclasses.is_dataclass(obj):
+            return dataclasses.asdict(obj)
+        return super().default(obj)
