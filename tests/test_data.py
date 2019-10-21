@@ -9,7 +9,7 @@ def file_info():
 
 
 class FailJSON:
-    def func():
+    def func(self):
         pass
 
 
