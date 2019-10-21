@@ -35,6 +35,10 @@ def explore_dir(path: str) -> List[FileInfo]:
     info: FileInfo
     ext: str
 
+    # Check if called in empty directory
+    if not os.listdir(path):
+        return []
+
     # Traverse given path, collect results.
     # tqdm is used to show progress of os.walk
     for root, dirs, files in tqdm(

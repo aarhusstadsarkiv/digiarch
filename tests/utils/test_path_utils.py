@@ -1,5 +1,7 @@
 # import pytest
+import os
 from digital_archive.utils.path_utils import explore_dir
+from digital_archive.data import FileInfo
 
 
 class TestExploreDir:
@@ -7,17 +9,17 @@ class TestExploreDir:
 
     def test_in_empty_dir(self, tmpdir):
         """`explore_dir` is invoked in an empty directory.
-        Return values `file_exts` and `empty_dirs` should both have len=0"""
+        The returned list of FileInfo objects should have len = 0"""
 
-        file_exts, empty_dirs = explore_dir(tmpdir)
-        assert len(file_exts) == 0
-        assert len(empty_dirs) == 0
+        dir_info = explore_dir(tmpdir)
+        assert len(dir_info) == 0
 
     def test_with_files(self, tmpdir):
         """`explore_dir` is invoked in a non-empty directory,
         with files and non-empty sub-folders.
-        Return value `file_exts` should be populated,
-        while `empty_dirs` should be empty."""
+        The returned list of FileInfo objects should have len = 2,
+        the name, ext and path fields in each FileInfo object
+        should be populated, and the is_empty_sub field should be False."""
 
         # Populate `tmpdir` and call `explore_dir(tmpdir)`
         file1 = tmpdir.join("test.txt")
@@ -25,45 +27,76 @@ class TestExploreDir:
         file1.write("test")
         file2.write("test")
 
-        file_exts, empty_dirs = explore_dir(tmpdir)
+        file1_info = FileInfo(
+            name=file1.basename,
+            ext=os.path.splitext(file1)[1].lower(),
+            is_empty_sub=False,
+            path=file1.dirname,
+        )
 
-        # `file_exts` should have len = 2
-        # `empty_dirs` should have len = 0
-        assert len(file_exts) == 2
-        assert len(empty_dirs) == 0
+        file2_info = FileInfo(
+            name=file2.basename,
+            ext=os.path.splitext(file2)[1].lower(),
+            is_empty_sub=False,
+            path=file2.dirname,
+        )
+
+        dir_info = explore_dir(tmpdir)
+
+        assert len(dir_info) == 2
+        assert file1_info in dir_info
+        assert file2_info in dir_info
 
     def test_with_empty_dirs(self, tmpdir):
         """`explore_dir` is invoked in a non-empty directory,
         with no files and empty sub-folders.
-        Return value `file_exts` should be empty,
-        while `empty_dirs` should be populated."""
+        The returned list of FileInfo objects should have len = 1
+        and the object should have is_empty_sub=True with a
+        populated path field"""
 
         # Populate `tmpdir` with an empty folder
         # and call `explore_dir(tmpdir)`
-        tmpdir.mkdir("testdir")
+        testdir = tmpdir.mkdir("testdir")
+        testdir_info = FileInfo(is_empty_sub=True, path=testdir)
 
-        file_exts, empty_dirs = explore_dir(tmpdir)
+        dir_info = explore_dir(tmpdir)
 
-        # `file_exts` should have `len = 0`
-        # `empty_dirs` should have `len = 1`
-        assert len(file_exts) == 0
-        assert len(empty_dirs) == 1
+        assert len(dir_info) == 1
+        assert testdir_info in dir_info
 
     def test_with_files_and_empty_dirs(self, tmpdir):
         """`explore_dir` is invoked in a non-empty directory,
         with files and some empty sub-folders.
-        Both return values should be populated"""
+        The returned list of FileInfo objects should have len = 3,
+        with two populated objects and one showing is_empty_sub = True."""
 
-        # Populate `tmpdir` and call `explore_dir(tmpdir)`
+        # Populate tmpdir and call explore_dir(tmpdir)
         file1 = tmpdir.join("test.txt")
         file2 = tmpdir.mkdir("testdir").join("test.txt")
         file1.write("test")
         file2.write("test")
-        tmpdir.mkdir("testdir2")
+        testdir2 = tmpdir.mkdir("testdir2")
 
-        file_exts, empty_dirs = explore_dir(tmpdir)
+        file1_info = FileInfo(
+            name=file1.basename,
+            ext=os.path.splitext(file1)[1].lower(),
+            is_empty_sub=False,
+            path=file1.dirname,
+        )
 
-        # `file_exts` should have `len = 2`
-        # `empty_dirs` should have `len = 1`
-        assert len(file_exts) == 2
-        assert len(empty_dirs) == 1
+        file2_info = FileInfo(
+            name=file2.basename,
+            ext=os.path.splitext(file2)[1].lower(),
+            is_empty_sub=False,
+            path=file2.dirname,
+        )
+        testdir2_info = FileInfo(is_empty_sub=True, path=testdir2)
+
+        dir_info = explore_dir(tmpdir)
+
+        assert len(dir_info) == 3
+        assert file1_info in dir_info
+        assert file2_info in dir_info
+        assert testdir2_info in dir_info
+        # assert len(file_exts) == 2
+        # assert len(empty_dirs) == 1
