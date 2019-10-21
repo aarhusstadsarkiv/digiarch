@@ -31,7 +31,7 @@ class FileInfo:
 
 
 class FileInfoEncoder(json.JSONEncoder):
-    def default(self, file_info: FileInfo) -> Optional(dict):
+    def default(self, file_info: FileInfo) -> Optional[dict]:
         # Since type checking is not enforced at runtime
         if isinstance(file_info, FileInfo):
             return file_info.to_dict()
