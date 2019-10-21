@@ -1,6 +1,6 @@
 import json
 import pytest
-from digital_archive.data import FileInfo, EnhancedEnconder
+from digital_archive.data import FileInfo, DataclassEncoder
 
 
 @pytest.fixture
@@ -33,9 +33,9 @@ class TestFileInfo:
 
 class TestJSONEncode:
     def test_with_valid_input(self):
-        data = json.dumps(123, cls=EnhancedEnconder)
+        data = json.dumps(123, cls=DataclassEncoder)
         assert json.loads(data) == 123
 
     def test_with_invalid_input(self, make_json_fail):
         with pytest.raises(TypeError):
-            assert json.dumps(make_json_fail, cls=EnhancedEnconder)
+            assert json.dumps(make_json_fail, cls=DataclassEncoder)

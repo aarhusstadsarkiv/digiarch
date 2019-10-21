@@ -31,10 +31,10 @@ class FileInfo:
     def to_json(self) -> str:
         """Return json dump using
         :class:`~digital_archive.data.DataclassEncoder`"""
-        return json.dumps(self, cls=EnhancedEnconder)
+        return json.dumps(self, cls=DataclassEncoder)
 
 
-class EnhancedEnconder(json.JSONEncoder):
+class DataclassEncoder(json.JSONEncoder):
     """JSONEncoder subclass supporting dataclass serialization."""
 
     def default(self, obj: object) -> Any:
