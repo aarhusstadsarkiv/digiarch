@@ -6,8 +6,9 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
+import tqdm
 import pandas as pd
-from digital_archive.data import FileInfo
+from digital_archive.data import load_json_list, FileInfo
 from digital_archive.utils import click_utils
 from typing import List
 
@@ -16,33 +17,40 @@ from typing import List
 # -----------------------------------------------------------------------------
 
 
-def report_results(info: List[FileInfo], save_path: str) -> None:
+def report_results(data_file: str, save_path: str) -> None:
     """Generates reports of explore_dir() results.
 
     Parameters
     ----------
-    info: List[FileInfo]
-        Information from which to generate reports.
+    data_file: str
+        Data file containing information from which to generate reports.
     save_path: str
         The path in which to save the reports.
 
     Returns
     -------
-    report_file: str
-        The file in which the report was saved.
-    empty_subs_file : str
-        The file in which the empty subdirectory report was saved.
+    None
 
     """
     # Type declarations
     report_file: str = ""
     empty_subs_file: str = ""
-    files: List[dict]
-    empty_subs: List[str]
+    files: List[dict] = []
+    empty_subs: List[str] = []
     files_df: pd.DataFrame
     files_df_count: pd.DataFrame
 
-    # Collect file information
+    # Load file info
+    data: List[dict] = tqdm.tqdm(
+        load_json_list(data_file), desc="Reading file information"
+    )
+    info: List[FileInfo] = tqdm.tqdm(
+        [FileInfo.from_dict(d) for d in data], desc="Loading file information"
+    )
+
+    # # print(json.loads(data_file))
+
+    # # Collect file information
     files = [f.to_dict() for f in info if f.is_empty_sub is False]
     empty_subs = [f.path for f in info if f.is_empty_sub is True]
 
@@ -65,4 +73,6 @@ def report_results(info: List[FileInfo], save_path: str) -> None:
             for sub in empty_subs:
                 f.write(sub + "\n")
         click_utils.click_warn("There are empty subdirectories!")
-        click_utils.click_warn(f"Consult {empty_subs} for more information.")
+        click_utils.click_warn(
+            f"Consult {empty_subs_file} for more information."
+        )

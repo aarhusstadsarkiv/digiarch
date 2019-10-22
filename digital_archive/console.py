@@ -8,6 +8,7 @@ The CLI implements several commands with suboptions.
 # Imports
 # -----------------------------------------------------------------------------
 import click
+import os
 from .utils import path_utils
 from .identify import reports
 
@@ -16,23 +17,42 @@ from .identify import reports
 # -----------------------------------------------------------------------------
 
 
-@click.group()
-def cli() -> None:
-    """Command Line Tool for handling Aarhus Digital Archive handins."""
-    pass
+@click.group(invoke_without_command=True)
+@click.argument(
+    "path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
+)
+@click.option(
+    "--reindex", is_flag=True, help="Whether to reindex the current directory."
+)
+@click.pass_context
+def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
+    """Command Line Tool for handling Aarhus Digital Archive handins.
+    Invoked using digiarch /path/to/handins followed by the desired command."""
+    # Create directories
+    main_dir: str = os.path.join(path, "_digiarch")
+    data_dir: str = os.path.join(main_dir, ".data")
+    data_file: str = os.path.join(data_dir, "data.json")
+    path_utils.create_folders((main_dir, data_dir))
+
+    # If we haven't indexed this directory before,
+    # or reindex is passed, traverse directory and dump data file.
+    # Otherwise, tell the user which file we're processing from.
+    if reindex or not os.path.isfile(data_file):
+        click.secho("Collecting file information...", bold=True)
+        path_utils.explore_dir(path, main_dir, data_file)
+        click.secho("Done!", bold=True, fg="green")
+    else:
+        click.echo(f"Processing data from ", nl=False)
+        click.secho(f"{data_file}", bold=True)
+
+    ctx.obj = {"main_dir": main_dir, "data_file": data_file}
 
 
 @cli.command()
-@click.option(
-    "--path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
-)
-def report(path: str) -> None:
-    """This command invokes `report_results` on files and
-    subdirectories found in the given `--path`."""
+@click.pass_obj
+def report(path_info: dict) -> None:
+    """Generate reports on files and directory structure."""
     # TODO: --path should be optional, default to directory where
     # the CLI is called.
     # TODO: Check if path is empty, exit gracefully if so.
-    click.secho("Collecting file information...", bold=True)
-    dir_info = path_utils.explore_dir(path)
-    click.secho("Done!", bold=True, fg="green")
-    reports.report_results(dir_info, path)
+    reports.report_results(path_info["data_file"], path_info["main_dir"])

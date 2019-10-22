@@ -7,12 +7,15 @@ Digital Archive.
 # Imports
 # -----------------------------------------------------------------------------
 import dataclasses
+import dacite
 import json
-from typing import Any
+from typing import Any, List
 
 # -----------------------------------------------------------------------------
 # Classes
 # -----------------------------------------------------------------------------
+
+
 @dataclasses.dataclass
 class FileInfo:
     """Dataclass for keeping track of file information"""
@@ -33,6 +36,10 @@ class FileInfo:
         :class:`~digital_archive.data.DataclassEncoder`"""
         return json.dumps(self, cls=DataclassEncoder)
 
+    @staticmethod
+    def from_dict(data: dict) -> Any:
+        return dacite.from_dict(data_class=FileInfo, data=data)
+
 
 class DataclassEncoder(json.JSONEncoder):
     """JSONEncoder subclass supporting dataclass serialization."""
@@ -41,3 +48,14 @@ class DataclassEncoder(json.JSONEncoder):
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)
         return super().default(obj)
+
+
+# -----------------------------------------------------------------------------
+# Function Definitions
+# -----------------------------------------------------------------------------
+
+
+def load_json_list(data_file: str) -> List[dict]:
+    with open(data_file) as file:
+        data: List[dict] = json.load(file)
+    return data

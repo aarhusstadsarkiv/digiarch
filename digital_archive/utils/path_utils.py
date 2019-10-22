@@ -5,17 +5,25 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
+import json
 from tqdm import tqdm
-from digital_archive.data import FileInfo
-from typing import List
-
+from digital_archive.data import FileInfo, DataclassEncoder
+from typing import List, Tuple
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def explore_dir(path: str) -> List[FileInfo]:
+def create_folders(folder_paths: Tuple[str, ...]) -> None:
+    for folder in folder_paths:
+        try:
+            os.mkdir(folder)
+        except FileExistsError:
+            pass
+
+
+def explore_dir(path: str, main_dir: str, save_file: str) -> None:
     """Finds files and empty directories in the given path,
     and collects them into a list of FileInfo objects.
 
@@ -34,16 +42,16 @@ def explore_dir(path: str) -> List[FileInfo]:
     dir_info: List[FileInfo] = []
     info: FileInfo
     ext: str
-
-    # Check if called in empty directory
-    if not os.listdir(path):
-        return []
+    main_dir_name: str = os.path.basename(os.path.normpath(main_dir))
 
     # Traverse given path, collect results.
     # tqdm is used to show progress of os.walk
     for root, dirs, files in tqdm(
-        os.walk(path), unit=" folders", desc="Processed"
+        os.walk(path, topdown=True), unit=" folders", desc="Processed"
     ):
+        # Don't walk the processing directory
+        if main_dir_name in dirs:
+            dirs.remove(main_dir_name)
         if not dirs and not files:
             # We found an empty subdirectory.
             info = FileInfo(is_empty_sub=True, path=root)
@@ -53,4 +61,6 @@ def explore_dir(path: str) -> List[FileInfo]:
             info = FileInfo(name=file, ext=ext, path=root)
             dir_info.append(info)
 
-    return dir_info
+    # Save results
+    with open(save_file, "w") as file:
+        file.write(json.dumps(dir_info, cls=DataclassEncoder, indent=4))
