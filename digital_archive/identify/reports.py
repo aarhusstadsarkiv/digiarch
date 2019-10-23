@@ -7,21 +7,22 @@
 # -----------------------------------------------------------------------------
 import os
 import pandas as pd
+from digital_archive.data import get_fileinfo_list
+from digital_archive.utils import click_utils
+from typing import List
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def report_results(file_exts: list, empty_dirs: list, save_path: str) -> None:
+def report_results(data_file: str, save_path: str) -> None:
     """Generates reports of explore_dir() results.
 
     Parameters
     ----------
-    file_exts : list
-        Two-dimensional array with file extensions and root paths.
-    empty_dirs : list
-        List of empty directories found in a search.
+    data_file: str
+        Data file containing information from which to generate reports.
     save_path: str
         The path in which to save the reports.
 
@@ -30,27 +31,40 @@ def report_results(file_exts: list, empty_dirs: list, save_path: str) -> None:
     None
 
     """
-    if file_exts:
-        save_file = os.path.join(save_path, "file_exts.csv")
-        file_exts_df = pd.DataFrame(
-            data=file_exts, columns=["FileExt", "Root"]
-        )
-        file_exts_group = file_exts_df.groupby(
-            "FileExt", as_index=False
-        ).count()
-        file_exts_group = file_exts_group.rename(columns={"Root": "Count"})
-        file_exts_group.to_csv(
-            save_file, header=True, index=False, encoding="utf-8"
-        )
-        print(f"Wrote file ext report to {save_file}")
+    # Type declarations
+    report_file: str = ""
+    empty_subs_file: str = ""
+    files: List[dict] = []
+    empty_subs: List[str] = []
+    files_df: pd.DataFrame
+    file_exts_count: pd.DataFrame
 
-    if empty_dirs:
-        save_file = os.path.join(save_path, "empty_dirs.txt")
-        with open(save_file, "w+") as f:
-            for dir in empty_dirs:
-                f.write(dir + "\n")
-        print("There are empty directories!")
-        print(f"Consult {save_file} for more information")
+    # Get file information from data file
+    info = get_fileinfo_list(data_file)
 
-    if not file_exts and not empty_dirs:
-        print("Base directory is empty. No reports produced.")
+    # Collect file information
+    files = [f.to_dict() for f in info if f.is_empty_sub is False]
+    empty_subs = [f.path for f in info if f.is_empty_sub is True]
+
+    # We might get an empty directory
+    if files:
+        # Generate reports
+        report_file = os.path.join(save_path, "file_exts.csv")
+        files_df = pd.DataFrame(data=files)
+        # Count extensions
+        file_exts_count = (
+            files_df.groupby("ext").size().rename("count").to_frame()
+        )
+        file_exts_count.to_csv(report_file, header=True)
+        click_utils.click_ok(f"Wrote file extension report to {report_file}")
+
+    # Generate separate report if there are empty subdirectories
+    if empty_subs:
+        empty_subs_file = os.path.join(save_path, "empty_subs.txt")
+        with open(empty_subs_file, "w+") as f:
+            for sub in empty_subs:
+                f.write(sub + "\n")
+        click_utils.click_warn("There are empty subdirectories!")
+        click_utils.click_warn(
+            f"Consult {empty_subs_file} for more information."
+        )
