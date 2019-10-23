@@ -66,8 +66,9 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
             info = FileInfo(is_empty_sub=True, path=root)
             dir_info.append(info)
         for file in files:
-            ext = os.path.splitext(file)[1].lower()
-            info = FileInfo(name=file, ext=ext, path=root)
+            cur_file = str(file)
+            ext = os.path.splitext(cur_file)[1].lower()
+            info = FileInfo(name=cur_file, ext=ext, path=root)
             dir_info.append(info)
 
     # Save results
