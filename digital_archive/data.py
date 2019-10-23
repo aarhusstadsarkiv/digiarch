@@ -9,6 +9,7 @@ Digital Archive.
 import dataclasses
 import dacite
 import json
+import tqdm
 from typing import Any, List
 
 # -----------------------------------------------------------------------------
@@ -59,3 +60,15 @@ def load_json_list(data_file: str) -> List[dict]:
     with open(data_file) as file:
         data: List[dict] = json.load(file)
     return data
+
+
+def get_fileinfo_list(data_file: str) -> List[FileInfo]:
+    # Read file info from data file
+    data: List[dict] = tqdm.tqdm(
+        load_json_list(data_file), desc="Reading file information"
+    )
+    # Load file info into list
+    info: List[FileInfo] = tqdm.tqdm(
+        [FileInfo.from_dict(d) for d in data], desc="Loading file information"
+    )
+    return info
