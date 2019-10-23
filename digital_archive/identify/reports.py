@@ -37,7 +37,7 @@ def report_results(data_file: str, save_path: str) -> None:
     files: List[dict] = []
     empty_subs: List[str] = []
     files_df: pd.DataFrame
-    files_df_count: pd.DataFrame
+    file_exts_count: pd.DataFrame
 
     # Get file information from data file
     info = get_fileinfo_list(data_file)
