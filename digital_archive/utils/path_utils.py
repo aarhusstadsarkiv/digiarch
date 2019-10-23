@@ -43,6 +43,15 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
     info: FileInfo
     ext: str
     main_dir_name: str = os.path.basename(os.path.normpath(main_dir))
+    main_folders: List[str] = [
+        folder for folder in os.listdir(path) if folder != main_dir_name
+    ]
+
+    if not main_folders:
+        # Path is empty, write empty file and return
+        with open(save_file, "w") as file:
+            file.write(json.dumps(""))
+        return
 
     # Traverse given path, collect results.
     # tqdm is used to show progress of os.walk
