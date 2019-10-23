@@ -35,25 +35,24 @@ class FileInfo:
     def to_json(self) -> str:
         """Return json dump using
         :class:`~digital_archive.data.DataclassEncoder`"""
-        return json.dumps(self, cls=DataclassEncoder)
+        return json.dumps(self, default=encode_dataclass)
 
     @staticmethod
     def from_dict(data: dict) -> Any:
         return dacite.from_dict(data_class=FileInfo, data=data)
 
 
-class DataclassEncoder(json.JSONEncoder):
-    """JSONEncoder subclass supporting dataclass serialization."""
-
-    def default(self, obj: object) -> Any:
-        if dataclasses.is_dataclass(obj):
-            return dataclasses.asdict(obj)
-        return super().default(obj)
-
-
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
+def encode_dataclass(data_cls: object) -> dict:
+    try:
+        return dataclasses.asdict(data_cls)
+    except TypeError:
+        type_name = type(data_cls)
+        raise TypeError(
+            f"Object of type {type_name} is not serializable with this default"
+        )
 
 
 def load_json_list(data_file: str) -> List[dict]:

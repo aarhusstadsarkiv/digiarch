@@ -2,12 +2,12 @@ import json
 import os
 from typing import List
 from digital_archive.identify.reports import report_results
-from digital_archive.data import FileInfo, DataclassEncoder
+from digital_archive.data import FileInfo, encode_dataclass
 
 
 def write_test_file(temp_dir, data_file, dir_info):
     with open(data_file, "w") as file:
-        file.write(json.dumps(dir_info, cls=DataclassEncoder, indent=4))
+        file.write(json.dumps(dir_info, default=encode_dataclass, indent=4))
 
 
 class TestReportResults:

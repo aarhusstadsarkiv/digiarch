@@ -7,7 +7,7 @@
 import os
 import json
 from tqdm import tqdm
-from digital_archive.data import FileInfo, DataclassEncoder
+from digital_archive.data import FileInfo, encode_dataclass
 from typing import List, Tuple
 
 # -----------------------------------------------------------------------------
@@ -73,4 +73,4 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
 
     # Save results
     with open(save_file, "w") as file:
-        file.write(json.dumps(dir_info, cls=DataclassEncoder, indent=4))
+        file.write(json.dumps(dir_info, default=encode_dataclass, indent=4))
