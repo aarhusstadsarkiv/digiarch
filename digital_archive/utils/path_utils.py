@@ -16,6 +16,18 @@ from typing import List, Tuple
 
 
 def create_folders(folder_paths: Tuple[str, ...]) -> None:
+    """Creates given folders, and passes on FileExistsException.
+
+    Parameters
+    ----------
+    folder_paths : Tuple[str, ...]
+        Paths of folders to create.
+
+    Returns
+    -------
+    None
+
+    """
     for folder in folder_paths:
         try:
             os.mkdir(folder)
