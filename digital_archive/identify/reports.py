@@ -6,9 +6,8 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
-import tqdm
 import pandas as pd
-from digital_archive.data import load_json_list, FileInfo
+from digital_archive.data import get_fileinfo_list
 from digital_archive.utils import click_utils
 from typing import List
 
@@ -40,17 +39,10 @@ def report_results(data_file: str, save_path: str) -> None:
     files_df: pd.DataFrame
     files_df_count: pd.DataFrame
 
-    # Load file info
-    data: List[dict] = tqdm.tqdm(
-        load_json_list(data_file), desc="Reading file information"
-    )
-    info: List[FileInfo] = tqdm.tqdm(
-        [FileInfo.from_dict(d) for d in data], desc="Loading file information"
-    )
+    # Get file information from data file
+    info = get_fileinfo_list(data_file)
 
-    # # print(json.loads(data_file))
-
-    # # Collect file information
+    # Collect file information
     files = [f.to_dict() for f in info if f.is_empty_sub is False]
     empty_subs = [f.path for f in info if f.is_empty_sub is True]
 
