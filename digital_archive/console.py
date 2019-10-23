@@ -27,7 +27,7 @@ from .identify import reports
 @click.pass_context
 def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
     """Command Line Tool for handling Aarhus Digital Archive handins.
-    Invoked using digiarch /path/to/handins followed by the desired command."""
+    Invoked using digiarch [option] /path/to/handins/ [command]."""
     # Create directories
     main_dir: str = os.path.join(path, "_digiarch")
     data_dir: str = os.path.join(main_dir, ".data")
