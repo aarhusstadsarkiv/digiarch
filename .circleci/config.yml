@@ -13,11 +13,20 @@ commands:
     steps:
       # Get current code base
       - checkout
-
+      # Restore cache
+      - restore_cache:
+          keys:
+            - deps-{{ checksum "poetry.lock" }}
+      # Install dependencies using poetry.
       - run:
           name: Install Python dependencies
-          # Install dependencies using poetry.
           command: poetry install
+      # Save to cache
+      - save_cache:
+          key: deps-{{ checksum "poetry.lock" }}
+          paths:
+            - /home/circleci/.cache/pypoetry/virtualenvs
+
 
 jobs:
   check-and-test:
