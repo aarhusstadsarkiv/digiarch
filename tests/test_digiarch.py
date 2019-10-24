@@ -1,6 +1,6 @@
 import pytest
 from click.testing import CliRunner
-from digital_archive.console import cli
+from digital_archive.digiarch import cli
 
 
 @pytest.fixture

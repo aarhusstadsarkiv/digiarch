@@ -16,6 +16,14 @@ from typing import List, Tuple
 
 
 def create_folders(folder_paths: Tuple[str, ...]) -> None:
+    """Creates given folders, and passes on FileExistsException.
+
+    Parameters
+    ----------
+    folder_paths : Tuple[str, ...]
+        Paths of folders to create.
+
+    """
     for folder in folder_paths:
         try:
             os.mkdir(folder)
@@ -31,11 +39,6 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
     ----------
     path : str
         The path in which to find files.
-
-    Returns
-    -------
-    List[FileInfo]
-        List of :class:`~digital_archive.data.FileInfo` objects.
 
     """
     # Type declarations

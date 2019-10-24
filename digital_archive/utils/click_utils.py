@@ -20,10 +20,6 @@ def click_ok(message: str) -> None:
     message : str
         The message to return using `click.echo`
 
-    Returns
-    -------
-    None
-
     """
     click.secho("🗸 ", fg="green", nl=False)
     click.echo(message)
@@ -36,10 +32,6 @@ def click_warn(message: str) -> None:
     ----------
     message : str
         The message to return using `click.echo`
-
-    Returns
-    -------
-    None
 
     """
     click.secho("⚠️ ", fg="red", nl=False)
