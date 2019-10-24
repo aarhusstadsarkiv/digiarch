@@ -27,7 +27,7 @@ sphinx_rtd_theme = {version = "^0.4.3", optional = true}
 docs = ["sphinx", "sphinx_rtd_theme"]
 
 [tool.poetry.scripts]
-digiarch = "digital_archive.console:cli"
+digiarch = "digital_archive.digiarch:cli"
 
 [tool.black]
 line-length = 79
