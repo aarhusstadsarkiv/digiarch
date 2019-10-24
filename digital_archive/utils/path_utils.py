@@ -23,10 +23,6 @@ def create_folders(folder_paths: Tuple[str, ...]) -> None:
     folder_paths : Tuple[str, ...]
         Paths of folders to create.
 
-    Returns
-    -------
-    None
-
     """
     for folder in folder_paths:
         try:
@@ -43,11 +39,6 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
     ----------
     path : str
         The path in which to find files.
-
-    Returns
-    -------
-    List[FileInfo]
-        List of :class:`~digital_archive.data.FileInfo` objects.
 
     """
     # Type declarations

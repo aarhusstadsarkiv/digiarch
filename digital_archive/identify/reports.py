@@ -26,10 +26,6 @@ def report_results(data_file: str, save_path: str) -> None:
     save_path: str
         The path in which to save the reports.
 
-    Returns
-    -------
-    None
-
     """
     # Type declarations
     report_file: str = ""
