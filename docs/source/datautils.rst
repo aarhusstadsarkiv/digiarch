@@ -1,5 +1,17 @@
-Utilities
+Data & Utilities
 ==============================
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Contents:
+
+
+Data
+------------------------------------------
+.. automodule:: digital_archive.data
+   :members:
+   :undoc-members:
+   :show-inheritance:
 
 Click Utilities
 ------------------------------------------

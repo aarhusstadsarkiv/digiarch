@@ -5,9 +5,9 @@ Welcome to Digital Archive's documentation!
    :maxdepth: 2
    :caption: Contents:
 
-.. include:: digiarch.rst
-.. include:: identify.rst
-.. include:: utils.rst
+   digiarch
+   identify
+   datautils
 
 Indices and tables
 ==================
