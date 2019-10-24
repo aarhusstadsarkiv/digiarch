@@ -29,7 +29,7 @@ commands:
 
 
 jobs:
-  check-and-test:
+  check:
     docker:
       - image: circleci/python:3.7
     steps:
@@ -52,6 +52,11 @@ jobs:
           command: |
             poetry run mypy digital_archive/
             poetry run mypy tests/
+  test:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - init
       # Run tests, generate coverage report & upload to codecov
       - run:
           name: Test and generate report using pytest with coverage
@@ -59,10 +64,10 @@ jobs:
             poetry run pytest --cov=digital_archive --cov-report=xml
       - codecov/upload:
           file: coverage.xml
-
 workflows:
   version: 2.1
   development:
     jobs:
-      - check-and-test
+      - check
+      - test
 # tbd: deploy workflow
