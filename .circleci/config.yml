@@ -95,4 +95,36 @@ workflows:
   version: 2.1
   development:
     jobs:
-
+      - check
+      - test
+      - build
+  release:
+    jobs:
+      - check:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: master
+      - test:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: master
+      - build:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: master
+      - deploy:
+          requires:
+            - check
+            - test
+            - build
+          filters:
+            branches:
+              ignore: /.*/
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
