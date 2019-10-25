@@ -64,6 +64,24 @@ jobs:
       # Upload coverage to codecov
       - codecov/upload:
           file: coverage.xml
+  build:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - init
+      # Build digital_archive with Poetry
+      - run:
+          name: Build sdist and wheel with Poetry
+          command: poetry build
+  deploy:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      #- init
+      # Build digital_archive with Poetry
+      - run:
+          name: Test version
+          command: echo $CIRCLE_TAG
 
 workflows:
   version: 2.1
@@ -71,4 +89,12 @@ workflows:
     jobs:
       - check
       - test
+  release:
+    jobs:
+      - test
+      - build
+      - deploy:
+          filters:
+            tags:
+              only: /.*/
 # tbd: deploy workflow
