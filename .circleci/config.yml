@@ -20,7 +20,7 @@ commands:
       # Install dependencies using poetry.
       - run:
           name: Initialse Poetry config
-          command: poetry config repositories.pypitest https://test.pypi.org/legacy/
+          command: poetry config
       - run:
           name: Install Python dependencies
           command: poetry install
@@ -87,9 +87,9 @@ jobs:
           command: |
             sh .circleci/check_version.sh
       - run:
-          name: Publish to PyPI test
+          name: Publish to PyPI
           command: |
-            poetry publish --build -r pypitest -u jnik-aarhus -p $pypitest_pwd
+            poetry publish --build -r pypi -u jnik-aarhus -p $pypi_pwd
 
 workflows:
   version: 2.1
@@ -97,27 +97,34 @@ workflows:
     jobs:
       - check
       - test
+      - build
   release:
     jobs:
+      - check:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: master
       - test:
           filters:
             tags:
               only: /.*/
             branches:
-              only: iss60-ci-build-deploy
+              only: master
       - build:
           filters:
             tags:
               only: /.*/
             branches:
-              only: iss60-ci-build-deploy
+              only: master
       - deploy:
           requires:
+            - check
             - test
             - build
           filters:
             tags:
               only: /^v.*/
             branches:
-              only: iss60-ci-build-deploy
-# tbd: deploy workflow
+              only: master
