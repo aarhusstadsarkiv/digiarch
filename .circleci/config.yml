@@ -104,13 +104,13 @@ workflows:
             tags:
               only: /.*/
             branches:
-              only: master
+              only: iss60-ci-build-deploy
       - build:
           filters:
             tags:
               only: /.*/
             branches:
-              only: master
+              only: iss60-ci-build-deploy
       - deploy:
           requires:
             - test
@@ -119,5 +119,5 @@ workflows:
             tags:
               only: /^v.*/
             branches:
-              only: master
+              only: iss60-ci-build-deploy
 # tbd: deploy workflow
