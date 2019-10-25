@@ -19,6 +19,9 @@ commands:
             - deps-{{ checksum "poetry.lock" }}
       # Install dependencies using poetry.
       - run:
+          name: Initialse Poetry config
+          command: poetry config repositories.pypitest https://test.pypi.org/legacy/
+      - run:
           name: Install Python dependencies
           command: poetry install
       # Save to cache
@@ -77,13 +80,16 @@ jobs:
     docker:
       - image: circleci/python:3.7
     steps:
-      #- init
+      - init
       # Build digital_archive with Poetry
+      # - run:
+      #     name: Test version
+      #     command: |
+      #       sh .circleci/check_version.sh
       - run:
-          name: Test version
+          name: Publish to PyPI test
           command: |
-            echo $CIRCLE_BRANCH
-            echo $CIRCLE_TAG
+            poetry publish --build -r pypitest -u jnik-aarhus -p $pypitest_pwd
 
 workflows:
   version: 2.1
@@ -93,10 +99,25 @@ workflows:
       - test
   release:
     jobs:
-      - test
-      - build
-      - deploy:
+      - test:
           filters:
             tags:
               only: /.*/
+            branches:
+              only: master
+      - build:
+          filters:
+            tags:
+              only: /.*/
+            branches:
+              only: master
+      - deploy:
+          requires:
+            - test
+            - build
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              only: master
 # tbd: deploy workflow
