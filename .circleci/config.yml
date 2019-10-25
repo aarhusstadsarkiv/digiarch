@@ -27,7 +27,6 @@ commands:
           paths:
             - /home/circleci/.cache/pypoetry/virtualenvs
 
-
 jobs:
   check:
     docker:
@@ -64,6 +63,7 @@ jobs:
             poetry run pytest --cov=digital_archive --cov-report=xml
       - codecov/upload:
           file: coverage.xml
+
 workflows:
   version: 2.1
   development:
