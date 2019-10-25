@@ -20,7 +20,8 @@ commands:
       # Install dependencies using poetry.
       - run:
           name: Initialse Poetry config
-          command: poetry config
+          command: |
+            poetry config
       - run:
           name: Install Python dependencies
           command: poetry install
@@ -89,7 +90,7 @@ jobs:
       - run:
           name: Publish to PyPI
           command: |
-            poetry publish --build -r pypi -u jnik-aarhus -p $pypi_pwd
+            poetry publish --build -u jnik-aarhus -p $pypi_pwd
 
 workflows:
   version: 2.1
