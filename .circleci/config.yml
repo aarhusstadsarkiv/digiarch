@@ -13,14 +13,22 @@ commands:
     steps:
       # Get current code base
       - checkout
-
+      # Restore cache
+      - restore_cache:
+          keys:
+            - deps-{{ checksum "poetry.lock" }}
+      # Install dependencies using poetry.
       - run:
           name: Install Python dependencies
-          # Install dependencies using poetry.
           command: poetry install
+      # Save to cache
+      - save_cache:
+          key: deps-{{ checksum "poetry.lock" }}
+          paths:
+            - /home/circleci/.cache/pypoetry/virtualenvs
 
 jobs:
-  check-and-test:
+  check:
     docker:
       - image: circleci/python:3.7
     steps:
@@ -43,11 +51,17 @@ jobs:
           command: |
             poetry run mypy digital_archive/
             poetry run mypy tests/
-      # Run tests, generate coverage report & upload to codecov
+  test:
+    docker:
+      - image: circleci/python:3.7
+    steps:
+      - init
+      # Run tests, generate coverage report
       - run:
           name: Test and generate report using pytest with coverage
           command: |
             poetry run pytest --cov=digital_archive --cov-report=xml
+      # Upload coverage to codecov
       - codecov/upload:
           file: coverage.xml
 
@@ -55,5 +69,6 @@ workflows:
   version: 2.1
   development:
     jobs:
-      - check-and-test
+      - check
+      - test
 # tbd: deploy workflow
