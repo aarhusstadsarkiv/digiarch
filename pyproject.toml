@@ -8,6 +8,7 @@ readme = "docs/README.md"
 homepage = "https://stadsarkiv.aarhus.dk/"
 repository = "https://github.com/aarhusstadsarkiv/digital-archive"
 documentation = "https://digital-archive.readthedocs.io/en/latest/"
+keywords = ["archiving", "preservation", "digital-archive"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
