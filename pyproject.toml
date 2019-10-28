@@ -1,9 +1,14 @@
 [tool.poetry]
 name = "digital_archive"
-version = "0.2.0"
+version = "0.2.1"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
-authors = ["Nina Jensen <jnik@aarhus.dk>"]
+authors = ["Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
+readme = "docs/README.md"
+homepage = "https://stadsarkiv.aarhus.dk/"
+repository = "https://github.com/aarhusstadsarkiv/digital-archive"
+documentation = "https://digital-archive.readthedocs.io/en/latest/"
+keywords = ["archiving", "preservation", "digital-archive"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
