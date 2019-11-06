@@ -34,7 +34,7 @@ class FileInfo:
 
     def to_json(self) -> str:
         """Return json dump using
-        :class:`~digital_archive.data.DataclassEncoder`"""
+        :class:`~digiarch.data.DataclassEncoder`"""
         return json.dumps(self, default=encode_dataclass)
 
     @staticmethod

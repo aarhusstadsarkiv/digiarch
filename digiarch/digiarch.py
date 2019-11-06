@@ -1,5 +1,5 @@
 """This implements the Command Line Interface which enables the user to
-use the functionality implemented in the `digital_archive` submodules.
+use the functionality implemented in the `digiarch` submodules.
 The CLI implements several commands with suboptions.
 
 """
