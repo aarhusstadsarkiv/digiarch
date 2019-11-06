@@ -8,7 +8,7 @@ Data & Utilities
 
 Data
 ------------------------------------------
-.. automodule:: digital_archive.data
+.. automodule:: digiarch.data
    :members:
    :undoc-members:
    :show-inheritance:
@@ -16,7 +16,7 @@ Data
 Click Utilities
 ------------------------------------------
 
-.. automodule:: digital_archive.utils.click_utils
+.. automodule:: digiarch.utils.click_utils
    :members:
    :undoc-members:
    :show-inheritance:
@@ -24,7 +24,7 @@ Click Utilities
 Path Utilities
 -----------------------------------------
 
-.. automodule:: digital_archive.utils.path_utils
+.. automodule:: digiarch.utils.path_utils
    :members:
    :undoc-members:
    :show-inheritance:

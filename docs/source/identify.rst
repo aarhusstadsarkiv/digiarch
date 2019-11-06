@@ -4,7 +4,7 @@ Identify
 Identify Files
 ------------------------------------------------
 
-.. automodule:: digital_archive.identify.identify_files
+.. automodule:: digiarch.identify.identify_files
    :members:
    :undoc-members:
    :show-inheritance:
@@ -13,7 +13,7 @@ Identify Files
 Generate reports
 ----------------------------------------
 
-.. automodule:: digital_archive.identify.reports
+.. automodule:: digiarch.identify.reports
    :members:
    :undoc-members:
    :show-inheritance:
