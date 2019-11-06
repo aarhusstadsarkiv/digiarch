@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "digital_archive"
+name = "digiarch"
 version = "0.2.1"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
@@ -26,7 +26,7 @@ black = {version = "^18.3-alpha.0", allows-prereleases = true}
 flake8 = "^3.7"
 
 [tool.poetry.scripts]
-digiarch = "digital_archive.digiarch:cli"
+digiarch = "digiarch.digiarch:cli"
 
 [tool.black]
 line-length = 79
