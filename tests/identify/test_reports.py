@@ -1,8 +1,8 @@
 import json
 import os
 from typing import List
-from digital_archive.identify.reports import report_results
-from digital_archive.data import FileInfo, encode_dataclass
+from digiarch.identify.reports import report_results
+from digiarch.data import FileInfo, encode_dataclass
 
 
 def write_test_file(temp_dir, data_file, dir_info):

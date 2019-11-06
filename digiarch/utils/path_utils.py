@@ -7,7 +7,7 @@
 import os
 import json
 from tqdm import tqdm
-from digital_archive.data import FileInfo, encode_dataclass
+from digiarch.data import FileInfo, encode_dataclass
 from typing import List, Tuple
 
 # -----------------------------------------------------------------------------
