@@ -1,10 +1,10 @@
 CLI
 ==============================
-.. automodule:: digital_archive.digiarch
+.. automodule:: digiarch.digiarch
    :members:
    :undoc-members:
    :show-inheritance:
 
-.. click:: digital_archive.digiarch:cli
+.. click:: digiarch.digiarch:cli
     :prog: digiarch
     :show-nested:
