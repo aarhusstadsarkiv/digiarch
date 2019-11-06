@@ -1,6 +1,6 @@
 import os
-from digital_archive.utils.path_utils import explore_dir
-from digital_archive.data import FileInfo, get_fileinfo_list
+from digiarch.utils.path_utils import explore_dir
+from digiarch.data import FileInfo, get_fileinfo_list
 
 
 class TestExploreDir:
