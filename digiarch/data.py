@@ -47,7 +47,7 @@ class DataJSONEncoder(json.JSONEncoder):
     """DataJSONEncoder subclasses JSONEncoder in order to handle
     encoding of dataclasses."""
 
-    def default(self, obj: object) -> Any:
+    def default(self, obj: object) -> Any:  # pylint: disable=E0202,W0221
         """Overrides the JSONEncoder default.
 
         Parameters
