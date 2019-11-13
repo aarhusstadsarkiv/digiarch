@@ -51,7 +51,10 @@ def report_results(data_file: str, save_path: str) -> None:
         file_exts_count = (
             files_df.groupby("ext").size().rename("count").to_frame()
         )
-        file_exts_count.to_csv(report_file, header=True)
+        file_exts_sorted = file_exts_count.sort_values(
+            "count", ascending=False
+        )
+        file_exts_sorted.to_csv(report_file, header=True)
         click_utils.click_ok(f"Wrote file extension report to {report_file}")
 
     # Generate separate report if there are empty subdirectories
