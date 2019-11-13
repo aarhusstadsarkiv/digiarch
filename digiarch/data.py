@@ -9,7 +9,6 @@ Digital Archive.
 import dataclasses
 import dacite
 import json
-import tqdm
 from typing import Any, List
 
 # -----------------------------------------------------------------------------
