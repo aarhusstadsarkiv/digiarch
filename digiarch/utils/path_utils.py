@@ -5,9 +5,8 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
-import json
 from tqdm import tqdm
-from digiarch.data import FileInfo, encode_dataclass
+from digiarch.data import FileInfo, dump_file
 from typing import List, Tuple
 
 # -----------------------------------------------------------------------------
@@ -52,8 +51,7 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
 
     if not main_folders:
         # Path is empty, write empty file and return
-        with open(save_file, "w") as file:
-            file.write(json.dumps(""))
+        dump_file(data="", file=save_file)
         return
 
     # Traverse given path, collect results.
@@ -75,5 +73,4 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
             dir_info.append(info)
 
     # Save results
-    with open(save_file, "w") as file:
-        file.write(json.dumps(dir_info, default=encode_dataclass, indent=4))
+    dump_file(data=dir_info, file=save_file)
