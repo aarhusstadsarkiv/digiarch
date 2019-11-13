@@ -50,6 +50,7 @@ class DataJSONEncoder(json.JSONEncoder):
 
     def default(self, obj: object) -> Any:
         """Overrides the JSONEncoder default.
+
         Parameters
         ----------
         obj : object
@@ -99,11 +100,8 @@ def load_json_list(data_file: str) -> List[dict]:
 
 def get_fileinfo_list(data_file: str) -> List[FileInfo]:
     # Read file info from data file
-    data: List[dict] = tqdm.tqdm(
-        load_json_list(data_file), desc="Reading file information"
-    )
+    data: List[dict] = load_json_list(data_file)
+
     # Load file info into list
-    info: List[FileInfo] = tqdm.tqdm(
-        [FileInfo.from_dict(d) for d in data], desc="Loading file information"
-    )
+    info: List[FileInfo] = [FileInfo.from_dict(d) for d in data]
     return info

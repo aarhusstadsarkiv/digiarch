@@ -1,13 +1,11 @@
-import json
 import os
 from typing import List
 from digiarch.identify.reports import report_results
-from digiarch.data import FileInfo, encode_dataclass
+from digiarch.data import FileInfo, dump_file
 
 
 def write_test_file(temp_dir, data_file, dir_info):
-    with open(data_file, "w") as file:
-        file.write(json.dumps(dir_info, default=encode_dataclass, indent=4))
+    dump_file(dir_info, data_file)
 
 
 class TestReportResults:
