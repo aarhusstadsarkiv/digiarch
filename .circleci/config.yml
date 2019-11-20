@@ -37,24 +37,31 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - init
-      # Check formatting using Black via Poetry
+      # Check formatting using Black
       - run:
           name: Check formatting using Black
           command: |
-            poetry run black --check digiarch/
-            poetry run black --check tests/
-      # Check linting using flake8 via Poetry
+            pip install black --user --quiet
+            black --check digiarch/
+            black --check tests/
+      # Check linting using flake8
       - run:
           name: Check linting using flake8
           command: |
-            poetry run flake8 digiarch/
-            poetry run flake8 tests/
+            pip install flake8 --user --quiet
+            flake8 digiarch/
+            flake8 tests/
       # Check types using mypy via Poetry
       - run:
           name: Check types using mypy
           command: |
             poetry run mypy digiarch/
             poetry run mypy tests/
+      # Check code using Prospector via Poetry
+      - run:
+          name: Check code using Prospector
+          command: |
+            poetry run prospector -M digiarch/
   test:
     docker:
       - image: circleci/python:3.7
