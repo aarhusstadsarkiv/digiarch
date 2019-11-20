@@ -61,7 +61,7 @@ jobs:
       - run:
           name: Check code using Prospector
           command: |
-            poetry run prospector -M /digiarch
+            poetry run prospector -M digiarch/
   test:
     docker:
       - image: circleci/python:3.7
