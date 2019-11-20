@@ -47,8 +47,9 @@ jobs:
       - run:
           name: Check linting using flake8
           command: |
-            poetry run flake8 digiarch/
-            poetry run flake8 tests/
+            pip install flake8 --user --quiet
+            flake8 digiarch/
+            flake8 tests/
       # Check types using mypy via Poetry
       - run:
           name: Check types using mypy
