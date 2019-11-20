@@ -9,8 +9,8 @@ The CLI implements several commands with suboptions.
 # -----------------------------------------------------------------------------
 import click
 import os
-from .utils import path_utils
-from .identify import reports
+from digiarch.utils import path_utils
+from digiarch.identify import reports
 
 # -----------------------------------------------------------------------------
 # Function Definitions
