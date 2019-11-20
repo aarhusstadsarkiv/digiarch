@@ -1,6 +1,6 @@
 import pytest
 from click.testing import CliRunner
-from digiarch.digiarch import cli
+from digiarch.cli import cli
 
 
 @pytest.fixture
