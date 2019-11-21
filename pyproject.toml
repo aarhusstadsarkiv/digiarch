@@ -24,7 +24,7 @@ mypy = "^0.730.0"
 prospector = "^1.1"
 
 [tool.poetry.scripts]
-digiarch = "digiarch.digiarch:cli"
+digiarch = "digiarch.cli:cli"
 
 [tool.black]
 line-length = 79
