@@ -9,7 +9,8 @@ The CLI implements several commands with suboptions.
 # -----------------------------------------------------------------------------
 import click
 import os
-from digiarch.utils import path_utils
+from pathlib import Path
+from digiarch.utils import path_utils, group_files
 from digiarch.identify import reports
 
 # -----------------------------------------------------------------------------
@@ -56,3 +57,15 @@ def report(path_info: dict) -> None:
     # the CLI is called.
     # TODO: Check if path is empty, exit gracefully if so.
     reports.report_results(path_info["data_file"], path_info["main_dir"])
+
+
+@cli.command()
+@click.pass_obj
+def group(path_info: dict) -> None:
+    config_path = Path(__file__).parent.joinpath(
+        "_config", "conversion_map.json"
+    )
+    file_map = group_files.get_map(config_path)
+    group_files.grouping(
+        path_info["data_file"], file_map, path_info["main_dir"]
+    )

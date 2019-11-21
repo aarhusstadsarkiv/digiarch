@@ -1,0 +1,9 @@
+{
+    ".doc": "LibreOffice",
+    ".docx": "LibreOffice",
+    ".ppt": "LibreOffice", 
+    ".pptx": "LibreOffice",
+    ".xml": "LibreOffice",
+    ".odt": "LibreOffice" 
+
+}
