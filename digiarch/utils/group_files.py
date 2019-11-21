@@ -51,5 +51,3 @@ def grouping(data_file: str, file_map: dict, save_path: str) -> None:
         convert_tool_file = os.path.join(save_path, f"{tool}_files.txt")
         with open(convert_tool_file, "w") as file:
             file.writelines(convert_map.get(tool))
-
-    # print(files_df[files_df["ext"] in file_map.keys()])
