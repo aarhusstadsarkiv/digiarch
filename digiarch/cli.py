@@ -62,10 +62,4 @@ def report(path_info: dict) -> None:
 @cli.command()
 @click.pass_obj
 def group(path_info: dict) -> None:
-    config_path = Path(__file__).parent.joinpath(
-        "_config", "conversion_map.json"
-    )
-    file_map = group_files.get_map(config_path)
-    group_files.grouping(
-        path_info["data_file"], file_map, path_info["main_dir"]
-    )
+    group_files.grouping(path_info["data_file"], path_info["main_dir"])
