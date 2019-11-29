@@ -29,14 +29,14 @@ class TestExploreDir:
             name=file1.basename,
             ext=os.path.splitext(file1)[1].lower(),
             is_empty_sub=False,
-            path=file1.dirname,
+            path=os.path.join(file1.dirname, file1.basename),
         )
 
         file2_info = FileInfo(
             name=file2.basename,
             ext=os.path.splitext(file2)[1].lower(),
             is_empty_sub=False,
-            path=file2.dirname,
+            path=os.path.join(file2.dirname, file2.basename),
         )
 
         explore_dir(temp_dir, main_dir, data_file)
@@ -80,14 +80,14 @@ class TestExploreDir:
             name=file1.basename,
             ext=os.path.splitext(file1)[1].lower(),
             is_empty_sub=False,
-            path=file1.dirname,
+            path=os.path.join(file1.dirname, file1.basename),
         )
 
         file2_info = FileInfo(
             name=file2.basename,
             ext=os.path.splitext(file2)[1].lower(),
             is_empty_sub=False,
-            path=file2.dirname,
+            path=os.path.join(file2.dirname, file2.basename),
         )
         testdir2_info = FileInfo(is_empty_sub=True, path=testdir2)
 
