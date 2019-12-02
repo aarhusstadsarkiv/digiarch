@@ -14,12 +14,6 @@ from digiarch.data import get_fileinfo_list, FileInfo
 # -----------------------------------------------------------------------------
 
 
-# def get_map(map_file: str) -> dict:
-#     with open(map_file, "r") as file:
-#         map_dict = json.load(file)
-#     return map_dict
-
-
 def grouping(data_file: str, save_path: str) -> None:
     """Groups files per file extension.
 
@@ -37,8 +31,8 @@ def grouping(data_file: str, save_path: str) -> None:
 
     # Group files per file extension.
     for ext in exts:
-        for file in files:
-            if file.ext == ext:
-                ext_file = os.path.join(save_path, f"{ext}_files.txt")
-                with open(ext_file, "w") as out_file:
-                    out_file.writelines(file.path)
+        ext_file = os.path.join(save_path, f"{ext}_files.txt")
+        with open(ext_file, "w") as out_file:
+            for file in files:
+                if file.ext == ext:
+                    out_file.write(f"{file.path}\n")
