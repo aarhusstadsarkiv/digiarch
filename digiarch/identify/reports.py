@@ -8,7 +8,6 @@
 import os
 import pandas as pd
 from digiarch.data import get_fileinfo_list
-from digiarch.utils import click_utils
 from typing import List
 
 # -----------------------------------------------------------------------------

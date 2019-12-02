@@ -9,7 +9,6 @@ The CLI implements several commands with suboptions.
 # -----------------------------------------------------------------------------
 import click
 import os
-from pathlib import Path
 from digiarch.utils import path_utils, group_files
 from digiarch.identify import reports
 
