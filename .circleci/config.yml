@@ -41,9 +41,8 @@ jobs:
       - run:
           name: Check formatting using Black
           command: |
-            pip install black --user --quiet
-            black --check digiarch/
-            black --check tests/
+            poetry run black --check digiarch/
+            poetry run black --check tests/
       # Check linting using flake8
       - run:
           name: Check linting using flake8
