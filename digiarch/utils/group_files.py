@@ -6,7 +6,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
-from typing import List
+from typing import List, Set
 from digiarch.data import get_fileinfo_list, FileInfo
 
 # -----------------------------------------------------------------------------
@@ -27,7 +27,7 @@ def grouping(data_file: str, save_path: str) -> None:
 
     # Initialise variables
     files: List[FileInfo] = get_fileinfo_list(data_file)
-    exts: List[str] = list(set([file.ext for file in files]))
+    exts: Set[str] = {file.ext for file in files}
 
     # Group files per file extension.
     for ext in exts:
