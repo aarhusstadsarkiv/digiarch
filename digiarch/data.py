@@ -27,12 +27,14 @@ class FileInfo:
     ext: str = ""
     is_empty_sub: bool = False
     path: str = ""
-    mime_type: str = ""
-    guessed_ext: str = ""
+    checksum: str = ""
 
     def to_dict(self) -> dict:
         """Avoid having to import dataclasses all the time."""
         return dataclasses.asdict(self)
+
+    def replace(self, **fields):
+        return dataclasses.replace(self, **fields)
 
     @staticmethod
     def from_dict(data: dict) -> Any:
