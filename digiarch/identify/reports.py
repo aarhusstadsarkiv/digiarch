@@ -8,7 +8,6 @@
 import os
 import pandas as pd
 from digiarch.data import get_fileinfo_list
-from digiarch.utils import click_utils
 from typing import List
 
 # -----------------------------------------------------------------------------
@@ -55,7 +54,7 @@ def report_results(data_file: str, save_path: str) -> None:
             "count", ascending=False
         )
         file_exts_sorted.to_csv(report_file, header=True)
-        click_utils.click_ok(f"Wrote file extension report to {report_file}")
+        # click_utils.click_ok(f"Wrote file extension report to {report_file}")
 
     # Generate separate report if there are empty subdirectories
     if empty_subs:
@@ -63,7 +62,7 @@ def report_results(data_file: str, save_path: str) -> None:
         with open(empty_subs_file, "w+") as f:
             for sub in empty_subs:
                 f.write(sub + "\n")
-        click_utils.click_warn("There are empty subdirectories!")
-        click_utils.click_warn(
-            f"Consult {empty_subs_file} for more information."
-        )
+        # click_utils.click_warn("There are empty subdirectories!")
+        # click_utils.click_warn(
+        #     f"Consult {empty_subs_file} for more information."
+        # )
