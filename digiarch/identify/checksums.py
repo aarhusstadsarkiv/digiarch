@@ -91,7 +91,9 @@ def check_collisions(data_file: str, save_path: str) -> int:
     file_collisions: Dict[str] = dict()
     checksum_counts: Counter = Counter(checksums).items()
 
-    for checksum, count in tqdm.tqdm(checksum_counts):
+    for checksum, count in tqdm.tqdm(
+        checksum_counts, desc="Detecting Collisions", unit="checksums"
+    ):
         if count > 1:
             # We have a collision, boys
             collisions.add(checksum)
