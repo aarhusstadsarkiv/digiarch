@@ -6,7 +6,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import hashlib
-import collections
+from collections import Counter
 from pathlib import Path
 from typing import List, Set, Dict
 import tqdm
@@ -89,8 +89,9 @@ def check_collisions(data_file: str, save_path: str) -> int:
     checksums: List[str] = [file.checksum for file in files]
     collisions: Set[str] = set()
     file_collisions: Dict[str] = dict()
+    checksum_counts: Counter = Counter(checksums).items()
 
-    for checksum, count in tqdm.tqdm(collections.Counter(checksums).items()):
+    for checksum, count in tqdm.tqdm(checksum_counts):
         if count > 1:
             # We have a collision, boys
             collisions.add(checksum)
