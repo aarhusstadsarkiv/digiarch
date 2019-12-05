@@ -39,7 +39,10 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
     # Otherwise, tell the user which file we're processing from.
     if reindex or not os.path.isfile(data_file):
         click.secho("Collecting file information...", bold=True)
-        path_utils.explore_dir(path, main_dir, data_file)
+        empty_subs = path_utils.explore_dir(path, main_dir, data_file)
+        if empty_subs:
+            for sub in empty_subs:
+                click.secho(f"Warning! {sub} is empty!", bold=True, fg="red")
         click.secho("Done!", bold=True, fg="green")
     else:
         click.echo(f"Processing data from ", nl=False)

@@ -7,7 +7,7 @@
 import os
 from tqdm import tqdm
 from digiarch.data import FileInfo, dump_file
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -30,7 +30,9 @@ def create_folders(folder_paths: Tuple[str, ...]) -> None:
             pass
 
 
-def explore_dir(path: str, main_dir: str, save_file: str) -> None:
+def explore_dir(
+    path: str, main_dir: str, save_file: str
+) -> Optional[List[str]]:
     """Finds files and empty directories in the given path,
     and collects them into a list of FileInfo objects.
 
@@ -39,9 +41,14 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
     path : str
         The path in which to find files.
 
+    Returns
+    -------
+    empty_subs: List[str]
+        A list of empty subdirectory paths, if any such were found
     """
     # Type declarations
     dir_info: List[FileInfo] = []
+    empty_subs: List[str] = []
     info: FileInfo
     ext: str
     main_dir_name: str = os.path.basename(os.path.normpath(main_dir))
@@ -52,7 +59,7 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
     if not main_folders:
         # Path is empty, write empty file and return
         dump_file(data="", file=save_file)
-        return
+        return None
 
     # Traverse given path, collect results.
     # tqdm is used to show progress of os.walk
@@ -64,8 +71,7 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
             dirs.remove(main_dir_name)
         if not dirs and not files:
             # We found an empty subdirectory.
-            info = FileInfo(is_empty_sub=True, path=root)
-            dir_info.append(info)
+            empty_subs.append(root)
         for file in files:
             cur_file = str(file)
             ext = os.path.splitext(cur_file)[1].lower()
@@ -75,3 +81,5 @@ def explore_dir(path: str, main_dir: str, save_file: str) -> None:
 
     # Save results
     dump_file(data=dir_info, file=save_file)
+
+    return empty_subs
