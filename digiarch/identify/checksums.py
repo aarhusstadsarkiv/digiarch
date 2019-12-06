@@ -49,8 +49,7 @@ def file_checksum(file: Path, secure: bool = False) -> str:
 
     if file.is_file():
         with file.open("rb") as f:
-            bytes = f.read()
-            hasher.update(bytes)
+            hasher.update(f.read())
             checksum = hasher.hexdigest()
 
     return checksum
