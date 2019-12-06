@@ -90,12 +90,12 @@ def dump_file(data: object, file: str) -> None:
         Path to the file in which to dump JSON data.
     """
 
-    with open(file, "w+") as f:
+    with open(file, "w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
 
 
 def load_json_list(data_file: str) -> List[dict]:
-    with open(data_file) as file:
+    with open(data_file, "r", encoding="utf-8") as file:
         data: List[dict] = json.load(file)
     return data
 
