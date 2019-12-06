@@ -25,7 +25,6 @@ class FileInfo:
 
     name: str = ""
     ext: str = ""
-    is_empty_sub: bool = False
     path: str = ""
     mime_type: str = ""
     guessed_ext: str = ""
