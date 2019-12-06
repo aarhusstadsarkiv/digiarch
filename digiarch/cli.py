@@ -9,7 +9,9 @@ The CLI implements several commands with suboptions.
 # -----------------------------------------------------------------------------
 import click
 import os
+from digiarch.data import get_fileinfo_list, dump_file
 from digiarch.utils import path_utils, group_files
+from digiarch.identify import checksums
 from digiarch.identify import reports
 
 # -----------------------------------------------------------------------------
@@ -17,7 +19,7 @@ from digiarch.identify import reports
 # -----------------------------------------------------------------------------
 
 
-@click.group(invoke_without_command=True)
+@click.group(invoke_without_command=True, chain=True)
 @click.argument(
     "path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
 )
@@ -64,4 +66,24 @@ def report(path_info: dict) -> None:
 @cli.command()
 @click.pass_obj
 def group(path_info: dict) -> None:
+    """Generate lists of files grouped per file extension."""
     group_files.grouping(path_info["data_file"], path_info["main_dir"])
+    click.secho("Done!", bold=True, fg="green")
+
+
+@cli.command()
+@click.pass_obj
+def checksum(path_info: dict) -> None:
+    """Generate file checksums using BLAKE2."""
+    files = get_fileinfo_list(path_info["data_file"])
+    updated_files = checksums.generate_checksums(files)
+    dump_file(updated_files, path_info["data_file"])
+    click.secho("Done!", bold=True, fg="green")
+
+
+@cli.command()
+@click.pass_obj
+def dups(path_info: dict) -> None:
+    """Check for file duplicates."""
+    checksums.check_duplicates(path_info["data_file"], path_info["main_dir"])
+    click.secho("Done!", bold=True, fg="green")
