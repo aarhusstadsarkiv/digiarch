@@ -8,8 +8,9 @@
 import hashlib
 from collections import Counter
 from pathlib import Path
-from typing import List, Set, Dict
+from typing import List, Set, Dict, ItemsView, Any
 import tqdm
+import xxhash
 from digiarch.data import FileInfo, get_fileinfo_list, dump_file
 
 # -----------------------------------------------------------------------------
@@ -17,26 +18,34 @@ from digiarch.data import FileInfo, get_fileinfo_list, dump_file
 # -----------------------------------------------------------------------------
 
 
-def file_checksum(file: Path) -> str:
-    """Calculate the BLAKE2 checksum of an input file. Returns a 32 bit
-    hex hash.
+def file_checksum(file: Path, secure: bool = False) -> str:
+    """Calculate the checksum of an input file using xxHash or BLAKE2,
+    depending on need for cryptographical security.
 
     Parameters
     ----------
     file : Path
         The file for which to calculate the checksum. Expects a `pathlib.Path`
         object.
+    secure : bool
+        Whether the hash function used to generate checksums should be
+        cryptographically secure.
+        If false (the default), xxHash is used. If true, BLAKE2 is used.
 
     Returns
     -------
     str
-        The 32 bit BLAKE2 hash of the input file.
+        The hex checksum of the input file.
 
     """
 
-    # block_size: int = 524288000
     checksum: str = ""
-    hasher: object = hashlib.blake2s()
+    hasher: Any
+
+    if secure:
+        hasher = hashlib.blake2b()
+    else:
+        hasher = xxhash.xxh64(seed=42)
 
     if file.is_file():
         with file.open("rb") as f:
@@ -47,27 +56,49 @@ def file_checksum(file: Path) -> str:
     return checksum
 
 
-def generate_checksums(data_file: str) -> None:
-    """Generates BLAKE2 checksums of files in data_file.
+def generate_checksums(
+    files: List[FileInfo], secure: bool = False, disable_progress: bool = False
+) -> List[FileInfo]:
+    """Generates checksums of files in data_file.
 
     Parameters
     ----------
     data_file : str
         File from which to read and update information.
+    secure : bool
+        Whether the checksum generated should come from a cryptographically
+        secure hashing function. Defaults to false.
     """
 
     # Assign variables
-    files: List[FileInfo] = get_fileinfo_list(data_file)
+    # files: List[FileInfo] = get_fileinfo_list(data_file)
     updated_files: List[FileInfo] = []
 
-    for file in tqdm.tqdm(files, desc="Generating Checksums", unit="files"):
-        checksum = file_checksum(Path(file.path))
+    for file in tqdm.tqdm(
+        files,
+        desc="Generating checksums",
+        unit="files",
+        disable=disable_progress,
+    ):
+        checksum = file_checksum(Path(file.path), secure)
         updated_files.append(file.replace(checksum=checksum))
 
-    dump_file(updated_files, data_file)
+    return updated_files
 
 
-def check_collisions(data_file: str, save_path: str) -> int:
+def check_collisions(checksums: List[str]) -> Set[str]:
+    checksum_counts: ItemsView[str, int] = Counter(checksums).items()
+    collisions: Set[str] = set()
+
+    for checksum, count in checksum_counts:
+        if count > 1:
+            # We have a collision, boys
+            collisions.add(checksum)
+
+    return collisions
+
+
+def check_duplicates(data_file: str, save_path: str) -> None:
     """Generates a file with checksum collisions, indicating that duplicates
     are present.
 
@@ -77,32 +108,36 @@ def check_collisions(data_file: str, save_path: str) -> int:
         File from which to read and update information.
     save_path : str
         Path to which the checksum collision information should be saved.
-
-    Returns
-    -------
-    int
-        The number of collisions found.
     """
 
     # Initialise variables
     files: List[FileInfo] = get_fileinfo_list(data_file)
+    possible_dups: List[FileInfo] = []
     checksums: List[str] = [file.checksum for file in files]
-    collisions: Set[str] = set()
-    file_collisions: Dict[str] = dict()
-    checksum_counts: Counter = Counter(checksums).items()
+    collisions: Set[str] = check_collisions(checksums)
+    file_collisions: Dict[str, str] = dict()
+    # checksum_counts: Counter = Counter(checksums).items()
 
-    for checksum, count in tqdm.tqdm(
-        checksum_counts, desc="Detecting Collisions", unit="checksums"
-    ):
-        if count > 1:
-            # We have a collision, boys
-            collisions.add(checksum)
+    for checksum in tqdm.tqdm(collisions, desc="Processing collisions"):
+        # Generate secure checksums for possible file collisions.
+        new_files = generate_checksums(
+            [file for file in files if file.checksum == checksum],
+            secure=True,
+            disable_progress=True,
+        )
+        for file in new_files:
+            possible_dups.append(file)
 
-    for collision in collisions:
-        file_hits = [file.path for file in files if file.checksum == collision]
-        file_collisions.update({collision: file_hits})
+    secure_collisions: Set[str] = check_collisions(
+        [file.checksum for file in possible_dups]
+    )
+    for checksum in tqdm.tqdm(secure_collisions, desc="Finding duplicates"):
+        hits = [
+            {"name": file.name, "path": file.path}
+            for file in possible_dups
+            if file.checksum == checksum
+        ]
+        file_collisions.update({checksum: hits})
 
     dups_file = Path(save_path).joinpath("duplicate_files.json")
-    dump_file(file_collisions, dups_file)
-
-    return len(collisions)
+    dump_file(file_collisions, str(dups_file))
