@@ -9,7 +9,7 @@ Digital Archive.
 import dataclasses
 import dacite
 import json
-from typing import Any, List
+from typing import Any, List, Union
 
 # -----------------------------------------------------------------------------
 # Classes
@@ -33,7 +33,7 @@ class FileInfo:
         """Avoid having to import dataclasses all the time."""
         return dataclasses.asdict(self)
 
-    def replace(self, **fields):
+    def replace(self, **fields: Union[bool, str]) -> Any:
         return dataclasses.replace(self, **fields)
 
     @staticmethod
@@ -70,6 +70,8 @@ class DataJSONEncoder(json.JSONEncoder):
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)
         return super().default(obj)
+
+    # pylint: enable=method-hidden,arguments-differ
 
 
 # -----------------------------------------------------------------------------
