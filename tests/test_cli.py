@@ -64,3 +64,21 @@ class TestCli:
             args = [".", "report"]
             result = cli_run.invoke(cli, args)
             assert result.exit_code == 0
+
+    def test_group_command(self, cli_run):
+        with cli_run.isolated_filesystem():
+            args = [".", "group"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
+
+    def test_checksum_command(self, cli_run):
+        with cli_run.isolated_filesystem():
+            args = [".", "checksum"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
+
+    def test_dups_command(self, cli_run):
+        with cli_run.isolated_filesystem():
+            args = [".", "dups"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
