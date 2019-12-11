@@ -85,5 +85,6 @@ def checksum(path_info: dict) -> None:
 @click.pass_obj
 def dups(path_info: dict) -> None:
     """Check for file duplicates."""
-    checksums.check_duplicates(path_info["data_file"], path_info["main_dir"])
+    files = get_fileinfo_list(path_info["data_file"])
+    checksums.check_duplicates(files, path_info["main_dir"])
     click.secho("Done!", bold=True, fg="green")

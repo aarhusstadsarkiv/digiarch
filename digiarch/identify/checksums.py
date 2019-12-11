@@ -62,15 +62,14 @@ def generate_checksums(
 
     Parameters
     ----------
-    data_file : str
-        File from which to read and update information.
+    files : List[FileInfo]
+        List of files that need checksums.
     secure : bool
         Whether the checksum generated should come from a cryptographically
         secure hashing function. Defaults to false.
     """
 
     # Assign variables
-    # files: List[FileInfo] = get_fileinfo_list(data_file)
     updated_files: List[FileInfo] = []
 
     for file in tqdm.tqdm(
@@ -97,20 +96,20 @@ def check_collisions(checksums: List[str]) -> Set[str]:
     return collisions
 
 
-def check_duplicates(data_file: str, save_path: str) -> None:
+def check_duplicates(files: List[FileInfo], save_path: str) -> None:
     """Generates a file with checksum collisions, indicating that duplicates
     are present.
 
     Parameters
     ----------
-    data_file : str
-        File from which to read and update information.
+    files : List[FileInfo]
+        Files for which duplicates should be checked.
     save_path : str
         Path to which the checksum collision information should be saved.
     """
 
     # Initialise variables
-    files: List[FileInfo] = get_fileinfo_list(data_file)
+    # files: List[FileInfo] = get_fileinfo_list(data_file)
     possible_dups: List[FileInfo] = []
     checksums: List[str] = [file.checksum for file in files]
     collisions: Set[str] = check_collisions(checksums)
