@@ -28,15 +28,13 @@ class TestExploreDir:
         file1_info = FileInfo(
             name=file1.basename,
             ext=os.path.splitext(file1)[1].lower(),
-            is_empty_sub=False,
-            path=file1.dirname,
+            path=os.path.join(file1.dirname, file1.basename),
         )
 
         file2_info = FileInfo(
             name=file2.basename,
             ext=os.path.splitext(file2)[1].lower(),
-            is_empty_sub=False,
-            path=file2.dirname,
+            path=os.path.join(file2.dirname, file2.basename),
         )
 
         explore_dir(temp_dir, main_dir, data_file)
@@ -55,48 +53,8 @@ class TestExploreDir:
 
         # Populate temp_dir with an empty folder
         testdir2 = temp_dir.mkdir("testdir2")
-        testdir2_info = FileInfo(is_empty_sub=True, path=testdir2)
 
-        explore_dir(temp_dir, main_dir, data_file)
-        result = get_fileinfo_list(data_file)
+        result = explore_dir(temp_dir, main_dir, data_file)
 
         assert len(result) == 1
-        assert testdir2_info in result
-
-    def test_with_files_and_empty_dirs(self, temp_dir, main_dir, data_file):
-        """`explore_dir` is invoked in a non-empty directory,
-        with files and some empty sub-folders.
-        The returned list of FileInfo objects should have len = 3,
-        with two populated objects and one showing is_empty_sub = True."""
-
-        # Populate tmpdir and call explore_dir(tmpdir)
-        file1 = temp_dir.join("test.txt")
-        file2 = temp_dir.mkdir("testdir").join("test.txt")
-        file1.write("test")
-        file2.write("test")
-        testdir2 = temp_dir.mkdir("testdir2")
-
-        file1_info = FileInfo(
-            name=file1.basename,
-            ext=os.path.splitext(file1)[1].lower(),
-            is_empty_sub=False,
-            path=file1.dirname,
-        )
-
-        file2_info = FileInfo(
-            name=file2.basename,
-            ext=os.path.splitext(file2)[1].lower(),
-            is_empty_sub=False,
-            path=file2.dirname,
-        )
-        testdir2_info = FileInfo(is_empty_sub=True, path=testdir2)
-
-        explore_dir(temp_dir, main_dir, data_file)
-        result = get_fileinfo_list(data_file)
-
-        assert len(result) == 3
-        assert file1_info in result
-        assert file2_info in result
-        assert testdir2_info in result
-        # assert len(file_exts) == 2
-        # assert len(empty_dirs) == 1
+        assert testdir2 in result

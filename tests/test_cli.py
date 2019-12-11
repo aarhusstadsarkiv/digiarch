@@ -17,6 +17,7 @@ class TestCli:
         with cli_run.isolated_filesystem():
             args = [str(temp_dir)]
             result = cli_run.invoke(cli, args)
+            print(result)
             assert result.exit_code == 0
 
     def test_main_cli_invalid(self, cli_run):
@@ -33,7 +34,11 @@ class TestCli:
         and so it should echo which file it's working with."""
         with cli_run.isolated_filesystem():
             args = [str(temp_dir)]
+            # Create an empty directory
+            empty_dir = temp_dir.mkdir("empty_dir")
             result = cli_run.invoke(cli, args)
+            assert "Warning" in result.output
+            assert str(empty_dir) in result.output
             assert "Collecting file information" in result.output
             # Create a data file
             with open(data_file, "w") as file:
@@ -57,5 +62,23 @@ class TestCli:
         This should be successful, i.e. have exit code 0."""
         with cli_run.isolated_filesystem():
             args = [".", "report"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
+
+    def test_group_command(self, cli_run):
+        with cli_run.isolated_filesystem():
+            args = [".", "group"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
+
+    def test_checksum_command(self, cli_run):
+        with cli_run.isolated_filesystem():
+            args = [".", "checksum"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
+
+    def test_dups_command(self, cli_run):
+        with cli_run.isolated_filesystem():
+            args = [".", "dups"]
             result = cli_run.invoke(cli, args)
             assert result.exit_code == 0
