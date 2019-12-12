@@ -17,12 +17,15 @@ click = "^7.0"
 tqdm = "^4.36"
 dacite = "^1.0"
 xxhash = "^1.4"
+pyyaml = "^5.2"
+
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 pytest-cov = "^2.8"
 mypy = "^0.730.0"
 prospector = "^1.1"
-black = {version = "^18.3-alpha.0", allows-prereleases = true}
+black = {version = "^18.3-alpha.0", allow-prereleases = true}
+
 [tool.poetry.scripts]
 digiarch = "digiarch.cli:cli"
 
