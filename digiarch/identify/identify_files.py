@@ -37,16 +37,18 @@ def sf_id(file: FileInfo) -> FileInfo:
 
     """
     cmd = subprocess.run(f"sf {file.path}", shell=True, capture_output=True)
-    docs = yaml.safe_load_all(cmd.stdout)
-    for doc in docs:
-        if doc.get("matches"):
-            return doc.get("matches")[0]
+
+    for doc in yaml.safe_load_all(cmd.stdout.decode()):
+        if "matches" in doc:
+            for match in doc.get("matches"):
+                if match.get("ns") == "pronom":
+                    return match
 
 
 file = FileInfo(
     name="test_sheet",
     ext="",
     path="/home/jnik/Documents/test_data/test_sheet",
-    checksum="",
 )
-sf_id(file)
+print(sf_id(file))
+print(file)
