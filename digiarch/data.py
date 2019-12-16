@@ -7,37 +7,58 @@ Digital Archive.
 # Imports
 # -----------------------------------------------------------------------------
 import dataclasses
-import dacite
 import json
-from typing import Any, List, Union
+import dacite
+from typing import Any, List, Optional, Dict
 
 # -----------------------------------------------------------------------------
 # Classes
 # -----------------------------------------------------------------------------
+
+# Base class
+# --------------------
+
+
+@dataclasses.dataclass
+class DataBase:
+    def to_dict(self) -> dict:
+        return dataclasses.asdict(self)
+
+    def replace(self, **fields: Any) -> Any:
+        return dataclasses.replace(self, **fields)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Any:
+        return dacite.from_dict(data_class=cls, data=data)
+
+
+# Identification
+# --------------------
+
+
+@dataclasses.dataclass
+class Identification(DataBase):
+    """Data class for keeping track of file identification information"""
+
+    puid: Optional[str]
+    ext: str
+    tool_info: Dict[str, str]
+    warning: Optional[str] = None
+
 
 # File Info
 # --------------------
 
 
 @dataclasses.dataclass
-class FileInfo:
-    """Dataclass for keeping track of file information"""
+class FileInfo(DataBase):
+    """Data class for keeping track of file information"""
 
-    name: str = ""
-    ext: str = ""
-    path: str = ""
-    checksum: str = ""
-
-    def to_dict(self) -> dict:
-        """Avoid having to import dataclasses all the time."""
-        return dataclasses.asdict(self)
-
-    def replace(self, **fields: Union[bool, str]) -> Any:
-        return dataclasses.replace(self, **fields)
-
-    @staticmethod
-    def from_dict(data: dict) -> Any:
-        return dacite.from_dict(data_class=FileInfo, data=data)
+    name: str
+    ext: str
+    path: str
+    checksum: Optional[str] = None
+    identification: Optional[Identification] = None
 
 
 # Utility
@@ -46,10 +67,11 @@ class FileInfo:
 
 class DataJSONEncoder(json.JSONEncoder):
     """DataJSONEncoder subclasses JSONEncoder in order to handle
-    encoding of dataclasses."""
+    encoding of data classes."""
 
     # pylint does not like this subclassing, even though it's the recommended
     # method. So we disable the warnings.
+
     # pylint: disable=method-hidden,arguments-differ
     def default(self, obj: object) -> Any:
         """Overrides the JSONEncoder default.
