@@ -1,6 +1,7 @@
 import json
 import pytest
 from digiarch.data import FileInfo, DataJSONEncoder
+from dacite import MissingValueError
 
 
 @pytest.fixture
@@ -20,14 +21,15 @@ def make_json_fail():
 
 class TestFileInfo:
     def test_init(self):
-        f_info = FileInfo()
-        assert f_info.name == ""
-        assert f_info.ext == ""
-        assert f_info.path == ""
-        assert f_info.checksum == ""
-        f2_info = FileInfo("test.txt", ".txt")
-        assert f2_info.name == "test.txt"
-        assert f2_info.ext == ".txt"
+        # We cannot create an empty FileInfo.
+        with pytest.raises(TypeError):
+            FileInfo()
+        f_info = FileInfo(name="test.txt", ext=".txt", path="/")
+        assert f_info.name == "test.txt"
+        assert f_info.ext == ".txt"
+        assert f_info.path == "/"
+        assert f_info.checksum is None
+        assert f_info.identification is None
 
     def test_to_dict(self, file_info):
         dict_info = file_info.to_dict()
@@ -44,9 +46,16 @@ class TestFileInfo:
         assert new_info.path == file_info.path
 
     def test_from_dict(self):
-        dict_info = {"name": "dict_test"}
+        # This dict does not have enough params
+        with pytest.raises(MissingValueError):
+            dict_info = {"name": "dict_test"}
+            FileInfo.from_dict(data=dict_info)
+        # This does
+        dict_info = {"name": "dict_test.txt", "ext": ".txt", "path": "/root"}
         file_info = FileInfo.from_dict(dict_info)
         assert file_info.name == dict_info["name"]
+        assert file_info.ext == dict_info["ext"]
+        assert file_info.path == dict_info["path"]
 
 
 class TestJSONEncode:
