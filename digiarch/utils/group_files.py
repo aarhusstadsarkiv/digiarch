@@ -32,7 +32,7 @@ def grouping(data_file: str, save_path: str) -> None:
     # Group files per file extension.
     for ext in exts:
         ext_file = os.path.join(save_path, f"{ext}_files.txt")
-        with open(ext_file, "w") as out_file:
+        with open(ext_file, "w", encoding="utf-8") as out_file:
             for file in files:
                 if file.ext == ext:
                     out_file.write(f"{file.path}\n")
