@@ -9,7 +9,7 @@ Digital Archive.
 import dataclasses
 import json
 import dacite
-from typing import Any, List, Optional, Dict
+from typing import Any, List, Optional
 
 # -----------------------------------------------------------------------------
 # Classes
@@ -41,8 +41,7 @@ class Identification(DataBase):
     """Data class for keeping track of file identification information"""
 
     puid: Optional[str]
-    ext: str
-    tool_info: Dict[str, str]
+    mime: Optional[str]
     warning: Optional[str] = None
 
 

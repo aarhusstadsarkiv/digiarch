@@ -6,8 +6,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import subprocess
-from subprocess import CalledProcessError
-from digiarch.data import FileInfo
+from digiarch.data import FileInfo, Identification
 import yaml
 
 # -----------------------------------------------------------------------------
@@ -36,19 +35,26 @@ def sf_id(file: FileInfo) -> FileInfo:
         description
 
     """
+    new_id: Identification = Identification(
+        puid=None, mime=None, warning="No identification information obtained."
+    )
     cmd = subprocess.run(f"sf {file.path}", shell=True, capture_output=True)
 
     for doc in yaml.safe_load_all(cmd.stdout.decode()):
         if "matches" in doc:
             for match in doc.get("matches"):
                 if match.get("ns") == "pronom":
-                    return match
+                    if match.get("id").lower() == "unknown":
+                        new_id = new_id.replace(warning=match.get("warning"))
+                    else:
+                        new_id = new_id.replace(
+                            puid=match.get("id"),
+                            mime=match.get("mime"),
+                            warning=match.get("warning"),
+                        )
+
+    return file.replace(identification=new_id)
 
 
-file = FileInfo(
-    name="test_sheet",
-    ext="",
-    path="/home/jnik/Documents/test_data/test_sheet",
-)
-print(sf_id(file))
-print(file)
+file = FileInfo(name="test_sheet", ext="", path=r"C:\data\test_data\cat.png",)
+print(sf_id(file).to_dict().get("identification"))
