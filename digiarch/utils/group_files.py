@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-import os
+from pathlib import Path
 from typing import List, Set
 from digiarch.data import get_fileinfo_list, FileInfo
 
@@ -14,7 +14,7 @@ from digiarch.data import get_fileinfo_list, FileInfo
 # -----------------------------------------------------------------------------
 
 
-def grouping(data_file: str, save_path: str) -> None:
+def grouping(data_file: Path, save_path: Path) -> None:
     """Groups files per file extension.
 
     Parameters
@@ -31,8 +31,8 @@ def grouping(data_file: str, save_path: str) -> None:
 
     # Group files per file extension.
     for ext in exts:
-        ext_file = os.path.join(save_path, f"{ext}_files.txt")
-        with open(ext_file, "w", encoding="utf-8") as out_file:
+        ext_file = Path(save_path, f"{ext}_files.txt")
+        with ext_file.open("w", encoding="utf-8") as out_file:
             for file in files:
                 if file.ext == ext:
                     out_file.write(f"{file.path}\n")
