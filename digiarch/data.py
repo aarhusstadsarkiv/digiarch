@@ -9,6 +9,7 @@ Digital Archive.
 import dataclasses
 import json
 import dacite
+from pathlib import Path
 from typing import Any, List, Optional
 
 # -----------------------------------------------------------------------------
@@ -29,6 +30,8 @@ class DataBase:
 
     @classmethod
     def from_dict(cls, data: dict) -> Any:
+        if data.get("path"):
+            data.update({"path": Path(str(data.get("path")))})
         return dacite.from_dict(data_class=cls, data=data)
 
 
@@ -55,7 +58,7 @@ class FileInfo(DataBase):
 
     name: str
     ext: str
-    path: str
+    path: Path
     checksum: Optional[str] = None
     identification: Optional[Identification] = None
 
@@ -89,6 +92,8 @@ class DataJSONEncoder(json.JSONEncoder):
         """
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)
+        if isinstance(obj, Path):
+            return str(obj)
         return super().default(obj)
 
     # pylint: enable=method-hidden,arguments-differ
@@ -99,7 +104,7 @@ class DataJSONEncoder(json.JSONEncoder):
 # -----------------------------------------------------------------------------
 
 
-def dump_file(data: object, file: str) -> None:
+def dump_file(data: object, file: Path) -> None:
     """Dumps JSON files given data and a file path
     using :class:`~digiarch.data.DataJSONEncoder` as encoder.
     Output uses indent = 4 to get pretty and readable files.
@@ -114,17 +119,17 @@ def dump_file(data: object, file: str) -> None:
         Path to the file in which to dump JSON data.
     """
 
-    with open(file, "w", encoding="utf-8") as f:
+    with file.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
 
 
-def load_json_list(data_file: str) -> List[dict]:
-    with open(data_file, "r", encoding="utf-8") as file:
+def load_json_list(data_file: Path) -> List[dict]:
+    with data_file.open("r", encoding="utf-8") as file:
         data: List[dict] = json.load(file)
     return data
 
 
-def get_fileinfo_list(data_file: str) -> List[FileInfo]:
+def get_fileinfo_list(data_file: Path) -> List[FileInfo]:
     # Read file info from data file
     data: List[dict] = load_json_list(data_file)
 
