@@ -8,7 +8,7 @@ The CLI implements several commands with suboptions.
 # Imports
 # -----------------------------------------------------------------------------
 import click
-import os
+from pathlib import Path
 from digiarch.data import get_fileinfo_list, dump_file
 from digiarch.utils import path_utils, group_files
 from digiarch.identify import checksums
@@ -31,17 +31,17 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
     """Command Line Tool for handling Aarhus Digital Archive handins.
     Invoked using digiarch [option] /path/to/handins/ [command]."""
     # Create directories
-    main_dir: str = os.path.join(path, "_digiarch")
-    data_dir: str = os.path.join(main_dir, ".data")
-    data_file: str = os.path.join(data_dir, "data.json")
+    main_dir: Path = Path(path, "_digiarch")
+    data_dir: Path = Path(main_dir, ".data")
+    data_file: Path = Path(data_dir, "data.json")
     path_utils.create_folders((main_dir, data_dir))
 
     # If we haven't indexed this directory before,
     # or reindex is passed, traverse directory and dump data file.
     # Otherwise, tell the user which file we're processing from.
-    if reindex or not os.path.isfile(data_file):
+    if reindex or not data_file.is_file():
         click.secho("Collecting file information...", bold=True)
-        empty_subs = path_utils.explore_dir(path, main_dir, data_file)
+        empty_subs = path_utils.explore_dir(Path(path), main_dir, data_file)
         if empty_subs:
             for sub in empty_subs:
                 click.secho(f"Warning! {sub} is empty!", bold=True, fg="red")
