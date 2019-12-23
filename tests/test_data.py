@@ -24,7 +24,7 @@ class TestFileInfo:
     def test_init(self):
         # We cannot create an empty FileInfo.
         with pytest.raises(TypeError):
-            FileInfo()
+            FileInfo()  # type: ignore
         f_info = FileInfo(name="test.txt", ext=".txt", path=Path("/"))
         assert f_info.name == "test.txt"
         assert f_info.ext == ".txt"
