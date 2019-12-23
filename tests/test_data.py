@@ -52,11 +52,7 @@ class TestFileInfo:
             dict_info = {"name": "dict_test"}
             FileInfo.from_dict(data=dict_info)
         # This does
-        dict_info = {
-            "name": "dict_test.txt",
-            "ext": ".txt",
-            "path": "/root",
-        }
+        dict_info = {"name": "dict_test.txt", "ext": ".txt", "path": "/root"}
         file_info = FileInfo.from_dict(dict_info)
         assert file_info.name == dict_info["name"]
         assert file_info.ext == dict_info["ext"]
