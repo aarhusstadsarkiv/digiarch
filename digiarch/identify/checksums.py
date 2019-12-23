@@ -111,7 +111,9 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
     # Initialise variables
     # files: List[FileInfo] = get_fileinfo_list(data_file)
     possible_dups: List[FileInfo] = []
-    checksums: List[str] = [file.checksum for file in files]
+    checksums: List[str] = [
+        file.checksum for file in files if file.checksum is not None
+    ]
     collisions: Set[str] = check_collisions(checksums)
     file_collisions: Dict[str, str] = dict()
     # checksum_counts: Counter = Counter(checksums).items()
@@ -127,7 +129,7 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
             possible_dups.append(file)
 
     secure_collisions: Set[str] = check_collisions(
-        [file.checksum for file in possible_dups]
+        [file.checksum for file in possible_dups if file.checksum is not None]
     )
     for checksum in tqdm.tqdm(secure_collisions, desc="Finding duplicates"):
         hits = [
@@ -138,4 +140,4 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
         file_collisions.update({checksum: hits})
 
     dups_file = Path(save_path).joinpath("duplicate_files.json")
-    dump_file(file_collisions, str(dups_file))
+    dump_file(file_collisions, dups_file)

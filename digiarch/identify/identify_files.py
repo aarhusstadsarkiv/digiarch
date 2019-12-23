@@ -6,6 +6,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import subprocess
+from pathlib import Path
 from digiarch.data import FileInfo, Identification
 from digiarch.utils.exceptions import IdentificationError
 import yaml
@@ -60,12 +61,13 @@ def sf_id(file: FileInfo) -> FileInfo:
                                 mime=match.get("mime"),
                                 warning=match.get("warning").capitalize(),
                             )
-    return file.replace(identification=new_id)
+    updated_file: FileInfo = file.replace(identification=new_id)
+    return updated_file
 
 
 file = FileInfo(
     name="test_sheet",
     ext="",
-    path=r"/home/jnik/Documents/test_data/test_sheet",
+    path=Path(r"/home/jnik/Documents/test_data/test_sheet"),
 )
 print(sf_id(file).to_dict().get("identification"))
