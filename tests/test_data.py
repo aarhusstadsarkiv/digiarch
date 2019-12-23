@@ -7,7 +7,7 @@ from dacite import MissingValueError
 
 @pytest.fixture
 def file_info():
-    return FileInfo(name="test.txt", ext=".txt", path="/root/test.txt")
+    return FileInfo(name="test.txt", ext=".txt", path=Path("/root/test.txt"))
 
 
 class FailJSON:
@@ -25,10 +25,10 @@ class TestFileInfo:
         # We cannot create an empty FileInfo.
         with pytest.raises(TypeError):
             FileInfo()
-        f_info = FileInfo(name="test.txt", ext=".txt", path="/")
+        f_info = FileInfo(name="test.txt", ext=".txt", path=Path("/"))
         assert f_info.name == "test.txt"
         assert f_info.ext == ".txt"
-        assert f_info.path == "/"
+        assert f_info.path == Path("/")
         assert f_info.checksum is None
         assert f_info.identification is None
 
@@ -36,11 +36,11 @@ class TestFileInfo:
         dict_info = file_info.to_dict()
         assert dict_info["name"] == "test.txt"
         assert dict_info["ext"] == ".txt"
-        assert dict_info["path"] == "/root/test.txt"
+        assert dict_info["path"] == Path("/root/test.txt")
 
     def test_replace(self, file_info):
         assert file_info.name == "test.txt"
-        assert file_info.path == "/root/test.txt"
+        assert file_info.path == Path("/root/test.txt")
         new_info = file_info.replace(name="new_name")
         assert new_info.name == "new_name"
         assert new_info.ext == file_info.ext
@@ -60,7 +60,7 @@ class TestFileInfo:
         file_info = FileInfo.from_dict(dict_info)
         assert file_info.name == dict_info["name"]
         assert file_info.ext == dict_info["ext"]
-        assert file_info.path == dict_info["path"]
+        assert file_info.path == Path(dict_info["path"])
 
 
 class TestJSONEncode:
