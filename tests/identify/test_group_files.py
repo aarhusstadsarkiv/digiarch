@@ -5,8 +5,12 @@ from digiarch.data import FileInfo, dump_file
 
 class TestGrouping:
     def test_with_file(self, main_dir, data_file):
-        file_1 = FileInfo(name="file1.txt", ext="txt", path="/root/file1.txt")
-        file_2 = FileInfo(name="file2.pdf", ext="pdf", path="/root/file2.pdf")
+        file_1 = FileInfo(
+            name="file1.txt", ext="txt", path=Path("/root/file1.txt")
+        )
+        file_2 = FileInfo(
+            name="file2.pdf", ext="pdf", path=Path("/root/file2.pdf")
+        )
         file_info = [file_1, file_2]
         dump_file(file_info, data_file)
 
