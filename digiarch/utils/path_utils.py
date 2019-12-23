@@ -5,6 +5,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
+from pathlib import Path
 from tqdm import tqdm
 from digiarch.data import FileInfo, dump_file
 from typing import List, Tuple, Optional
@@ -14,7 +15,7 @@ from typing import List, Tuple, Optional
 # -----------------------------------------------------------------------------
 
 
-def create_folders(folder_paths: Tuple[str, ...]) -> None:
+def create_folders(folder_paths: Tuple[Path, ...]) -> None:
     """Creates given folders, and passes on FileExistsException.
 
     Parameters
@@ -31,8 +32,8 @@ def create_folders(folder_paths: Tuple[str, ...]) -> None:
 
 
 def explore_dir(
-    path: str, main_dir: str, save_file: str
-) -> Optional[List[str]]:
+    path: Path, main_dir: Path, save_file: Path
+) -> Optional[List[Path]]:
     """Finds files and empty directories in the given path,
     and collects them into a list of FileInfo objects.
 
@@ -48,15 +49,15 @@ def explore_dir(
     """
     # Type declarations
     dir_info: List[FileInfo] = []
-    empty_subs: List[str] = []
+    empty_subs: List[Path] = []
     info: FileInfo
     ext: str
-    main_dir_name: str = os.path.basename(os.path.normpath(main_dir))
-    main_folders: List[str] = [
-        folder for folder in os.listdir(path) if folder != main_dir_name
+    main_dir_name: str = main_dir.resolve().name
+    path_contents: List[Path] = [
+        child for child in path.iterdir() if child.name != main_dir_name
     ]
 
-    if not main_folders:
+    if not path_contents:
         # Path is empty, write empty file and return
         dump_file(data="", file=save_file)
         return None
@@ -71,12 +72,12 @@ def explore_dir(
             dirs.remove(main_dir_name)
         if not dirs and not files:
             # We found an empty subdirectory.
-            empty_subs.append(root)
+            empty_subs.append(Path(root))
         for file in files:
-            cur_file = str(file)
-            ext = os.path.splitext(cur_file)[1].lower()
-            path = os.path.join(root, cur_file)
-            info = FileInfo(name=cur_file, ext=ext, path=path)
+            cur_file = Path(file)
+            ext = cur_file.suffix.lower()
+            path = Path(root, cur_file)
+            info = FileInfo(name=cur_file.name, ext=ext, path=path)
             dir_info.append(info)
 
     # Save results
