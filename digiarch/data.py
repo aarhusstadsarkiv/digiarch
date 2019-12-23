@@ -7,37 +7,60 @@ Digital Archive.
 # Imports
 # -----------------------------------------------------------------------------
 import dataclasses
-import dacite
 import json
-from typing import Any, List, Union
+import dacite
+from pathlib import Path
+from typing import Any, List, Optional
 
 # -----------------------------------------------------------------------------
 # Classes
 # -----------------------------------------------------------------------------
+
+# Base class
+# --------------------
+
+
+@dataclasses.dataclass
+class DataBase:
+    def to_dict(self) -> dict:
+        return dataclasses.asdict(self)
+
+    def replace(self, **fields: Any) -> Any:
+        return dataclasses.replace(self, **fields)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> Any:
+        if data.get("path"):
+            data.update({"path": Path(str(data.get("path")))})
+        return dacite.from_dict(data_class=cls, data=data)
+
+
+# Identification
+# --------------------
+
+
+@dataclasses.dataclass
+class Identification(DataBase):
+    """Data class for keeping track of file identification information"""
+
+    puid: Optional[str]
+    mime: Optional[str]
+    warning: Optional[str] = None
+
 
 # File Info
 # --------------------
 
 
 @dataclasses.dataclass
-class FileInfo:
-    """Dataclass for keeping track of file information"""
+class FileInfo(DataBase):
+    """Data class for keeping track of file information"""
 
-    name: str = ""
-    ext: str = ""
-    path: str = ""
-    checksum: str = ""
-
-    def to_dict(self) -> dict:
-        """Avoid having to import dataclasses all the time."""
-        return dataclasses.asdict(self)
-
-    def replace(self, **fields: Union[bool, str]) -> Any:
-        return dataclasses.replace(self, **fields)
-
-    @staticmethod
-    def from_dict(data: dict) -> Any:
-        return dacite.from_dict(data_class=FileInfo, data=data)
+    name: str
+    ext: str
+    path: Path
+    checksum: Optional[str] = None
+    identification: Optional[Identification] = None
 
 
 # Utility
@@ -46,10 +69,11 @@ class FileInfo:
 
 class DataJSONEncoder(json.JSONEncoder):
     """DataJSONEncoder subclasses JSONEncoder in order to handle
-    encoding of dataclasses."""
+    encoding of data classes."""
 
     # pylint does not like this subclassing, even though it's the recommended
     # method. So we disable the warnings.
+
     # pylint: disable=method-hidden,arguments-differ
     def default(self, obj: object) -> Any:
         """Overrides the JSONEncoder default.
@@ -68,6 +92,8 @@ class DataJSONEncoder(json.JSONEncoder):
         """
         if dataclasses.is_dataclass(obj):
             return dataclasses.asdict(obj)
+        if isinstance(obj, Path):
+            return str(obj)
         return super().default(obj)
 
     # pylint: enable=method-hidden,arguments-differ
@@ -78,7 +104,7 @@ class DataJSONEncoder(json.JSONEncoder):
 # -----------------------------------------------------------------------------
 
 
-def dump_file(data: object, file: str) -> None:
+def dump_file(data: object, file: Path) -> None:
     """Dumps JSON files given data and a file path
     using :class:`~digiarch.data.DataJSONEncoder` as encoder.
     Output uses indent = 4 to get pretty and readable files.
@@ -93,17 +119,17 @@ def dump_file(data: object, file: str) -> None:
         Path to the file in which to dump JSON data.
     """
 
-    with open(file, "w", encoding="utf-8") as f:
+    with file.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
 
 
-def load_json_list(data_file: str) -> List[dict]:
-    with open(data_file, "r", encoding="utf-8") as file:
+def load_json_list(data_file: Path) -> List[dict]:
+    with data_file.open("r", encoding="utf-8") as file:
         data: List[dict] = json.load(file)
     return data
 
 
-def get_fileinfo_list(data_file: str) -> List[FileInfo]:
+def get_fileinfo_list(data_file: Path) -> List[FileInfo]:
     # Read file info from data file
     data: List[dict] = load_json_list(data_file)
 

@@ -1,4 +1,4 @@
-import os
+from pathlib import Path
 from digiarch.utils.path_utils import explore_dir
 from digiarch.data import FileInfo, get_fileinfo_list
 
@@ -9,7 +9,7 @@ class TestExploreDir:
     def test_in_empty_dir(self, temp_dir, main_dir, data_file):
         """`explore_dir` is invoked in an empty directory.
         The data file should be empty."""
-        explore_dir(temp_dir, main_dir, data_file)
+        explore_dir(Path(temp_dir), Path(main_dir), data_file)
         result = get_fileinfo_list(data_file)
         assert len(result) == 0
 
@@ -26,18 +26,18 @@ class TestExploreDir:
         file2.write("test")
 
         file1_info = FileInfo(
-            name=file1.basename,
-            ext=os.path.splitext(file1)[1].lower(),
-            path=os.path.join(file1.dirname, file1.basename),
+            name=Path(file1).name,
+            ext=Path(file1).suffix.lower(),
+            path=Path(file1.dirname, file1.basename),
         )
 
         file2_info = FileInfo(
-            name=file2.basename,
-            ext=os.path.splitext(file2)[1].lower(),
-            path=os.path.join(file2.dirname, file2.basename),
+            name=Path(file2).name,
+            ext=Path(file2).suffix.lower(),
+            path=Path(file2.dirname, file2.basename),
         )
 
-        explore_dir(temp_dir, main_dir, data_file)
+        explore_dir(Path(temp_dir), Path(main_dir), data_file)
         result = get_fileinfo_list(data_file)
 
         assert len(result) == 2
@@ -54,7 +54,7 @@ class TestExploreDir:
         # Populate temp_dir with an empty folder
         testdir2 = temp_dir.mkdir("testdir2")
 
-        result = explore_dir(temp_dir, main_dir, data_file)
+        result = explore_dir(Path(temp_dir), Path(main_dir), data_file)
 
         assert len(result) == 1
         assert testdir2 in result

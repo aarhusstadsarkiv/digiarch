@@ -6,7 +6,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import pytest
-import os
+from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -28,5 +28,5 @@ def main_dir(temp_dir):
 @pytest.fixture
 def data_file(main_dir):
     data_dir: str = main_dir.mkdir(".data")
-    data_file: str = os.path.join(data_dir, "data.json")
+    data_file: Path = Path(data_dir, "data.json")
     return data_file

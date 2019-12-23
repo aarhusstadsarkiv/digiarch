@@ -5,8 +5,8 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-import os
 import pandas as pd
+from pathlib import Path
 from digiarch.data import get_fileinfo_list
 from typing import List
 
@@ -15,7 +15,7 @@ from typing import List
 # -----------------------------------------------------------------------------
 
 
-def report_results(data_file: str, save_path: str) -> None:
+def report_results(data_file: Path, save_path: Path) -> None:
     """Generates reports of explore_dir() results.
 
     Parameters
@@ -27,10 +27,8 @@ def report_results(data_file: str, save_path: str) -> None:
 
     """
     # Type declarations
-    report_file: str = ""
-    # empty_subs_file: str = ""
+    report_file: Path
     files: List[dict] = []
-    # empty_subs: List[str] = []
     files_df: pd.DataFrame
     file_exts_count: pd.DataFrame
 
@@ -44,7 +42,7 @@ def report_results(data_file: str, save_path: str) -> None:
     # We might get an empty directory
     if files:
         # Generate reports
-        report_file = os.path.join(save_path, "file_exts.csv")
+        report_file = Path(save_path, "file_exts.csv")
         files_df = pd.DataFrame(data=files)
         # Count extensions
         file_exts_count = (
