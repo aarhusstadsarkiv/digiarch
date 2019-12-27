@@ -34,7 +34,7 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
     main_dir: Path = Path(path, "_digiarch")
     data_dir: Path = Path(main_dir, ".data")
     data_file: Path = Path(data_dir, "data.json")
-    path_utils.create_folders((main_dir, data_dir))
+    path_utils.create_folders(main_dir, data_dir)
 
     # If we haven't indexed this directory before,
     # or reindex is passed, traverse directory and dump data file.
