@@ -8,27 +8,24 @@ import os
 from pathlib import Path
 from tqdm import tqdm
 from digiarch.data import FileInfo, dump_file
-from typing import List, Tuple, Optional
+from typing import List, Optional
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def create_folders(folder_paths: Tuple[Path, ...]) -> None:
+def create_folders(*folder_paths: Path) -> None:
     """Creates given folders, and passes on FileExistsException.
 
     Parameters
     ----------
-    folder_paths : Tuple[str, ...]
+    *folder_paths : Path
         Paths of folders to create.
 
     """
     for folder in folder_paths:
-        try:
-            os.mkdir(folder)
-        except FileExistsError:
-            pass
+        folder.mkdir(parents=True, exist_ok=True)
 
 
 def explore_dir(
@@ -36,7 +33,7 @@ def explore_dir(
 ) -> Optional[List[Path]]:
     """Finds files and empty directories in the given path,
     and collects them into a list of FileInfo objects.
-
+s
     Parameters
     ----------
     path : str
