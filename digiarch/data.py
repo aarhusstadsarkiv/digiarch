@@ -44,7 +44,7 @@ class Identification(DataBase):
     """Data class for keeping track of file identification information"""
 
     puid: Optional[str]
-    mime: Optional[str]
+    signame: Optional[str]
     warning: Optional[str] = None
 
 
