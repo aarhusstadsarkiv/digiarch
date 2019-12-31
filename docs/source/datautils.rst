@@ -13,14 +13,6 @@ Data
    :undoc-members:
    :show-inheritance:
 
-Click Utilities
-------------------------------------------
-
-.. automodule:: digiarch.utils.click_utils
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
 Path Utilities
 -----------------------------------------
 
