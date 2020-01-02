@@ -1,3 +1,3 @@
 sphinx
 sphinx-click
-sphinx-typlog-theme
+sphinx-rtd-theme
