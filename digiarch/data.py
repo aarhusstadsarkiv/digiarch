@@ -7,10 +7,22 @@ Digital Archive.
 # Imports
 # -----------------------------------------------------------------------------
 import dataclasses
+import inspect
 import json
 import dacite
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, List, Optional, Set
+import digiarch
+
+# -----------------------------------------------------------------------------
+# Globals
+# -----------------------------------------------------------------------------
+
+IGNORED_EXTS: Set[str] = json.load(
+    (
+        Path(inspect.getfile(digiarch)).parent / "_data" / "blacklist.json"
+    ).open()
+).keys()
 
 # -----------------------------------------------------------------------------
 # Classes

@@ -1,0 +1,35 @@
+{
+    ".dll": {
+        "Dynamic Link Library": "Compiled library that contains a set of procedures and/or drivers that are referenced and executed by a Windows program."
+    },
+    ".exe": {
+        "Windows Executable File": "Executable program for Windows."
+    },
+    ".id": {
+        "Lotus Notes User ID File": "Identifying information for a Domino Server and Lotus Notes user. Includes the user's name, Notes license number, secure certificate, public and private key, and a password."
+    },
+    ".ini": {
+        "Initialization File": "Configuration file used to initialize program settings."
+    },
+    ".lck": {
+        "Lock File": "Access control file used to lock a resource, such as a file or a device."
+    },
+    ".lock": {
+        "Lock File": "Access control file used to lock a resource, such as a file or a device."
+    },
+    ".log": {
+        "Log File": "Usually a plain text log of certain events with timestamps."
+    },
+    ".mpw": {
+        "Microsoft Project Workspace File": "Settings file created by Microsoft Project. Stores the current user interface settings, including the layout, open projects, and views."
+    },
+    ".adx": {
+        "Approach Index File": "Indexing information for a Lotus Approach relational database"
+    },
+    ".thmx": {
+        "Office 2007 Theme File": "Theme that can be applied to a document or presentation created with Microsoft Office 2007 or later."
+    },
+    ".vbs": {
+        "VBScript File": "Virtual Basic script written in the VBScript scripting language."
+    }
+}
