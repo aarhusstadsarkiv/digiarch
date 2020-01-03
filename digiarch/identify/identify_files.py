@@ -7,10 +7,11 @@
 # -----------------------------------------------------------------------------
 import subprocess
 from subprocess import CalledProcessError
-from pathlib import Path
+from typing import List
 from digiarch.data import FileInfo, Identification
 from digiarch.utils.exceptions import IdentificationError
 import yaml
+import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -18,24 +19,25 @@ import yaml
 
 
 def sf_id(file: FileInfo) -> FileInfo:
-    """Function level documentation.
-    Delete non-applicable sections.
+    """Identify files using
+    `siegfried <https://github.com/richardlehane/siegfried>`_ and update
+    FileInfo with obtained PUID, signature name, and warning if applicable.
 
     Parameters
     ----------
-    input : type
-        description
+    file : FileInfo
+        The file to identify.
 
     Returns
     -------
-    return : type
-        description
-    type (anonymous types are allowed in return)
-        description
+    updated_file : FileInfo
+        Input file with updated information in the Identification field.
+
     Raises
     ------
-    BadException
-        description
+    IdentificationError
+        If running siegfried or loading of the resulting YAML output fails, an
+        IdentificationError is thrown.
 
     """
     new_id: Identification = Identification(
@@ -45,45 +47,59 @@ def sf_id(file: FileInfo) -> FileInfo:
     )
     try:
         cmd = subprocess.run(
-            f"sf {file.path}", shell=True, capture_output=True, check=True
+            f'sf "{file.path}"', shell=True, capture_output=True, check=True
         )
     except CalledProcessError as error:
         raise IdentificationError(error)
+
+    try:
+        docs = yaml.safe_load_all(cmd.stdout.decode())
+    except yaml.YAMLError as error:
+        raise IdentificationError(error)
     else:
-        try:
-            docs = yaml.safe_load_all(cmd.stdout.decode())
-        except yaml.YAMLError as error:
-            raise IdentificationError(error)
-        else:
-            match_doc = [
-                doc.get("matches") for doc in docs if "matches" in doc
-            ]
-            # match_doc is a list of list of matches. Flatten it and get only
-            # matches from PRONOM.
-            matches = [
-                match
-                for matches in match_doc
-                for match in matches
-                if match.get("ns") == "pronom"
-            ]
-            for match in matches:
-                if match.get("id").lower() == "unknown":
-                    new_id = new_id.replace(
-                        warning=match.get("warning").capitalize()
-                    )
-                else:
-                    new_id = new_id.replace(
-                        puid=match.get("id"),
-                        signame=match.get("format"),
-                        warning=match.get("warning").capitalize(),
-                    )
+        match_doc = [doc.get("matches") for doc in docs if "matches" in doc]
+        # match_doc is a list of list of matches. Flatten it and get only
+        # matches from PRONOM.
+        matches = [
+            match
+            for matches in match_doc
+            for match in matches
+            if match.get("ns") == "pronom"
+        ]
+        for match in matches:
+            new_id = new_id.replace(
+                puid=match.get("id"),
+                signame=match.get("format"),
+                warning=match.get("warning"),
+            )
+            if new_id.puid.lower() == "unknown":
+                new_id.puid = None
+            if isinstance(new_id.warning, str):
+                new_id.warning = new_id.warning.capitalize()
+
     updated_file: FileInfo = file.replace(identification=new_id)
     return updated_file
 
 
-file = FileInfo(
-    name="test_sheet",
-    ext="",
-    path=Path(r"/home/jnik/Documents/test_data/test_sheet"),
-)
-print(sf_id(file).to_dict().get("identification"))
+def identify(files: List[FileInfo]) -> List[FileInfo]:
+    """Identify all files in a list, and return the updated list.
+
+    Parameters
+    ----------
+    files : List[FileInfo]
+        Files to identify.
+
+    Returns
+    -------
+    List[FileInfo]
+        Input files with updated Identification information.
+
+    """
+
+    # Assign variables
+    updated_files: List[FileInfo] = []
+
+    for file in tqdm.tqdm(files, desc="Identifying files", unit="files"):
+        updated_files.append(sf_id(file))
+
+    return updated_files
