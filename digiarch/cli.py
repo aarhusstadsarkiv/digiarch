@@ -1,5 +1,5 @@
 """This implements the Command Line Interface which enables the user to
-use the functionality implemented in the `digiarch` submodules.
+use the functionality implemented in the :mod:`~digiarch` submodules.
 The CLI implements several commands with suboptions.
 
 """
@@ -28,8 +28,9 @@ from digiarch.identify import reports
 )
 @click.pass_context
 def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
-    """Command Line Tool for handling Aarhus Digital Archive handins.
-    Invoked using digiarch [option] /path/to/handins/ [command]."""
+    """Used for indexing, reporting on, and identifying files
+    found in PATH.
+    """
     # Create directories
     main_dir: Path = Path(path, "_digiarch")
     data_dir: Path = Path(main_dir, ".data")

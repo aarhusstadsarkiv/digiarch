@@ -33,7 +33,7 @@ def explore_dir(
 ) -> Optional[List[Path]]:
     """Finds files and empty directories in the given path,
     and collects them into a list of FileInfo objects.
-s
+
     Parameters
     ----------
     path : str

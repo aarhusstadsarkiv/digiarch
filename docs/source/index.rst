@@ -8,6 +8,7 @@ Welcome to Digital Archive's documentation!
    digiarch
    identify
    datautils
+   exceptions
 
 Indices and tables
 ==================
