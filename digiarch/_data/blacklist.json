@@ -31,5 +31,8 @@
     },
     ".vbs": {
         "VBScript File": "Virtual Basic script written in the VBScript scripting language."
+    },
+    ".lnk": {
+        "Windows Shortcut": "Shortcut or link used by Windows as a reference to an original file, folder, or application."
     }
 }
