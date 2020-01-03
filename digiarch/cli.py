@@ -11,8 +11,7 @@ import click
 from pathlib import Path
 from digiarch.data import get_fileinfo_list, dump_file
 from digiarch.utils import path_utils, group_files
-from digiarch.identify import checksums
-from digiarch.identify import reports
+from digiarch.identify import checksums, reports, identify_files
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -87,4 +86,14 @@ def dups(path_info: dict) -> None:
     """Check for file duplicates."""
     files = get_fileinfo_list(path_info["data_file"])
     checksums.check_duplicates(files, path_info["main_dir"])
+    click.secho("Done!", bold=True, fg="green")
+
+
+@cli.command()
+@click.pass_obj
+def identify(path_info: dict) -> None:
+    """Identify files using siegfried."""
+    files = get_fileinfo_list(path_info["data_file"])
+    updated_files = identify_files.identify(files)
+    dump_file(updated_files, path_info["data_file"])
     click.secho("Done!", bold=True, fg="green")
