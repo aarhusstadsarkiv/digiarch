@@ -9,10 +9,11 @@ The CLI implements several commands with suboptions.
 # -----------------------------------------------------------------------------
 import click
 from pathlib import Path
-from digiarch.data import get_fileinfo_list, dump_file
+from digiarch.data import get_fileinfo_list, dump_file, get_data
 from digiarch.utils import path_utils, group_files
 from digiarch.identify import checksums
 from digiarch.identify import reports
+from digiarch.utils.exceptions import FileCollectionError
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -31,25 +32,35 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
     """Used for indexing, reporting on, and identifying files
     found in PATH.
     """
+
     # Create directories
     main_dir: Path = Path(path, "_digiarch")
     data_dir: Path = Path(main_dir, ".data")
     data_file: Path = Path(data_dir, "data.json")
     path_utils.create_folders(main_dir, data_dir)
 
-    # If we haven't indexed this directory before,
-    # or reindex is passed, traverse directory and dump data file.
-    # Otherwise, tell the user which file we're processing from.
+    # Collect file info
     if reindex or not data_file.is_file():
         click.secho("Collecting file information...", bold=True)
-        empty_subs = path_utils.explore_dir(Path(path), main_dir, data_file)
-        if empty_subs:
-            for sub in empty_subs:
-                click.secho(f"Warning! {sub} is empty!", bold=True, fg="red")
+        try:
+            empty_subs = path_utils.explore_dir(
+                Path(path), main_dir, data_file
+            )
+        except FileCollectionError as error:
+            raise click.ClickException(str(error))
+        else:
+            if empty_subs:
+                click.secho(
+                    "Warning! Empty subdirectories detected!",
+                    bold=True,
+                    fg="red",
+                )
         click.secho("Done!", bold=True, fg="green")
     else:
         click.echo(f"Processing data from ", nl=False)
         click.secho(f"{data_file}", bold=True)
+
+    print(get_data(data_file))
 
     ctx.obj = {"main_dir": main_dir, "data_file": data_file}
 
@@ -58,10 +69,8 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
 @click.pass_obj
 def report(path_info: dict) -> None:
     """Generate reports on files and directory structure."""
-    # TODO: --path should be optional, default to directory where
-    # the CLI is called.
-    # TODO: Check if path is empty, exit gracefully if so.
     reports.report_results(path_info["data_file"], path_info["main_dir"])
+    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
