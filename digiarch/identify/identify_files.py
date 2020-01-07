@@ -68,7 +68,7 @@ def sf_id(file: FileInfo) -> FileInfo:
         ]
         for match in matches:
             new_id = new_id.replace(
-                signame=match.get("format"), warning=match.get("warning"),
+                signame=match.get("format"), warning=match.get("warning")
             )
             if match.get("id", "").lower() == "unknown":
                 new_id.puid = None
