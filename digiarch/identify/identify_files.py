@@ -68,12 +68,12 @@ def sf_id(file: FileInfo) -> FileInfo:
         ]
         for match in matches:
             new_id = new_id.replace(
-                puid=match.get("id"),
-                signame=match.get("format"),
-                warning=match.get("warning"),
+                signame=match.get("format"), warning=match.get("warning"),
             )
-            if new_id.puid.lower() == "unknown":
+            if match.get("id", "").lower() == "unknown":
                 new_id.puid = None
+            else:
+                new_id.puid = match.get("id")
             if isinstance(new_id.warning, str):
                 new_id.warning = new_id.warning.capitalize()
 
