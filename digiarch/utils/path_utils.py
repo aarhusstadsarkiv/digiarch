@@ -9,7 +9,7 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from tqdm import tqdm
-from digiarch.data import FileInfo, Metadata, FileData, dump_file
+from digiarch.data import FileInfo, Metadata, FileData, to_json
 from digiarch.utils.exceptions import FileCollectionError
 from typing import List
 
@@ -56,16 +56,12 @@ def explore_dir(path: Path, main_dir: Path, save_file: Path) -> bool:
     # Type declarations
     dir_info: List[FileInfo] = []
     empty_subs: List[Path] = []
-    info: FileInfo
     ext: str
     total_size: int = 0
     file_count: int = 0
     main_dir_name: str = main_dir.resolve().name
-    path_contents: List[Path] = [
-        child for child in path.iterdir() if child.name != main_dir_name
-    ]
 
-    if not path_contents:
+    if not [child for child in path.iterdir() if child.name != main_dir_name]:
         # Path is empty, remove main directory and raise
         shutil.rmtree(main_dir)
         raise FileCollectionError(f"{path} is empty! No files collected.")
@@ -82,33 +78,23 @@ def explore_dir(path: Path, main_dir: Path, save_file: Path) -> bool:
             # We found an empty subdirectory.
             empty_subs.append(Path(root))
         for file in files:
-            cur_file = Path(file)
-            ext = cur_file.suffix.lower()
-            cur_path = Path(root, cur_file)
-            size = cur_path.stat().st_size
-            dir_info.append(
-                FileInfo(
-                    name=cur_file.name,
-                    ext=ext,
-                    path=cur_path,
-                    size=size_fmt(size),
-                )
-            )
-            total_size += size
+            cur_path = Path(root, file)
+            dir_info.append(FileInfo(path=cur_path,))
+            total_size += cur_path.stat().st_size
             file_count += 1
 
     # Update metadata
     metadata = Metadata(
-        created_on=datetime.now(),
+        last_run=datetime.now(),
+        processed_dir=path,
         file_count=file_count,
         total_size=size_fmt(total_size),
-        processed_dir=path,
     )
 
     if empty_subs:
         metadata.empty_subdirectories = empty_subs
 
     # Save results
-    dump_file(data=FileData(metadata, dir_info), file=save_file)
+    to_json(data=FileData(metadata, dir_info), file=save_file)
 
     return bool(empty_subs)

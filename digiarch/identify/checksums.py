@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List, Set, Dict, ItemsView, Any
 import tqdm
 import xxhash
-from digiarch.data import FileInfo, dump_file
+from digiarch.data import FileInfo, to_json
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -140,4 +140,4 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
         file_collisions.update({checksum: hits})
 
     dups_file = Path(save_path).joinpath("duplicate_files.json")
-    dump_file(file_collisions, dups_file)
+    to_json(file_collisions, dups_file)

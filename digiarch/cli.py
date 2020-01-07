@@ -9,7 +9,7 @@ The CLI implements several commands with suboptions.
 # -----------------------------------------------------------------------------
 import click
 from pathlib import Path
-from digiarch.data import get_fileinfo_list, dump_file, get_data
+from digiarch.data import get_fileinfo_list, to_json
 from digiarch.utils import path_utils, group_files
 from digiarch.identify import checksums, reports, identify_files
 from digiarch.utils.exceptions import FileCollectionError
@@ -59,8 +59,6 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
         click.echo(f"Processing data from ", nl=False)
         click.secho(f"{data_file}", bold=True)
 
-    print(get_data(data_file))
-
     ctx.obj = {"main_dir": main_dir, "data_file": data_file}
 
 
@@ -86,7 +84,7 @@ def checksum(path_info: dict) -> None:
     """Generate file checksums using BLAKE2."""
     files = get_fileinfo_list(path_info["data_file"])
     updated_files = checksums.generate_checksums(files)
-    dump_file(updated_files, path_info["data_file"])
+    to_json(updated_files, path_info["data_file"])
     click.secho("Done!", bold=True, fg="green")
 
 
@@ -105,5 +103,5 @@ def identify(path_info: dict) -> None:
     """Identify files using siegfried."""
     files = get_fileinfo_list(path_info["data_file"])
     updated_files = identify_files.identify(files)
-    dump_file(updated_files, path_info["data_file"])
+    to_json(updated_files, path_info["data_file"])
     click.secho("Done!", bold=True, fg="green")
