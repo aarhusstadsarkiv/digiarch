@@ -44,8 +44,13 @@ class DataBase:
 
     @classmethod
     def from_dict(cls, data: dict) -> Any:
+        # For some reason the post init yields str for FileData
+        if isinstance(data.get("digiarch_dir"), str):
+            data.update({"digiarch_dir": Path(data.get("digiarch_dir"))})
+        if isinstance(data.get("json_file"), str):
+            data.update({"json_file": Path(data.get("json_file"))})
         return dacite.from_dict(
-            data_class=cls, data=data, config=dacite.Config(check_types=False)
+            data_class=cls, data=data, config=dacite.Config(check_types=False),
         )
 
 
@@ -70,17 +75,21 @@ class Identification(DataBase):
 class FileInfo(DataBase):
     """Data class for keeping track of file information"""
 
-    name: str
-    ext: str
     path: Path
-    size: str
+    name: str = dataclasses.field(init=False)
+    ext: str = dataclasses.field(init=False)
+    size: str = dataclasses.field(init=False)
     checksum: Optional[str] = None
     identification: Optional[Identification] = None
 
-    # JSON/from_dict compatibility
     def __post_init__(self) -> None:
+        # JSON/from_dict compatibility
         if isinstance(self.path, str):
             self.path = Path(self.path)
+
+        self.name = self.path.name
+        self.ext = self.path.suffix.lower()
+        self.size = size_fmt(self.path.stat().st_size)
 
 
 # Metadata
@@ -91,10 +100,10 @@ class FileInfo(DataBase):
 class Metadata(DataBase):
     """Data class for keeping track of metadata used in data.json"""
 
-    created_on: datetime
-    file_count: int
-    total_size: str
+    last_run: datetime
     processed_dir: Path
+    file_count: Optional[int] = None
+    total_size: Optional[str] = None
     duplicates: Optional[int] = None
     identification_warnings: Optional[int] = None
     empty_subdirectories: Optional[List[Path]] = None
@@ -103,18 +112,40 @@ class Metadata(DataBase):
     def __post_init__(self) -> None:
         if isinstance(self.processed_dir, str):
             self.processed_dir = Path(self.processed_dir)
-        if isinstance(self.created_on, str):
-            self.created_on = date_parse(self.created_on)
+        if isinstance(self.last_run, str):
+            self.last_run = date_parse(self.last_run)
 
 
 # JSON Data
 # --------------------
 @dataclasses.dataclass
 class FileData(DataBase):
-    """Data class collecting FileInfo lists and Metadata"""
+    """Data class collecting Metadata and list of FileInfo"""
 
     metadata: Metadata
-    files: List[FileInfo]
+    files: List[FileInfo] = dataclasses.field(default_factory=list)
+    digiarch_dir: Path = dataclasses.field(init=False)
+    json_file: Path = dataclasses.field(init=False)
+
+    def __post_init__(self) -> None:
+        # Directory paths
+        self.digiarch_dir = Path(self.metadata.processed_dir, "_digiarch")
+        data_dir = self.digiarch_dir / ".data"
+        self.json_file = data_dir / "data.json"
+        # Create directories
+        self.digiarch_dir.mkdir(exist_ok=True)
+        data_dir.mkdir(exist_ok=True)
+        # Create data file if it does not exist
+        if not self.json_file.is_file():
+            self.json_file.touch()
+
+    def to_json(self, file: Optional[Path] = None) -> None:
+        if file is None:
+            file = self.json_file
+        with file.open("w", encoding="utf-8") as f:
+            json.dump(
+                self, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False
+            )
 
 
 # Utility
@@ -160,7 +191,15 @@ class DataJSONEncoder(json.JSONEncoder):
 # -----------------------------------------------------------------------------
 
 
-def dump_file(data: object, file: Path) -> None:
+def size_fmt(size: float) -> str:
+    for unit in ["B", "KiB", "MiB", "GiB", "TiB"]:
+        if size < 1024.0:
+            break
+        size /= 1024.0
+    return f"{size:.1f} {unit}"
+
+
+def to_json(data: object, file: Path) -> None:
     """Dumps JSON files given data and a file path
     using :class:`~digiarch.data.DataJSONEncoder` as encoder.
     Output uses indent = 4 to get pretty and readable files.
@@ -179,6 +218,11 @@ def dump_file(data: object, file: Path) -> None:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
 
 
+def from_json(data_file: Path) -> Any:
+    with data_file.open("r", encoding="utf-8") as file:
+        return FileData.from_dict(json.load(file))
+
+
 def get_fileinfo_list(data_file: Path) -> List[FileInfo]:
     # Read file info from data file
     with data_file.open("r", encoding="utf-8") as file:
@@ -187,8 +231,3 @@ def get_fileinfo_list(data_file: Path) -> List[FileInfo]:
     # Load file info into list
     info: List[FileInfo] = [FileInfo.from_dict(d) for d in data]
     return info
-
-
-def get_data(data_file: Path) -> Any:
-    with data_file.open("r", encoding="utf-8") as file:
-        return FileData.from_dict(json.load(file))
