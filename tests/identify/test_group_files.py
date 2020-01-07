@@ -1,6 +1,6 @@
 from pathlib import Path
 from digiarch.utils.group_files import grouping
-from digiarch.data import FileInfo, dump_file
+from digiarch.data import FileInfo, to_json
 
 
 class TestGrouping:
@@ -12,7 +12,7 @@ class TestGrouping:
             name="file2.pdf", ext="pdf", path=Path("/root/file2.pdf")
         )
         file_info = [file_1, file_2]
-        dump_file(file_info, data_file)
+        to_json(file_info, data_file)
 
         grouping(data_file, main_dir)
         contents = [str(p) for p in Path(main_dir).iterdir()]
