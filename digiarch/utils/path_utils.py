@@ -56,6 +56,7 @@ def explore_dir(path: Path, main_dir: Path, save_file: Path) -> bool:
     # Type declarations
     dir_info: List[FileInfo] = []
     empty_subs: List[Path] = []
+    several_files: List[Path] = []
     ext: str
     total_size: int = 0
     file_count: int = 0
@@ -77,9 +78,11 @@ def explore_dir(path: Path, main_dir: Path, save_file: Path) -> bool:
         if not dirs and not files:
             # We found an empty subdirectory.
             empty_subs.append(Path(root))
+        if len(files) > 1:
+            several_files.append(Path(root))
         for file in files:
             cur_path = Path(root, file)
-            dir_info.append(FileInfo(path=cur_path,))
+            dir_info.append(FileInfo(path=cur_path))
             total_size += cur_path.stat().st_size
             file_count += 1
 
@@ -93,8 +96,9 @@ def explore_dir(path: Path, main_dir: Path, save_file: Path) -> bool:
 
     if empty_subs:
         metadata.empty_subdirectories = empty_subs
-
+    if several_files:
+        metadata.several_files = several_files
     # Save results
     to_json(data=FileData(metadata, dir_info), file=save_file)
 
-    return bool(empty_subs)
+    return bool(empty_subs), bool(several_files)

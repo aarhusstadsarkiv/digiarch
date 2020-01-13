@@ -50,7 +50,7 @@ class DataBase:
         if isinstance(data.get("json_file"), str):
             data.update({"json_file": Path(data.get("json_file"))})
         return dacite.from_dict(
-            data_class=cls, data=data, config=dacite.Config(check_types=False),
+            data_class=cls, data=data, config=dacite.Config(check_types=False)
         )
 
 
@@ -84,9 +84,11 @@ class FileInfo(DataBase):
 
     def __post_init__(self) -> None:
         # JSON/from_dict compatibility
-        if isinstance(self.path, str):
+        if not isinstance(self.path, Path):
             self.path = Path(self.path)
 
+        # Resolve path, init fields
+        self.path = self.path.resolve()
         self.name = self.path.name
         self.ext = self.path.suffix.lower()
         self.size = size_fmt(self.path.stat().st_size)
@@ -107,13 +109,17 @@ class Metadata(DataBase):
     duplicates: Optional[int] = None
     identification_warnings: Optional[int] = None
     empty_subdirectories: Optional[List[Path]] = None
+    several_files: Optional[List[Path]] = None
 
-    # JSON/from_dict compatibility
     def __post_init__(self) -> None:
+        # JSON/from_dict compatibility
         if isinstance(self.processed_dir, str):
             self.processed_dir = Path(self.processed_dir)
         if isinstance(self.last_run, str):
             self.last_run = date_parse(self.last_run)
+
+        # Resolve path
+        self.processed_dir = self.processed_dir.resolve()
 
 
 # JSON Data
@@ -132,9 +138,11 @@ class FileData(DataBase):
         self.digiarch_dir = Path(self.metadata.processed_dir, "_digiarch")
         data_dir = self.digiarch_dir / ".data"
         self.json_file = data_dir / "data.json"
+
         # Create directories
         self.digiarch_dir.mkdir(exist_ok=True)
         data_dir.mkdir(exist_ok=True)
+
         # Create data file if it does not exist
         if not self.json_file.is_file():
             self.json_file.touch()

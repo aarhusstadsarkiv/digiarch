@@ -42,7 +42,7 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
     if reindex or not data_file.is_file():
         click.secho("Collecting file information...", bold=True)
         try:
-            empty_subs = path_utils.explore_dir(
+            empty_subs, several_files = path_utils.explore_dir(
                 Path(path), main_dir, data_file
             )
         except FileCollectionError as error:
@@ -51,6 +51,12 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
             if empty_subs:
                 click.secho(
                     "Warning! Empty subdirectories detected!",
+                    bold=True,
+                    fg="red",
+                )
+            if several_files:
+                click.secho(
+                    "Warning! Some directories have several files!",
                     bold=True,
                     fg="red",
                 )
