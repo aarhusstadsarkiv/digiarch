@@ -76,11 +76,11 @@ class FileInfo(DataBase):
     """Data class for keeping track of file information"""
 
     path: Path
+    checksum: Optional[str] = None
+    identification: Optional[Identification] = None
     name: str = dataclasses.field(init=False)
     ext: str = dataclasses.field(init=False)
     size: str = dataclasses.field(init=False)
-    checksum: Optional[str] = None
-    identification: Optional[Identification] = None
 
     def __post_init__(self) -> None:
         # JSON/from_dict compatibility
