@@ -16,7 +16,7 @@ from pathlib import Path
 @pytest.fixture
 def temp_dir(tmpdir_factory):
     temp_dir: str = tmpdir_factory.mktemp("temp_dir")
-    return temp_dir
+    return Path(temp_dir)
 
 
 @pytest.fixture
