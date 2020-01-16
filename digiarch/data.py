@@ -76,11 +76,11 @@ class FileInfo(DataBase):
     """Data class for keeping track of file information"""
 
     path: Path
-    checksum: Optional[str] = None
-    identification: Optional[Identification] = None
     name: str = dataclasses.field(init=False)
     ext: str = dataclasses.field(init=False)
     size: str = dataclasses.field(init=False)
+    checksum: Optional[str] = None
+    identification: Optional[Identification] = None
 
     def __post_init__(self) -> None:
         # JSON/from_dict compatibility
@@ -108,7 +108,7 @@ class Metadata(DataBase):
     total_size: Optional[str] = None
     duplicates: Optional[int] = None
     identification_warnings: Optional[int] = None
-    empty_subdirectories: Optional[List[Path]] = None
+    empty_subdirs: Optional[List[Path]] = None
     several_files: Optional[List[Path]] = None
 
     def __post_init__(self) -> None:
