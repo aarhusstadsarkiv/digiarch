@@ -155,6 +155,11 @@ class FileData(DataBase):
                 self, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False
             )
 
+    @classmethod
+    def from_json(cls, data_file) -> Any:
+        with data_file.open("r", encoding="utf-8") as file:
+            return cls.from_dict(json.load(file))
+
 
 # Utility
 # --------------------
