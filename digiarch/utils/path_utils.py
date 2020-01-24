@@ -9,34 +9,13 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from tqdm import tqdm
-from digiarch.data import FileInfo, Metadata, FileData, to_json
+from digiarch.data import FileInfo, Metadata, FileData, size_fmt
 from digiarch.utils.exceptions import FileCollectionError
 from typing import List
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
-
-
-def size_fmt(size: float) -> str:
-    for unit in ["B", "KiB", "MiB", "GiB", "TiB"]:
-        if size < 1024.0:
-            break
-        size /= 1024.0
-    return f"{size:.1f} {unit}"
-
-
-def create_folders(*folder_paths: Path) -> None:
-    """Creates given folders, and passes on FileExistsException.
-
-    Parameters
-    ----------
-    *folder_paths : Path
-        Paths of folders to create.
-
-    """
-    for folder in folder_paths:
-        folder.mkdir(parents=True, exist_ok=True)
 
 
 def explore_dir(path: Path) -> FileData:
