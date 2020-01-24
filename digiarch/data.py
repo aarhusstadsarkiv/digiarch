@@ -241,18 +241,3 @@ def to_json(data: object, file: Path) -> None:
 
     with file.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
-
-
-def from_json(data_file: Path) -> Any:
-    with data_file.open("r", encoding="utf-8") as file:
-        return FileData.from_dict(json.load(file))
-
-
-def get_fileinfo_list(data_file: Path) -> List[FileInfo]:
-    # Read file info from data file
-    with data_file.open("r", encoding="utf-8") as file:
-        data: List[dict] = json.load(file).get("files", [{}])
-
-    # Load file info into list
-    info: List[FileInfo] = [FileInfo.from_dict(d) for d in data]
-    return info
