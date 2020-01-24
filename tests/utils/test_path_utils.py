@@ -2,7 +2,7 @@ import pytest
 from pathlib import Path
 from datetime import datetime
 from digiarch.utils.path_utils import explore_dir
-from digiarch.data import FileInfo, get_fileinfo_list, FileData, Metadata
+from digiarch.data import FileInfo, FileData, Metadata
 from digiarch.utils.exceptions import FileCollectionError
 
 
@@ -60,4 +60,4 @@ class TestExploreDir:
         file_data = explore_dir(temp_dir)
 
         assert len(file_data.files) == 0
-        assert testdir2 in file_data.metadata.empty_subdirectories
+        assert testdir2 in file_data.metadata.empty_subdirs
