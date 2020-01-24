@@ -8,9 +8,6 @@ from digiarch.data import (
     FileData,
     DataJSONEncoder,
     size_fmt,
-    get_fileinfo_list,
-    to_json,
-    from_json,
 )
 from dacite import MissingValueError
 
@@ -85,7 +82,8 @@ class TestMetadata:
         assert metadata.total_size is None
         assert metadata.duplicates is None
         assert metadata.identification_warnings is None
-        assert metadata.empty_subdirectories is None
+        assert metadata.empty_subdirs is None
+        assert metadata.several_files is None
 
     def test_post_init(self):
         cur_time = datetime.now()
@@ -118,6 +116,14 @@ class TestFileData:
             == file_data.digiarch_dir / ".data" / "data.json"
         )
 
+    def test_functions(self, temp_dir):
+        cur_time = datetime.now()
+        metadata = Metadata(last_run=cur_time, processed_dir=str(temp_dir))
+        file_data = FileData(metadata)
+        file_data.to_json()
+        new_file_data = FileData.from_json(file_data.json_file)
+        assert new_file_data == file_data
+
 
 class TestJSONEncode:
     def test_with_valid_input(self):
@@ -130,12 +136,9 @@ class TestJSONEncode:
 
 
 class TestAuxFunctions:
-    def test_get_data(self, temp_dir):
-        cur_time = datetime.now()
-        metadata = Metadata(last_run=cur_time, processed_dir=str(temp_dir))
-        file_data = FileData(metadata)
-        file_data.to_json()
-        new_file_data = from_json(file_data.json_file)
-        print(file_data)
-        print(new_file_data)
-        assert new_file_data == file_data
+    def test_size_fmt(self):
+        assert size_fmt(2 ** 0) == "1.0 B"
+        assert size_fmt(2 ** 10) == "1.0 KiB"
+        assert size_fmt(2 ** 20) == "1.0 MiB"
+        assert size_fmt(2 ** 30) == "1.0 GiB"
+        assert size_fmt(2 ** 40) == "1.0 TiB"
