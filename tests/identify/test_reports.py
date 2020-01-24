@@ -1,11 +1,11 @@
-import os
-from typing import List
-from digiarch.identify.reports import report_results
-from digiarch.data import FileInfo, to_json
+# import os
+# from typing import List
+# from digiarch.identify.reports import report_results
+# from digiarch.data import FileInfo, to_json
 
 
-def write_test_file(temp_dir, data_file, dir_info):
-    to_json(dir_info, data_file)
+# def write_test_file(temp_dir, data_file, dir_info):
+#     to_json(dir_info, data_file)
 
 
 # class TestReportResults:
