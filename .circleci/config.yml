@@ -66,6 +66,14 @@ jobs:
       - image: circleci/python:3.7
     steps:
       - init
+      # Install sf which is used for identification
+      - run:
+          name: "Install sf (siegfried)"
+          command: |
+            wget -qO - https://bintray.com/user/downloadSubjectPublicKey?username=bintray | sudo apt-key add -
+            echo "deb http://dl.bintray.com/siegfried/debian wheezy main" | sudo tee -a /etc/apt/sources.list
+            sudo apt update && sudo apt install siegfried
+            
       # Run tests, generate coverage report
       - run:
           name: Test and generate report using pytest with coverage
