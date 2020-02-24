@@ -87,8 +87,7 @@ class TestMetadata:
 
     def test_post_init(self):
         cur_time = datetime.now()
-        cur_time_str = cur_time.isoformat()
-        metadata = Metadata(last_run=cur_time_str, processed_dir="/")
+        metadata = Metadata(last_run=cur_time, processed_dir=Path("/"))
         assert metadata.last_run == cur_time
         assert metadata.processed_dir == Path("/")
 
@@ -106,7 +105,7 @@ class TestFileData:
 
     def test_post_init(self, temp_dir):
         cur_time = datetime.now()
-        metadata = Metadata(last_run=cur_time, processed_dir=str(temp_dir))
+        metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
         file_data = FileData(metadata)
         assert file_data.digiarch_dir == Path(
             metadata.processed_dir, "_digiarch"
@@ -118,7 +117,7 @@ class TestFileData:
 
     def test_functions(self, temp_dir):
         cur_time = datetime.now()
-        metadata = Metadata(last_run=cur_time, processed_dir=str(temp_dir))
+        metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
         file_data = FileData(metadata)
         file_data.to_json()
         new_file_data = FileData.from_json(file_data.json_file)
