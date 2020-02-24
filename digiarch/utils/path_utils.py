@@ -36,7 +36,6 @@ def explore_dir(path: Path) -> FileData:
     dir_info: List[FileInfo] = []
     empty_subs: List[Path] = []
     several_files: List[Path] = []
-    ext: str
     total_size: int = 0
     file_count: int = 0
     metadata = Metadata(last_run=datetime.now(), processed_dir=path)
