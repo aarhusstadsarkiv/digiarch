@@ -1,4 +1,4 @@
-"""Module level docstring.
+"""This module implements checksum generation and duplicate detection.
 
 """
 
@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List, Set, Dict, ItemsView, Any
 import tqdm
 import xxhash
-from digiarch.data import FileInfo, dump_file
+from digiarch.data import FileInfo, to_json
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -96,7 +96,7 @@ def check_collisions(checksums: List[str]) -> Set[str]:
     return collisions
 
 
-def check_duplicates(files: List[FileInfo], save_path: str) -> None:
+def check_duplicates(files: List[FileInfo], save_path: Path) -> None:
     """Generates a file with checksum collisions, indicating that duplicates
     are present.
 
@@ -104,7 +104,7 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
     ----------
     files : List[FileInfo]
         Files for which duplicates should be checked.
-    save_path : str
+    save_path : Path
         Path to which the checksum collision information should be saved.
     """
 
@@ -140,4 +140,4 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
         file_collisions.update({checksum: hits})
 
     dups_file = Path(save_path).joinpath("duplicate_files.json")
-    dump_file(file_collisions, dups_file)
+    to_json(file_collisions, dups_file)

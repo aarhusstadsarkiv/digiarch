@@ -44,18 +44,8 @@ class TestFileChecksum:
 
 class TestGenerateChecksums:
     def test_with_files(self, test_file_0, test_file_1):
-        f_info_0 = FileInfo(
-            name=test_file_0.name,
-            ext=test_file_0.suffix,
-            path=str(test_file_0),
-            checksum="test0",
-        )
-        f_info_1 = FileInfo(
-            name=test_file_1.name,
-            ext=test_file_1.suffix,
-            path=str(test_file_1),
-            checksum="test1",
-        )
+        f_info_0 = FileInfo(path=test_file_0, checksum="test0")
+        f_info_1 = FileInfo(path=test_file_1, checksum="test1")
         files = [f_info_0, f_info_1]
         result = generate_checksums(files)
         for file in result:
@@ -87,18 +77,8 @@ class TestCheckCollisions:
 
 class TestCheckDuplicates:
     def test_with_dups(self, test_file_0, temp_dir):
-        f_info_0 = FileInfo(
-            name=test_file_0.name,
-            ext=test_file_0.suffix,
-            path=str(test_file_0),
-            checksum="test0",
-        )
-        f_info_1 = FileInfo(
-            name=test_file_0.name,
-            ext=test_file_0.suffix,
-            path=str(test_file_0),
-            checksum="test1",
-        )
+        f_info_0 = FileInfo(path=test_file_0, checksum="test0")
+        f_info_1 = FileInfo(path=test_file_0, checksum="test1")
         files = [f_info_0, f_info_1]
         updated_files = generate_checksums(files)
         check_duplicates(updated_files, temp_dir)
@@ -109,18 +89,8 @@ class TestCheckDuplicates:
         assert len(result[file_checksum(test_file_0, secure=True)]) == 2
 
     def test_without_dups(self, test_file_0, test_file_1, temp_dir):
-        f_info_0 = FileInfo(
-            name=test_file_0.name,
-            ext=test_file_0.suffix,
-            path=str(test_file_0),
-            checksum="test0",
-        )
-        f_info_1 = FileInfo(
-            name=test_file_1.name,
-            ext=test_file_1.suffix,
-            path=str(test_file_1),
-            checksum="test1",
-        )
+        f_info_0 = FileInfo(path=test_file_0, checksum="test0")
+        f_info_1 = FileInfo(path=test_file_1, checksum="test1")
         files = [f_info_0, f_info_1]
         updated_files = generate_checksums(files)
         check_duplicates(updated_files, temp_dir)

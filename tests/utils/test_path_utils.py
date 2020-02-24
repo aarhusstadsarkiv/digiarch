@@ -1,60 +1,63 @@
+import pytest
 from pathlib import Path
+from datetime import datetime
 from digiarch.utils.path_utils import explore_dir
-from digiarch.data import FileInfo, get_fileinfo_list
+from digiarch.data import FileInfo, FileData, Metadata
+from digiarch.utils.exceptions import FileCollectionError
+
+
+@pytest.fixture
+def file_data(temp_dir):
+    cur_time = datetime.now()
+    return FileData(Metadata(cur_time, Path(temp_dir)))
 
 
 class TestExploreDir:
     """Class for testing the `explore_dir` function."""
 
-    def test_in_empty_dir(self, temp_dir, main_dir, data_file):
+    def test_in_empty_dir(self, temp_dir, file_data):
         """`explore_dir` is invoked in an empty directory.
         The data file should be empty."""
-        explore_dir(Path(temp_dir), Path(main_dir), data_file)
-        result = get_fileinfo_list(data_file)
-        assert len(result) == 0
+        with pytest.raises(FileCollectionError):
+            explore_dir(temp_dir)
+        assert not file_data.digiarch_dir.exists()
 
-    def test_with_files(self, temp_dir, main_dir, data_file):
+    def test_with_files(self, temp_dir):
         """explore_dir is invoked in a non-empty directory,
         with files and non-empty sub-folders.
         The resulting JSON file should be populated,
         and we should be able to reconstruct file infos."""
 
         # Populate temp_dir and define file info
-        file1 = temp_dir.join("test.txt")
-        file2 = temp_dir.mkdir("testdir").join("test.txt")
-        file1.write("test")
-        file2.write("test")
+        file1 = temp_dir / "test.txt"
+        file2 = temp_dir / "testdir" / "test.txt"
+        file1.touch()
+        file2.parent.mkdir()
+        file2.touch()
+        file1.write_text("test")
+        file2.write_text("test")
 
-        file1_info = FileInfo(
-            name=Path(file1).name,
-            ext=Path(file1).suffix.lower(),
-            path=Path(file1.dirname, file1.basename),
-        )
+        file1_info = FileInfo(path=file1)
 
-        file2_info = FileInfo(
-            name=Path(file2).name,
-            ext=Path(file2).suffix.lower(),
-            path=Path(file2.dirname, file2.basename),
-        )
+        file2_info = FileInfo(path=file2)
 
-        explore_dir(Path(temp_dir), Path(main_dir), data_file)
-        result = get_fileinfo_list(data_file)
+        file_data = explore_dir(temp_dir)
 
-        assert len(result) == 2
-        assert file1_info in result
-        assert file2_info in result
+        assert len(file_data.files) == 2
+        assert file1_info in file_data.files
+        assert file2_info in file_data.files
 
-    def test_with_empty_dirs(self, temp_dir, main_dir, data_file):
-        """`explore_dir` is invoked in a non-empty directory,
-        with no files and empty sub-folders.
-        The returned list of FileInfo objects should have len = 1
-        and the object should have is_empty_sub=True with a
-        populated path field"""
+    def test_with_empty_dirs(self, temp_dir):
+        """Invoke in non-empty directory containing no files but one empty
+        subdirectory. The files field of the returned FileData object should be
+        empty, and the path to the empty subdirectory should exist in the
+        Metadata field named empty_subdirectories."""
 
         # Populate temp_dir with an empty folder
-        testdir2 = temp_dir.mkdir("testdir2")
+        testdir2 = temp_dir / "testdir2"
+        testdir2.mkdir()
 
-        result = explore_dir(Path(temp_dir), Path(main_dir), data_file)
+        file_data = explore_dir(temp_dir)
 
-        assert len(result) == 1
-        assert testdir2 in result
+        assert len(file_data.files) == 0
+        assert testdir2 in file_data.metadata.empty_subdirs

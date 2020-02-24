@@ -5,32 +5,20 @@
 # Imports
 # -----------------------------------------------------------------------------
 import os
+import shutil
+from datetime import datetime
 from pathlib import Path
 from tqdm import tqdm
-from digiarch.data import FileInfo, dump_file
-from typing import List, Optional
+from digiarch.data import FileInfo, Metadata, FileData, size_fmt
+from digiarch.utils.exceptions import FileCollectionError
+from typing import List
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def create_folders(*folder_paths: Path) -> None:
-    """Creates given folders, and passes on FileExistsException.
-
-    Parameters
-    ----------
-    *folder_paths : Path
-        Paths of folders to create.
-
-    """
-    for folder in folder_paths:
-        folder.mkdir(parents=True, exist_ok=True)
-
-
-def explore_dir(
-    path: Path, main_dir: Path, save_file: Path
-) -> Optional[List[Path]]:
+def explore_dir(path: Path) -> FileData:
     """Finds files and empty directories in the given path,
     and collects them into a list of FileInfo objects.
 
@@ -47,37 +35,50 @@ def explore_dir(
     # Type declarations
     dir_info: List[FileInfo] = []
     empty_subs: List[Path] = []
-    info: FileInfo
-    ext: str
-    main_dir_name: str = main_dir.resolve().name
-    path_contents: List[Path] = [
-        child for child in path.iterdir() if child.name != main_dir_name
-    ]
+    several_files: List[Path] = []
+    total_size: int = 0
+    file_count: int = 0
+    metadata = Metadata(last_run=datetime.now(), processed_dir=path)
+    file_data = FileData(metadata)
+    main_dir_name: str = file_data.digiarch_dir.name
 
-    if not path_contents:
-        # Path is empty, write empty file and return
-        dump_file(data="", file=save_file)
-        return None
+    if not [child for child in path.iterdir() if child.name != main_dir_name]:
+        # Path is empty, remove main directory and raise
+        shutil.rmtree(file_data.digiarch_dir)
+        raise FileCollectionError(f"{path} is empty! No files collected.")
 
     # Traverse given path, collect results.
     # tqdm is used to show progress of os.walk
     for root, dirs, files in tqdm(
         os.walk(path, topdown=True), unit=" folders", desc="Processed"
     ):
-        # Don't walk the processing directory
         if main_dir_name in dirs:
+            # Don't walk the _digiarch directory
             dirs.remove(main_dir_name)
         if not dirs and not files:
             # We found an empty subdirectory.
             empty_subs.append(Path(root))
+        if len(files) > 1:
+            several_files.append(Path(root))
         for file in files:
-            cur_file = Path(file)
-            ext = cur_file.suffix.lower()
-            path = Path(root, cur_file)
-            info = FileInfo(name=cur_file.name, ext=ext, path=path)
-            dir_info.append(info)
+            cur_path = Path(root, file)
+            dir_info.append(FileInfo(path=cur_path))
+            total_size += cur_path.stat().st_size
+            file_count += 1
 
-    # Save results
-    dump_file(data=dir_info, file=save_file)
+    # Update metadata
+    metadata.file_count = file_count
+    metadata.total_size = size_fmt(total_size)
 
-    return empty_subs
+    if empty_subs:
+        metadata.empty_subdirs = empty_subs
+    if several_files:
+        metadata.several_files = several_files
+
+    # Update file data
+    file_data.files = dir_info
+
+    # Save file data
+    file_data.to_json()
+
+    return file_data

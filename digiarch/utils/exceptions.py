@@ -14,3 +14,8 @@ class DigiarchError(Exception):
 class IdentificationError(DigiarchError):
     """Implements an error to raise if identification or related
     functionality fails."""
+
+
+class FileCollectionError(DigiarchError):
+    """Implements an error to raise if File discovery/collection or related
+    functionality fails."""

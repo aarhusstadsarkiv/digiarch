@@ -8,10 +8,12 @@ The CLI implements several commands with suboptions.
 # Imports
 # -----------------------------------------------------------------------------
 import click
+from datetime import datetime
 from pathlib import Path
-from digiarch.data import get_fileinfo_list, dump_file
+from digiarch.data import FileData, Metadata
 from digiarch.utils import path_utils, group_files
 from digiarch.identify import checksums, reports, identify_files
+from digiarch.utils.exceptions import FileCollectionError
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -30,71 +32,77 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
     """Used for indexing, reporting on, and identifying files
     found in PATH.
     """
-    # Create directories
-    main_dir: Path = Path(path, "_digiarch")
-    data_dir: Path = Path(main_dir, ".data")
-    data_file: Path = Path(data_dir, "data.json")
-    path_utils.create_folders(main_dir, data_dir)
 
-    # If we haven't indexed this directory before,
-    # or reindex is passed, traverse directory and dump data file.
-    # Otherwise, tell the user which file we're processing from.
-    if reindex or not data_file.is_file():
+    # Initialise FileData
+    metadata = Metadata(last_run=datetime.now(), processed_dir=Path(path))
+    init_file_data = FileData(metadata)
+
+    # Collect file info and update file_data
+    if reindex or init_file_data.json_file.stat().st_size == 0:
         click.secho("Collecting file information...", bold=True)
-        empty_subs = path_utils.explore_dir(Path(path), main_dir, data_file)
-        if empty_subs:
-            for sub in empty_subs:
-                click.secho(f"Warning! {sub} is empty!", bold=True, fg="red")
+        try:
+            file_data = path_utils.explore_dir(Path(path))
+        except FileCollectionError as error:
+            raise click.ClickException(str(error))
+        else:
+            if file_data.metadata.empty_subdirs:
+                click.secho(
+                    "Warning! Empty subdirectories detected!",
+                    bold=True,
+                    fg="red",
+                )
+            if file_data.metadata.several_files:
+                click.secho(
+                    "Warning! Some directories have several files!",
+                    bold=True,
+                    fg="red",
+                )
         click.secho("Done!", bold=True, fg="green")
     else:
+        file_data = FileData.from_json(init_file_data.json_file)
         click.echo(f"Processing data from ", nl=False)
-        click.secho(f"{data_file}", bold=True)
+        click.secho(f"{file_data.json_file}", bold=True)
 
-    ctx.obj = {"main_dir": main_dir, "data_file": data_file}
+    ctx.obj = file_data
 
 
 @cli.command()
 @click.pass_obj
-def report(path_info: dict) -> None:
+def report(file_data: FileData) -> None:
     """Generate reports on files and directory structure."""
-    # TODO: --path should be optional, default to directory where
-    # the CLI is called.
-    # TODO: Check if path is empty, exit gracefully if so.
-    reports.report_results(path_info["data_file"], path_info["main_dir"])
+    reports.report_results(file_data.files, file_data.digiarch_dir)
+    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
 @click.pass_obj
-def group(path_info: dict) -> None:
+def group(file_data: FileData) -> None:
     """Generate lists of files grouped per file extension."""
-    group_files.grouping(path_info["data_file"], path_info["main_dir"])
+    group_files.grouping(file_data.files, file_data.digiarch_dir)
     click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
 @click.pass_obj
-def checksum(path_info: dict) -> None:
-    """Generate file checksums using BLAKE2."""
-    files = get_fileinfo_list(path_info["data_file"])
-    updated_files = checksums.generate_checksums(files)
-    dump_file(updated_files, path_info["data_file"])
+def checksum(file_data: FileData) -> None:
+    """Generate file checksums using xxHash."""
+    file_data.files = checksums.generate_checksums(file_data.files)
+    file_data.to_json()
     click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
 @click.pass_obj
-def dups(path_info: dict) -> None:
+def dups(file_data: FileData) -> None:
     """Check for file duplicates."""
-    files = get_fileinfo_list(path_info["data_file"])
-    checksums.check_duplicates(files, path_info["main_dir"])
+    checksums.check_duplicates(file_data.files, file_data.digiarch_dir)
     click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
 @click.pass_obj
-def identify(path_info: dict) -> None:
+def identify(file_data: FileData) -> None:
     """Identify files using siegfried."""
-    files = get_fileinfo_list(path_info["data_file"])
-    updated_files = identify_files.identify(files)
-    dump_file(updated_files, path_info["data_file"])
+    file_data.files = identify_files.identify(file_data.files)
+    file_data.to_json()
     click.secho("Done!", bold=True, fg="green")
