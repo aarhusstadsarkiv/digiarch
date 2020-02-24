@@ -7,7 +7,7 @@ license = "GPL-3.0"
 readme = "docs/README.md"
 homepage = "https://stadsarkiv.aarhus.dk/"
 repository = "https://github.com/aarhusstadsarkiv/digiarch"
-documentation = "https://digital-archive.readthedocs.io/en/latest/"
+documentation = "https://digiarch.readthedocs.io/en/latest/"
 keywords = ["archiving", "preservation", "digiarch"]
 
 [tool.poetry.dependencies]
