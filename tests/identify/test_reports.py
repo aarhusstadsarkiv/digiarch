@@ -18,7 +18,8 @@
 #     dir_info_file = [file_info]
 
 #     def test_no_files_no_folders(self, temp_dir, data_file):
-#         """`report_results` is invoked with an empty list of FileInfo objects.
+#         """`report_results` is invoked with an
+#         empty list of FileInfo objects.
 #         No files expected."""
 
 #         write_test_file(temp_dir, data_file, self.no_dir_info)
