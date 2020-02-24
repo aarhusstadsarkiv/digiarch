@@ -108,7 +108,7 @@ class Metadata(DataBase):
     total_size: Optional[str] = None
     duplicates: Optional[int] = None
     identification_warnings: Optional[int] = None
-    empty_subdirectories: Optional[List[Path]] = None
+    empty_subdirs: Optional[List[Path]] = None
     several_files: Optional[List[Path]] = None
 
     def __post_init__(self) -> None:
@@ -155,6 +155,11 @@ class FileData(DataBase):
                 self, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False
             )
 
+    @classmethod
+    def from_json(cls, data_file) -> Any:
+        with data_file.open("r", encoding="utf-8") as file:
+            return cls.from_dict(json.load(file))
+
 
 # Utility
 # --------------------
@@ -200,6 +205,18 @@ class DataJSONEncoder(json.JSONEncoder):
 
 
 def size_fmt(size: float) -> str:
+    """Formats a file size in binary multiples to a human readable string.
+
+    Parameters
+    ----------
+    size : float
+        The file size in bytes.
+
+    Returns
+    -------
+    str
+        Human readable string representing size in binary multiples.
+    """
     for unit in ["B", "KiB", "MiB", "GiB", "TiB"]:
         if size < 1024.0:
             break
@@ -224,18 +241,3 @@ def to_json(data: object, file: Path) -> None:
 
     with file.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
-
-
-def from_json(data_file: Path) -> Any:
-    with data_file.open("r", encoding="utf-8") as file:
-        return FileData.from_dict(json.load(file))
-
-
-def get_fileinfo_list(data_file: Path) -> List[FileInfo]:
-    # Read file info from data file
-    with data_file.open("r", encoding="utf-8") as file:
-        data: List[dict] = json.load(file).get("files", [{}])
-
-    # Load file info into list
-    info: List[FileInfo] = [FileInfo.from_dict(d) for d in data]
-    return info

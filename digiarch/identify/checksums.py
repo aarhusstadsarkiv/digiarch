@@ -1,4 +1,4 @@
-"""Module level docstring.
+"""This module implements checksum generation and duplicate detection.
 
 """
 

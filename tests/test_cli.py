@@ -1,3 +1,4 @@
+import json
 import pytest
 from pathlib import Path
 from click.testing import CliRunner
@@ -29,22 +30,36 @@ class TestCli:
             result = cli_run.invoke(cli, args)
             assert result.exit_code != 0
 
-    def test_main_cli_echos(self, cli_run, temp_dir, data_file):
+    def test_main_cli_echos(self, cli_run, temp_dir, file_data):
         """The cli is run given no data file, and so it should collect file
-        file information. Afterwards, it is called with an existing data file,
+        information. Afterwards, it is called with an existing data file,
         and so it should echo which file it's working with."""
         with cli_run.isolated_filesystem():
             args = [str(temp_dir)]
             # Create an empty directory
-            temp_dir.mkdir("empty_dir")
+            empty_dir = temp_dir / "empty"
+            empty_dir.mkdir()
             result = cli_run.invoke(cli, args)
             assert "Warning! Empty subdirectories detected!" in result.output
             assert "Collecting file information" in result.output
             # Create a data file
-            with open(data_file, "w") as file:
-                file.write("test")
+            new_file = file_data
+            new_file.to_json()
             result = cli_run.invoke(cli, args)
-            assert f"Processing data from {data_file}" in result.output
+            assert (
+                f"Processing data from {new_file.json_file}" in result.output
+            )
+            # Create several files in one folder
+            args = ["--reindex", str(temp_dir)]
+            file_1 = temp_dir / "file1.txt"
+            file_2 = temp_dir / "file2.txt"
+            file_1.touch()
+            file_2.touch()
+            result = cli_run.invoke(cli, args)
+            assert (
+                "Warning! Some directories have several files!"
+                in result.output
+            )
 
     def test_reindex_option(self, cli_run, temp_dir, data_file):
         """The cli is run with a data file present, but the --reindex command
@@ -52,8 +67,7 @@ class TestCli:
         with cli_run.isolated_filesystem():
             args = ["--reindex", str(temp_dir)]
             # Create a data file
-            with open(data_file, "w") as file:
-                file.write("test")
+            json.dump({"test": "test"}, data_file.open("w"))
             result = cli_run.invoke(cli, args)
             assert "Collecting file information" in result.output
 
@@ -87,3 +101,9 @@ class TestCli:
             args = [str(temp_dir), "dups"]
             result = cli_run.invoke(cli, args)
             assert result.exit_code == 0
+
+    def test_identify_command(self, cli_run, temp_dir):
+        Path(temp_dir, "test.txt").touch()
+        args = [str(temp_dir), "identify"]
+        result = cli_run.invoke(cli, args)
+        assert result.exit_code == 0

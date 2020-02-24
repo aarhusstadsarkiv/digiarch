@@ -7,14 +7,14 @@
 # -----------------------------------------------------------------------------
 from pathlib import Path
 from typing import List, Set
-from digiarch.data import get_fileinfo_list, FileInfo, IGNORED_EXTS
+from digiarch.data import FileInfo, IGNORED_EXTS
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def grouping(data_file: Path, save_path: Path) -> None:
+def grouping(files: List[FileInfo], save_path: Path) -> None:
     """Groups files per file extension.
 
     Parameters
@@ -26,7 +26,6 @@ def grouping(data_file: Path, save_path: Path) -> None:
     """
 
     # Initialise variables
-    files: List[FileInfo] = get_fileinfo_list(data_file)
     ignored_file: Path = Path(save_path, "ignored_files.txt")
     exts: Set[str] = {file.ext for file in files}
 
