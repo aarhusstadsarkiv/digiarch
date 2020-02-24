@@ -96,7 +96,7 @@ def check_collisions(checksums: List[str]) -> Set[str]:
     return collisions
 
 
-def check_duplicates(files: List[FileInfo], save_path: str) -> None:
+def check_duplicates(files: List[FileInfo], save_path: Path) -> None:
     """Generates a file with checksum collisions, indicating that duplicates
     are present.
 
@@ -104,7 +104,7 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
     ----------
     files : List[FileInfo]
         Files for which duplicates should be checked.
-    save_path : str
+    save_path : Path
         Path to which the checksum collision information should be saved.
     """
 

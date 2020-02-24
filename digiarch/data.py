@@ -46,9 +46,9 @@ class DataBase:
     def from_dict(cls, data: dict) -> Any:
         # For some reason the post init yields str for FileData
         if isinstance(data.get("digiarch_dir"), str):
-            data.update({"digiarch_dir": Path(data.get("digiarch_dir"))})
+            data.update({"digiarch_dir": Path(data.get("digiarch_dir", ""))})
         if isinstance(data.get("json_file"), str):
-            data.update({"json_file": Path(data.get("json_file"))})
+            data.update({"json_file": Path(data.get("json_file", ""))})
         return dacite.from_dict(
             data_class=cls, data=data, config=dacite.Config(check_types=False)
         )
@@ -156,7 +156,7 @@ class FileData(DataBase):
             )
 
     @classmethod
-    def from_json(cls, data_file) -> Any:
+    def from_json(cls, data_file: Path) -> Any:
         with data_file.open("r", encoding="utf-8") as file:
             return cls.from_dict(json.load(file))
 

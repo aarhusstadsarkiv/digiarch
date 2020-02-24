@@ -32,13 +32,13 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
     file_exts_count: pd.DataFrame
 
     # Collect file information
-    files: List[dict] = [f.to_dict() for f in files]
+    file_dicts: List[dict] = [f.to_dict() for f in files]
 
     # We might get an empty directory
-    if files:
+    if file_dicts:
         # Generate reports
         report_file = Path(save_path, "file_exts.csv")
-        files_df = pd.DataFrame(data=files)
+        files_df = pd.DataFrame(data=file_dicts)
         # Count extensions
         file_exts_count = (
             files_df.groupby("ext").size().rename("count").to_frame()

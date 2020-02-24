@@ -34,7 +34,7 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
     """
 
     # Initialise FileData
-    metadata = Metadata(last_run=datetime.now(), processed_dir=path)
+    metadata = Metadata(last_run=datetime.now(), processed_dir=Path(path))
     init_file_data = FileData(metadata)
 
     # Collect file info and update file_data
