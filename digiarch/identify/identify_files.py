@@ -1,4 +1,5 @@
-"""Module level docstring.
+"""Identify files using
+`siegfried <https://github.com/richardlehane/siegfried>`_
 
 """
 
