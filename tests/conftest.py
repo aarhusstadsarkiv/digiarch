@@ -7,6 +7,7 @@
 # -----------------------------------------------------------------------------
 from datetime import datetime
 import pytest
+import inspect
 from pathlib import Path
 from digiarch.data import FileData, Metadata
 
@@ -40,3 +41,8 @@ def data_file(main_dir):
 def file_data(temp_dir):
     cur_time = datetime.now()
     return FileData(Metadata(cur_time, Path(temp_dir)))
+
+
+@pytest.fixture
+def test_data_dir():
+    return Path(inspect.getfile(FileData)).parent.parent / "tests" / "_data"
