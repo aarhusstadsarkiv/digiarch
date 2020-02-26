@@ -1,7 +1,7 @@
 import pytest
 from pathlib import Path
 from digiarch.utils.group_files import grouping
-from digiarch.data import FileInfo
+from digiarch.internals import FileInfo
 
 
 @pytest.fixture

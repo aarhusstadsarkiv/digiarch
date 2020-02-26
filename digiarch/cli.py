@@ -10,10 +10,10 @@ The CLI implements several commands with suboptions.
 import click
 from datetime import datetime
 from pathlib import Path
-from digiarch.data import FileData, Metadata
+from digiarch.internals import FileData, Metadata
 from digiarch.utils import path_utils, group_files
 from digiarch.identify import checksums, reports, identify_files
-from digiarch.utils.exceptions import FileCollectionError
+from digiarch.exceptions import FileCollectionError
 
 # -----------------------------------------------------------------------------
 # Function Definitions

@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 import pandas as pd
 from pathlib import Path
-from digiarch.data import FileInfo
+from digiarch.internals import FileInfo
 from typing import List
 
 # -----------------------------------------------------------------------------

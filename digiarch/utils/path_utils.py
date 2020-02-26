@@ -9,8 +9,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from tqdm import tqdm
-from digiarch.data import FileInfo, Metadata, FileData, size_fmt
-from digiarch.utils.exceptions import FileCollectionError
+from digiarch.internals import FileInfo, Metadata, FileData, size_fmt
+from digiarch.exceptions import FileCollectionError
 from typing import List
 
 # -----------------------------------------------------------------------------
