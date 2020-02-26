@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 import pandas as pd
 from pathlib import Path
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Any
 from digiarch.internals import FileInfo, to_json
 
 # -----------------------------------------------------------------------------
