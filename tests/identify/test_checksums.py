@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 import pytest
-from digiarch.data import FileInfo
+from digiarch.internals import FileInfo
 from digiarch.identify.checksums import (
     file_checksum,
     generate_checksums,

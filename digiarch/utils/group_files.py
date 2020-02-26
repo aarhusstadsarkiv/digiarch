@@ -7,7 +7,7 @@
 # -----------------------------------------------------------------------------
 from pathlib import Path
 from typing import List, Set
-from digiarch.data import FileInfo, IGNORED_EXTS
+from digiarch.internals import FileInfo, IGNORED_EXTS
 
 # -----------------------------------------------------------------------------
 # Function Definitions

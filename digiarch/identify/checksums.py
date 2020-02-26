@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List, Set, Dict, ItemsView, Any
 import tqdm
 import xxhash
-from digiarch.data import FileInfo, to_json
+from digiarch.internals import FileInfo, to_json
 
 # -----------------------------------------------------------------------------
 # Function Definitions

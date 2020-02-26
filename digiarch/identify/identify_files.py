@@ -9,8 +9,8 @@
 import subprocess
 from subprocess import CalledProcessError
 from typing import List
-from digiarch.data import FileInfo, Identification
-from digiarch.utils.exceptions import IdentificationError
+from digiarch.internals import FileInfo, Identification
+from digiarch.exceptions import IdentificationError
 import yaml
 import tqdm
 
