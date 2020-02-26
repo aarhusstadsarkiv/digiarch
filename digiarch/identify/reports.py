@@ -5,9 +5,9 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-import os
 import pandas as pd
-from digiarch.data import get_fileinfo_list
+from pathlib import Path
+from digiarch.data import FileInfo
 from typing import List
 
 # -----------------------------------------------------------------------------
@@ -15,37 +15,30 @@ from typing import List
 # -----------------------------------------------------------------------------
 
 
-def report_results(data_file: str, save_path: str) -> None:
+def report_results(files: List[FileInfo], save_path: Path) -> None:
     """Generates reports of explore_dir() results.
 
     Parameters
     ----------
-    data_file: str
-        Data file containing information from which to generate reports.
+    files: List[FileInfo]
+        The files to report on.
     save_path: str
         The path in which to save the reports.
 
     """
     # Type declarations
-    report_file: str = ""
-    # empty_subs_file: str = ""
-    files: List[dict] = []
-    # empty_subs: List[str] = []
+    report_file: Path
     files_df: pd.DataFrame
     file_exts_count: pd.DataFrame
 
-    # Get file information from data file
-    info = get_fileinfo_list(data_file)
-
     # Collect file information
-    files = [f.to_dict() for f in info]
-    # empty_subs = [f.path for f in info if f.is_empty_sub is True]
+    file_dicts: List[dict] = [f.to_dict() for f in files]
 
     # We might get an empty directory
-    if files:
+    if file_dicts:
         # Generate reports
-        report_file = os.path.join(save_path, "file_exts.csv")
-        files_df = pd.DataFrame(data=files)
+        report_file = Path(save_path, "file_exts.csv")
+        files_df = pd.DataFrame(data=file_dicts)
         # Count extensions
         file_exts_count = (
             files_df.groupby("ext").size().rename("count").to_frame()

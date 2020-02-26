@@ -4,7 +4,7 @@ version = "0.3.0"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
-readme = "docs/README.md"
+readme = "README.md"
 homepage = "https://stadsarkiv.aarhus.dk/"
 repository = "https://github.com/aarhusstadsarkiv/digiarch"
 documentation = "https://digiarch.readthedocs.io/en/latest/"
@@ -17,12 +17,16 @@ click = "^7.0"
 tqdm = "^4.36"
 dacite = "^1.0"
 xxhash = "^1.4"
+pyyaml = "^5.2"
+python-dateutil = "^2.8.1"
+
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 pytest-cov = "^2.8"
 mypy = "^0.730.0"
-prospector = "^1.1"
-black = {version = "^18.3-alpha.0", allows-prereleases = true}
+prospector = "^1.2.0"
+black = "^19.10b0"
+
 [tool.poetry.scripts]
 digiarch = "digiarch.cli:cli"
 

@@ -1,4 +1,4 @@
-"""Module level docstring.
+"""This module implements checksum generation and duplicate detection.
 
 """
 
@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List, Set, Dict, ItemsView, Any
 import tqdm
 import xxhash
-from digiarch.data import FileInfo, dump_file
+from digiarch.data import FileInfo, to_json
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -96,7 +96,7 @@ def check_collisions(checksums: List[str]) -> Set[str]:
     return collisions
 
 
-def check_duplicates(files: List[FileInfo], save_path: str) -> None:
+def check_duplicates(files: List[FileInfo], save_path: Path) -> None:
     """Generates a file with checksum collisions, indicating that duplicates
     are present.
 
@@ -104,14 +104,16 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
     ----------
     files : List[FileInfo]
         Files for which duplicates should be checked.
-    save_path : str
+    save_path : Path
         Path to which the checksum collision information should be saved.
     """
 
     # Initialise variables
     # files: List[FileInfo] = get_fileinfo_list(data_file)
     possible_dups: List[FileInfo] = []
-    checksums: List[str] = [file.checksum for file in files]
+    checksums: List[str] = [
+        file.checksum for file in files if file.checksum is not None
+    ]
     collisions: Set[str] = check_collisions(checksums)
     file_collisions: Dict[str, str] = dict()
     # checksum_counts: Counter = Counter(checksums).items()
@@ -127,7 +129,7 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
             possible_dups.append(file)
 
     secure_collisions: Set[str] = check_collisions(
-        [file.checksum for file in possible_dups]
+        [file.checksum for file in possible_dups if file.checksum is not None]
     )
     for checksum in tqdm.tqdm(secure_collisions, desc="Finding duplicates"):
         hits = [
@@ -138,4 +140,4 @@ def check_duplicates(files: List[FileInfo], save_path: str) -> None:
         file_collisions.update({checksum: hits})
 
     dups_file = Path(save_path).joinpath("duplicate_files.json")
-    dump_file(file_collisions, str(dups_file))
+    to_json(file_collisions, dups_file)

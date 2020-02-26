@@ -1,6 +1,14 @@
 Identify
 =================================
 
+Generate Checksums & Check for duplicates
+------------------------------------------------
+
+.. automodule:: digiarch.identify.checksums
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Identify Files
 ------------------------------------------------
 
@@ -10,7 +18,7 @@ Identify Files
    :show-inheritance:
 
 
-Generate reports
+Generate Reports
 ----------------------------------------
 
 .. automodule:: digiarch.identify.reports
