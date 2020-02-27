@@ -9,7 +9,6 @@
 import subprocess
 from multiprocessing import Pool
 from subprocess import CalledProcessError
-from operator import attrgetter
 from typing import List
 from digiarch.internals import FileInfo, Identification
 from digiarch.exceptions import IdentificationError
@@ -114,6 +113,8 @@ def identify(files: List[FileInfo]) -> List[FileInfo]:
         )
 
     # Natsort list by file.path
-    updated_files = natsorted(updated_files, key=str(attrgetter("path")))
+    updated_files = natsorted(
+        updated_files, key=lambda fileinfo: str(fileinfo.path)
+    )
 
     return updated_files
