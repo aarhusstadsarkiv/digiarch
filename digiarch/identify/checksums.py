@@ -6,19 +6,21 @@
 # Imports
 # -----------------------------------------------------------------------------
 import hashlib
+from functools import partial
+from multiprocessing import Pool
 from collections import Counter
 from pathlib import Path
 from typing import List, Set, Dict, ItemsView, Any
-import tqdm
+from tqdm import tqdm
 import xxhash
-from digiarch.internals import FileInfo, to_json
+from digiarch.internals import FileInfo, to_json, natsort_path
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def file_checksum(file: Path, secure: bool = False) -> str:
+def file_checksum(file: Path, secure: bool = True) -> str:
     """Calculate the checksum of an input file using xxHash or BLAKE2,
     depending on need for cryptographical security.
 
@@ -55,6 +57,28 @@ def file_checksum(file: Path, secure: bool = False) -> str:
     return checksum
 
 
+def checksum_worker(fileinfo: FileInfo, secure: bool = True) -> FileInfo:
+    """Worker used when multiprocessing checksums of FileInfo objects.
+
+    Parameters
+    ----------
+    fileinfo : FileInfo
+        The FileInfo object that must be updated with a new checksum value.
+    secure : bool
+        Whether the hash function used to generate checksums should be
+        cryptographically secure.
+        If false (the default), xxHash is used. If true, BLAKE2 is used.
+
+    Returns
+    -------
+    FileInfo
+        The FileInfo object with an updated checksum value.
+    """
+    return fileinfo.replace(
+        checksum=file_checksum(fileinfo.path, secure=secure)
+    )
+
+
 def generate_checksums(
     files: List[FileInfo], secure: bool = False, disable_progress: bool = False
 ) -> List[FileInfo]:
@@ -72,16 +96,31 @@ def generate_checksums(
     # Assign variables
     updated_files: List[FileInfo] = []
 
-    for file in tqdm.tqdm(
-        files,
-        desc="Generating checksums",
-        unit="files",
-        disable=disable_progress,
-    ):
-        checksum = file_checksum(Path(file.path), secure)
-        updated_files.append(file.replace(checksum=checksum))
+    # Fix secure parameter in checksum_worker
+    checksum_func = partial(checksum_worker, secure=secure)
 
-    return updated_files
+    # Multiprocess checksum generation
+    with Pool() as p:
+        updated_files = list(
+            tqdm(
+                p.imap_unordered(checksum_func, files),
+                desc="Generating checksums",
+                unit=" files",
+                total=len(files),
+                disable=disable_progress,
+            )
+        )
+
+    # for file in tqdm(
+    #     files,
+    #     desc="Generating checksums",
+    #     unit="files",
+    #     disable=disable_progress,
+    # ):
+    #     checksum = file_checksum(Path(file.path), secure)
+    #     updated_files.append(file.replace(checksum=checksum))
+
+    return natsort_path(updated_files)
 
 
 def check_collisions(checksums: List[str]) -> Set[str]:
@@ -118,7 +157,7 @@ def check_duplicates(files: List[FileInfo], save_path: Path) -> None:
     file_collisions: Dict[str, str] = dict()
     # checksum_counts: Counter = Counter(checksums).items()
 
-    for checksum in tqdm.tqdm(collisions, desc="Processing collisions"):
+    for checksum in tqdm(collisions, desc="Processing collisions"):
         # Generate secure checksums for possible file collisions.
         new_files = generate_checksums(
             [file for file in files if file.checksum == checksum],
@@ -131,7 +170,7 @@ def check_duplicates(files: List[FileInfo], save_path: Path) -> None:
     secure_collisions: Set[str] = check_collisions(
         [file.checksum for file in possible_dups if file.checksum is not None]
     )
-    for checksum in tqdm.tqdm(secure_collisions, desc="Finding duplicates"):
+    for checksum in tqdm(secure_collisions, desc="Finding duplicates"):
         hits = [
             {"name": file.name, "path": file.path}
             for file in possible_dups
