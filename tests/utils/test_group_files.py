@@ -36,7 +36,7 @@ class TestGrouping:
         file_info = [file_1, file_2, file_3]
 
         grouping(file_info, main_dir)
-        contents = [str(p) for p in Path(main_dir).iterdir()]
+        contents = [str(p) for p in Path(main_dir / "grouped_files").iterdir()]
         assert any("txt_files.txt" in content for content in contents)
         assert any("pdf_files.txt" in content for content in contents)
         assert any("ignored_files.txt" in content for content in contents)

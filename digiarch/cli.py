@@ -59,9 +59,9 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
                 )
         click.secho("Done!", bold=True, fg="green")
     else:
-        file_data = FileData.from_json(init_file_data.json_file)
         click.echo(f"Processing data from ", nl=False)
-        click.secho(f"{file_data.json_file}", bold=True)
+        click.secho(f"{init_file_data.json_file}", bold=True)
+        file_data = FileData.from_json(init_file_data.json_file)
 
     ctx.obj = file_data
 
