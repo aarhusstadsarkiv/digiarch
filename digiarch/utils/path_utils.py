@@ -12,6 +12,7 @@ from tqdm import tqdm
 from digiarch.internals import FileInfo, Metadata, FileData, size_fmt
 from digiarch.exceptions import FileCollectionError
 from typing import List
+from natsort import natsorted
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -76,7 +77,9 @@ def explore_dir(path: Path) -> FileData:
         metadata.several_files = several_files
 
     # Update file data
-    file_data.files = dir_info
+    file_data.files = natsorted(
+        dir_info, key=lambda fileinfo: str(fileinfo.path)
+    )
 
     # Save file data
     file_data.to_json()
