@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "digiarch"
-version = "0.3.0"
+version = "0.4.0"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
 readme = "README.md"
 homepage = "https://stadsarkiv.aarhus.dk/"
-repository = "https://github.com/aarhusstadsarkiv/digital-archive"
-documentation = "https://digital-archive.readthedocs.io/en/latest/"
-keywords = ["archiving", "preservation", "digital-archive"]
+repository = "https://github.com/aarhusstadsarkiv/digiarch"
+documentation = "https://digiarch.readthedocs.io/en/latest/"
+keywords = ["archiving", "preservation", "digiarch"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
