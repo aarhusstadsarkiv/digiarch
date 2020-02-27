@@ -27,9 +27,7 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
 
     """
     # Type declarations
-    report_file: Path
     files_df: pd.DataFrame
-    file_exts_count: pd.DataFrame
 
     # Collect file information
     file_dicts: List[Dict[Any, Any]] = [f.to_dict() for f in files]
@@ -37,7 +35,7 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
     # We might get an empty directory
     if file_dicts:
         # Create new folder in save path
-        save_path: Path = save_path / "reports"
+        save_path = save_path / "reports"
         save_path.mkdir(exist_ok=True)
 
         # Generate data frame
@@ -53,7 +51,7 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
 
         # Find identification warnings
         file_id_warnings = files_df[files_df.identification.notnull()]
-        id_warnings: List[Dict[str, Dict[str, Any]]] = dict()
+        id_warnings: Dict[str, Dict[str, Any]] = dict()
         for _, row in file_id_warnings.iterrows():
             if row["identification"].get("warning") is not None:
                 warn_dict = {

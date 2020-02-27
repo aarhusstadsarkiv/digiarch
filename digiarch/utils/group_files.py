@@ -31,7 +31,7 @@ def grouping(files: List[FileInfo], save_path: Path) -> None:
     exts: Set[str] = {file.ext for file in files}
 
     # Create new folder in save path
-    save_path: Path = save_path / "grouped_files"
+    save_path = save_path / "grouped_files"
     save_path.mkdir(exist_ok=True)
 
     # Group files per file extension.
