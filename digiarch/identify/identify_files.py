@@ -10,11 +10,10 @@ import subprocess
 from multiprocessing import Pool
 from subprocess import CalledProcessError
 from typing import List
-from digiarch.internals import FileInfo, Identification
+from digiarch.internals import FileInfo, Identification, natsort_path
 from digiarch.exceptions import IdentificationError
 import yaml
 from tqdm import tqdm
-from natsort import natsorted
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -113,8 +112,6 @@ def identify(files: List[FileInfo]) -> List[FileInfo]:
         )
 
     # Natsort list by file.path
-    updated_files = natsorted(
-        updated_files, key=lambda fileinfo: str(fileinfo.path)
-    )
+    updated_files = natsort_path(updated_files)
 
     return updated_files
