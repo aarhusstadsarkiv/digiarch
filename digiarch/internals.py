@@ -258,4 +258,8 @@ def natsort_path(file_list: List[FileInfo]) -> List[FileInfo]:
         The list of FileInfo objects naturally sorted by their path.
     """
 
-    return natsorted(file_list, key=lambda fileinfo: str(fileinfo.path))
+    sorted_file_list: List[FileInfo] = natsorted(
+        file_list, key=lambda fileinfo: str(fileinfo.path)
+    )
+
+    return sorted_file_list
