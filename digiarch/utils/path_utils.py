@@ -9,14 +9,8 @@ import shutil
 from datetime import datetime
 from pathlib import Path
 from tqdm import tqdm
-from digiarch.internals import (
-    FileInfo,
-    Metadata,
-    FileData,
-    size_fmt,
-    natsort_path,
-)
-from digiarch.exceptions import FileCollectionError
+from digiarch.data import FileInfo, Metadata, FileData, size_fmt
+from digiarch.utils.exceptions import FileCollectionError
 from typing import List
 
 # -----------------------------------------------------------------------------
@@ -82,7 +76,7 @@ def explore_dir(path: Path) -> FileData:
         metadata.several_files = several_files
 
     # Update file data
-    file_data.files = natsort_path(dir_info)
+    file_data.files = dir_info
 
     # Save file data
     file_data.to_json()

@@ -9,7 +9,7 @@ from datetime import datetime
 import pytest
 import inspect
 from pathlib import Path
-from digiarch.internals import FileData, Metadata
+from digiarch.data import FileData, Metadata
 
 # -----------------------------------------------------------------------------
 # Function Definitions

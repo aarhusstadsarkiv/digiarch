@@ -3,9 +3,9 @@ import yaml
 from subprocess import CalledProcessError
 from pathlib import Path
 from unittest.mock import patch
-from digiarch.internals import FileInfo
+from digiarch.data import FileInfo
 from digiarch.identify.identify_files import sf_id
-from digiarch.exceptions import IdentificationError
+from digiarch.utils.exceptions import IdentificationError
 
 
 @pytest.fixture

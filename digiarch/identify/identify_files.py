@@ -7,13 +7,12 @@
 # Imports
 # -----------------------------------------------------------------------------
 import subprocess
-from multiprocessing import Pool
 from subprocess import CalledProcessError
 from typing import List
-from digiarch.internals import FileInfo, Identification, natsort_path
-from digiarch.exceptions import IdentificationError
+from digiarch.data import FileInfo, Identification
+from digiarch.utils.exceptions import IdentificationError
 import yaml
-from tqdm import tqdm
+import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -98,24 +97,10 @@ def identify(files: List[FileInfo]) -> List[FileInfo]:
 
     """
 
-    updated_files: List[FileInfo]
+    # Assign variables
+    updated_files: List[FileInfo] = []
 
-    # Multiprocess identification
-    pool = Pool()
-    try:
-        updated_files = list(
-            tqdm(
-                pool.imap_unordered(sf_id, files),
-                desc="Identifying files",
-                unit="files",
-                total=len(files),
-            )
-        )
-    finally:
-        pool.close()
-        pool.join()
-
-    # Natsort list by file.path
-    updated_files = natsort_path(updated_files)
+    for file in tqdm.tqdm(files, desc="Identifying files", unit="files"):
+        updated_files.append(sf_id(file))
 
     return updated_files

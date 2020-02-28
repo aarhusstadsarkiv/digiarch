@@ -14,7 +14,6 @@ from datetime import datetime
 from dateutil.parser import parse as date_parse
 from pathlib import Path
 from typing import Any, List, Optional, Set
-from natsort import natsorted
 import digiarch
 
 # -----------------------------------------------------------------------------
@@ -242,24 +241,3 @@ def to_json(data: object, file: Path) -> None:
 
     with file.open("w", encoding="utf-8") as f:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
-
-
-def natsort_path(file_list: List[FileInfo]) -> List[FileInfo]:
-    """Naturally sort a list of FileInfo objects by their paths.
-
-    Parameters
-    ----------
-    file_list : List[FileInfo]
-        The list of FileInfo objects to be sorted.
-
-    Returns
-    -------
-    List[FileInfo]
-        The list of FileInfo objects naturally sorted by their path.
-    """
-
-    sorted_file_list: List[FileInfo] = natsorted(
-        file_list, key=lambda fileinfo: str(fileinfo.path)
-    )
-
-    return sorted_file_list
