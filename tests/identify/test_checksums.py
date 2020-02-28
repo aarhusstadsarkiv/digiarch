@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
 import pytest
-from digiarch.data import FileInfo
+from digiarch.internals import FileInfo
 from digiarch.identify.checksums import (
     file_checksum,
+    checksum_worker,
     generate_checksums,
     check_collisions,
     check_duplicates,
@@ -26,6 +27,11 @@ def test_file_1(temp_dir):
     return test_file
 
 
+@pytest.fixture
+def test_file_info(test_file_0):
+    return FileInfo(path=test_file_0)
+
+
 class TestFileChecksum:
     def test_without_file(self, temp_dir):
         assert file_checksum(Path(temp_dir)) == ""
@@ -36,6 +42,24 @@ class TestFileChecksum:
     def test_secure(self, test_file_0):
         assert (
             file_checksum(test_file_0, secure=True)
+            == "e9f11462495399c0b8d0d8ec7128df9c0d7269cda23531a352b174bd29c3"
+            "b6318a55d3508cb70dad9aaa590185ba0fef4fab46febd46874a103739c10d6"
+            "0ebc7"
+        )
+
+
+class TestChecksumWorker:
+    def test_without_file(self, temp_dir):
+        file_info = FileInfo(path=temp_dir)
+        result = checksum_worker(file_info)
+        assert result.checksum is None
+
+    def test_insecure(self, test_file_info):
+        assert checksum_worker(test_file_info).checksum == "ab76e8e9ff682bb4"
+
+    def test_secure(self, test_file_info):
+        assert (
+            checksum_worker(test_file_info, secure=True).checksum
             == "e9f11462495399c0b8d0d8ec7128df9c0d7269cda23531a352b174bd29c3"
             "b6318a55d3508cb70dad9aaa590185ba0fef4fab46febd46874a103739c10d6"
             "0ebc7"

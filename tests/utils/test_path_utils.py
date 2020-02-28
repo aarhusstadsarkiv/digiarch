@@ -2,8 +2,8 @@ import pytest
 from pathlib import Path
 from datetime import datetime
 from digiarch.utils.path_utils import explore_dir
-from digiarch.data import FileInfo, FileData, Metadata
-from digiarch.utils.exceptions import FileCollectionError
+from digiarch.internals import FileInfo, FileData, Metadata
+from digiarch.exceptions import FileCollectionError
 
 
 @pytest.fixture

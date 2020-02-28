@@ -2,7 +2,7 @@ import json
 import pytest
 from pathlib import Path
 from datetime import datetime
-from digiarch.data import (
+from digiarch.internals import (
     FileInfo,
     Metadata,
     FileData,

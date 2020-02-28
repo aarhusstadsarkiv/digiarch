@@ -10,10 +10,10 @@ The CLI implements several commands with suboptions.
 import click
 from datetime import datetime
 from pathlib import Path
-from digiarch.data import FileData, Metadata
+from digiarch.internals import FileData, Metadata
 from digiarch.utils import path_utils, group_files
 from digiarch.identify import checksums, reports, identify_files
-from digiarch.utils.exceptions import FileCollectionError
+from digiarch.exceptions import FileCollectionError
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -59,9 +59,9 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
                 )
         click.secho("Done!", bold=True, fg="green")
     else:
-        file_data = FileData.from_json(init_file_data.json_file)
         click.echo(f"Processing data from ", nl=False)
-        click.secho(f"{file_data.json_file}", bold=True)
+        click.secho(f"{init_file_data.json_file}", bold=True)
+        file_data = FileData.from_json(init_file_data.json_file)
 
     ctx.obj = file_data
 

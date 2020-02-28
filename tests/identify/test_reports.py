@@ -1,58 +1,58 @@
-# import os
-# from typing import List
-# from digiarch.identify.reports import report_results
-# from digiarch.data import FileInfo, to_json
+import pytest
+from pathlib import Path
+from digiarch.internals import FileInfo, Identification
+from digiarch.identify.reports import report_results
 
 
-# def write_test_file(temp_dir, data_file, dir_info):
-#     to_json(dir_info, data_file)
+@pytest.fixture
+def file_info_0(temp_dir):
+    test_file = Path(temp_dir).joinpath("test0.txt")
+    test_file.write_text("0")
+    file_info = FileInfo(
+        test_file,
+        identification=Identification("x-fmt/111", "Plain Text File"),
+    )
+    return file_info
 
 
-# class TestReportResults:
-#     """Class for testing the `report_results` function."""
+@pytest.fixture
+def file_info_1(temp_dir):
+    test_file = Path(temp_dir).joinpath("test1.pdf")
+    test_file.write_text("1")
+    file_info = FileInfo(
+        test_file,
+        identification=Identification(
+            puid=None, signame=None, warning="No match"
+        ),
+    )
+    return file_info
 
-#     file_info = FileInfo(
-#         name="test.txt", ext=".txt", path="/root/", size="0.0 KiB"
-#     )
-#     no_dir_info: List = []
-#     dir_info_file = [file_info]
 
-#     def test_no_files_no_folders(self, temp_dir, data_file):
-#         """`report_results` is invoked with an
-#         empty list of FileInfo objects.
-#         No files expected."""
+class TestReportResults:
+    def test_with_file(self, file_info_0, temp_dir):
+        file_list = [file_info_0]
+        report_results(file_list, temp_dir)
+        contents = [str(p) for p in Path(temp_dir / "reports").rglob("*")]
+        assert any("file_extensions.csv" in content for content in contents)
+        assert not any(
+            "identification_warnings.json" in content for content in contents
+        )
 
-#         write_test_file(temp_dir, data_file, self.no_dir_info)
-#         report_results(data_file, temp_dir)
-#         files_in_temp = [
-#             file
-#             for file in os.listdir(temp_dir)
-#             if os.path.isfile(os.path.join(temp_dir, file))
-#         ]
-#         assert len(files_in_temp) == 0
+    def test_with_id_warnings(self, file_info_1, temp_dir):
+        file_list = [file_info_1]
+        report_results(file_list, temp_dir)
+        contents = [str(p) for p in Path(temp_dir / "reports").rglob("*")]
+        assert any(
+            "identification_warnings.json" in content for content in contents
+        )
 
-#     def test_files_no_folders(self, temp_dir, data_file):
-#         """`report_results` is invoked with a populated list of
-#         FileInfo objects. None of them are empty subfolders.
-#         1 file expected to be written."""
-#         write_test_file(temp_dir, data_file, self.dir_info_file)
-#         report_results(data_file, temp_dir)
-#         files_in_temp = [
-#             file
-#             for file in os.listdir(temp_dir)
-#             if os.path.isfile(os.path.join(temp_dir, file))
-#         ]
-#         assert len(files_in_temp) == 1
-
-# def test_files_and_folders(self, temp_dir, data_file):
-#     """`report_results` is invoked with a populated list of
-#     FileInfo objects. One is a file, one is an empty subfolder.
-#     2 files expected to be written."""
-#     write_test_file(temp_dir, data_file, self.dir_info_file_empty_sub)
-#     report_results(data_file, temp_dir)
-#     files_in_temp = [
-#         file
-#         for file in os.listdir(temp_dir)
-#         if os.path.isfile(os.path.join(temp_dir, file))
-#     ]
-#     assert len(files_in_temp) == 2
+    def test_without_files(self, temp_dir):
+        file_list = []
+        report_results(file_list, temp_dir)
+        contents = [str(p) for p in Path(temp_dir / "reports").rglob("*")]
+        assert not any(
+            "file_extensions.csv" in content for content in contents
+        )
+        assert not any(
+            "identification_warnings.json" in content for content in contents
+        )
