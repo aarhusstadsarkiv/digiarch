@@ -20,7 +20,7 @@ from digiarch.internals import FileInfo, to_json, natsort_path
 # -----------------------------------------------------------------------------
 
 
-def file_checksum(file: Path, secure: bool = True) -> str:
+def file_checksum(file: Path, secure: bool = False) -> str:
     """Calculate the checksum of an input file using xxHash or BLAKE2,
     depending on need for cryptographical security.
 
@@ -57,7 +57,7 @@ def file_checksum(file: Path, secure: bool = True) -> str:
     return checksum
 
 
-def checksum_worker(fileinfo: FileInfo, secure: bool = True) -> FileInfo:
+def checksum_worker(fileinfo: FileInfo, secure: bool = False) -> FileInfo:
     """Worker used when multiprocessing checksums of FileInfo objects.
 
     Parameters
