@@ -10,7 +10,7 @@ from functools import partial
 from multiprocessing import Pool
 from collections import Counter
 from pathlib import Path
-from typing import List, Set, Dict, ItemsView, Any
+from typing import List, Set, Dict, ItemsView, Any, Optional
 from tqdm import tqdm
 import xxhash
 from digiarch.internals import FileInfo, to_json, natsort_path
@@ -75,9 +75,10 @@ def checksum_worker(fileinfo: FileInfo, secure: bool = False) -> FileInfo:
         The FileInfo object with an updated checksum value.
     """
 
-    updated_file_info: FileInfo = fileinfo.replace(
-        checksum=file_checksum(fileinfo.path, secure=secure)
-    )
+    checksum: Optional[str] = file_checksum(
+        fileinfo.path, secure=secure
+    ) or None
+    updated_file_info: FileInfo = fileinfo.replace(checksum=checksum)
     return updated_file_info
 
 
