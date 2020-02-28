@@ -101,15 +101,19 @@ def identify(files: List[FileInfo]) -> List[FileInfo]:
     updated_files: List[FileInfo]
 
     # Multiprocess identification
-    with Pool() as p:
+    pool = Pool()
+    try:
         updated_files = list(
             tqdm(
-                p.imap_unordered(sf_id, files),
+                pool.imap_unordered(sf_id, files),
                 desc="Identifying files",
                 unit="files",
                 total=len(files),
             )
         )
+    finally:
+        pool.close()
+        pool.join()
 
     # Natsort list by file.path
     updated_files = natsort_path(updated_files)

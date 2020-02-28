@@ -102,25 +102,20 @@ def generate_checksums(
     checksum_func = partial(checksum_worker, secure=secure)
 
     # Multiprocess checksum generation
-    with Pool() as p:
+    pool = Pool()
+    try:
         updated_files = list(
             tqdm(
-                p.imap_unordered(checksum_func, files),
+                pool.imap_unordered(checksum_func, files),
                 desc="Generating checksums",
                 unit=" files",
                 total=len(files),
                 disable=disable_progress,
             )
         )
-
-    # for file in tqdm(
-    #     files,
-    #     desc="Generating checksums",
-    #     unit="files",
-    #     disable=disable_progress,
-    # ):
-    #     checksum = file_checksum(Path(file.path), secure)
-    #     updated_files.append(file.replace(checksum=checksum))
+    finally:
+        pool.close()
+        pool.join()
 
     return natsort_path(updated_files)
 
