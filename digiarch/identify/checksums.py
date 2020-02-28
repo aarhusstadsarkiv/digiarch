@@ -74,9 +74,11 @@ def checksum_worker(fileinfo: FileInfo, secure: bool = True) -> FileInfo:
     FileInfo
         The FileInfo object with an updated checksum value.
     """
-    return fileinfo.replace(
+
+    updated_file_info: FileInfo = fileinfo.replace(
         checksum=file_checksum(fileinfo.path, secure=secure)
     )
+    return updated_file_info
 
 
 def generate_checksums(
