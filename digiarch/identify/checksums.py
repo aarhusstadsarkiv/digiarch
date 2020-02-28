@@ -57,7 +57,7 @@ def file_checksum(file: Path, secure: bool = False) -> str:
     return checksum
 
 
-def checksum_worker(fileinfo: FileInfo, secure: bool = False) -> FileInfo:
+def checksum_worker(file_info: FileInfo, secure: bool = False) -> FileInfo:
     """Worker used when multiprocessing checksums of FileInfo objects.
 
     Parameters
@@ -76,9 +76,9 @@ def checksum_worker(fileinfo: FileInfo, secure: bool = False) -> FileInfo:
     """
 
     checksum: Optional[str] = file_checksum(
-        fileinfo.path, secure=secure
+        file_info.path, secure=secure
     ) or None
-    updated_file_info: FileInfo = fileinfo.replace(checksum=checksum)
+    updated_file_info: FileInfo = file_info.replace(checksum=checksum)
     return updated_file_info
 
 
