@@ -101,6 +101,19 @@ def generate_checksums(files: List[FileInfo]) -> List[FileInfo]:
 
 
 def check_collisions(checksums: List[str]) -> Set[str]:
+    """Checks checksum collisions given a list of checksums as strings.
+    Returns a set of collisions if any such are found.
+
+    Parameters
+    ----------
+    checksums : List[str]
+        List of checksums that must be checked for collisions.
+
+    Returns
+    -------
+    Set[str]
+        A set of colliding checksums. Empty if none are found.
+    """
     checksum_counts: ItemsView[str, int] = Counter(checksums).items()
     collisions: Set[str] = set()
 
