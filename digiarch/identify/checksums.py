@@ -6,13 +6,11 @@
 # Imports
 # -----------------------------------------------------------------------------
 import hashlib
-from functools import partial
 from multiprocessing import Pool
 from collections import Counter
 from pathlib import Path
 from typing import List, Set, Dict, ItemsView, Any, Optional
 from tqdm import tqdm
-import xxhash
 from digiarch.internals import FileInfo, to_json, natsort_path
 
 # -----------------------------------------------------------------------------
@@ -20,19 +18,14 @@ from digiarch.internals import FileInfo, to_json, natsort_path
 # -----------------------------------------------------------------------------
 
 
-def file_checksum(file: Path, secure: bool = False) -> str:
-    """Calculate the checksum of an input file using xxHash or BLAKE2,
-    depending on need for cryptographical security.
+def file_checksum(file: Path) -> str:
+    """Calculate the checksum of an input file using BLAKE2.
 
     Parameters
     ----------
     file : Path
         The file for which to calculate the checksum. Expects a `pathlib.Path`
         object.
-    secure : bool
-        Whether the hash function used to generate checksums should be
-        cryptographically secure.
-        If false (the default), xxHash is used. If true, BLAKE2 is used.
 
     Returns
     -------
@@ -42,12 +35,7 @@ def file_checksum(file: Path, secure: bool = False) -> str:
     """
 
     checksum: str = ""
-    hasher: Any
-
-    if secure:
-        hasher = hashlib.blake2b()
-    else:
-        hasher = xxhash.xxh64(seed=42)
+    hasher: Any = hashlib.blake2b()
 
     if file.is_file():
         with file.open("rb") as f:
@@ -57,17 +45,13 @@ def file_checksum(file: Path, secure: bool = False) -> str:
     return checksum
 
 
-def checksum_worker(file_info: FileInfo, secure: bool = False) -> FileInfo:
+def checksum_worker(file_info: FileInfo) -> FileInfo:
     """Worker used when multiprocessing checksums of FileInfo objects.
 
     Parameters
     ----------
     fileinfo : FileInfo
         The FileInfo object that must be updated with a new checksum value.
-    secure : bool
-        Whether the hash function used to generate checksums should be
-        cryptographically secure.
-        If false (the default), xxHash is used. If true, BLAKE2 is used.
 
     Returns
     -------
@@ -75,43 +59,38 @@ def checksum_worker(file_info: FileInfo, secure: bool = False) -> FileInfo:
         The FileInfo object with an updated checksum value.
     """
 
-    checksum: Optional[str] = file_checksum(
-        file_info.path, secure=secure
-    ) or None
+    checksum: Optional[str] = file_checksum(file_info.path) or None
     updated_file_info: FileInfo = file_info.replace(checksum=checksum)
     return updated_file_info
 
 
-def generate_checksums(
-    files: List[FileInfo], secure: bool = False, disable_progress: bool = False
-) -> List[FileInfo]:
-    """Generates checksums of files in data_file.
+def generate_checksums(files: List[FileInfo]) -> List[FileInfo]:
+    """Multiprocesses a list of FileInfo object in order to assign
+    new checksums.
 
     Parameters
     ----------
     files : List[FileInfo]
-        List of files that need checksums.
-    secure : bool
-        Whether the checksum generated should come from a cryptographically
-        secure hashing function. Defaults to false.
+        List of FileInfo objects that need checksums.
+
+    Returns
+    -------
+    List[FileInfo]
+        The updated list of FileInfo objects.
     """
 
     # Assign variables
     updated_files: List[FileInfo] = []
-
-    # Fix secure parameter in checksum_worker
-    checksum_func = partial(checksum_worker, secure=secure)
 
     # Multiprocess checksum generation
     pool = Pool()
     try:
         updated_files = list(
             tqdm(
-                pool.imap_unordered(checksum_func, files),
+                pool.imap_unordered(checksum_worker, files),
                 desc="Generating checksums",
                 unit=" files",
                 total=len(files),
-                disable=disable_progress,
             )
         )
     finally:
