@@ -138,32 +138,16 @@ def check_duplicates(files: List[FileInfo], save_path: Path) -> None:
     """
 
     # Initialise variables
-    # files: List[FileInfo] = get_fileinfo_list(data_file)
-    possible_dups: List[FileInfo] = []
     checksums: List[str] = [
         file.checksum for file in files if file.checksum is not None
     ]
     collisions: Set[str] = check_collisions(checksums)
     file_collisions: Dict[str, str] = dict()
-    # checksum_counts: Counter = Counter(checksums).items()
 
-    for checksum in tqdm(collisions, desc="Processing collisions"):
-        # Generate secure checksums for possible file collisions.
-        new_files = generate_checksums(
-            [file for file in files if file.checksum == checksum],
-            secure=True,
-            disable_progress=True,
-        )
-        for file in new_files:
-            possible_dups.append(file)
-
-    secure_collisions: Set[str] = check_collisions(
-        [file.checksum for file in possible_dups if file.checksum is not None]
-    )
-    for checksum in tqdm(secure_collisions, desc="Finding duplicates"):
+    for checksum in tqdm(collisions, desc="Finding duplicates"):
         hits = [
             {"name": file.name, "path": file.path}
-            for file in possible_dups
+            for file in files
             if file.checksum == checksum
         ]
         file_collisions.update({checksum: hits})
