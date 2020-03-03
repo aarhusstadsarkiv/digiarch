@@ -44,8 +44,7 @@ class TestReportResults:
         )
 
     def test_without_files(self, temp_dir):
-        file_list = []
-        report_results(file_list, temp_dir)
+        report_results([], temp_dir)
         contents = [str(p) for p in Path(temp_dir / "reports").rglob("*")]
         assert not any(
             "file_extensions.csv" in content for content in contents
