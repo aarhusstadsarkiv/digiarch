@@ -8,10 +8,7 @@ from digiarch.identify.reports import report_results
 def file_info_0(temp_dir):
     test_file = Path(temp_dir).joinpath("test0.txt")
     test_file.write_text("0")
-    file_info = FileInfo(
-        test_file,
-        identification=Identification("x-fmt/111", "Plain Text File"),
-    )
+    file_info = FileInfo(test_file)
     return file_info
 
 
