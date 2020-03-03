@@ -33,7 +33,7 @@ class TestReportResults:
         file_list = [file_info_0]
         report_results(file_list, temp_dir)
         contents = [str(p) for p in Path(temp_dir / "reports").rglob("*")]
-        assert any("file_extensions.csv" in content for content in contents)
+        assert any("file_extensions.json" in content for content in contents)
         assert not any(
             "identification_warnings.json" in content for content in contents
         )
