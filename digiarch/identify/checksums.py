@@ -6,13 +6,11 @@
 # Imports
 # -----------------------------------------------------------------------------
 import hashlib
-from functools import partial
 from multiprocessing import Pool
 from collections import Counter
 from pathlib import Path
 from typing import List, Set, Dict, ItemsView, Any, Optional
 from tqdm import tqdm
-import xxhash
 from digiarch.internals import FileInfo, to_json, natsort_path
 
 # -----------------------------------------------------------------------------
@@ -20,19 +18,14 @@ from digiarch.internals import FileInfo, to_json, natsort_path
 # -----------------------------------------------------------------------------
 
 
-def file_checksum(file: Path, secure: bool = False) -> str:
-    """Calculate the checksum of an input file using xxHash or BLAKE2,
-    depending on need for cryptographical security.
+def file_checksum(file: Path) -> str:
+    """Calculate the checksum of an input file using BLAKE2.
 
     Parameters
     ----------
     file : Path
         The file for which to calculate the checksum. Expects a `pathlib.Path`
         object.
-    secure : bool
-        Whether the hash function used to generate checksums should be
-        cryptographically secure.
-        If false (the default), xxHash is used. If true, BLAKE2 is used.
 
     Returns
     -------
@@ -42,12 +35,7 @@ def file_checksum(file: Path, secure: bool = False) -> str:
     """
 
     checksum: str = ""
-    hasher: Any
-
-    if secure:
-        hasher = hashlib.blake2b()
-    else:
-        hasher = xxhash.xxh64(seed=42)
+    hasher: Any = hashlib.blake2b()
 
     if file.is_file():
         with file.open("rb") as f:
@@ -57,17 +45,13 @@ def file_checksum(file: Path, secure: bool = False) -> str:
     return checksum
 
 
-def checksum_worker(file_info: FileInfo, secure: bool = False) -> FileInfo:
+def checksum_worker(file_info: FileInfo) -> FileInfo:
     """Worker used when multiprocessing checksums of FileInfo objects.
 
     Parameters
     ----------
     fileinfo : FileInfo
         The FileInfo object that must be updated with a new checksum value.
-    secure : bool
-        Whether the hash function used to generate checksums should be
-        cryptographically secure.
-        If false (the default), xxHash is used. If true, BLAKE2 is used.
 
     Returns
     -------
@@ -75,43 +59,38 @@ def checksum_worker(file_info: FileInfo, secure: bool = False) -> FileInfo:
         The FileInfo object with an updated checksum value.
     """
 
-    checksum: Optional[str] = file_checksum(
-        file_info.path, secure=secure
-    ) or None
+    checksum: Optional[str] = file_checksum(file_info.path) or None
     updated_file_info: FileInfo = file_info.replace(checksum=checksum)
     return updated_file_info
 
 
-def generate_checksums(
-    files: List[FileInfo], secure: bool = False, disable_progress: bool = False
-) -> List[FileInfo]:
-    """Generates checksums of files in data_file.
+def generate_checksums(files: List[FileInfo]) -> List[FileInfo]:
+    """Multiprocesses a list of FileInfo object in order to assign
+    new checksums.
 
     Parameters
     ----------
     files : List[FileInfo]
-        List of files that need checksums.
-    secure : bool
-        Whether the checksum generated should come from a cryptographically
-        secure hashing function. Defaults to false.
+        List of FileInfo objects that need checksums.
+
+    Returns
+    -------
+    List[FileInfo]
+        The updated list of FileInfo objects.
     """
 
     # Assign variables
     updated_files: List[FileInfo] = []
-
-    # Fix secure parameter in checksum_worker
-    checksum_func = partial(checksum_worker, secure=secure)
 
     # Multiprocess checksum generation
     pool = Pool()
     try:
         updated_files = list(
             tqdm(
-                pool.imap_unordered(checksum_func, files),
+                pool.imap_unordered(checksum_worker, files),
                 desc="Generating checksums",
                 unit=" files",
                 total=len(files),
-                disable=disable_progress,
             )
         )
     finally:
@@ -122,6 +101,19 @@ def generate_checksums(
 
 
 def check_collisions(checksums: List[str]) -> Set[str]:
+    """Checks checksum collisions given a list of checksums as strings.
+    Returns a set of collisions if any such are found.
+
+    Parameters
+    ----------
+    checksums : List[str]
+        List of checksums that must be checked for collisions.
+
+    Returns
+    -------
+    Set[str]
+        A set of colliding checksums. Empty if none are found.
+    """
     checksum_counts: ItemsView[str, int] = Counter(checksums).items()
     collisions: Set[str] = set()
 
@@ -146,32 +138,16 @@ def check_duplicates(files: List[FileInfo], save_path: Path) -> None:
     """
 
     # Initialise variables
-    # files: List[FileInfo] = get_fileinfo_list(data_file)
-    possible_dups: List[FileInfo] = []
     checksums: List[str] = [
         file.checksum for file in files if file.checksum is not None
     ]
     collisions: Set[str] = check_collisions(checksums)
     file_collisions: Dict[str, str] = dict()
-    # checksum_counts: Counter = Counter(checksums).items()
 
-    for checksum in tqdm(collisions, desc="Processing collisions"):
-        # Generate secure checksums for possible file collisions.
-        new_files = generate_checksums(
-            [file for file in files if file.checksum == checksum],
-            secure=True,
-            disable_progress=True,
-        )
-        for file in new_files:
-            possible_dups.append(file)
-
-    secure_collisions: Set[str] = check_collisions(
-        [file.checksum for file in possible_dups if file.checksum is not None]
-    )
-    for checksum in tqdm(secure_collisions, desc="Finding duplicates"):
+    for checksum in tqdm(collisions, desc="Finding duplicates"):
         hits = [
             {"name": file.name, "path": file.path}
-            for file in possible_dups
+            for file in files
             if file.checksum == checksum
         ]
         file_collisions.update({checksum: hits})
