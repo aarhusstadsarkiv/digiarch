@@ -93,6 +93,9 @@ def generate_checksums(files: List[FileInfo]) -> List[FileInfo]:
                 total=len(files),
             )
         )
+    except KeyboardInterrupt:
+        pool.terminate()
+        pool.join()
     finally:
         pool.close()
         pool.join()
