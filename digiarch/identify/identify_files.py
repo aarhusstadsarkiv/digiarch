@@ -49,7 +49,7 @@ def sf_id(file: FileInfo) -> FileInfo:
     )
     try:
         cmd = subprocess.run(
-            f'sf "{file.path}"', shell=True, capture_output=True, check=True
+            ["sf", file.path], capture_output=True, check=True,
         )
     except CalledProcessError as error:
         raise IdentificationError(error)
@@ -78,7 +78,6 @@ def sf_id(file: FileInfo) -> FileInfo:
                 new_id.puid = match.get("id")
             if isinstance(new_id.warning, str):
                 new_id.warning = new_id.warning.capitalize()
-
     updated_file: FileInfo = file.replace(identification=new_id)
     return updated_file
 
@@ -111,6 +110,9 @@ def identify(files: List[FileInfo]) -> List[FileInfo]:
                 total=len(files),
             )
         )
+    except KeyboardInterrupt:
+        pool.terminate()
+        pool.join()
     finally:
         pool.close()
         pool.join()
