@@ -38,10 +38,8 @@ class TestFileChecksum:
 
     def test_with_file(self, test_file_0):
         assert (
-            file_checksum(test_file_0)
-            == "e9f11462495399c0b8d0d8ec7128df9c0d7269cda23531a352b174bd29c3"
-            "b6318a55d3508cb70dad9aaa590185ba0fef4fab46febd46874a103739c10d6"
-            "0ebc7"
+            file_checksum(test_file_0) == "5feceb66ffc86f38d952786c6d696c79"
+            "c2dbc239dd4e91b46729d73a27fb57e9"
         )
 
 
@@ -54,9 +52,8 @@ class TestChecksumWorker:
     def test_with_file(self, test_file_info):
         assert (
             checksum_worker(test_file_info).checksum
-            == "e9f11462495399c0b8d0d8ec7128df9c0d7269cda23531a352b174bd29c3"
-            "b6318a55d3508cb70dad9aaa590185ba0fef4fab46febd46874a103739c10d6"
-            "0ebc7"
+            == "5feceb66ffc86f38d952786c6d696c79"
+            "c2dbc239dd4e91b46729d73a27fb57e9"
         )
 
 

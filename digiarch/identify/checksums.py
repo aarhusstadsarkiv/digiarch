@@ -35,7 +35,7 @@ def file_checksum(file: Path) -> str:
     """
 
     checksum: str = ""
-    hasher: Any = hashlib.blake2b()
+    hasher: Any = hashlib.sha256()
 
     if file.is_file():
         with file.open("rb") as f:
