@@ -8,10 +8,7 @@ from digiarch.identify.reports import report_results
 def file_info_0(temp_dir):
     test_file = Path(temp_dir).joinpath("test0.txt")
     test_file.write_text("0")
-    file_info = FileInfo(
-        test_file,
-        identification=Identification("x-fmt/111", "Plain Text File"),
-    )
+    file_info = FileInfo(test_file)
     return file_info
 
 
@@ -28,18 +25,31 @@ def file_info_1(temp_dir):
     return file_info
 
 
+@pytest.fixture
+def file_info_2(temp_dir):
+    test_file = Path(temp_dir).joinpath("test3.bogus")
+    test_file.write_text("1")
+    file_info = FileInfo(
+        test_file,
+        identification=Identification(
+            puid=None, signame=None, warning="Extension mismatch"
+        ),
+    )
+    return file_info
+
+
 class TestReportResults:
     def test_with_file(self, file_info_0, temp_dir):
         file_list = [file_info_0]
         report_results(file_list, temp_dir)
         contents = [str(p) for p in Path(temp_dir / "reports").rglob("*")]
-        assert any("file_extensions.csv" in content for content in contents)
+        assert any("file_extensions.json" in content for content in contents)
         assert not any(
             "identification_warnings.json" in content for content in contents
         )
 
-    def test_with_id_warnings(self, file_info_1, temp_dir):
-        file_list = [file_info_1]
+    def test_with_id_warnings(self, file_info_1, file_info_2, temp_dir):
+        file_list = [file_info_1, file_info_2]
         report_results(file_list, temp_dir)
         contents = [str(p) for p in Path(temp_dir / "reports").rglob("*")]
         assert any(
@@ -47,8 +57,7 @@ class TestReportResults:
         )
 
     def test_without_files(self, temp_dir):
-        file_list = []
-        report_results(file_list, temp_dir)
+        report_results([], temp_dir)
         contents = [str(p) for p in Path(temp_dir / "reports").rglob("*")]
         assert not any(
             "file_extensions.csv" in content for content in contents

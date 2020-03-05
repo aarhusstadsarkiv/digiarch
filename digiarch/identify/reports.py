@@ -5,10 +5,10 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-import pandas as pd
+from collections import Counter
 from pathlib import Path
-from typing import List, Dict, Any
-from digiarch.internals import FileInfo, to_json
+from typing import List, Dict
+from digiarch.internals import FileInfo, Identification, to_json
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -26,41 +26,38 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
         The path in which to save the reports.
 
     """
-    # Type declarations
-    files_df: pd.DataFrame
 
-    # Collect file information
-    file_dicts: List[Dict[Any, Any]] = [f.to_dict() for f in files]
+    # Initialise counters & dicts
+    ext_count: Counter = Counter()
+    id_warnings: Dict[str, List[Dict[str, Identification]]] = dict()
+    warning_key: str
+    warning_count: Counter = Counter()
 
-    # We might get an empty directory
-    if file_dicts:
+    # Collect information
+    for file in files:
+        ext_count.update([file.ext])
+        if file.identification and file.identification.warning:
+            if "No match" in file.identification.warning:
+                warning_key = "No match"
+            else:
+                warning_key = file.identification.warning
+            warning_list = id_warnings.get(warning_key, [])
+            warning_list.append({str(file.path): file.identification})
+            id_warnings.update({warning_key: warning_list})
+
+    file_exts: Dict[str, int] = dict(ext_count.most_common())
+    if files:
         # Create new folder in save path
         save_path = save_path / "reports"
         save_path.mkdir(exist_ok=True)
 
-        # Generate data frame
-        files_df = pd.DataFrame(data=file_dicts)
-
-        # Count extensions
-        file_exts_count = (
-            files_df.groupby("ext").size().rename("count").to_frame()
-        )
-        file_exts_sorted = file_exts_count.sort_values(
-            "count", ascending=False
-        )
-
-        # Find identification warnings
-        file_id_warnings = files_df[files_df.identification.notnull()]
-        id_warnings: Dict[str, Dict[str, Any]] = dict()
-        for _, row in file_id_warnings.iterrows():
-            if row["identification"].get("warning") is not None:
-                warn_dict = {
-                    "identification": row["identification"],
-                    "name": row["name"],
-                }
-                id_warnings.update({str(row["path"]): warn_dict})
-
-        # Save reports
-        file_exts_sorted.to_csv(save_path / "file_extensions.csv", header=True)
+        # Save files
+        to_json(file_exts, save_path / "file_extensions.json")
         if id_warnings:
-            to_json(id_warnings, save_path / "identification_warnings.json")
+            for warning_key, warning_list in id_warnings.items():
+                warning_count.update({warning_key: len(warning_list)})
+
+            to_json(
+                [dict(warning_count), id_warnings],
+                save_path / "identification_warnings.json",
+            )

@@ -70,14 +70,14 @@ class TestFileInfo:
 
 
 class TestMetadata:
-    def test_init(self):
+    def test_init(self, temp_dir):
         # We cannot create an empty Metadata.
         with pytest.raises(TypeError):
             Metadata()  # type: ignore
         cur_time = datetime.now()
-        metadata = Metadata(last_run=cur_time, processed_dir=Path("/"))
+        metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
         assert metadata.last_run == cur_time
-        assert metadata.processed_dir == Path("/")
+        assert metadata.processed_dir == Path(temp_dir)
         assert metadata.file_count is None
         assert metadata.total_size is None
         assert metadata.duplicates is None
@@ -85,11 +85,11 @@ class TestMetadata:
         assert metadata.empty_subdirs is None
         assert metadata.several_files is None
 
-    def test_post_init(self):
+    def test_post_init(self, temp_dir):
         cur_time = datetime.now()
-        metadata = Metadata(last_run=cur_time, processed_dir=Path("/"))
+        metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
         assert metadata.last_run == cur_time
-        assert metadata.processed_dir == Path("/")
+        assert metadata.processed_dir == Path(temp_dir)
 
 
 class TestFileData:

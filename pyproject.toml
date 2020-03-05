@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "0.4.0"
+version = "0.5.0"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -12,7 +12,6 @@ keywords = ["archiving", "preservation", "digiarch"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-pandas = "^0.25.1"
 click = "^7.0"
 tqdm = "^4.36"
 dacite = "^1.0"
