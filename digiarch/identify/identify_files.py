@@ -49,7 +49,7 @@ def sf_id(file: FileInfo) -> FileInfo:
     )
     try:
         cmd = subprocess.run(
-            ["sf", file.path], shell=True, capture_output=True, check=True
+            ["sf", file.path], capture_output=True, check=True,
         )
     except CalledProcessError as error:
         raise IdentificationError(error)
