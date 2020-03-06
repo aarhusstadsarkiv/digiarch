@@ -8,6 +8,7 @@
 from collections import Counter
 from pathlib import Path
 from typing import List, Dict
+from tqdm import tqdm
 from digiarch.internals import FileInfo, Identification, to_json
 
 # -----------------------------------------------------------------------------
@@ -34,7 +35,7 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
     warning_count: Counter = Counter()
 
     # Collect information
-    for file in files:
+    for file in tqdm(files, desc="Creating reports"):
         ext_count.update([file.ext])
         if file.identification and file.identification.warning:
             if "No match" in file.identification.warning:
