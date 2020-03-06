@@ -45,7 +45,15 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
             warning_list.append({str(file.path): file.identification})
             id_warnings.update({warning_key: warning_list})
 
+    for warning_key, warning_list in id_warnings.items():
+        warning_count.update({warning_key: len(warning_list)})
+
     file_exts: Dict[str, int] = dict(ext_count.most_common())
+    identification_warnings = {
+        "counts": dict(warning_count),
+        "warnings": id_warnings,
+    }
+
     if files:
         # Create new folder in save path
         save_path = save_path / "reports"
@@ -53,11 +61,7 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
 
         # Save files
         to_json(file_exts, save_path / "file_extensions.json")
-        if id_warnings:
-            for warning_key, warning_list in id_warnings.items():
-                warning_count.update({warning_key: len(warning_list)})
-
-            to_json(
-                [dict(warning_count), id_warnings],
-                save_path / "identification_warnings.json",
-            )
+        to_json(
+            identification_warnings,
+            save_path / "identification_warnings.json",
+        )
