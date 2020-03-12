@@ -7,12 +7,14 @@
 # Imports
 # -----------------------------------------------------------------------------
 import subprocess
-from multiprocessing import Pool
+import json
+from functools import partial
+from pathlib import Path
 from subprocess import CalledProcessError
-from typing import List
+from typing import List, Any, Dict
 from digiarch.internals import FileInfo, Identification, natsort_path
 from digiarch.exceptions import IdentificationError
-import yaml
+from halo import Halo
 from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
@@ -20,26 +22,25 @@ from tqdm import tqdm
 # -----------------------------------------------------------------------------
 
 
-def sf_id(file: FileInfo) -> FileInfo:
-    """Identify files using
-    `siegfried <https://github.com/richardlehane/siegfried>`_ and update
-    FileInfo with obtained PUID, signature name, and warning if applicable.
+def sf_id(path: Path) -> Dict[Path, Identification]:
+    """Identify files in path using
+    `siegfried <https://github.com/richardlehane/siegfried>`_ and return a list
+    of corresponding file objects.
 
     Parameters
     ----------
-    file : FileInfo
-        The file to identify.
+    path : pathlib.Path
+        The path in which to run siegfried.
 
     Returns
     -------
-    updated_file : FileInfo
-        Input file with updated information in the Identification field.
+    identified_files : List[FileInfo]
+        List of FileInfo objects with identification information.
 
     Raises
     ------
     IdentificationError
-        If running siegfried or loading of the resulting YAML output fails, an
-        IdentificationError is thrown.
+        If running siegfried fails, an IdentificationError is thrown.
 
     """
     new_id: Identification = Identification(
@@ -47,46 +48,57 @@ def sf_id(file: FileInfo) -> FileInfo:
         signame=None,
         warning="No identification information obtained.",
     )
+    identified_files: Dict[Path, Identification] = {}
     try:
         cmd = subprocess.run(
-            ["sf", file.path], capture_output=True, check=True,
+            ["sf", "-json", "-multi", "256", path],
+            capture_output=True,
+            check=True,
         )
     except CalledProcessError as error:
         raise IdentificationError(error)
-
-    try:
-        docs = yaml.safe_load_all(cmd.stdout.decode())
-    except yaml.YAMLError as error:
-        raise IdentificationError(error)
     else:
-        match_doc = [doc.get("matches") for doc in docs if "matches" in doc]
-        # match_doc is a list of list of matches. Flatten it and get only
-        # matches from PRONOM.
-        matches = [
-            match
-            for matches in match_doc
-            for match in matches
-            if match.get("ns") == "pronom"
-        ]
-        for match in matches:
-            new_id = new_id.replace(
-                signame=match.get("format"), warning=match.get("warning")
-            )
-            if match.get("id", "").lower() == "unknown":
-                new_id.puid = None
-            else:
-                new_id.puid = match.get("id")
-            if isinstance(new_id.warning, str):
-                new_id.warning = new_id.warning.capitalize()
-    updated_file: FileInfo = file.replace(identification=new_id)
-    return updated_file
+        id_result = json.loads(cmd.stdout.decode())
+
+    for file in id_result.get("files", []):
+        match: Dict[str, Any] = {}
+        for id_match in file.get("matches"):
+            if id_match.get("ns") == "pronom":
+                match = id_match
+
+        new_id = new_id.replace(
+            signame=match.get("format"), warning=match.get("warning")
+        )
+        if match.get("id", "").lower() == "unknown":
+            new_id.puid = None
+        else:
+            new_id.puid = match.get("id")
+        if isinstance(new_id.warning, str):
+            new_id.warning = new_id.warning.capitalize() or None
+        identified_files.update({Path(file.get("filename", "")): new_id})
+
+    return identified_files
 
 
-def identify(files: List[FileInfo]) -> List[FileInfo]:
+def update_file(
+    file: FileInfo, updated_files: Dict[Path, Identification]
+) -> FileInfo:
+    no_id = Identification(
+        puid=None,
+        signame=None,
+        warning="No identification information obtained.",
+    )
+    file.identification = updated_files.get(file.path) or no_id
+    return file
+
+
+def identify(path: Path, files: List[FileInfo]) -> List[FileInfo]:
     """Identify all files in a list, and return the updated list.
 
     Parameters
     ----------
+    path: pathlib.Path
+        Path in which to identify files.
     files : List[FileInfo]
         Files to identify.
 
@@ -96,26 +108,27 @@ def identify(files: List[FileInfo]) -> List[FileInfo]:
         Input files with updated Identification information.
 
     """
-
-    updated_files: List[FileInfo]
+    identified_files = sf_id(path)
+    _update = partial(update_file, updated_files=identified_files)
+    updated_files = list(map(_update, files))
 
     # Multiprocess identification
-    pool = Pool()
-    try:
-        updated_files = list(
-            tqdm(
-                pool.imap_unordered(sf_id, files),
-                desc="Identifying files",
-                unit="files",
-                total=len(files),
-            )
-        )
-    except KeyboardInterrupt:
-        pool.terminate()
-        pool.join()
-    finally:
-        pool.close()
-        pool.join()
+    # pool = Pool()
+    # try:
+    #     updated_files = list(
+    #         tqdm(
+    #             pool.imap_unordered(_update, files),
+    #             desc="Identifying files",
+    #             unit="files",
+    #             total=len(files),
+    #         )
+    #     )
+    # except KeyboardInterrupt:
+    #     pool.terminate()
+    #     pool.join()
+    # finally:
+    #     pool.close()
+    #     pool.join()
 
     # Natsort list by file.path
     updated_files = natsort_path(updated_files)

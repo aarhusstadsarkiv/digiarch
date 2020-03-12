@@ -21,8 +21,10 @@ def docx_info(test_data_dir):
 
 
 class TestSFId:
-    def test_valid_input(self, docx_info):
-        result = sf_id(docx_info).identification or Identification(None, None)
+    def test_valid_input(self, test_data_dir):
+        result = sf_id(test_data_dir).identification or Identification(
+            None, None
+        )
         assert result.puid == "fmt/412"
         assert result.signame == "Microsoft Word for Windows"
         assert result.warning is None

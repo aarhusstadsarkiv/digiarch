@@ -81,6 +81,7 @@ def generate_checksums(files: List[FileInfo]) -> List[FileInfo]:
 
     # Assign variables
     updated_files: List[FileInfo] = []
+    identified_files = sf_id(path)
 
     # Multiprocess checksum generation
     pool = Pool()
