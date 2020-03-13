@@ -112,24 +112,6 @@ def identify(path: Path, files: List[FileInfo]) -> List[FileInfo]:
     _update = partial(update_file, updated_files=identified_files)
     updated_files = list(map(_update, files))
 
-    # Multiprocess identification
-    # pool = Pool()
-    # try:
-    #     updated_files = list(
-    #         tqdm(
-    #             pool.imap_unordered(_update, files),
-    #             desc="Identifying files",
-    #             unit="files",
-    #             total=len(files),
-    #         )
-    #     )
-    # except KeyboardInterrupt:
-    #     pool.terminate()
-    #     pool.join()
-    # finally:
-    #     pool.close()
-    #     pool.join()
-
     # Natsort list by file.path
     updated_files = natsort_path(updated_files)
 
