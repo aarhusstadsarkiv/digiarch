@@ -19,6 +19,7 @@ python-dateutil = "^2.8.1"
 natsort = "^7.0.1"
 halo = "^0.0.29"
 yaspin = "^0.16.0"
+requests = "^2.23.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
