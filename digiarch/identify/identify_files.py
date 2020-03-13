@@ -7,14 +7,19 @@
 # Imports
 # -----------------------------------------------------------------------------
 import subprocess
+import multiprocessing as mp
+import requests
+import asyncio
 import json
-from functools import partial
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from requests import HTTPError
+from base64 import urlsafe_b64encode
+from functools import partial
+from typing import Dict, Any, List, Union
 from subprocess import CalledProcessError
-from typing import List, Any, Dict
 from digiarch.internals import FileInfo, Identification, natsort_path
 from digiarch.exceptions import IdentificationError
-from halo import Halo
 from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
@@ -22,47 +27,69 @@ from tqdm import tqdm
 # -----------------------------------------------------------------------------
 
 
-def sf_id(path: Path) -> Dict[Path, Identification]:
-    """Identify files in path using
-    `siegfried <https://github.com/richardlehane/siegfried>`_ and return a list
-    of corresponding file objects.
+# async def run_cmd(cmd: str) -> Any:
+#     proc = await asyncio.create_subprocess_shell(
+#         cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
+#     )
+#     std_out, std_err = await proc.communicate()
+
+
+def sf_id(file: FileInfo, server: str) -> FileInfo:
+    """Identify files using
+    `siegfried <https://github.com/richardlehane/siegfried>`_ and update
+    FileInfo with obtained PUID, signature name, and warning if applicable.
 
     Parameters
     ----------
-    path : pathlib.Path
-        The path in which to run siegfried.
+    file : FileInfo
+        The file to identify.
 
     Returns
     -------
-    identified_files : List[FileInfo]
-        List of FileInfo objects with identification information.
+    updated_file : FileInfo
+        Input file with updated information in the Identification field.
 
     Raises
     ------
     IdentificationError
-        If running siegfried fails, an IdentificationError is thrown.
+        If running siegfried or loading of the resulting YAML output fails, an
+        IdentificationError is thrown.
 
     """
+
     new_id: Identification = Identification(
         puid=None,
         signame=None,
         warning="No identification information obtained.",
     )
-    identified_files: Dict[Path, Identification] = {}
+    # base64_path = urlsafe_b64encode(bytes(file.path)).decode()
+    # id_response = requests.get(
+    #     f"http://{server}/identify/{base64_path}?base64=true&format=json"
+    # )
     try:
-        cmd = subprocess.run(
-            ["sf", "-json", "-multi", "256", path],
-            capture_output=True,
-            check=True,
+        proc = subprocess.Popen(
+            ["sf", "-json", file.path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
-    except CalledProcessError as error:
+    except Exception as error:
         raise IdentificationError(error)
-    else:
-        id_result = json.loads(cmd.stdout.decode())
 
-    for file in id_result.get("files", []):
+    std_out, std_err = proc.communicate()
+    if proc.returncode != 0:
+        raise IdentificationError(std_err.decode())
+    else:
+        id_result = json.loads(std_out.decode())
+    # try:
+    #     id_response.raise_for_status()
+    # except HTTPError as error:
+    #     raise IdentificationError(error)
+    # else:
+    #     id_result = id_response.json()
+
+    for file_result in id_result.get("files", []):
         match: Dict[str, Any] = {}
-        for id_match in file.get("matches"):
+        for id_match in file_result.get("matches"):
             if id_match.get("ns") == "pronom":
                 match = id_match
 
@@ -75,30 +102,16 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             new_id.puid = match.get("id")
         if isinstance(new_id.warning, str):
             new_id.warning = new_id.warning.capitalize() or None
-        identified_files.update({Path(file.get("filename", "")): new_id})
 
-    return identified_files
-
-
-def update_file(
-    file: FileInfo, updated_files: Dict[Path, Identification]
-) -> FileInfo:
-    no_id = Identification(
-        puid=None,
-        signame=None,
-        warning="No identification information obtained.",
-    )
-    file.identification = updated_files.get(file.path) or no_id
-    return file
+    updated_file: FileInfo = file.replace(identification=new_id)
+    return updated_file
 
 
-def identify(path: Path, files: List[FileInfo]) -> List[FileInfo]:
+def identify(files: List[FileInfo]) -> List[FileInfo]:
     """Identify all files in a list, and return the updated list.
 
     Parameters
     ----------
-    path: pathlib.Path
-        Path in which to identify files.
     files : List[FileInfo]
         Files to identify.
 
@@ -108,9 +121,46 @@ def identify(path: Path, files: List[FileInfo]) -> List[FileInfo]:
         Input files with updated Identification information.
 
     """
-    identified_files = sf_id(path)
-    _update = partial(update_file, updated_files=identified_files)
-    updated_files = list(map(_update, files))
+
+    updated_files: List[FileInfo]
+
+    # Start siegfried server
+    server = "localhost:1337"
+    # subprocess.Popen(
+    #     ["sf", "-serve", server],
+    #     stdout=subprocess.DEVNULL,
+    #     stderr=subprocess.DEVNULL,
+    # )
+
+    # Multiprocess identification
+    # mp.set_start_method("spawn")
+    pool = mp.Pool()
+    # paths = [file.path for file in files]
+    _identify = partial(sf_id, server=server)
+    with ThreadPoolExecutor() as executor:
+        updated_files = list(
+            tqdm(
+                executor.map(_identify, files),
+                desc="Identifying files",
+                unit="files",
+                total=len(files),
+            )
+        )
+    # try:
+    #     updated_files = list(
+    #         tqdm(
+    #             pool.imap_unordered(_identify, files),
+    #             desc="Identifying files",
+    #             unit="files",
+    #             total=len(files),
+    #         )
+    #     )
+    # except KeyboardInterrupt:
+    #     pool.terminate()
+    #     pool.join()
+    # finally:
+    #     pool.close()
+    #     pool.join()
 
     # Natsort list by file.path
     updated_files = natsort_path(updated_files)
