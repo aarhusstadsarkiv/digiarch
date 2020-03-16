@@ -70,6 +70,7 @@ jobs:
       - run:
           name: "Install sf (siegfried)"
           command: |
+            sudo apt update
             wget -qO - https://bintray.com/user/downloadSubjectPublicKey?username=bintray | sudo apt-key add -
             echo "deb http://dl.bintray.com/siegfried/debian wheezy main" | sudo tee -a /etc/apt/sources.list
             sudo apt update && sudo apt install siegfried

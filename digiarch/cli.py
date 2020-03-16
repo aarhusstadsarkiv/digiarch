@@ -103,6 +103,8 @@ def dups(file_data: FileData) -> None:
 @click.pass_obj
 def identify(file_data: FileData) -> None:
     """Identify files using siegfried."""
-    file_data.files = identify_files.identify(file_data.files)
+    file_data.files = identify_files.identify(
+        file_data.files, file_data.metadata.processed_dir
+    )
     file_data.to_json()
     click.secho("Done!", bold=True, fg="green")
