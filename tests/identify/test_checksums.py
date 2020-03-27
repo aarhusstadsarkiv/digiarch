@@ -1,6 +1,7 @@
 import json
 from pathlib import Path
 import pytest
+from unittest.mock import patch
 from digiarch.internals import FileInfo
 from digiarch.identify.checksums import (
     file_checksum,
@@ -68,6 +69,16 @@ class TestGenerateChecksums:
 
     def test_without_files(self):
         assert generate_checksums([]) == []
+
+    def test_exception(self, test_file_0):
+        f_info_0 = FileInfo(path=test_file_0, checksum="test0")
+        files = [f_info_0] * 10
+        with pytest.raises(Exception):
+            with patch(
+                "digiarch.identify.checksums.file_checksum",
+                side_effect=Exception,
+            ):
+                generate_checksums(files)
 
 
 class TestCheckCollisions:
