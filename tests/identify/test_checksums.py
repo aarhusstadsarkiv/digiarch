@@ -73,10 +73,11 @@ class TestGenerateChecksums:
     def test_exception(self, test_file_0):
         f_info_0 = FileInfo(path=test_file_0, checksum="test0")
         files = [f_info_0] * 10
-        with pytest.raises(Exception):
+        # Raise an arbitrary exception, test that it bubbles up
+        with pytest.raises(ValueError):
             with patch(
                 "digiarch.identify.checksums.file_checksum",
-                side_effect=Exception,
+                side_effect=ValueError,
             ):
                 generate_checksums(files)
 
