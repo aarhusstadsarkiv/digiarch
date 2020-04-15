@@ -26,7 +26,7 @@ pytest-cov = "^2.8"
 mypy = "^0.770"
 prospector = "^1.2.0"
 black = "^19.10b0"
-sphinx = "^2.4.4"
+sphinx = "^3.0.1"
 sphinx-click = "^2.3.2"
 sphinx-rtd-theme = "^0.4.3"
 
