@@ -23,9 +23,12 @@ requests = "^2.23.0"
 [tool.poetry.dev-dependencies]
 pytest = "^5.2"
 pytest-cov = "^2.8"
-mypy = "^0.730.0"
+mypy = "^0.770"
 prospector = "^1.2.0"
 black = "^19.10b0"
+sphinx = "^3.0.1"
+sphinx-click = "^2.3.2"
+sphinx-rtd-theme = "^0.4.3"
 
 [tool.poetry.scripts]
 digiarch = "digiarch.cli:cli"
