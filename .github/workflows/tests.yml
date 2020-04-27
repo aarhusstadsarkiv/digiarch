@@ -36,7 +36,6 @@ jobs:
           poetry run black --check .
           poetry run mypy .
 
-
   test:
     name: Run tests & get coverage
     runs-on: ubuntu-latest
