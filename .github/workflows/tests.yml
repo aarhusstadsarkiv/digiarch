@@ -33,48 +33,48 @@ jobs:
         run: |
           source $HOME/.poetry/env
           poetry run flake8
-#          poetry run black --check .
-#          poetry run mypy .
+          poetry run black --check .
+          poetry run mypy .
 
 
-  # test:
-  #   name: Run tests & get coverage
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Checkout 
-  #       uses: actions/checkout@v1
-  #     - name: Set up Python 3.8
-  #       uses: actions/setup-python@v1
-  #       with:
-  #         python-version: 3.8
-  #     - name: Install & set up poetry
-  #       run: |
-  #         curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
-  #         source $HOME/.poetry/env
-  #         poetry config virtualenvs.in-project true
-  #     - name: Set up cache
-  #       uses: actions/cache@v1
-  #       with:
-  #         path: .venv
-  #         key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
-  #         restore-keys: |
-  #           ${{ runner.os }}-venv-
-  #     - name: Install dependencies
-  #       run: |
-  #         source $HOME/.poetry/env
-  #         poetry install
-  #     - name: Install siegfried
-  #       run: |
-  #         sudo apt update
-  #         wget -qO - https://bintray.com/user/downloadSubjectPublicKey?username=bintray | sudo apt-key add -
-  #         echo "deb http://dl.bintray.com/siegfried/debian wheezy main" | sudo tee -a /etc/apt/sources.list
-  #         sudo apt update && sudo apt install siegfried
-  #     - name: Test and generate coverage report
-  #       run: |
-  #         source $HOME/.poetry/env
-  #         poetry run pytest --cov=digiarch --cov-report=xml
-  #     - name: Upload to codecov
-  #       uses: codecov/codecov-action@v1
-  #       with:
-  #         token: ${{ secrets.CODECOV_TOKEN }}
-  #         fail_ci_if_error: true
+  test:
+    name: Run tests & get coverage
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v1
+      - name: Set up Python 3.8
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.8
+      - name: Install & set up poetry
+        run: |
+          curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python
+          source $HOME/.poetry/env
+          poetry config virtualenvs.in-project true
+      - name: Set up cache
+        uses: actions/cache@v1
+        with:
+          path: .venv
+          key: ${{ runner.os }}-venv-${{ hashFiles('**/poetry.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-venv-
+      - name: Install dependencies
+        run: |
+          source $HOME/.poetry/env
+          poetry install
+      - name: Install siegfried
+        run: |
+          sudo apt update
+          wget -qO - https://bintray.com/user/downloadSubjectPublicKey?username=bintray | sudo apt-key add -
+          echo "deb http://dl.bintray.com/siegfried/debian wheezy main" | sudo tee -a /etc/apt/sources.list
+          sudo apt update && sudo apt install siegfried
+      - name: Test and generate coverage report
+        run: |
+          source $HOME/.poetry/env
+          poetry run pytest --cov=digiarch --cov-report=xml
+      - name: Upload to codecov
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
