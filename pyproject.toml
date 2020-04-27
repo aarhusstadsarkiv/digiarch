@@ -11,7 +11,7 @@ documentation = "https://digiarch.readthedocs.io/en/latest/"
 keywords = ["archiving", "preservation", "digiarch"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 click = "^7.0"
 tqdm = "^4.36"
 dacite = "^1.0"
