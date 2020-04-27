@@ -6,9 +6,18 @@ on:
       - 'v*'
 
 jobs:
-  deploy:
-    name: Check version & deploy to PyPI
+  check:
+    name: Check version
     runs-on: ubuntu-latest
+    steps:
+      - name: Checkout 
+        uses: actions/checkout@v1
+      - name: Run check_version.sh
+        run: sh .github/check_version.sh
+  deploy:
+    name: Deploy to PyPI
+    runs-on: ubuntu-latest
+    needs: check
     steps:
       - name: Checkout 
         uses: actions/checkout@v1
@@ -32,9 +41,5 @@ jobs:
         run: |
           source $HOME/.poetry/env
           poetry install
-      - name: Hello from tag
-        run: echo "I fired on a tag!"
-      - name: Run check_version.sh
-        run: sh .github/check_version.sh
-      # - name: Publish to PyPI
-        # run: poetry publish --build -u jnik-aarhus -p ${{ secrets.PYPI_PWD }}
+      - name: Publish to PyPI
+        run: poetry publish --build -u jnik-aarhus -p ${{ secrets.PYPI_PWD }}
