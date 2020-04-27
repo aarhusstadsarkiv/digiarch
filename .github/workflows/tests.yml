@@ -32,9 +32,10 @@ jobs:
       - name: Run flake8, black, and mypy
         run: |
           source $HOME/.poetry/env
-          poetry run flake8
-          poetry run black --check .
-          poetry run mypy .
+
+#          poetry run flake8
+#          poetry run black --check .
+#          poetry run mypy .
 
 
   test:
