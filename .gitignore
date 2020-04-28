@@ -105,3 +105,7 @@ venv.bak/
 
 # CircleCI
 process.yml
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
