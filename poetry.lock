@@ -632,8 +632,8 @@ category = "main"
 description = "Yet Another Terminal Spinner"
 name = "yaspin"
 optional = false
-python-versions = "*"
-version = "0.16.0"
+python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
+version = "0.17.0"
 
 [[package]]
 category = "dev"
@@ -649,7 +649,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "6cd45c9ded304861ca0378057368658609f4df53b623fad981727913c04bae38"
+content-hash = "a1c667b38b802c306153f2faa413814f12696b70b9167904ec63b801f5609774"
 python-versions = "^3.7"
 
 [metadata.files]
@@ -994,8 +994,8 @@ wcwidth = [
     {file = "wcwidth-0.1.8.tar.gz", hash = "sha256:f28b3e8a6483e5d49e7f8949ac1a78314e740333ae305b4ba5defd3e74fb37a8"},
 ]
 yaspin = [
-    {file = "yaspin-0.16.0-py2.py3-none-any.whl", hash = "sha256:e88bf9c9fe4ac588e3620588aadae655dfc20f1f7460338394ef4693bdc2b800"},
-    {file = "yaspin-0.16.0.tar.gz", hash = "sha256:efca3eb7162e575d3ab2e49743cd9bd1f5ec2adc7d85b9489ab145a3f6460ed4"},
+    {file = "yaspin-0.17.0-py2.py3-none-any.whl", hash = "sha256:f8406d345ae046cb7330a4e581d7a959f6f7718a38002da6142b3bcaaa0367b1"},
+    {file = "yaspin-0.17.0.tar.gz", hash = "sha256:4330b240e3cb7ad990dbdc9c72891fecb1e1668cc19f0e44440bb01ffe2b1e56"},
 ]
 zipp = [
     {file = "zipp-3.1.0-py3-none-any.whl", hash = "sha256:aa36550ff0c0b7ef7fa639055d797116ee891440eac1a56f378e2d3179e0320b"},
