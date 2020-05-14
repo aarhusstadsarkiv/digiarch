@@ -11,7 +11,7 @@ documentation = "https://digiarch.readthedocs.io/en/latest/"
 keywords = ["archiving", "preservation", "digiarch"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 click = "^7.0"
 tqdm = "^4.36"
 dacite = "^1.0"
@@ -19,6 +19,7 @@ python-dateutil = "^2.8.1"
 natsort = "^7.0.1"
 yaspin = ">=0.16,<0.18"
 requests = "^2.23.0"
+datamodels = {git = "https://github.com/aarhusstadsarkiv/datamodels.git"}
 
 [tool.poetry.dev-dependencies]
 pytest = "^5.4"
