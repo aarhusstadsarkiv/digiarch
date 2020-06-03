@@ -118,7 +118,7 @@ description = "Simple creation of data classes from dictionaries."
 name = "dacite"
 optional = false
 python-versions = ">=3.6"
-version = "1.4.0"
+version = "1.5.0"
 
 [package.extras]
 dev = ["pytest (>=4)", "pytest-cov", "coveralls", "black", "mypy", "pylint"]
@@ -709,8 +709,8 @@ coverage = [
     {file = "coverage-5.1.tar.gz", hash = "sha256:f90bfc4ad18450c80b024036eaf91e4a246ae287701aaa88eaebebf150868052"},
 ]
 dacite = [
-    {file = "dacite-1.4.0-py3-none-any.whl", hash = "sha256:ee76047e035260d1bebcd5d9fe81a8341aafe6137bac08883c4be12d1719b049"},
-    {file = "dacite-1.4.0.tar.gz", hash = "sha256:6a871c818d53e7298135fda7856fdc871239d5dce0b8395427a46ff8e896aada"},
+    {file = "dacite-1.5.0-py3-none-any.whl", hash = "sha256:2ecc8497d53a1546605174694ba5a52317d643483798717435a3ab8b0c30e3d0"},
+    {file = "dacite-1.5.0.tar.gz", hash = "sha256:8288279efd458f44ac4f563df16da516a94ed14ed5fcfbaade87528ac4bab558"},
 ]
 datamodels = []
 docutils = [
