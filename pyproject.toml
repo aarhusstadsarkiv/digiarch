@@ -24,7 +24,7 @@ datamodels = {git = "https://github.com/aarhusstadsarkiv/datamodels.git"}
 [tool.poetry.dev-dependencies]
 pytest = "^5.4"
 pytest-cov = "^2.9"
-mypy = "^0.770"
+mypy = "^0.780"
 black = "^19.10b0"
 sphinx = "^3.0.4"
 sphinx-click = "^2.3.2"
