@@ -1,15 +1,13 @@
 import json
 from pathlib import Path
-import pytest
 from unittest.mock import patch
+
+import pytest
+
+from digiarch.identify.checksums import (check_collisions, check_duplicates,
+                                         checksum_worker, file_checksum,
+                                         generate_checksums)
 from digiarch.internals import FileInfo
-from digiarch.identify.checksums import (
-    file_checksum,
-    checksum_worker,
-    generate_checksums,
-    check_collisions,
-    check_duplicates,
-)
 
 
 @pytest.fixture

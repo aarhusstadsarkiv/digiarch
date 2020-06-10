@@ -1,10 +1,12 @@
-import pytest
 import json
-from subprocess import CalledProcessError
 from pathlib import Path
+from subprocess import CalledProcessError
 from unittest.mock import patch
-from digiarch.identify.identify_files import sf_id
+
+import pytest
+
 from digiarch.exceptions import IdentificationError
+from digiarch.identify.identify_files import sf_id
 
 
 @pytest.fixture

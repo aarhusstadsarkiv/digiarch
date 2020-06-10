@@ -1,7 +1,9 @@
-import pytest
 from pathlib import Path
-from digiarch.utils.group_files import grouping
+
+import pytest
+
 from digiarch.internals import FileInfo
+from digiarch.utils.group_files import grouping
 
 
 @pytest.fixture

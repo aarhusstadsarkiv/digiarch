@@ -1,8 +1,10 @@
-import pytest
 import json
 from pathlib import Path
-from digiarch.internals import FileInfo, Identification
+
+import pytest
+
 from digiarch.identify.reports import report_results
+from digiarch.internals import FileInfo, Identification
 
 
 @pytest.fixture

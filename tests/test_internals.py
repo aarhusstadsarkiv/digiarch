@@ -1,15 +1,12 @@
 import json
-import pytest
-from pathlib import Path
 from datetime import datetime
-from digiarch.internals import (
-    FileInfo,
-    Metadata,
-    FileData,
-    DataJSONEncoder,
-    size_fmt,
-)
+from pathlib import Path
+
+import pytest
 from dacite import MissingValueError
+
+from digiarch.internals import (DataJSONEncoder, FileData, FileInfo, Metadata,
+                                size_fmt)
 
 
 @pytest.fixture
