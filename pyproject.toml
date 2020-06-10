@@ -11,24 +11,25 @@ documentation = "https://digiarch.readthedocs.io/en/latest/"
 keywords = ["archiving", "preservation", "digiarch"]
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = "^3.8"
 click = "^7.0"
 tqdm = "^4.36"
 dacite = "^1.0"
 python-dateutil = "^2.8.1"
 natsort = "^7.0.1"
-yaspin = "^0.16.0"
+yaspin = ">=0.16,<0.18"
 requests = "^2.23.0"
+datamodels = {git = "https://github.com/aarhusstadsarkiv/datamodels.git"}
 
 [tool.poetry.dev-dependencies]
-pytest = "^5.2"
-pytest-cov = "^2.8"
-mypy = "^0.770"
+pytest = "^5.4"
+pytest-cov = "^2.9"
+mypy = "^0.780"
 black = "^19.10b0"
-sphinx = "^3.0.3"
+sphinx = "^3.1.0"
 sphinx-click = "^2.3.2"
 sphinx-rtd-theme = "^0.4.3"
-flake8 = "^3.7.9"
+flake8 = "^3.8.3"
 
 [tool.poetry.scripts]
 digiarch = "digiarch.cli:cli"

@@ -59,7 +59,7 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
                 )
         click.secho("Done!", bold=True, fg="green")
     else:
-        click.echo(f"Processing data from ", nl=False)
+        click.echo("Processing data from ", nl=False)
         click.secho(f"{init_file_data.json_file}", bold=True)
         file_data = FileData.from_json(init_file_data.json_file)
 
