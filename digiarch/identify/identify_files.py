@@ -3,16 +3,19 @@
 
 """
 
+
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-import subprocess
+
 import json
-from pathlib import Path
+import subprocess
 from functools import partial
-from typing import Dict, Any, List
-from digiarch.internals import FileInfo, Identification, natsort_path
+from pathlib import Path
+from typing import Any, Dict, List
+
 from digiarch.exceptions import IdentificationError
+from digiarch.internals import FileInfo, Identification, natsort_path
 from yaspin import yaspin
 
 # -----------------------------------------------------------------------------

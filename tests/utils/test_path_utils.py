@@ -1,15 +1,30 @@
-import pytest
-from pathlib import Path
+# -----------------------------------------------------------------------------
+# Imports
+# -----------------------------------------------------------------------------
+
 from datetime import datetime
-from digiarch.utils.path_utils import explore_dir
-from digiarch.internals import FileInfo, FileData, Metadata
+from pathlib import Path
+
+import pytest
+
 from digiarch.exceptions import FileCollectionError
+from digiarch.internals import FileData, FileInfo, Metadata
+from digiarch.utils.path_utils import explore_dir
+
+# -----------------------------------------------------------------------------
+# Fixtures
+# -----------------------------------------------------------------------------
 
 
 @pytest.fixture
 def file_data(temp_dir):
     cur_time = datetime.now()
     return FileData(Metadata(cur_time, Path(temp_dir)))
+
+
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 
 
 class TestExploreDir:
