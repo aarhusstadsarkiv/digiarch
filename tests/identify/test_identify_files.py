@@ -1,3 +1,7 @@
+# -----------------------------------------------------------------------------
+# Imports
+# -----------------------------------------------------------------------------
+
 import json
 from pathlib import Path
 from subprocess import CalledProcessError
@@ -7,6 +11,10 @@ import pytest
 
 from digiarch.exceptions import IdentificationError
 from digiarch.identify.identify_files import sf_id
+
+# -----------------------------------------------------------------------------
+# Fixtures
+# -----------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -19,6 +27,11 @@ def adx_info(test_data_dir):
 def docx_info(test_data_dir):
     docx_file: Path = test_data_dir / "docx_test.docx"
     return docx_file
+
+
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 
 
 class TestSFId:

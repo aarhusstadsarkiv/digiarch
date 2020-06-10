@@ -5,8 +5,13 @@ from pathlib import Path
 import pytest
 from dacite import MissingValueError
 
-from digiarch.internals import (DataJSONEncoder, FileData, FileInfo, Metadata,
-                                size_fmt)
+from digiarch.internals import (
+    DataJSONEncoder,
+    FileData,
+    FileInfo,
+    Metadata,
+    size_fmt,
+)
 
 
 @pytest.fixture
