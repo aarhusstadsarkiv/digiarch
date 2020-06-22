@@ -74,6 +74,7 @@ jobs:
       - name: Test and generate coverage report
         run: |
           source $HOME/.poetry/env
+          PATH=$PATH:$(go env GOPATH)/bin
           poetry run pytest --cov=digiarch --cov-report=xml
       - name: Upload to codecov
         uses: codecov/codecov-action@v1
