@@ -69,12 +69,11 @@ jobs:
       - name: Install siegfried
         run: |
           go get github.com/richardlehane/siegfried/cmd/sf
-          PATH=$PATH:$(go env GOPATH)/bin
+          echo "::add-path::$(go env GOPATH)/bin"
           sf -update
       - name: Test and generate coverage report
         run: |
           source $HOME/.poetry/env
-          PATH=$PATH:$(go env GOPATH)/bin
           poetry run pytest --cov=digiarch --cov-report=xml
       - name: Upload to codecov
         uses: codecov/codecov-action@v1
