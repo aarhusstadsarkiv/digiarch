@@ -68,8 +68,8 @@ jobs:
           poetry install
       - name: Install siegfried
         run: |
-          source $(go env GOPATH)/bin
           go get github.com/richardlehane/siegfried/cmd/sf
+          ls -a $(go env GOPATH)
           sf -update
       - name: Test and generate coverage report
         run: |
