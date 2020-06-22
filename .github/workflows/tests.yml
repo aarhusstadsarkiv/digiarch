@@ -69,7 +69,7 @@ jobs:
       - name: Install siegfried
         run: |
           go get github.com/richardlehane/siegfried/cmd/sf
-          ls -a $(go env GOPATH)
+          source $(go env GOPATH)/bin
           sf -update
       - name: Test and generate coverage report
         run: |
