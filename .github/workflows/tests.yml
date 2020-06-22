@@ -69,8 +69,7 @@ jobs:
       - name: Install siegfried
         run: |
           go get github.com/richardlehane/siegfried/cmd/sf
-          which sf
-          exit 1
+          sf -update
 
       - name: Test and generate coverage report
         run: |
