@@ -37,6 +37,7 @@ jobs:
             ${{ runner.os }}-venv-
       - name: Install dependencies
         run: |
+          poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
           poetry install
       - name: Publish to PyPI
