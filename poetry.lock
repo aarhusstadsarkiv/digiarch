@@ -625,16 +625,8 @@ optional = false
 python-versions = "*"
 version = "0.1.9"
 
-[[package]]
-category = "main"
-description = "Yet Another Terminal Spinner"
-name = "yaspin"
-optional = false
-python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
-version = "0.17.0"
-
 [metadata]
-content-hash = "ae327d109201b4d1970a54f85f0c6295fdbc8a8d2b745fa644c0cac6774846c2"
+content-hash = "891a39c19504e2022e0baa3ca9baf34891bdd127bd770978248fa712154c992e"
 python-versions = "^3.8"
 
 [metadata.files]
@@ -989,8 +981,4 @@ urllib3 = [
 wcwidth = [
     {file = "wcwidth-0.1.9-py2.py3-none-any.whl", hash = "sha256:cafe2186b3c009a04067022ce1dcd79cb38d8d65ee4f4791b8888d6599d1bbe1"},
     {file = "wcwidth-0.1.9.tar.gz", hash = "sha256:ee73862862a156bf77ff92b09034fc4825dd3af9cf81bc5b360668d425f3c5f1"},
-]
-yaspin = [
-    {file = "yaspin-0.17.0-py2.py3-none-any.whl", hash = "sha256:f8406d345ae046cb7330a4e581d7a959f6f7718a38002da6142b3bcaaa0367b1"},
-    {file = "yaspin-0.17.0.tar.gz", hash = "sha256:4330b240e3cb7ad990dbdc9c72891fecb1e1668cc19f0e44440bb01ffe2b1e56"},
 ]

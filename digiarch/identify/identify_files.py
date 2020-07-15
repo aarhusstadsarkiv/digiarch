@@ -16,14 +16,12 @@ from typing import Any, Dict, List
 
 from digiarch.exceptions import IdentificationError
 from digiarch.internals import FileInfo, Identification, natsort_path
-from yaspin import yaspin
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-@yaspin(text="Identifying files")
 def sf_id(path: Path) -> Dict[Path, Identification]:
     """Identify files using
     `siegfried <https://github.com/richardlehane/siegfried>`_ and update
