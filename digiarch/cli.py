@@ -74,7 +74,6 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
 def report(file_data: FileData) -> None:
     """Generate reports on files and directory structure."""
     reports.report_results(file_data.files, file_data.digiarch_dir)
-    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
@@ -82,16 +81,14 @@ def report(file_data: FileData) -> None:
 def group(file_data: FileData) -> None:
     """Generate lists of files grouped per file extension."""
     group_files.grouping(file_data.files, file_data.digiarch_dir)
-    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
 @click.pass_obj
 def checksum(file_data: FileData) -> None:
-    """Generate file checksums using xxHash."""
+    """Generate file checksums using SHA-256."""
     file_data.files = checksums.generate_checksums(file_data.files)
     file_data.to_json()
-    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
@@ -99,7 +96,6 @@ def checksum(file_data: FileData) -> None:
 def dups(file_data: FileData) -> None:
     """Check for file duplicates."""
     checksums.check_duplicates(file_data.files, file_data.digiarch_dir)
-    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
@@ -110,4 +106,8 @@ def identify(file_data: FileData) -> None:
         file_data.files, file_data.metadata.processed_dir
     )
     file_data.to_json()
+
+
+@cli.resultcallback()
+def done(result: Any, **kwargs: Any) -> None:
     click.secho("Done!", bold=True, fg="green")
