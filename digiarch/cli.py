@@ -10,6 +10,7 @@ The CLI implements several commands with suboptions.
 
 from datetime import datetime
 from pathlib import Path
+from typing import Any
 
 import click
 
@@ -102,10 +103,12 @@ def dups(file_data: FileData) -> None:
 @click.pass_obj
 def identify(file_data: FileData) -> None:
     """Identify files using siegfried."""
+    click.secho("Identifying files... ", nl=False)
     file_data.files = identify_files.identify(
         file_data.files, file_data.metadata.processed_dir
     )
     file_data.to_json()
+    click.secho(f"Successfully identified {len(file_data.files)} files.")
 
 
 @cli.resultcallback()
