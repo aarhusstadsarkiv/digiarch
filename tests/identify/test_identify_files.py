@@ -10,7 +10,8 @@ from unittest.mock import patch
 import pytest
 
 from digiarch.exceptions import IdentificationError
-from digiarch.identify.identify_files import sf_id
+from digiarch.internals import Identification
+from digiarch.identify.identify_files import sf_id, custom_id
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -84,3 +85,32 @@ class TestSFId:
                 "json.loads", side_effect=json.JSONDecodeError,
             ):
                 sf_id(docx_info)
+
+
+class TestCustomId:
+    def test_lwp(self, temp_dir):
+        lwp_file = temp_dir / "mock.lwp"
+        lwp_file.write_bytes(
+            bytes.fromhex(
+                "576F726450726F0DFB000000000000"
+                "000005985C8172030040CCC1BFFFBDF970"
+            )
+        )
+        lwp_id = Identification(
+            puid=None, signame=None, warning="this is a warning"
+        )
+        new_id = custom_id(lwp_file, lwp_id)
+        assert new_id.puid == "x-fmt/340"
+        assert new_id.signame == "Lotus WordPro Document"
+        assert new_id.warning is None
+
+    def test_123(self, temp_dir):
+        _123_file = temp_dir / "mock.123"
+        _123_file.write_bytes(bytes.fromhex("00001A000310040000000000"))
+        _123_id = Identification(
+            puid=None, signame=None, warning="this is a warning"
+        )
+        new_id = custom_id(_123_file, _123_id)
+        assert new_id.puid == "aca-fmt/1"
+        assert new_id.signame == "Lotus 1-2-3 Spreadsheet"
+        assert new_id.warning is None

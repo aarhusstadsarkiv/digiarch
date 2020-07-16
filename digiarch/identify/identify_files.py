@@ -8,6 +8,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 
+import re
 import json
 import subprocess
 from functools import partial
@@ -20,6 +21,25 @@ from digiarch.internals import FileInfo, Identification, natsort_path
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
+
+
+def custom_id(path: Path, file_id: Identification) -> Identification:
+    sig_lwp = re.compile(
+        r"(?i)^576F726450726F0DFB000000000000"
+        "000005985C8172030040CCC1BFFFBDF970"
+    )
+    sig_123 = re.compile(r"(?i)^00001A000(3|4|5)10040000000000")
+    with path.open("rb") as file_bytes:
+        bof = file_bytes.read(64).hex()
+        if sig_lwp.match(bof):
+            file_id.puid = "x-fmt/340"
+            file_id.signame = "Lotus WordPro Document"
+            file_id.warning = None
+        elif sig_123.match(bof):
+            file_id.puid = "aca-fmt/1"
+            file_id.signame = "Lotus 1-2-3 Spreadsheet"
+            file_id.warning = None
+    return file_id
 
 
 def sf_id(path: Path) -> Dict[Path, Identification]:
@@ -67,17 +87,21 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             if id_match.get("ns") == "pronom":
                 match = id_match
         if match:
-            signame = match.get("format")
-            warning = match.get("warning", "").capitalize() or None
+            file_identification: Identification
+            file_path: Path = Path(file_result["filename"])
 
             if match.get("id", "").lower() == "unknown":
                 puid = None
             else:
                 puid = match.get("id")
-            file_path: Path = Path(file_result["filename"])
-            file_identification: Identification = Identification(
+
+            signame = match.get("format") or None
+            warning = match.get("warning", "").capitalize() or None
+            file_identification = Identification(
                 puid=puid, signame=signame, warning=warning
             )
+            if puid is None:
+                file_identification = custom_id(file_path, file_identification)
             id_dict.update({file_path: file_identification})
 
     return id_dict
