@@ -3,65 +3,24 @@
 
 """
 
-
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
-import re
-import json
 import subprocess
-from functools import partial
+import json
 from pathlib import Path
-from typing import Any, Dict, List
-
-from digiarch.exceptions import IdentificationError
+from functools import partial
+from typing import Dict, Any, List
 from digiarch.internals import FileInfo, Identification, natsort_path
+from digiarch.exceptions import IdentificationError
+from yaspin import yaspin
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def custom_id(path: Path, file_id: Identification) -> Identification:
-    sig_lwp = re.compile(
-        r"(?i)^576F726450726F0DFB000000000000"
-        "000005985C8172030040CCC1BFFFBDF970"
-    )
-    sig_123 = re.compile(r"(?i)^00001A000(3|4|5)10040000000000")
-    sig_word_markup = re.compile(
-        r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,20}576f72642e446f63756d656e74"
-    )
-    sig_excel_markup = re.compile(
-        r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,18}457863656C2E5368656574"
-    )
-    with path.open("rb") as file_bytes:
-        bof = file_bytes.read(512).hex()
-        if sig_lwp.match(bof):
-            file_id.puid = "x-fmt/340"
-            file_id.signame = "Lotus WordPro Document"
-            file_id.warning = None
-        elif sig_123.match(bof):
-            file_id.puid = "aca-fmt/1"
-            file_id.signame = "Lotus 1-2-3 Spreadsheet"
-            file_id.warning = None
-        elif sig_word_markup.search(bof):
-            file_id.puid = "aca-fmt/2"
-            file_id.signame = "Microsoft Word Markup"
-            if path.suffix != ".doc":
-                file_id.warning = "Extension mismatch"
-            else:
-                file_id.warning = None
-        elif sig_excel_markup.search(bof):
-            file_id.puid = "aca-fmt/3"
-            file_id.signame = "Microsoft Excel Markup"
-            if path.suffix != ".xls":
-                file_id.warning = "Extension mismatch"
-            else:
-                file_id.warning = None
-    return file_id
-
-
+@yaspin(text="Identifying files")
 def sf_id(path: Path) -> Dict[Path, Identification]:
     """Identify files using
     `siegfried <https://github.com/richardlehane/siegfried>`_ and update
@@ -107,26 +66,17 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             if id_match.get("ns") == "pronom":
                 match = id_match
         if match:
-            file_identification: Identification
-            file_path: Path = Path(file_result["filename"])
+            signame = match.get("format")
+            warning = match.get("warning", "").capitalize() or None
 
             if match.get("id", "").lower() == "unknown":
                 puid = None
             else:
                 puid = match.get("id")
-
-            signame = match.get("format")
-            warning = match.get("warning", "").capitalize()
-            file_identification = Identification(
-                puid=puid, signame=signame or None, warning=warning or None
+            file_path: Path = Path(file_result["filename"])
+            file_identification: Identification = Identification(
+                puid=puid, signame=signame, warning=warning
             )
-            if puid is None:
-                file_identification = custom_id(file_path, file_identification)
-            if (
-                puid in ["fmt/96", "fmt/101", "fmt/583"]
-                and "Extension mismatch" in warning
-            ):
-                file_identification = custom_id(file_path, file_identification)
             id_dict.update({file_path: file_identification})
 
     return id_dict

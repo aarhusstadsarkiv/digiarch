@@ -5,16 +5,13 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 import hashlib
-from collections import Counter
 from multiprocessing import Pool
+from collections import Counter
 from pathlib import Path
-from typing import Any, Dict, ItemsView, List, Optional, Set
-
+from typing import List, Set, Dict, ItemsView, Any, Optional
 from tqdm import tqdm
-
-from digiarch.internals import FileInfo, natsort_path, to_json
+from digiarch.internals import FileInfo, to_json, natsort_path
 
 # -----------------------------------------------------------------------------
 # Function Definitions
