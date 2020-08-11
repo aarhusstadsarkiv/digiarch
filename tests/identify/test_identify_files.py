@@ -30,6 +30,12 @@ def docx_info(test_data_dir):
     return docx_file
 
 
+@pytest.fixture
+def xls_info(test_data_dir):
+    xls_file: Path = test_data_dir / "xls_test.xls"
+    return xls_file
+
+
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
@@ -38,36 +44,24 @@ def docx_info(test_data_dir):
 class TestSFId:
     def test_valid_input(self, docx_info):
         result = sf_id(docx_info)
-        paths = result.keys()
-        puids = [identification.puid for identification in result.values()]
-        signames = [
-            identification.signame for identification in result.values()
-        ]
-        warnings = [
-            identification.warning for identification in result.values()
-        ]
-        assert docx_info in paths
-        assert "fmt/412" in puids
-        assert "Microsoft Word for Windows" in signames
-        assert not any(warnings)
+        assert result[docx_info].puid == "fmt/412"
+        assert result[docx_info].signame == "Microsoft Word for Windows"
+        assert result[docx_info].warning is None
 
     def test_unknown_puid(self, adx_info):
         result = sf_id(adx_info)
-        paths = result.keys()
-        puids = [identification.puid for identification in result.values()]
-        signames = [
-            identification.signame for identification in result.values()
-        ]
-        warnings = [
-            identification.warning for identification in result.values()
-        ]
-        assert adx_info in paths
-        assert not any(puids)
-        assert not any(signames)
+        assert result[adx_info].puid is None
+        assert result[adx_info].signame is None
         assert (
-            "No match; possibilities based on extension are fmt/840"
-            in warnings
+            result[adx_info].warning
+            == "No match; possibilities based on extension are fmt/840"
         )
+
+    def test_custom_markup(self, xls_info):
+        result = sf_id(xls_info)
+        assert result[xls_info].puid == "aca-fmt/3"
+        assert result[xls_info].signame == "Microsoft Excel Markup"
+        assert result[xls_info].warning is None
 
     def test_subprocess_error(self, docx_info):
         with pytest.raises(IdentificationError):
@@ -114,3 +108,65 @@ class TestCustomId:
         assert new_id.puid == "aca-fmt/1"
         assert new_id.signame == "Lotus 1-2-3 Spreadsheet"
         assert new_id.warning is None
+
+    def test_word_markup(self, temp_dir):
+        word_markup = temp_dir / "mock.doc"
+        word_markup.write_bytes(
+            bytes.fromhex(
+                "6e2070726f6769643d22576f72642e446f"
+                "63756d656e74223f3e3c773a776f726444"
+            )
+        )
+        word_markup_id = Identification(
+            puid="fmt/96",
+            signame="Hypertext Markup Language",
+            warning="Extension mismatch",
+        )
+        new_id = custom_id(word_markup, word_markup_id)
+        assert new_id.puid == "aca-fmt/2"
+        assert new_id.signame == "Microsoft Word Markup"
+        assert new_id.warning is None
+        word_markup_wrong_suffix = word_markup.with_suffix(".test")
+        word_markup_wrong_suffix.write_bytes(
+            bytes.fromhex(
+                "6e2070726f6769643d22576f72642e446f"
+                "63756d656e74223f3e3c773a776f726444"
+            )
+        )
+        new_id_wrong_suffix = custom_id(
+            word_markup_wrong_suffix, word_markup_id
+        )
+        assert new_id_wrong_suffix.puid == new_id.puid
+        assert new_id_wrong_suffix.signame == new_id.signame
+        assert new_id_wrong_suffix.warning is not None
+
+    def test_excel_markup(self, temp_dir):
+        excel_markup = temp_dir / "mock.xls"
+        excel_markup.write_bytes(
+            bytes.fromhex(
+                "6d657461206e616d653d50726f67496420636f6e74656e"
+                "743d457863656c2e53686565743e0d0a3c6d657461206e"
+            )
+        )
+        excel_markup_id = Identification(
+            puid="fmt/583",
+            signame="Vector Markup Language",
+            warning="Extension mismatch",
+        )
+        new_id = custom_id(excel_markup, excel_markup_id)
+        assert new_id.puid == "aca-fmt/3"
+        assert new_id.signame == "Microsoft Excel Markup"
+        assert new_id.warning is None
+        excel_markup_wrong_suffix = excel_markup.with_suffix(".test")
+        excel_markup_wrong_suffix.write_bytes(
+            bytes.fromhex(
+                "6d657461206e616d653d50726f67496420636f6e74656e"
+                "743d457863656c2e53686565743e0d0a3c6d657461206e"
+            )
+        )
+        new_id_wrong_suffix = custom_id(
+            excel_markup_wrong_suffix, excel_markup_id
+        )
+        assert new_id_wrong_suffix.puid == new_id.puid
+        assert new_id_wrong_suffix.signame == new_id.signame
+        assert new_id_wrong_suffix.warning is not None

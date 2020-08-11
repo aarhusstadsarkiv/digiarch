@@ -29,8 +29,14 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         "000005985C8172030040CCC1BFFFBDF970"
     )
     sig_123 = re.compile(r"(?i)^00001A000(3|4|5)10040000000000")
+    sig_word_markup = re.compile(
+        r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,20}576f72642e446f63756d656e74"
+    )
+    sig_excel_markup = re.compile(
+        r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,18}457863656C2E5368656574"
+    )
     with path.open("rb") as file_bytes:
-        bof = file_bytes.read(64).hex()
+        bof = file_bytes.read(512).hex()
         if sig_lwp.match(bof):
             file_id.puid = "x-fmt/340"
             file_id.signame = "Lotus WordPro Document"
@@ -39,6 +45,20 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
             file_id.puid = "aca-fmt/1"
             file_id.signame = "Lotus 1-2-3 Spreadsheet"
             file_id.warning = None
+        elif sig_word_markup.search(bof):
+            file_id.puid = "aca-fmt/2"
+            file_id.signame = "Microsoft Word Markup"
+            if path.suffix != ".doc":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
+        elif sig_excel_markup.search(bof):
+            file_id.puid = "aca-fmt/3"
+            file_id.signame = "Microsoft Excel Markup"
+            if path.suffix != ".xls":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
     return file_id
 
 
@@ -95,12 +115,17 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             else:
                 puid = match.get("id")
 
-            signame = match.get("format") or None
-            warning = match.get("warning", "").capitalize() or None
+            signame = match.get("format")
+            warning = match.get("warning", "").capitalize()
             file_identification = Identification(
-                puid=puid, signame=signame, warning=warning
+                puid=puid, signame=signame or None, warning=warning or None
             )
             if puid is None:
+                file_identification = custom_id(file_path, file_identification)
+            if (
+                puid in ["fmt/96", "fmt/101", "fmt/583"]
+                and "Extension mismatch" in warning
+            ):
                 file_identification = custom_id(file_path, file_identification)
             id_dict.update({file_path: file_identification})
 
