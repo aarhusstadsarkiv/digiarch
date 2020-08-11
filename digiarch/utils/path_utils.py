@@ -17,7 +17,7 @@ from tqdm import tqdm
 from digiarch.exceptions import FileCollectionError
 from digiarch.internals import (
     FileData,
-    FileInfo,
+    ArchiveFile,
     Metadata,
     natsort_path,
     size_fmt,
@@ -43,7 +43,7 @@ def explore_dir(path: Path) -> FileData:
         A list of empty subdirectory paths, if any such were found
     """
     # Type declarations
-    dir_info: List[FileInfo] = []
+    dir_info: List[ArchiveFile] = []
     empty_subs: List[Path] = []
     several_files: List[Path] = []
     total_size: int = 0
@@ -72,7 +72,7 @@ def explore_dir(path: Path) -> FileData:
             several_files.append(Path(root))
         for file in files:
             cur_path = Path(root, file)
-            dir_info.append(FileInfo(path=cur_path))
+            dir_info.append(ArchiveFile(path=cur_path))
             total_size += cur_path.stat().st_size
             file_count += 1
 

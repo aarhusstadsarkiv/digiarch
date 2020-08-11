@@ -8,7 +8,8 @@ from pathlib import Path
 import pytest
 
 from digiarch.identify.reports import report_results
-from digiarch.internals import FileInfo, Identification
+from digiarch.internals import ArchiveFile
+from datamodels import Identification
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -19,7 +20,7 @@ from digiarch.internals import FileInfo, Identification
 def file_info_0(temp_dir):
     test_file = Path(temp_dir).joinpath("test0.txt")
     test_file.write_text("0")
-    file_info = FileInfo(test_file)
+    file_info = ArchiveFile(test_file)
     return file_info
 
 
@@ -27,7 +28,7 @@ def file_info_0(temp_dir):
 def file_info_1(temp_dir):
     test_file = Path(temp_dir).joinpath("test1.pdf")
     test_file.write_text("1")
-    file_info = FileInfo(
+    file_info = ArchiveFile(
         test_file,
         identification=Identification(
             puid=None, signame=None, warning="No match"
@@ -40,7 +41,7 @@ def file_info_1(temp_dir):
 def file_info_2(temp_dir):
     test_file = Path(temp_dir).joinpath("test3.bogus")
     test_file.write_text("1")
-    file_info = FileInfo(
+    file_info = ArchiveFile(
         test_file,
         identification=Identification(
             puid=None, signame=None, warning="Extension mismatch"

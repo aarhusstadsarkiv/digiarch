@@ -20,6 +20,9 @@ from dateutil.parser import parse as date_parse
 import digiarch
 from natsort import natsorted
 
+from datamodels import ArchiveFile, ACABase
+from pydantic import Field
+
 # -----------------------------------------------------------------------------
 # Globals
 # -----------------------------------------------------------------------------
@@ -62,48 +65,47 @@ class DataBase:
 # --------------------
 
 
-@dataclasses.dataclass
-class Identification(DataBase):
-    """Data class for keeping track of file identification information"""
+# @dataclasses.dataclass
+# class Identification(DataBase):
+#     """Data class for keeping track of file identification information"""
 
-    puid: Optional[str]
-    signame: Optional[str]
-    warning: Optional[str] = None
+#     puid: Optional[str]
+#     signame: Optional[str]
+#     warning: Optional[str] = None
 
 
 # File Info
 # --------------------
 
 
-@dataclasses.dataclass
-class FileInfo(DataBase):
-    """Data class for keeping track of file information"""
+# @dataclasses.dataclass
+# class FileInfo(DataBase):
+#     """Data class for keeping track of file information"""
 
-    path: Path
-    name: str = dataclasses.field(init=False)
-    ext: str = dataclasses.field(init=False)
-    size: str = dataclasses.field(init=False)
-    checksum: Optional[str] = None
-    identification: Optional[Identification] = None
+#     path: Path
+#     name: str = dataclasses.field(init=False)
+#     ext: str = dataclasses.field(init=False)
+#     size: str = dataclasses.field(init=False)
+#     checksum: Optional[str] = None
+#     identification: Optional[Identification] = None
 
-    def __post_init__(self) -> None:
-        # JSON/from_dict compatibility
-        if not isinstance(self.path, Path):
-            self.path = Path(self.path)
+#     def __post_init__(self) -> None:
+#         # JSON/from_dict compatibility
+#         if not isinstance(self.path, Path):
+#             self.path = Path(self.path)
 
-        # Resolve path, init fields
-        self.path = self.path.resolve()
-        self.name = self.path.name
-        self.ext = self.path.suffix.lower()
-        self.size = size_fmt(self.path.stat().st_size)
+#         # Resolve path, init fields
+#         self.path = self.path.resolve()
+#         self.name = self.path.name
+#         self.ext = self.path.suffix.lower()
+#         self.size = size_fmt(self.path.stat().st_size)
 
 
 # Metadata
 # --------------------
 
 
-@dataclasses.dataclass
-class Metadata(DataBase):
+class Metadata(ACABase):
     """Data class for keeping track of metadata used in data.json"""
 
     last_run: datetime
@@ -128,14 +130,15 @@ class Metadata(DataBase):
 
 # JSON Data
 # --------------------
-@dataclasses.dataclass
-class FileData(DataBase):
+
+
+class FileData(ACABase):
     """Data class collecting Metadata and list of FileInfo"""
 
     metadata: Metadata
-    files: List[FileInfo] = dataclasses.field(default_factory=list)
-    digiarch_dir: Path = dataclasses.field(init=False)
-    json_file: Path = dataclasses.field(init=False)
+    files: List[ArchiveFile] = []
+    digiarch_dir: Path = Field(None)
+    json_file: Path = Field(None)
 
     def __post_init__(self) -> None:
         # Directory paths
@@ -151,18 +154,18 @@ class FileData(DataBase):
         if not self.json_file.is_file():
             self.json_file.touch()
 
-    def to_json(self, file: Optional[Path] = None) -> None:
-        if file is None:
-            file = self.json_file
-        with file.open("w", encoding="utf-8") as f:
-            json.dump(
-                self, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False
-            )
+    # def to_json(self, file: Optional[Path] = None) -> None:
+    #     if file is None:
+    #         file = self.json_file
+    #     with file.open("w", encoding="utf-8") as f:
+    #         json.dump(
+    #             self, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False
+    #         )
 
-    @classmethod
-    def from_json(cls, data_file: Path) -> Any:
-        with data_file.open("r", encoding="utf-8") as file:
-            return cls.from_dict(json.load(file))
+    # @classmethod
+    # def from_json(cls, data_file: Path) -> Any:
+    #     with data_file.open("r", encoding="utf-8") as file:
+    #         return cls.from_dict(json.load(file))
 
 
 # Utility
@@ -247,7 +250,7 @@ def to_json(data: object, file: Path) -> None:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
 
 
-def natsort_path(file_list: List[FileInfo]) -> List[FileInfo]:
+def natsort_path(file_list: List[ArchiveFile]) -> List[ArchiveFile]:
     """Naturally sort a list of FileInfo objects by their paths.
 
     Parameters
@@ -261,8 +264,8 @@ def natsort_path(file_list: List[FileInfo]) -> List[FileInfo]:
         The list of FileInfo objects naturally sorted by their path.
     """
 
-    sorted_file_list: List[FileInfo] = natsorted(
-        file_list, key=lambda fileinfo: str(fileinfo.path)
+    sorted_file_list: List[ArchiveFile] = natsorted(
+        file_list, key=lambda archive_file: str(archive_file.path)
     )
 
     return sorted_file_list

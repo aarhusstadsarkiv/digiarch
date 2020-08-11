@@ -13,14 +13,15 @@ from typing import Dict, List
 
 from tqdm import tqdm
 
-from digiarch.internals import FileInfo, Identification, to_json
+from digiarch.internals import ArchiveFile, to_json
+from datamodels import Identification
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def report_results(files: List[FileInfo], save_path: Path) -> None:
+def report_results(files: List[ArchiveFile], save_path: Path) -> None:
     """Generates reports of explore_dir() results.
 
     Parameters

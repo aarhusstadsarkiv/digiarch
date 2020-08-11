@@ -39,7 +39,7 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
 
     # Initialise FileData
     metadata = Metadata(last_run=datetime.now(), processed_dir=Path(path))
-    init_file_data = FileData(metadata)
+    init_file_data = FileData(metadata=metadata)
 
     # Collect file info and update file_data
     if reindex or init_file_data.json_file.stat().st_size == 0:

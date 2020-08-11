@@ -16,7 +16,8 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from digiarch.exceptions import IdentificationError
-from digiarch.internals import FileInfo, Identification, natsort_path
+from digiarch.internals import ArchiveFile, natsort_path
+from datamodels import Identification
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -39,22 +40,22 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         bof = file_bytes.read(512).hex()
         if sig_lwp.match(bof):
             file_id.puid = "x-fmt/340"
-            file_id.signame = "Lotus WordPro Document"
+            file_id.signature = "Lotus WordPro Document"
             file_id.warning = None
         elif sig_123.match(bof):
             file_id.puid = "aca-fmt/1"
-            file_id.signame = "Lotus 1-2-3 Spreadsheet"
+            file_id.signature = "Lotus 1-2-3 Spreadsheet"
             file_id.warning = None
         elif sig_word_markup.search(bof):
             file_id.puid = "aca-fmt/2"
-            file_id.signame = "Microsoft Word Markup"
+            file_id.signature = "Microsoft Word Markup"
             if path.suffix != ".doc":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_excel_markup.search(bof):
             file_id.puid = "aca-fmt/3"
-            file_id.signame = "Microsoft Excel Markup"
+            file_id.signature = "Microsoft Excel Markup"
             if path.suffix != ".xls":
                 file_id.warning = "Extension mismatch"
             else:
@@ -115,10 +116,10 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             else:
                 puid = match.get("id")
 
-            signame = match.get("format")
+            signature = match.get("format")
             warning = match.get("warning", "").capitalize()
             file_identification = Identification(
-                puid=puid, signame=signame or None, warning=warning or None
+                puid=puid, signature=signature or None, warning=warning or None
             )
             if puid is None:
                 file_identification = custom_id(file_path, file_identification)
@@ -133,18 +134,18 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
 
 
 def update_file_info(
-    file_info: FileInfo, id_info: Dict[Path, Identification]
-) -> FileInfo:
+    file_info: ArchiveFile, id_info: Dict[Path, Identification]
+) -> ArchiveFile:
     no_id: Identification = Identification(
         puid=None,
-        signame=None,
+        signature=None,
         warning="No identification information obtained.",
     )
     file_info.identification = id_info.get(file_info.path) or no_id
     return file_info
 
 
-def identify(files: List[FileInfo], path: Path) -> List[FileInfo]:
+def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     """Identify all files in a list, and return the updated list.
 
     Parameters
@@ -161,7 +162,7 @@ def identify(files: List[FileInfo], path: Path) -> List[FileInfo]:
 
     id_info: Dict[Path, Identification] = sf_id(path)
     _update = partial(update_file_info, id_info=id_info)
-    updated_files: List[FileInfo] = list(map(_update, files))
+    updated_files: List[ArchiveFile] = list(map(_update, files))
 
     return natsort_path(updated_files)
 
@@ -251,7 +252,7 @@ def identify(files: List[FileInfo], path: Path) -> List[FileInfo]:
 
 #     new_id: Identification = Identification(
 #         puid=None,
-#         signame=None,
+#         signature=None,
 #         warning="No identification information obtained.",
 #     )
 #     server: str = random.choice(servers)
@@ -276,7 +277,7 @@ def identify(files: List[FileInfo], path: Path) -> List[FileInfo]:
 #                 match = id_match
 
 #         new_id = new_id.replace(
-#             signame=match.get("format"), warning=match.get("warning")
+#             signature=match.get("format"), warning=match.get("warning")
 #         )
 #         if match.get("id", "").lower() == "unknown":
 #             new_id.puid = None

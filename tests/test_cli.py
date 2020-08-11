@@ -35,6 +35,7 @@ class TestCli:
             Path(temp_dir, "test.txt").touch()
             args = [str(temp_dir)]
             result = cli_run.invoke(cli, args)
+            print(result.exc_info)
             assert result.exit_code == 0
 
     def test_main_cli_invalid(self, cli_run):
@@ -121,4 +122,5 @@ class TestCli:
         Path(temp_dir, "test.txt").touch()
         args = [str(temp_dir), "identify"]
         result = cli_run.invoke(cli, args)
+        print(result.exc_info)
         assert result.exit_code == 0

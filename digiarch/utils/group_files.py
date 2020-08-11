@@ -11,14 +11,14 @@ from typing import List, Set
 
 from tqdm import tqdm
 
-from digiarch.internals import IGNORED_EXTS, FileInfo
+from digiarch.internals import IGNORED_EXTS, ArchiveFile
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-def grouping(files: List[FileInfo], save_path: Path) -> None:
+def grouping(files: List[ArchiveFile], save_path: Path) -> None:
     """Groups files per file extension.
 
     Parameters
