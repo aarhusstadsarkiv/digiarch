@@ -5,10 +5,13 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+
 from pathlib import Path
 from typing import List, Set
+
 from tqdm import tqdm
-from digiarch.internals import FileInfo, IGNORED_EXTS
+
+from digiarch.internals import IGNORED_EXTS, FileInfo
 
 # -----------------------------------------------------------------------------
 # Function Definitions

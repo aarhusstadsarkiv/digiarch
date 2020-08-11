@@ -7,13 +7,17 @@ The CLI implements several commands with suboptions.
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-import click
+
 from datetime import datetime
 from pathlib import Path
-from digiarch.internals import FileData, Metadata
-from digiarch.utils import path_utils, group_files
-from digiarch.identify import checksums, reports, identify_files
+from typing import Any
+
+import click
+
 from digiarch.exceptions import FileCollectionError
+from digiarch.identify import checksums, identify_files, reports
+from digiarch.internals import FileData, Metadata
+from digiarch.utils import group_files, path_utils
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -71,7 +75,6 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
 def report(file_data: FileData) -> None:
     """Generate reports on files and directory structure."""
     reports.report_results(file_data.files, file_data.digiarch_dir)
-    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
@@ -79,16 +82,14 @@ def report(file_data: FileData) -> None:
 def group(file_data: FileData) -> None:
     """Generate lists of files grouped per file extension."""
     group_files.grouping(file_data.files, file_data.digiarch_dir)
-    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
 @click.pass_obj
 def checksum(file_data: FileData) -> None:
-    """Generate file checksums using xxHash."""
+    """Generate file checksums using SHA-256."""
     file_data.files = checksums.generate_checksums(file_data.files)
     file_data.to_json()
-    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
@@ -96,15 +97,20 @@ def checksum(file_data: FileData) -> None:
 def dups(file_data: FileData) -> None:
     """Check for file duplicates."""
     checksums.check_duplicates(file_data.files, file_data.digiarch_dir)
-    click.secho("Done!", bold=True, fg="green")
 
 
 @cli.command()
 @click.pass_obj
 def identify(file_data: FileData) -> None:
     """Identify files using siegfried."""
+    click.secho("Identifying files... ", nl=False)
     file_data.files = identify_files.identify(
         file_data.files, file_data.metadata.processed_dir
     )
     file_data.to_json()
+    click.secho(f"Successfully identified {len(file_data.files)} files.")
+
+
+@cli.resultcallback()
+def done(result: Any, **kwargs: Any) -> None:
     click.secho("Done!", bold=True, fg="green")

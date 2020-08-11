@@ -6,16 +6,19 @@ Digital Archive.
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+
 import dataclasses
 import inspect
 import json
-import dacite
 from datetime import datetime
-from dateutil.parser import parse as date_parse
 from pathlib import Path
 from typing import Any, List, Optional, Set
-from natsort import natsorted
+
+import dacite
+from dateutil.parser import parse as date_parse
+
 import digiarch
+from natsort import natsorted
 
 # -----------------------------------------------------------------------------
 # Globals
