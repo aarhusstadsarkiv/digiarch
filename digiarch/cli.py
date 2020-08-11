@@ -17,7 +17,7 @@ import click
 from digiarch.exceptions import FileCollectionError
 from digiarch.identify import checksums, identify_files, reports
 from digiarch.internals import FileData, Metadata
-from digiarch.utils import group_files, path_utils
+from digiarch.utils import group_files, path_utils, fix_file_exts
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -109,6 +109,21 @@ def identify(file_data: FileData) -> None:
     )
     file_data.to_json()
     click.secho(f"Successfully identified {len(file_data.files)} files.")
+
+
+@cli.command()
+@click.pass_obj
+def fix(file_data: FileData) -> None:
+    """Fix file extensions"""
+    fix_file_exts.fix_extensions(file_data.files)
+    click.secho("Rebuilding file information...", bold=True)
+    try:
+        file_data = path_utils.explore_dir(
+            Path(file_data.metadata.processed_dir)
+        )
+    except FileCollectionError as error:
+        raise click.ClickException(str(error))
+    file_data.to_json()
 
 
 @cli.resultcallback()
