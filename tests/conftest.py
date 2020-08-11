@@ -5,10 +5,13 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from datetime import datetime
-import pytest
+
 import inspect
+from datetime import datetime
 from pathlib import Path
+
+import pytest
+
 from digiarch.internals import FileData, Metadata
 
 # -----------------------------------------------------------------------------

@@ -2,13 +2,17 @@
 
 """
 
+
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+
 from collections import Counter
 from pathlib import Path
-from typing import List, Dict
+from typing import Dict, List
+
 from tqdm import tqdm
+
 from digiarch.internals import FileInfo, Identification, to_json
 
 # -----------------------------------------------------------------------------

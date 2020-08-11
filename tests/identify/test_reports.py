@@ -1,8 +1,18 @@
-import pytest
+# -----------------------------------------------------------------------------
+# Imports
+# -----------------------------------------------------------------------------
+
 import json
 from pathlib import Path
-from digiarch.internals import FileInfo, Identification
+
+import pytest
+
 from digiarch.identify.reports import report_results
+from digiarch.internals import FileInfo, Identification
+
+# -----------------------------------------------------------------------------
+# Fixtures
+# -----------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -37,6 +47,11 @@ def file_info_2(temp_dir):
         ),
     )
     return file_info
+
+
+# -----------------------------------------------------------------------------
+# Tests
+# -----------------------------------------------------------------------------
 
 
 class TestReportResults:

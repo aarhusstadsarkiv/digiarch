@@ -1,23 +1,27 @@
 """Utilities for handling files, paths, etc.
 
 """
+
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+
 import os
 import shutil
 from datetime import datetime
 from pathlib import Path
+from typing import List
+
 from tqdm import tqdm
+
+from digiarch.exceptions import FileCollectionError
 from digiarch.internals import (
+    FileData,
     FileInfo,
     Metadata,
-    FileData,
-    size_fmt,
     natsort_path,
+    size_fmt,
 )
-from digiarch.exceptions import FileCollectionError
-from typing import List
 
 # -----------------------------------------------------------------------------
 # Function Definitions
