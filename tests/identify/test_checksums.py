@@ -1,25 +1,15 @@
-# -----------------------------------------------------------------------------
-# Imports
-# -----------------------------------------------------------------------------
-
 import json
 from pathlib import Path
-from unittest.mock import patch
-
 import pytest
-
+from unittest.mock import patch
+from digiarch.internals import FileInfo
 from digiarch.identify.checksums import (
+    file_checksum,
+    checksum_worker,
+    generate_checksums,
     check_collisions,
     check_duplicates,
-    checksum_worker,
-    file_checksum,
-    generate_checksums,
 )
-from digiarch.internals import FileInfo
-
-# -----------------------------------------------------------------------------
-# Fixtures
-# -----------------------------------------------------------------------------
 
 
 @pytest.fixture
@@ -41,11 +31,6 @@ def test_file_1(temp_dir):
 @pytest.fixture
 def test_file_info(test_file_0):
     return FileInfo(path=test_file_0)
-
-
-# -----------------------------------------------------------------------------
-# Tests
-# -----------------------------------------------------------------------------
 
 
 class TestFileChecksum:

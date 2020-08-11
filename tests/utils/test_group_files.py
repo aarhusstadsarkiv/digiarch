@@ -1,17 +1,7 @@
-# -----------------------------------------------------------------------------
-# Imports
-# -----------------------------------------------------------------------------
-
-from pathlib import Path
-
 import pytest
-
-from digiarch.internals import FileInfo
+from pathlib import Path
 from digiarch.utils.group_files import grouping
-
-# -----------------------------------------------------------------------------
-# Fixtures
-# -----------------------------------------------------------------------------
+from digiarch.internals import FileInfo
 
 
 @pytest.fixture
@@ -36,11 +26,6 @@ def ignored_file(temp_dir):
     with test_file.open("w") as file:
         file.write("1")
     return test_file
-
-
-# -----------------------------------------------------------------------------
-# Tests
-# -----------------------------------------------------------------------------
 
 
 class TestGrouping:
