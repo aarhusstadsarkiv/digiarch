@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import click
+from click.core import Context
 
 from digiarch.exceptions import FileCollectionError
 from digiarch.identify import checksums, identify_files, reports
@@ -28,11 +29,12 @@ from digiarch.utils import group_files, path_utils
 @click.argument(
     "path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
 )
+@click.option("--reindex", is_flag=True, help="Reindex the current directory.")
 @click.option(
-    "--reindex", is_flag=True, help="Whether to reindex the current directory."
+    "--all", is_flag=True, is_eager=True, help="Run all commands.",
 )
 @click.pass_context
-def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
+def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
     """Used for indexing, reporting on, and identifying files
     found in PATH.
     """
@@ -48,26 +50,50 @@ def cli(ctx: click.core.Context, path: str, reindex: bool) -> None:
             file_data = path_utils.explore_dir(Path(path))
         except FileCollectionError as error:
             raise click.ClickException(str(error))
-        else:
-            if file_data.metadata.empty_subdirs:
-                click.secho(
-                    "Warning! Empty subdirectories detected!",
-                    bold=True,
-                    fg="red",
-                )
-            if file_data.metadata.several_files:
-                click.secho(
-                    "Warning! Some directories have several files!",
-                    bold=True,
-                    fg="red",
-                )
-        click.secho("Done!", bold=True, fg="green")
+
     else:
         click.echo("Processing data from ", nl=False)
         click.secho(f"{init_file_data.json_file}", bold=True)
         file_data = FileData.from_json(init_file_data.json_file)
 
+    if file_data.metadata.empty_subdirs:
+        click.secho(
+            "Warning! Empty subdirectories detected!", bold=True, fg="red",
+        )
+    if file_data.metadata.several_files:
+        click.secho(
+            "Warning! Some directories have several files!",
+            bold=True,
+            fg="red",
+        )
     ctx.obj = file_data
+    if all:
+        ctx.invoke(checksum)
+        ctx.invoke(identify)
+        ctx.invoke(report)
+        ctx.invoke(group)
+        ctx.invoke(dups)
+        ctx.exit()
+
+
+@cli.command()
+@click.pass_obj
+def checksum(file_data: FileData) -> None:
+    """Generate file checksums using SHA-256."""
+    file_data.files = checksums.generate_checksums(file_data.files)
+    file_data.to_json()
+
+
+@cli.command()
+@click.pass_obj
+def identify(file_data: FileData) -> None:
+    """Identify files using siegfried."""
+    click.secho("Identifying files... ", nl=False)
+    file_data.files = identify_files.identify(
+        file_data.files, file_data.metadata.processed_dir
+    )
+    file_data.to_json()
+    click.secho(f"Successfully identified {len(file_data.files)} files.")
 
 
 @cli.command()
@@ -86,29 +112,9 @@ def group(file_data: FileData) -> None:
 
 @cli.command()
 @click.pass_obj
-def checksum(file_data: FileData) -> None:
-    """Generate file checksums using SHA-256."""
-    file_data.files = checksums.generate_checksums(file_data.files)
-    file_data.to_json()
-
-
-@cli.command()
-@click.pass_obj
 def dups(file_data: FileData) -> None:
     """Check for file duplicates."""
     checksums.check_duplicates(file_data.files, file_data.digiarch_dir)
-
-
-@cli.command()
-@click.pass_obj
-def identify(file_data: FileData) -> None:
-    """Identify files using siegfried."""
-    click.secho("Identifying files... ", nl=False)
-    file_data.files = identify_files.identify(
-        file_data.files, file_data.metadata.processed_dir
-    )
-    file_data.to_json()
-    click.secho(f"Successfully identified {len(file_data.files)} files.")
 
 
 @cli.resultcallback()
