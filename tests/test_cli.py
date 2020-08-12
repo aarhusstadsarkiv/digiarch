@@ -86,6 +86,18 @@ class TestCli:
             result = cli_run.invoke(cli, args)
             assert "Collecting file information" in result.output
 
+    def test_all_option(self, cli_run, temp_dir, data_file):
+        with cli_run.isolated_filesystem():
+            args = ["--all", str(temp_dir)]
+            Path(temp_dir, "test.txt").touch()
+            result = cli_run.invoke(cli, args)
+            print(result.output)
+            assert "Generating checksums" in result.output
+            assert "Identifying files" in result.output
+            assert "Creating reports" in result.output
+            assert "Grouping files" in result.output
+            assert "Finding duplicates" in result.output
+
     def test_report_command(self, cli_run, temp_dir):
         """The cli is run with a valid path as argument and the report option.
         This should be successful, i.e. have exit code 0."""
