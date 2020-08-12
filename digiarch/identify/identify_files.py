@@ -29,6 +29,7 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         "000005985C8172030040CCC1BFFFBDF970"
     )
     sig_123 = re.compile(r"(?i)^00001A000(3|4|5)10040000000000")
+    sig_mmap = re.compile(r"(?i)4D696E644d616E61676572")
     sig_word_markup = re.compile(
         r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,20}576f72642e446f63756d656e74"
     )
