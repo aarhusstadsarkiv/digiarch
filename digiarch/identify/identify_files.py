@@ -37,26 +37,44 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,18}457863656C2E5368656574"
     )
     with path.open("rb") as file_bytes:
-        bof = file_bytes.read(512).hex()
+        # BOF
+        bof = file_bytes.read(1024).hex()
+        # Navigate to EOF
+        file_bytes.seek(-1024, 2)
+        eof = file_bytes.read(1024).hex()
+
         if sig_lwp.match(bof):
             file_id.puid = "x-fmt/340"
             file_id.signame = "Lotus WordPro Document"
-            file_id.warning = None
+            if path.suffix.lower() != ".lwp":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
         elif sig_123.match(bof):
             file_id.puid = "aca-fmt/1"
             file_id.signame = "Lotus 1-2-3 Spreadsheet"
-            file_id.warning = None
+            if path.suffix.lower() != ".123":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
         elif sig_word_markup.search(bof):
             file_id.puid = "aca-fmt/2"
             file_id.signame = "Microsoft Word Markup"
-            if path.suffix != ".doc":
+            if path.suffix.lower() != ".doc":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_excel_markup.search(bof):
             file_id.puid = "aca-fmt/3"
             file_id.signame = "Microsoft Excel Markup"
-            if path.suffix != ".xls":
+            if path.suffix.lower() != ".xls":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
+        elif sig_mmap.search(bof) or sig_mmap.search(eof):
+            file_id.puid = "aca-fmt/4"
+            file_id.signame = "MindManager Mind Map"
+            if path.suffix.lower() != ".mmap":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
@@ -124,7 +142,7 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             if puid is None:
                 file_identification = custom_id(file_path, file_identification)
             if (
-                puid in ["fmt/96", "fmt/101", "fmt/583"]
+                puid in ["fmt/96", "fmt/101", "fmt/583", "x-fmt/263"]
                 and "Extension mismatch" in warning
             ):
                 file_identification = custom_id(file_path, file_identification)
