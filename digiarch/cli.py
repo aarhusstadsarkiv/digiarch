@@ -30,9 +30,7 @@ from digiarch.utils import group_files, path_utils
     "path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
 )
 @click.option("--reindex", is_flag=True, help="Reindex the current directory.")
-@click.option(
-    "--all", is_flag=True, is_eager=True, help="Run all commands.",
-)
+@click.option("--all", is_flag=True, help="Run all commands.")
 @click.pass_context
 def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
     """Used for indexing, reporting on, and identifying files
