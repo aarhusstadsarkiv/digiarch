@@ -8,8 +8,8 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-import re
 import json
+import re
 import subprocess
 from functools import partial
 from pathlib import Path
