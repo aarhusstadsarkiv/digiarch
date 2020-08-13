@@ -14,9 +14,9 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any, List, Optional, Set
 
-import dacite
 from dateutil.parser import parse as date_parse
 
+import dacite
 import digiarch
 from natsort import natsorted
 

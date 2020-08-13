@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 from dacite import MissingValueError
-
 from digiarch.internals import (
     DataJSONEncoder,
     FileData,

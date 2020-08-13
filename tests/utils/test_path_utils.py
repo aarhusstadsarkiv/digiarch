@@ -6,7 +6,6 @@ from datetime import datetime
 from pathlib import Path
 
 import pytest
-
 from digiarch.exceptions import FileCollectionError
 from digiarch.internals import FileData, FileInfo, Metadata
 from digiarch.utils.path_utils import explore_dir

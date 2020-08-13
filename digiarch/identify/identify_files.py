@@ -8,8 +8,8 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-import re
 import json
+import re
 import subprocess
 from functools import partial
 from pathlib import Path
@@ -40,22 +40,28 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         if sig_lwp.match(bof):
             file_id.puid = "x-fmt/340"
             file_id.signame = "Lotus WordPro Document"
-            file_id.warning = None
+            if path.suffix.lower() != ".lwp":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
         elif sig_123.match(bof):
             file_id.puid = "aca-fmt/1"
             file_id.signame = "Lotus 1-2-3 Spreadsheet"
-            file_id.warning = None
+            if path.suffix.lower() != ".123":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
         elif sig_word_markup.search(bof):
             file_id.puid = "aca-fmt/2"
             file_id.signame = "Microsoft Word Markup"
-            if path.suffix != ".doc":
+            if path.suffix.lower() != ".doc":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_excel_markup.search(bof):
             file_id.puid = "aca-fmt/3"
             file_id.signame = "Microsoft Excel Markup"
-            if path.suffix != ".xls":
+            if path.suffix.lower() != ".xls":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None

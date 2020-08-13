@@ -18,7 +18,7 @@ from click.core import Context
 from digiarch.exceptions import FileCollectionError
 from digiarch.identify import checksums, identify_files, reports
 from digiarch.internals import FileData, Metadata
-from digiarch.utils import group_files, path_utils
+from digiarch.utils import fix_file_exts, group_files, path_utils
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -113,6 +113,16 @@ def group(file_data: FileData) -> None:
 def dups(file_data: FileData) -> None:
     """Check for file duplicates."""
     checksums.check_duplicates(file_data.files, file_data.digiarch_dir)
+
+
+@cli.command()
+@click.pass_obj
+def fix(file_data: FileData) -> None:
+    """Fix file extensions"""
+    fix_file_exts.fix_extensions(file_data.files)
+    click.secho("Rebuilding file information...", bold=True)
+    file_data = path_utils.explore_dir(Path(file_data.metadata.processed_dir))
+    file_data.to_json()
 
 
 @cli.resultcallback()
