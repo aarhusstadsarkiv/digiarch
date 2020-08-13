@@ -97,6 +97,11 @@ class TestCustomId:
         assert new_id.puid == "x-fmt/340"
         assert new_id.signame == "Lotus WordPro Document"
         assert new_id.warning is None
+        fail_lwp_file = lwp_file.rename(lwp_file.with_suffix(".fail"))
+        fail_id = custom_id(fail_lwp_file, lwp_id)
+        assert fail_id.puid == "x-fmt/340"
+        assert fail_id.signame == "Lotus WordPro Document"
+        assert fail_id.warning == "Extension mismatch"
 
     def test_123(self, temp_dir):
         _123_file = temp_dir / "mock.123"
@@ -108,6 +113,11 @@ class TestCustomId:
         assert new_id.puid == "aca-fmt/1"
         assert new_id.signame == "Lotus 1-2-3 Spreadsheet"
         assert new_id.warning is None
+        fail_123_file = _123_file.rename(_123_file.with_suffix(".fail"))
+        fail_id = custom_id(fail_123_file, _123_id)
+        assert fail_id.puid == "aca-fmt/1"
+        assert fail_id.signame == "Lotus 1-2-3 Spreadsheet"
+        assert fail_id.warning == "Extension mismatch"
 
     def test_word_markup(self, temp_dir):
         word_markup = temp_dir / "mock.doc"
