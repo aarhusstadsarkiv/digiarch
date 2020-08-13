@@ -13,8 +13,13 @@ from pathlib import Path
 from typing import List
 
 from digiarch.exceptions import FileCollectionError
-from digiarch.internals import (FileData, FileInfo, Metadata, natsort_path,
-                                size_fmt)
+from digiarch.internals import (
+    FileData,
+    FileInfo,
+    Metadata,
+    natsort_path,
+    size_fmt,
+)
 from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
