@@ -18,7 +18,7 @@ from click.core import Context
 from digiarch.exceptions import FileCollectionError
 from digiarch.identify import checksums, identify_files, reports
 from digiarch.internals import FileData, Metadata
-from digiarch.utils import group_files, path_utils, fix_file_exts
+from digiarch.utils import fix_file_exts, group_files, path_utils
 
 # -----------------------------------------------------------------------------
 # Function Definitions

@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from digiarch.identify.reports import report_results
 from digiarch.internals import FileInfo, Identification
 

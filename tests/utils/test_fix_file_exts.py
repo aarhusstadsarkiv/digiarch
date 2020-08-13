@@ -2,11 +2,9 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-from pathlib import Path
-
-from digiarch.utils.fix_file_exts import fix_extensions
 from digiarch.identify.identify_files import sf_id
 from digiarch.internals import FileInfo
+from digiarch.utils.fix_file_exts import fix_extensions
 
 # -----------------------------------------------------------------------------
 # Tests
