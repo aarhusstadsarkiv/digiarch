@@ -121,12 +121,7 @@ def fix(file_data: FileData) -> None:
     """Fix file extensions"""
     fix_file_exts.fix_extensions(file_data.files)
     click.secho("Rebuilding file information...", bold=True)
-    try:
-        file_data = path_utils.explore_dir(
-            Path(file_data.metadata.processed_dir)
-        )
-    except FileCollectionError as error:
-        raise click.ClickException(str(error))
+    file_data = path_utils.explore_dir(Path(file_data.metadata.processed_dir))
     file_data.to_json()
 
 
