@@ -130,7 +130,15 @@ class TestCli:
             assert result.exit_code == 0
 
     def test_identify_command(self, cli_run, temp_dir):
-        Path(temp_dir, "test.txt").touch()
-        args = [str(temp_dir), "identify"]
-        result = cli_run.invoke(cli, args)
-        assert result.exit_code == 0
+        with cli_run.isolated_filesystem():
+            Path(temp_dir, "test.txt").touch()
+            args = [str(temp_dir), "identify"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
+
+    def test_fix_command(self, cli_run, temp_dir):
+        with cli_run.isolated_filesystem():
+            Path(temp_dir, "test.txt").touch()
+            args = [str(temp_dir), "fix"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
