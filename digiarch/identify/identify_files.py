@@ -28,7 +28,10 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         r"(?i)^576F726450726F0DFB000000000000"
         "000005985C8172030040CCC1BFFFBDF970"
     )
+    sig_gif_bof = re.compile(r"(?i)^474946383961")
+    sig_gif_eof = re.compile(r"(?i)3B")
     sig_123 = re.compile(r"(?i)^00001A000(3|4|5)10040000000000")
+    sig_mmap = re.compile(r"(?i)4D696E644d616E61676572")
     sig_word_markup = re.compile(
         r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,20}576f72642e446f63756d656e74"
     )
@@ -36,7 +39,16 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,18}457863656C2E5368656574"
     )
     with path.open("rb") as file_bytes:
-        bof = file_bytes.read(512).hex()
+        # BOF
+        bof = file_bytes.read(1024).hex()
+        # Navigate to EOF
+        try:
+            file_bytes.seek(-1024, 2)
+        except OSError:
+            # File too small :)
+            file_bytes.seek(-file_bytes.tell(), 2)
+        eof = file_bytes.read(1024).hex()
+
         if sig_lwp.match(bof):
             file_id.puid = "x-fmt/340"
             file_id.signame = "Lotus WordPro Document"
@@ -62,6 +74,20 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
             file_id.puid = "aca-fmt/3"
             file_id.signame = "Microsoft Excel Markup"
             if path.suffix.lower() != ".xls":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
+        elif sig_mmap.search(bof) or sig_mmap.search(eof):
+            file_id.puid = "aca-fmt/4"
+            file_id.signame = "MindManager Mind Map"
+            if path.suffix.lower() != ".mmap":
+                file_id.warning = "Extension mismatch"
+            else:
+                file_id.warning = None
+        elif sig_gif_bof.match(bof) and sig_gif_eof.search(eof):
+            file_id.puid = "fmt/4"
+            file_id.signame = "Graphics Interchange Format"
+            if path.suffix.lower() != ".gif":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
@@ -129,7 +155,7 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             if puid is None:
                 file_identification = custom_id(file_path, file_identification)
             if (
-                puid in ["fmt/96", "fmt/101", "fmt/583"]
+                puid in ["fmt/96", "fmt/101", "fmt/583", "x-fmt/263"]
                 and "Extension mismatch" in warning
             ):
                 file_identification = custom_id(file_path, file_identification)
