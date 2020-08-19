@@ -12,16 +12,15 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from tqdm import tqdm
-
 from digiarch.exceptions import FileCollectionError
 from digiarch.internals import (
+    ArchiveFile,
     FileData,
-    FileInfo,
     Metadata,
     natsort_path,
     size_fmt,
 )
+from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -43,13 +42,13 @@ def explore_dir(path: Path) -> FileData:
         A list of empty subdirectory paths, if any such were found
     """
     # Type declarations
-    dir_info: List[FileInfo] = []
+    dir_info: List[ArchiveFile] = []
     empty_subs: List[Path] = []
     several_files: List[Path] = []
     total_size: int = 0
     file_count: int = 0
     metadata = Metadata(last_run=datetime.now(), processed_dir=path)
-    file_data = FileData(metadata)
+    file_data = FileData(metadata=metadata)
     main_dir_name: str = file_data.digiarch_dir.name
 
     if not [child for child in path.iterdir() if child.name != main_dir_name]:
@@ -72,7 +71,7 @@ def explore_dir(path: Path) -> FileData:
             several_files.append(Path(root))
         for file in files:
             cur_path = Path(root, file)
-            dir_info.append(FileInfo(path=cur_path))
+            dir_info.append(ArchiveFile(path=cur_path))
             total_size += cur_path.stat().st_size
             file_count += 1
 
@@ -86,9 +85,10 @@ def explore_dir(path: Path) -> FileData:
         metadata.several_files = several_files
 
     # Update file data
+    file_data.metadata = metadata
     file_data.files = natsort_path(dir_info)
 
     # Save file data
-    file_data.to_json()
+    file_data.dump()
 
     return file_data

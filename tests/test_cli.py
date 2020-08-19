@@ -5,9 +5,9 @@
 import json
 from pathlib import Path
 
-import pytest
 from click.testing import CliRunner
 
+import pytest
 from digiarch.cli import cli
 
 # -----------------------------------------------------------------------------
@@ -35,6 +35,7 @@ class TestCli:
             Path(temp_dir, "test.txt").touch()
             args = [str(temp_dir)]
             result = cli_run.invoke(cli, args)
+            print(result.exc_info)
             assert result.exit_code == 0
 
     def test_main_cli_invalid(self, cli_run):
@@ -59,7 +60,7 @@ class TestCli:
             assert "Collecting file information" in result.output
             # Create a data file
             new_file = file_data
-            new_file.to_json()
+            new_file.dump()
             result = cli_run.invoke(cli, args)
             assert (
                 f"Processing data from {new_file.json_file}" in result.output
@@ -85,6 +86,18 @@ class TestCli:
             json.dump({"test": "test"}, data_file.open("w"))
             result = cli_run.invoke(cli, args)
             assert "Collecting file information" in result.output
+
+    def test_all_option(self, cli_run, temp_dir, data_file):
+        with cli_run.isolated_filesystem():
+            args = ["--all", str(temp_dir)]
+            Path(temp_dir, "test.txt").touch()
+            result = cli_run.invoke(cli, args)
+            print(result.output)
+            assert "Generating checksums" in result.output
+            assert "Identifying files" in result.output
+            assert "Creating reports" in result.output
+            assert "Grouping files" in result.output
+            assert "Finding duplicates" in result.output
 
     def test_report_command(self, cli_run, temp_dir):
         """The cli is run with a valid path as argument and the report option.
@@ -118,7 +131,15 @@ class TestCli:
             assert result.exit_code == 0
 
     def test_identify_command(self, cli_run, temp_dir):
-        Path(temp_dir, "test.txt").touch()
-        args = [str(temp_dir), "identify"]
-        result = cli_run.invoke(cli, args)
-        assert result.exit_code == 0
+        with cli_run.isolated_filesystem():
+            Path(temp_dir, "test.txt").touch()
+            args = [str(temp_dir), "identify"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0
+
+    def test_fix_command(self, cli_run, temp_dir):
+        with cli_run.isolated_filesystem():
+            Path(temp_dir, "test.txt").touch()
+            args = [str(temp_dir), "fix"]
+            result = cli_run.invoke(cli, args)
+            assert result.exit_code == 0

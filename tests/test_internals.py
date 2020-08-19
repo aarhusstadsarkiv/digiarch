@@ -2,23 +2,10 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+from pydantic import ValidationError
+
 import pytest
-from dacite import MissingValueError
-
-from digiarch.internals import (
-    DataJSONEncoder,
-    FileData,
-    FileInfo,
-    Metadata,
-    size_fmt,
-)
-
-
-@pytest.fixture
-def file_info(temp_dir):
-    test_file: Path = Path(temp_dir, "test.txt")
-    test_file.touch(exist_ok=True)
-    return FileInfo(path=test_file)
+from digiarch.internals import DataJSONEncoder, FileData, Metadata, size_fmt
 
 
 class FailJSON:
@@ -31,50 +18,10 @@ def make_json_fail():
     return FailJSON
 
 
-class TestFileInfo:
-    def test_init(self, temp_dir):
-        # We cannot create an empty FileInfo.
-        with pytest.raises(TypeError):
-            FileInfo()  # type: ignore
-        test_file: Path = Path(temp_dir, "test.txt")
-        test_file.touch()
-        f_info = FileInfo(path=test_file)
-        assert f_info.name == "test.txt"
-        assert f_info.ext == ".txt"
-        assert f_info.path == Path(temp_dir, "test.txt")
-        assert f_info.checksum is None
-        assert f_info.identification is None
-
-    def test_to_dict(self, file_info, temp_dir):
-        dict_info = file_info.to_dict()
-        assert dict_info["name"] == "test.txt"
-        assert dict_info["ext"] == ".txt"
-        assert dict_info["path"] == Path(temp_dir, "test.txt")
-
-    def test_replace(self, file_info, temp_dir):
-        new_test = Path(temp_dir, "new_test.json")
-        new_test.touch()
-        new_info = file_info.replace(path=new_test)
-        assert new_info.name == "new_test.json"
-        assert new_info.ext == ".json"
-
-    def test_from_dict(self, temp_dir):
-        # This dict does not have correct params
-        with pytest.raises(MissingValueError):
-            dict_info = {"name": "dict_test"}
-            FileInfo.from_dict(data=dict_info)
-        # This does
-        test_file: Path = Path(temp_dir, "test.txt")
-        test_file.touch(exist_ok=True)
-        dict_info = {"path": str(test_file)}
-        file_info = FileInfo.from_dict(dict_info)
-        assert file_info.path == Path(dict_info["path"])
-
-
 class TestMetadata:
     def test_init(self, temp_dir):
         # We cannot create an empty Metadata.
-        with pytest.raises(TypeError):
+        with pytest.raises(ValidationError):
             Metadata()  # type: ignore
         cur_time = datetime.now()
         metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
@@ -91,24 +38,20 @@ class TestMetadata:
         cur_time = datetime.now()
         metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
         assert metadata.last_run == cur_time
+
         assert metadata.processed_dir == Path(temp_dir)
 
 
 class TestFileData:
     def test_init(self, temp_dir):
         # We cannot create an empty FileData.
-        with pytest.raises(TypeError):
+        with pytest.raises(ValidationError):
             FileData()  # type: ignore
         cur_time = datetime.now()
         metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
-        file_data = FileData(metadata)
+        file_data = FileData(metadata=metadata)
         assert file_data.metadata == metadata
         assert file_data.files == []
-
-    def test_post_init(self, temp_dir):
-        cur_time = datetime.now()
-        metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
-        file_data = FileData(metadata)
         assert file_data.digiarch_dir == Path(
             metadata.processed_dir, "_digiarch"
         )
@@ -117,13 +60,20 @@ class TestFileData:
             == file_data.digiarch_dir / ".data" / "data.json"
         )
 
-    def test_functions(self, temp_dir):
+    def test_validators(self, temp_dir):
         cur_time = datetime.now()
-        metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
-        file_data = FileData(metadata)
-        file_data.to_json()
-        new_file_data = FileData.from_json(file_data.json_file)
-        assert new_file_data == file_data
+        metadata = Metadata(last_run=cur_time, processed_dir=temp_dir)
+        with pytest.raises(
+            ValidationError, match="Invalid digiarch directory path"
+        ):
+            FileData(metadata=metadata, digiarch_dir=Path("fail"))
+        with pytest.raises(ValidationError, match="Invalid JSON file path"):
+            FileData(metadata=metadata, json_file=Path("fail"))
+
+        temp_json = temp_dir / "test.json"
+        temp_json.write_text("test")
+        assert FileData(metadata=metadata, digiarch_dir=temp_dir)
+        assert FileData(metadata=metadata, json_file=temp_json)
 
 
 class TestJSONEncode:

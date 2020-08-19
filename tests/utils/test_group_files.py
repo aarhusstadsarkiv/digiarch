@@ -5,8 +5,7 @@
 from pathlib import Path
 
 import pytest
-
-from digiarch.internals import FileInfo
+from digiarch.internals import ArchiveFile
 from digiarch.utils.group_files import grouping
 
 # -----------------------------------------------------------------------------
@@ -45,9 +44,9 @@ def ignored_file(temp_dir):
 
 class TestGrouping:
     def test_with_file(self, main_dir, test_file_0, test_file_1, ignored_file):
-        file_1 = FileInfo(path=test_file_0)
-        file_2 = FileInfo(path=test_file_1)
-        file_3 = FileInfo(path=ignored_file)
+        file_1 = ArchiveFile(path=test_file_0)
+        file_2 = ArchiveFile(path=test_file_1)
+        file_3 = ArchiveFile(path=ignored_file)
         file_info = [file_1, file_2, file_3]
 
         grouping(file_info, main_dir)

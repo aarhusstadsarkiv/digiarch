@@ -7,7 +7,6 @@ from pathlib import Path
 from unittest.mock import patch
 
 import pytest
-
 from digiarch.identify.checksums import (
     check_collisions,
     check_duplicates,
@@ -15,7 +14,7 @@ from digiarch.identify.checksums import (
     file_checksum,
     generate_checksums,
 )
-from digiarch.internals import FileInfo
+from digiarch.internals import ArchiveFile
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -40,7 +39,7 @@ def test_file_1(temp_dir):
 
 @pytest.fixture
 def test_file_info(test_file_0):
-    return FileInfo(path=test_file_0)
+    return ArchiveFile(path=test_file_0)
 
 
 # -----------------------------------------------------------------------------
@@ -60,11 +59,6 @@ class TestFileChecksum:
 
 
 class TestChecksumWorker:
-    def test_without_file(self, temp_dir):
-        file_info = FileInfo(path=temp_dir)
-        result = checksum_worker(file_info)
-        assert result.checksum is None
-
     def test_with_file(self, test_file_info):
         assert (
             checksum_worker(test_file_info).checksum
@@ -75,18 +69,18 @@ class TestChecksumWorker:
 
 class TestGenerateChecksums:
     def test_with_files(self, test_file_0, test_file_1):
-        f_info_0 = FileInfo(path=test_file_0, checksum="test0")
-        f_info_1 = FileInfo(path=test_file_1, checksum="test1")
+        f_info_0 = ArchiveFile(path=test_file_0, checksum="test0")
+        f_info_1 = ArchiveFile(path=test_file_1, checksum="test1")
         files = [f_info_0, f_info_1]
         result = generate_checksums(files)
         for file in result:
-            assert file.checksum == file_checksum(Path(file.path))
+            assert file.checksum == file_checksum(file.path)
 
     def test_without_files(self):
         assert generate_checksums([]) == []
 
     def test_exception(self, test_file_0):
-        f_info_0 = FileInfo(path=test_file_0, checksum="test0")
+        f_info_0 = ArchiveFile(path=test_file_0, checksum="test0")
         files = [f_info_0] * 10
         # Raise an arbitrary exception, test that it bubbles up
         with pytest.raises(ValueError):
@@ -119,8 +113,8 @@ class TestCheckCollisions:
 
 class TestCheckDuplicates:
     def test_with_dups(self, test_file_0, temp_dir):
-        f_info_0 = FileInfo(path=test_file_0, checksum="test0")
-        f_info_1 = FileInfo(path=test_file_0, checksum="test1")
+        f_info_0 = ArchiveFile(path=test_file_0, checksum="test0")
+        f_info_1 = ArchiveFile(path=test_file_0, checksum="test1")
         files = [f_info_0, f_info_1]
         updated_files = generate_checksums(files)
         print(updated_files)
@@ -132,8 +126,8 @@ class TestCheckDuplicates:
         assert len(result[file_checksum(test_file_0)]) == 2
 
     def test_without_dups(self, test_file_0, test_file_1, temp_dir):
-        f_info_0 = FileInfo(path=test_file_0, checksum="test0")
-        f_info_1 = FileInfo(path=test_file_1, checksum="test1")
+        f_info_0 = ArchiveFile(path=test_file_0, checksum="test0")
+        f_info_1 = ArchiveFile(path=test_file_1, checksum="test1")
         files = [f_info_0, f_info_1]
         updated_files = generate_checksums(files)
         check_duplicates(updated_files, temp_dir)

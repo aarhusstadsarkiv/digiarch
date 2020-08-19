@@ -6,9 +6,9 @@ import json
 from pathlib import Path
 
 import pytest
-
+from datamodels import Identification
 from digiarch.identify.reports import report_results
-from digiarch.internals import FileInfo, Identification
+from digiarch.internals import ArchiveFile
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -17,20 +17,20 @@ from digiarch.internals import FileInfo, Identification
 
 @pytest.fixture
 def file_info_0(temp_dir):
-    test_file = Path(temp_dir).joinpath("test0.txt")
+    test_file = temp_dir / "test0.txt"
     test_file.write_text("0")
-    file_info = FileInfo(test_file)
+    file_info = ArchiveFile(path=test_file)
     return file_info
 
 
 @pytest.fixture
 def file_info_1(temp_dir):
-    test_file = Path(temp_dir).joinpath("test1.pdf")
+    test_file = temp_dir / "test1.pdf"
     test_file.write_text("1")
-    file_info = FileInfo(
-        test_file,
+    file_info = ArchiveFile(
+        path=test_file,
         identification=Identification(
-            puid=None, signame=None, warning="No match"
+            puid=None, signature=None, warning="No match"
         ),
     )
     return file_info
@@ -38,12 +38,12 @@ def file_info_1(temp_dir):
 
 @pytest.fixture
 def file_info_2(temp_dir):
-    test_file = Path(temp_dir).joinpath("test3.bogus")
+    test_file = temp_dir / "test3.bogus"
     test_file.write_text("1")
-    file_info = FileInfo(
-        test_file,
+    file_info = ArchiveFile(
+        path=test_file,
         identification=Identification(
-            puid=None, signame=None, warning="Extension mismatch"
+            puid=None, signature=None, warning="Extension mismatch"
         ),
     )
     return file_info
