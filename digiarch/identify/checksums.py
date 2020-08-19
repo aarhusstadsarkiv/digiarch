@@ -12,9 +12,8 @@ from multiprocessing import Pool
 from pathlib import Path
 from typing import Any, Dict, ItemsView, List, Optional, Set
 
-from tqdm import tqdm
-
 from digiarch.internals import ArchiveFile, natsort_path, to_json
+from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -63,7 +62,9 @@ def checksum_worker(file_info: ArchiveFile) -> ArchiveFile:
     """
 
     checksum: Optional[str] = file_checksum(file_info.path) or None
-    updated_file_info: ArchiveFile = file_info.replace(checksum=checksum)
+    updated_file_info: ArchiveFile = file_info.copy(
+        update={"checksum": checksum}
+    )
     return updated_file_info
 
 
@@ -152,11 +153,11 @@ def check_duplicates(files: List[ArchiveFile], save_path: Path) -> None:
 
     for checksum in tqdm(collisions, desc="Finding duplicates"):
         hits = [
-            {"name": file.name, "path": file.path}
+            {"name": file.name(), "path": file.path}
             for file in files
             if file.checksum == checksum
         ]
         file_collisions.update({checksum: hits})
 
-    dups_file = Path(save_path).joinpath("duplicate_files.json")
+    dups_file = save_path / "duplicate_files.json"
     to_json(file_collisions, dups_file)

@@ -15,9 +15,9 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Dict, List
 
+from datamodels import Identification
 from digiarch.exceptions import IdentificationError
 from digiarch.internals import ArchiveFile, natsort_path
-from datamodels import Identification
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -52,42 +52,42 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
 
         if sig_lwp.match(bof):
             file_id.puid = "x-fmt/340"
-            file_id.signame = "Lotus WordPro Document"
+            file_id.signature = "Lotus WordPro Document"
             if path.suffix.lower() != ".lwp":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_123.match(bof):
             file_id.puid = "aca-fmt/1"
-            file_id.signame = "Lotus 1-2-3 Spreadsheet"
+            file_id.signature = "Lotus 1-2-3 Spreadsheet"
             if path.suffix.lower() != ".123":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_word_markup.search(bof):
             file_id.puid = "aca-fmt/2"
-            file_id.signame = "Microsoft Word Markup"
+            file_id.signature = "Microsoft Word Markup"
             if path.suffix.lower() != ".doc":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_excel_markup.search(bof):
             file_id.puid = "aca-fmt/3"
-            file_id.signame = "Microsoft Excel Markup"
+            file_id.signature = "Microsoft Excel Markup"
             if path.suffix.lower() != ".xls":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_mmap.search(bof) or sig_mmap.search(eof):
             file_id.puid = "aca-fmt/4"
-            file_id.signame = "MindManager Mind Map"
+            file_id.signature = "MindManager Mind Map"
             if path.suffix.lower() != ".mmap":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_gif_bof.match(bof) and sig_gif_eof.search(eof):
             file_id.puid = "fmt/4"
-            file_id.signame = "Graphics Interchange Format"
+            file_id.signature = "Graphics Interchange Format"
             if path.suffix.lower() != ".gif":
                 file_id.warning = "Extension mismatch"
             else:

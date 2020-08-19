@@ -59,11 +59,6 @@ class TestFileChecksum:
 
 
 class TestChecksumWorker:
-    def test_without_file(self, temp_dir):
-        file_info = ArchiveFile(path=temp_dir)
-        result = checksum_worker(file_info)
-        assert result.checksum is None
-
     def test_with_file(self, test_file_info):
         assert (
             checksum_worker(test_file_info).checksum
@@ -79,7 +74,7 @@ class TestGenerateChecksums:
         files = [f_info_0, f_info_1]
         result = generate_checksums(files)
         for file in result:
-            assert file.checksum == file_checksum(Path(file.path))
+            assert file.checksum == file_checksum(file.path)
 
     def test_without_files(self):
         assert generate_checksums([]) == []

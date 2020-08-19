@@ -26,5 +26,7 @@ def fix_extensions(files: List[ArchiveFile]) -> None:
             warning = file.identification.warning or ""
             puid = file.identification.puid
             if "Extension mismatch" in warning and puid in ext_map:
-                new_name = file.path.with_name(f"{file.name}.{ext_map[puid]}")
+                new_name = file.path.with_name(
+                    f"{file.name()}.{ext_map[puid]}"
+                )
                 file.path.rename(new_name)

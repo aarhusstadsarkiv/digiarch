@@ -9,9 +9,8 @@
 from pathlib import Path
 from typing import List, Set
 
-from tqdm import tqdm
-
 from digiarch.internals import IGNORED_EXTS, ArchiveFile
+from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -31,7 +30,7 @@ def grouping(files: List[ArchiveFile], save_path: Path) -> None:
 
     # Initialise variables
     ignored_group: List[str] = []
-    exts: Set[str] = {file.ext for file in files}
+    exts: Set[str] = {file.ext() for file in files}
 
     # Create new folder in save path
     save_path = save_path / "grouped_files"
@@ -42,9 +41,9 @@ def grouping(files: List[ArchiveFile], save_path: Path) -> None:
         group_out: Path = save_path / f"{ext}_files.txt"
         file_group: List[str] = []
         for file in files:
-            if file.ext in IGNORED_EXTS:
+            if file.ext() in IGNORED_EXTS:
                 ignored_group.append(str(file.path))
-            if file.ext == ext:
+            if file.ext() == ext:
                 file_group.append(str(file.path))
         group_out.write_text("\n".join(file_group), encoding="utf-8")
 

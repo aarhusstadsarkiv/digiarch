@@ -79,7 +79,7 @@ def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
 def checksum(file_data: FileData) -> None:
     """Generate file checksums using SHA-256."""
     file_data.files = checksums.generate_checksums(file_data.files)
-    file_data.to_json()
+    file_data.dump()
 
 
 @cli.command()
@@ -90,7 +90,7 @@ def identify(file_data: FileData) -> None:
     file_data.files = identify_files.identify(
         file_data.files, file_data.metadata.processed_dir
     )
-    file_data.to_json()
+    file_data.dump()
     click.secho(f"Successfully identified {len(file_data.files)} files.")
 
 
@@ -122,7 +122,7 @@ def fix(file_data: FileData) -> None:
     fix_file_exts.fix_extensions(file_data.files)
     click.secho("Rebuilding file information...", bold=True)
     file_data = path_utils.explore_dir(Path(file_data.metadata.processed_dir))
-    file_data.to_json()
+    file_data.dump()
 
 
 @cli.resultcallback()

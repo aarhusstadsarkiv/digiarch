@@ -60,7 +60,7 @@ class TestCli:
             assert "Collecting file information" in result.output
             # Create a data file
             new_file = file_data
-            new_file.to_json()
+            new_file.dump()
             result = cli_run.invoke(cli, args)
             assert (
                 f"Processing data from {new_file.json_file}" in result.output

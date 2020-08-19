@@ -42,7 +42,8 @@ def data_file(main_dir):
 @pytest.fixture
 def file_data(temp_dir):
     cur_time = datetime.now()
-    return FileData(Metadata(cur_time, Path(temp_dir)))
+    metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
+    return FileData(metadata=metadata)
 
 
 @pytest.fixture
