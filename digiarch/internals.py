@@ -7,17 +7,16 @@ Digital Archive.
 # Imports
 # -----------------------------------------------------------------------------
 
-import dataclasses
 import inspect
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Any, List, Optional, Set
+from typing import Any, Dict, List, Optional, Set
 
-from dateutil.parser import parse as date_parse
+from pydantic import Field, root_validator, validator
 
-import dacite
 import digiarch
+from datamodels import ACABase, ArchiveFile
 from natsort import natsorted
 
 # -----------------------------------------------------------------------------
@@ -34,76 +33,12 @@ IGNORED_EXTS: Set[str] = json.load(
 # Classes
 # -----------------------------------------------------------------------------
 
-# Base class
-# --------------------
-
-
-@dataclasses.dataclass
-class DataBase:
-    def to_dict(self) -> dict:
-        return dataclasses.asdict(self)
-
-    def replace(self, **fields: Any) -> Any:
-        return dataclasses.replace(self, **fields)
-
-    @classmethod
-    def from_dict(cls, data: dict) -> Any:
-        # For some reason the post init yields str for FileData
-        if isinstance(data.get("digiarch_dir"), str):
-            data.update({"digiarch_dir": Path(data.get("digiarch_dir", ""))})
-        if isinstance(data.get("json_file"), str):
-            data.update({"json_file": Path(data.get("json_file", ""))})
-        return dacite.from_dict(
-            data_class=cls, data=data, config=dacite.Config(check_types=False)
-        )
-
-
-# Identification
-# --------------------
-
-
-@dataclasses.dataclass
-class Identification(DataBase):
-    """Data class for keeping track of file identification information"""
-
-    puid: Optional[str]
-    signame: Optional[str]
-    warning: Optional[str] = None
-
-
-# File Info
-# --------------------
-
-
-@dataclasses.dataclass
-class FileInfo(DataBase):
-    """Data class for keeping track of file information"""
-
-    path: Path
-    name: str = dataclasses.field(init=False)
-    ext: str = dataclasses.field(init=False)
-    size: str = dataclasses.field(init=False)
-    checksum: Optional[str] = None
-    identification: Optional[Identification] = None
-
-    def __post_init__(self) -> None:
-        # JSON/from_dict compatibility
-        if not isinstance(self.path, Path):
-            self.path = Path(self.path)
-
-        # Resolve path, init fields
-        self.path = self.path.resolve()
-        self.name = self.path.name
-        self.ext = self.path.suffix.lower()
-        self.size = size_fmt(self.path.stat().st_size)
-
 
 # Metadata
 # --------------------
 
 
-@dataclasses.dataclass
-class Metadata(DataBase):
+class Metadata(ACABase):
     """Data class for keeping track of metadata used in data.json"""
 
     last_run: datetime
@@ -115,54 +50,51 @@ class Metadata(DataBase):
     empty_subdirs: Optional[List[Path]] = None
     several_files: Optional[List[Path]] = None
 
-    def __post_init__(self) -> None:
-        # JSON/from_dict compatibility
-        if isinstance(self.processed_dir, str):
-            self.processed_dir = Path(self.processed_dir)
-        if isinstance(self.last_run, str):
-            self.last_run = date_parse(self.last_run)
 
-        # Resolve path
-        self.processed_dir = self.processed_dir.resolve()
-
-
-# JSON Data
+# File Data
 # --------------------
-@dataclasses.dataclass
-class FileData(DataBase):
+
+
+class FileData(ACABase):
     """Data class collecting Metadata and list of FileInfo"""
 
     metadata: Metadata
-    files: List[FileInfo] = dataclasses.field(default_factory=list)
-    digiarch_dir: Path = dataclasses.field(init=False)
-    json_file: Path = dataclasses.field(init=False)
+    files: List[ArchiveFile] = []
+    digiarch_dir: Path = Field(None)
+    json_file: Path = Field(None)
 
-    def __post_init__(self) -> None:
-        # Directory paths
-        self.digiarch_dir = Path(self.metadata.processed_dir, "_digiarch")
-        data_dir = self.digiarch_dir / ".data"
-        self.json_file = data_dir / "data.json"
+    @root_validator
+    def create_directories(cls, fields: Dict[Any, Any]) -> Dict[Any, Any]:
+        metadata = fields.get("metadata")
+        digiarch_dir = fields.get("digiarch_dir")
+        json_file = fields.get("json_file")
+        if digiarch_dir is None and metadata:
+            digiarch_dir = metadata.processed_dir / "_digiarch"
+            digiarch_dir.mkdir(exist_ok=True)
+            fields["digiarch_dir"] = digiarch_dir
+        if json_file is None and digiarch_dir:
+            data_dir = digiarch_dir / ".data"
+            data_dir.mkdir(exist_ok=True)
+            json_file = data_dir / "data.json"
+            json_file.touch()
+            fields["json_file"] = json_file
+        return fields
 
-        # Create directories
-        self.digiarch_dir.mkdir(exist_ok=True)
-        data_dir.mkdir(exist_ok=True)
+    @validator("digiarch_dir")
+    def check_digiarch_dir(cls, digiarch_dir: Path) -> Path:
+        if not digiarch_dir.is_dir():
+            raise ValueError("Invalid digiarch directory path")
+        return digiarch_dir
 
-        # Create data file if it does not exist
-        if not self.json_file.is_file():
-            self.json_file.touch()
+    @validator("json_file")
+    def check_json_file(cls, json_file: Path) -> Path:
+        if not json_file.is_file():
+            raise ValueError("Invalid JSON file path")
+        return json_file
 
-    def to_json(self, file: Optional[Path] = None) -> None:
-        if file is None:
-            file = self.json_file
-        with file.open("w", encoding="utf-8") as f:
-            json.dump(
-                self, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False
-            )
-
-    @classmethod
-    def from_json(cls, data_file: Path) -> Any:
-        with data_file.open("r", encoding="utf-8") as file:
-            return cls.from_dict(json.load(file))
+    def dump(self) -> None:
+        data = super().json(indent=2, ensure_ascii=False)
+        self.json_file.write_text(data, encoding="utf-8")
 
 
 # Utility
@@ -192,15 +124,12 @@ class DataJSONEncoder(json.JSONEncoder):
             If the object is not a data class, use JSONEncoder's default and
             let it handle any exception that might occur.
         """
-        if dataclasses.is_dataclass(obj):
-            return dataclasses.asdict(obj)
         if isinstance(obj, Path):
             return str(obj)
-        if isinstance(obj, datetime):
-            return obj.isoformat()
         return super().default(obj)
 
-    # pylint: enable=method-hidden,arguments-differ
+
+# pylint: enable=method-hidden,arguments-differ
 
 
 # -----------------------------------------------------------------------------
@@ -247,7 +176,7 @@ def to_json(data: object, file: Path) -> None:
         json.dump(data, f, indent=4, cls=DataJSONEncoder, ensure_ascii=False)
 
 
-def natsort_path(file_list: List[FileInfo]) -> List[FileInfo]:
+def natsort_path(file_list: List[ArchiveFile]) -> List[ArchiveFile]:
     """Naturally sort a list of FileInfo objects by their paths.
 
     Parameters
@@ -261,8 +190,8 @@ def natsort_path(file_list: List[FileInfo]) -> List[FileInfo]:
         The list of FileInfo objects naturally sorted by their path.
     """
 
-    sorted_file_list: List[FileInfo] = natsorted(
-        file_list, key=lambda fileinfo: str(fileinfo.path)
+    sorted_file_list: List[ArchiveFile] = natsorted(
+        file_list, key=lambda archive_file: str(archive_file.path)
     )
 
     return sorted_file_list

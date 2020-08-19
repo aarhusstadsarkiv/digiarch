@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 from digiarch.exceptions import FileCollectionError
-from digiarch.internals import FileData, FileInfo, Metadata
+from digiarch.internals import ArchiveFile, FileData, Metadata
 from digiarch.utils.path_utils import explore_dir
 
 # -----------------------------------------------------------------------------
@@ -18,7 +18,8 @@ from digiarch.utils.path_utils import explore_dir
 @pytest.fixture
 def file_data(temp_dir):
     cur_time = datetime.now()
-    return FileData(Metadata(cur_time, Path(temp_dir)))
+    metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
+    return FileData(metadata=metadata)
 
 
 # -----------------------------------------------------------------------------
@@ -51,9 +52,9 @@ class TestExploreDir:
         file1.write_text("test")
         file2.write_text("test")
 
-        file1_info = FileInfo(path=file1)
+        file1_info = ArchiveFile(path=file1)
 
-        file2_info = FileInfo(path=file2)
+        file2_info = ArchiveFile(path=file2)
 
         file_data = explore_dir(temp_dir)
 
@@ -72,6 +73,6 @@ class TestExploreDir:
         testdir2.mkdir()
 
         file_data = explore_dir(temp_dir)
-
+        print(file_data)
         assert len(file_data.files) == 0
-        assert testdir2 in file_data.metadata.empty_subdirs
+        assert testdir2 in (file_data.metadata.empty_subdirs or [])

@@ -11,7 +11,8 @@ from collections import Counter
 from pathlib import Path
 from typing import Dict, List
 
-from digiarch.internals import FileInfo, Identification, to_json
+from datamodels import Identification
+from digiarch.internals import ArchiveFile, to_json
 from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
@@ -19,7 +20,7 @@ from tqdm import tqdm
 # -----------------------------------------------------------------------------
 
 
-def report_results(files: List[FileInfo], save_path: Path) -> None:
+def report_results(files: List[ArchiveFile], save_path: Path) -> None:
     """Generates reports of explore_dir() results.
 
     Parameters
@@ -39,14 +40,14 @@ def report_results(files: List[FileInfo], save_path: Path) -> None:
 
     # Collect information
     for file in tqdm(files, desc="Creating reports"):
-        ext_count.update([file.ext])
+        ext_count.update([file.ext()])
         if file.identification and file.identification.warning:
             if "No match" in file.identification.warning:
                 warning_key = "No match"
             else:
                 warning_key = file.identification.warning
             warning_list = id_warnings.get(warning_key, [])
-            warning_list.append({str(file.path): file.identification})
+            warning_list.append({str(file.path): file.identification.json()})
             id_warnings.update({warning_key: warning_list})
 
     for warning_key, warning_list in id_warnings.items():
