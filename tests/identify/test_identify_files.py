@@ -8,7 +8,6 @@ from subprocess import CalledProcessError
 from unittest.mock import patch
 
 import pytest
-
 from digiarch.exceptions import IdentificationError
 from datamodels import Identification
 from digiarch.identify.identify_files import sf_id, custom_id
@@ -97,6 +96,11 @@ class TestCustomId:
         assert new_id.puid == "x-fmt/340"
         assert new_id.signature == "Lotus WordPro Document"
         assert new_id.warning is None
+        fail_lwp_file = lwp_file.rename(lwp_file.with_suffix(".fail"))
+        fail_id = custom_id(fail_lwp_file, lwp_id)
+        assert fail_id.puid == "x-fmt/340"
+        assert fail_id.signame == "Lotus WordPro Document"
+        assert fail_id.warning == "Extension mismatch"
 
     def test_123(self, temp_dir):
         _123_file = temp_dir / "mock.123"
@@ -108,6 +112,11 @@ class TestCustomId:
         assert new_id.puid == "aca-fmt/1"
         assert new_id.signature == "Lotus 1-2-3 Spreadsheet"
         assert new_id.warning is None
+        fail_123_file = _123_file.rename(_123_file.with_suffix(".fail"))
+        fail_id = custom_id(fail_123_file, _123_id)
+        assert fail_id.puid == "aca-fmt/1"
+        assert fail_id.signame == "Lotus 1-2-3 Spreadsheet"
+        assert fail_id.warning == "Extension mismatch"
 
     def test_word_markup(self, temp_dir):
         word_markup = temp_dir / "mock.doc"
@@ -137,8 +146,8 @@ class TestCustomId:
             word_markup_wrong_suffix, word_markup_id
         )
         assert new_id_wrong_suffix.puid == new_id.puid
-        assert new_id_wrong_suffix.signature == new_id.signature
-        assert new_id_wrong_suffix.warning is not None
+        assert new_id_wrong_suffix.signame == new_id.signame
+        assert new_id_wrong_suffix.warning == "Extension mismatch"
 
     def test_excel_markup(self, temp_dir):
         excel_markup = temp_dir / "mock.xls"
@@ -168,5 +177,44 @@ class TestCustomId:
             excel_markup_wrong_suffix, excel_markup_id
         )
         assert new_id_wrong_suffix.puid == new_id.puid
-        assert new_id_wrong_suffix.signature == new_id.signature
-        assert new_id_wrong_suffix.warning is not None
+        assert new_id_wrong_suffix.signame == new_id.signame
+        assert new_id_wrong_suffix.warning == "Extension mismatch"
+
+    def test_mmap(self, temp_dir):
+        mmap_markup = temp_dir / "mock.mmap"
+        mmap_markup.write_bytes(bytes.fromhex("4D696E644d616E61676572"))
+        mmap_markup_id = Identification(
+            puid="x-fmt/263",
+            signame="ZIP Archive",
+            warning="Extension mismatch",
+        )
+        new_id = custom_id(mmap_markup, mmap_markup_id)
+        assert new_id.puid == "aca-fmt/4"
+        assert new_id.signame == "MindManager Mind Map"
+        assert new_id.warning is None
+        mmap_markup_wrong_suffix = mmap_markup.with_suffix(".test")
+        mmap_markup_wrong_suffix.write_bytes(
+            bytes.fromhex("4D696E644d616E61676572")
+        )
+        new_id_wrong_suffix = custom_id(
+            mmap_markup_wrong_suffix, mmap_markup_id
+        )
+        assert new_id_wrong_suffix.puid == new_id.puid
+        assert new_id_wrong_suffix.signame == new_id.signame
+        assert new_id_wrong_suffix.warning == "Extension mismatch"
+
+    def test_gif(self, temp_dir):
+        gif_file = temp_dir / "mock.gif"
+        gif_file.write_bytes(bytes.fromhex("4749463839613B"))
+        gif_id = Identification(
+            puid=None, signame=None, warning="this is a warning"
+        )
+        new_id = custom_id(gif_file, gif_id)
+        assert new_id.puid == "fmt/4"
+        assert new_id.signame == "Graphics Interchange Format"
+        assert new_id.warning is None
+        fail_gif_file = gif_file.rename(gif_file.with_suffix(".fail"))
+        fail_id = custom_id(fail_gif_file, gif_id)
+        assert fail_id.puid == "fmt/4"
+        assert fail_id.signame == "Graphics Interchange Format"
+        assert fail_id.warning == "Extension mismatch"
