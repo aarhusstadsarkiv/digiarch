@@ -1,4 +1,15 @@
 [[package]]
+category = "main"
+description = "Datamodels based on pydantic used in Python tools developed at Aarhus City Archives."
+name = "acamodels"
+optional = false
+python-versions = ">=3.8,<4.0"
+version = "0.5.0"
+
+[package.dependencies]
+pydantic = ">=1.6,<2.0"
+
+[[package]]
 category = "dev"
 description = "A configurable sidebar-enabled Sphinx theme"
 name = "alabaster"
@@ -122,22 +133,6 @@ version = "1.5.1"
 
 [package.extras]
 dev = ["pytest (>=5)", "pytest-cov", "coveralls", "black", "mypy", "pylint"]
-
-[[package]]
-category = "main"
-description = ""
-name = "datamodels"
-optional = false
-python-versions = "^3.8"
-version = "0.4.0"
-
-[package.dependencies]
-pydantic = "^1.6"
-
-[package.source]
-reference = "492b468db778dd3fc3ba98e9d9e70711e247f2d2"
-type = "git"
-url = "https://github.com/aarhusstadsarkiv/datamodels.git"
 
 [[package]]
 category = "dev"
@@ -627,10 +622,14 @@ secure = ["certifi", "cryptography (>=1.3.4)", "idna (>=2.0.0)", "pyOpenSSL (>=0
 socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 
 [metadata]
-content-hash = "5792e4ea27af7ca94c99662f9d361e5395b9d1b5036befe6f1232bc075a0ce20"
+content-hash = "04497e8e6bbbc723e43edc8b658a0f8cc87fda4659dfc5a62e180f33b2b564f5"
 python-versions = "^3.8"
 
 [metadata.files]
+acamodels = [
+    {file = "acamodels-0.5.0-py3-none-any.whl", hash = "sha256:56a97e18b91990464a8422f42d0948f241d5c487236b51af454389a3786f439a"},
+    {file = "acamodels-0.5.0.tar.gz", hash = "sha256:914750d17e3f1a8c7d4e844fb9ffa0f11337afddfc2716ec54561fcc64ab4378"},
+]
 alabaster = [
     {file = "alabaster-0.7.12-py2.py3-none-any.whl", hash = "sha256:446438bdcca0e05bd45ea2de1668c1d9b032e1a9154c2c259092d77031ddd359"},
     {file = "alabaster-0.7.12.tar.gz", hash = "sha256:a661d72d58e6ea8a57f7a86e37d86716863ee5e92788398526d58b26a4e4dc02"},
@@ -711,7 +710,6 @@ dacite = [
     {file = "dacite-1.5.1-py3-none-any.whl", hash = "sha256:f7f269647ede90f8702728eb7dcb972051511c81b853a93c962fbd31f1753b9f"},
     {file = "dacite-1.5.1.tar.gz", hash = "sha256:764c96e0304cb189628686689a163a6a3a8ce7bf3465f0a2d882a8b42f88108f"},
 ]
-datamodels = []
 docutils = [
     {file = "docutils-0.16-py2.py3-none-any.whl", hash = "sha256:0c5b78adfbf7762415433f5515cd5c9e762339e23369dbe8000d84a4bf4ab3af"},
     {file = "docutils-0.16.tar.gz", hash = "sha256:c2de3a60e9e7d07be26b7f2b00ca0309c207e06c100f9cc2a94931fc75a478fc"},

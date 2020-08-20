@@ -11,7 +11,7 @@ from collections import Counter
 from pathlib import Path
 from typing import Dict, List
 
-from datamodels import Identification
+from acamodels import Identification
 from digiarch.internals import ArchiveFile, to_json
 from tqdm import tqdm
 

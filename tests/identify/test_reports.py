@@ -6,7 +6,7 @@ import json
 from pathlib import Path
 
 import pytest
-from datamodels import Identification
+from acamodels import Identification
 from digiarch.identify.reports import report_results
 from digiarch.internals import ArchiveFile
 

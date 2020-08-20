@@ -18,8 +18,8 @@ dacite = "^1.0"
 python-dateutil = "^2.8.1"
 natsort = "^7.0.1"
 requests = "^2.23.0"
-datamodels = {git = "https://github.com/aarhusstadsarkiv/datamodels.git",  branch = "development"}
 pydantic = "^1.6.1"
+acamodels = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0"
