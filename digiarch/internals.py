@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Set
 from pydantic import Field, root_validator, validator
 
 import digiarch
-from datamodels import ACABase, ArchiveFile
+from acamodels import ACABase, ArchiveFile
 from natsort import natsorted
 
 # -----------------------------------------------------------------------------

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "0.7.0"
+version = "0.7.1"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -18,15 +18,15 @@ dacite = "^1.0"
 python-dateutil = "^2.8.1"
 natsort = "^7.0.1"
 requests = "^2.23.0"
-datamodels = {git = "https://github.com/aarhusstadsarkiv/datamodels.git",  branch = "development"}
 pydantic = "^1.6.1"
+acamodels = "^0.5.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.0"
 pytest-cov = "^2.10"
 mypy = "^0.782"
 black = "^19.10b0"
-sphinx = "^3.2.0"
+sphinx = "^3.2.1"
 sphinx-click = "^2.5.0"
 sphinx-rtd-theme = "^0.5.0"
 flake8 = "^3.8.3"
