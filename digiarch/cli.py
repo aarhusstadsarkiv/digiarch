@@ -8,9 +8,11 @@ The CLI implements several commands with suboptions.
 # Imports
 # -----------------------------------------------------------------------------
 
+import asyncio
+from functools import wraps
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import click
 from click.core import Context
@@ -21,7 +23,20 @@ from digiarch.internals import FileData, Metadata
 from digiarch.utils import fix_file_exts, group_files, path_utils
 
 # -----------------------------------------------------------------------------
-# Function Definitions
+# Auxiliary functions
+# -----------------------------------------------------------------------------
+
+
+def coro(func: Callable) -> Callable:
+    @wraps(func)
+    def wrapper(*args: Any, **kwargs: Any) -> Any:
+        return asyncio.run(func(*args, **kwargs))
+
+    return wrapper
+
+
+# -----------------------------------------------------------------------------
+# CLI
 # -----------------------------------------------------------------------------
 
 
@@ -32,7 +47,8 @@ from digiarch.utils import fix_file_exts, group_files, path_utils
 @click.option("--reindex", is_flag=True, help="Reindex the current directory.")
 @click.option("--all", is_flag=True, help="Run all commands.")
 @click.pass_context
-def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
+@coro
+async def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
     """Used for indexing, reporting on, and identifying files
     found in PATH.
     """
