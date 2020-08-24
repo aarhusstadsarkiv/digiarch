@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 import pytest
-from acamodels import Identification
 from digiarch.identify.reports import report_results
 from digiarch.internals import ArchiveFile
 
@@ -28,10 +27,7 @@ def file_info_1(temp_dir):
     test_file = temp_dir / "test1.pdf"
     test_file.write_text("1")
     file_info = ArchiveFile(
-        path=test_file,
-        identification=Identification(
-            puid=None, signature=None, warning="No match"
-        ),
+        path=test_file, puid=None, signature=None, warning="No match"
     )
     return file_info
 
@@ -41,10 +37,7 @@ def file_info_2(temp_dir):
     test_file = temp_dir / "test3.bogus"
     test_file.write_text("1")
     file_info = ArchiveFile(
-        path=test_file,
-        identification=Identification(
-            puid=None, signature=None, warning="Extension mismatch"
-        ),
+        path=test_file, puid=None, signature=None, warning="Extension mismatch"
     )
     return file_info
 
