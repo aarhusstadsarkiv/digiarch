@@ -7,6 +7,7 @@
 import json
 from typing import List
 import sqlalchemy as sql
+from pydantic import parse_obj_as
 from databases import Database
 from acamodels import ArchiveFile
 
@@ -35,7 +36,9 @@ class FileDB(Database):
         sql.Column("id", sql.Integer, primary_key=True, autoincrement=True),
         sql.Column("path", sql.String, nullable=False),
         sql.Column("checksum", sql.String),
-        sql.Column("identification", sql.JSON),
+        sql.Column("puid", sql.String),
+        sql.Column("signature", sql.String),
+        sql.Column("warning", sql.String),
     )
 
     def __init__(self, url: str) -> None:
@@ -53,3 +56,10 @@ class FileDB(Database):
                 json.loads(file.json(exclude_none=True)) for file in files
             ],
         )
+
+    async def get_files(self) -> List[ArchiveFile]:
+        query = self.files.select()
+        rows = await self.fetch_all(query)
+        print(rows)
+        files = parse_obj_as(List[ArchiveFile], rows)
+        return files

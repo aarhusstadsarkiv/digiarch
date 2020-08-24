@@ -30,3 +30,5 @@ class TestFileDB:
         files = [ArchiveFile(path=docx_info)]
         files = identify(files, docx_info.parent)
         await file_db.insert_files(files=files)
+        await file_db.get_files()
+        assert False
