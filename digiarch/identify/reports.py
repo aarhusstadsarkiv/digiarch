@@ -47,7 +47,9 @@ def report_results(files: List[ArchiveFile], save_path: Path) -> None:
             else:
                 warning_key = file.warning
             warning_list = id_warnings.get(warning_key, [])
-            warning_list.append({str(file.path): file.json()})
+            warning_list.append(
+                {str(file.path): file.dict(exclude={"path", "checksum"})}
+            )
             id_warnings.update({warning_key: warning_list})
 
     for warning_key, warning_list in id_warnings.items():
