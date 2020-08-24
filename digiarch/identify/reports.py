@@ -41,13 +41,13 @@ def report_results(files: List[ArchiveFile], save_path: Path) -> None:
     # Collect information
     for file in tqdm(files, desc="Creating reports"):
         ext_count.update([file.ext()])
-        if file.identification and file.identification.warning:
-            if "No match" in file.identification.warning:
+        if file.warning:
+            if "No match" in file.warning:
                 warning_key = "No match"
             else:
-                warning_key = file.identification.warning
+                warning_key = file.warning
             warning_list = id_warnings.get(warning_key, [])
-            warning_list.append({str(file.path): file.identification.json()})
+            warning_list.append({str(file.path): file.json()})
             id_warnings.update({warning_key: warning_list})
 
     for warning_key, warning_list in id_warnings.items():
