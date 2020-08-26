@@ -49,3 +49,21 @@ def file_data(temp_dir):
 @pytest.fixture
 def test_data_dir():
     return Path(inspect.getfile(FileData)).parent.parent / "tests" / "_data"
+
+
+@pytest.fixture
+def docx_info(test_data_dir):
+    docx_file: Path = test_data_dir / "docx_test.docx"
+    return docx_file
+
+
+@pytest.fixture
+def xls_info(test_data_dir):
+    xls_file: Path = test_data_dir / "xls_test.xls"
+    return xls_file
+
+
+@pytest.fixture
+def adx_info(test_data_dir):
+    adx_file: Path = test_data_dir / "adx_test.adx"
+    return adx_file

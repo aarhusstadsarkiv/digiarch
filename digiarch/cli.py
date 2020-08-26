@@ -18,7 +18,7 @@ import click
 from click.core import Context
 
 from digiarch.exceptions import FileCollectionError
-from digiarch.identify import checksums, identify_files, reports
+from digiarch.identify import checksums, identify_files  # , reports
 from digiarch.internals import FileData, Metadata
 from digiarch.utils import fix_file_exts, group_files, path_utils
 
@@ -114,7 +114,7 @@ def identify(file_data: FileData) -> None:
 @click.pass_obj
 def report(file_data: FileData) -> None:
     """Generate reports on files and directory structure."""
-    reports.report_results(file_data.files, file_data.digiarch_dir)
+    # reports.report_results(file_data.files, file_data.digiarch_dir)
 
 
 @cli.command()
