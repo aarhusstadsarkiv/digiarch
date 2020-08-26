@@ -4,7 +4,7 @@ description = "Datamodels based on pydantic used in Python tools developed at Aa
 name = "acamodels"
 optional = false
 python-versions = ">=3.8,<4.0"
-version = "0.5.1"
+version = "0.5.2"
 
 [package.dependencies]
 pydantic = ">=1.6,<2.0"
@@ -627,8 +627,8 @@ python-versions = "^3.8"
 
 [metadata.files]
 acamodels = [
-    {file = "acamodels-0.5.1-py3-none-any.whl", hash = "sha256:a4cb4587345fbd1ce3512cca4d7e2efb6df86953e9e1f8cf0676cb0001a6599d"},
-    {file = "acamodels-0.5.1.tar.gz", hash = "sha256:603ec68d6609310112f05b198e020e6c53883b325ce7775772576312ecbacc2b"},
+    {file = "acamodels-0.5.2-py3-none-any.whl", hash = "sha256:aaaef1c0715885d589f0ba7ad7cb20d252c33c64f234cc7cca5f60a8ccf47f22"},
+    {file = "acamodels-0.5.2.tar.gz", hash = "sha256:c4fa49126551ffe110ef810c473ff3a5b4e6f7b563453ef612d105c25d492ec0"},
 ]
 alabaster = [
     {file = "alabaster-0.7.12-py2.py3-none-any.whl", hash = "sha256:446438bdcca0e05bd45ea2de1668c1d9b032e1a9154c2c259092d77031ddd359"},
