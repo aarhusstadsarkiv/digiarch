@@ -6,8 +6,8 @@ from datetime import datetime
 from pathlib import Path
 from uuid import uuid4
 
-import pytest
 import acamodels.archive_file
+import pytest
 from digiarch.exceptions import FileCollectionError
 from digiarch.internals import ArchiveFile, FileData, Metadata
 from digiarch.utils.path_utils import explore_dir
