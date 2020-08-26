@@ -4,7 +4,9 @@
 
 from datetime import datetime
 from pathlib import Path
+from uuid import uuid4
 
+import acamodels.archive_file
 import pytest
 from digiarch.exceptions import FileCollectionError
 from digiarch.internals import ArchiveFile, FileData, Metadata
@@ -37,7 +39,7 @@ class TestExploreDir:
             explore_dir(temp_dir)
         assert not file_data.digiarch_dir.exists()
 
-    def test_with_files(self, temp_dir):
+    def test_with_files(self, temp_dir, monkeypatch):
         """explore_dir is invoked in a non-empty directory,
         with files and non-empty sub-folders.
         The resulting JSON file should be populated,
@@ -51,6 +53,16 @@ class TestExploreDir:
         file2.touch()
         file1.write_text("test")
         file2.write_text("test")
+
+        # Patch uuid
+        static_uuid = uuid4()
+
+        def uuid_return():
+            return static_uuid
+
+        monkeypatch.setattr(
+            acamodels.archive_file, "uuid4", uuid_return,
+        )
 
         file1_info = ArchiveFile(path=file1)
 
