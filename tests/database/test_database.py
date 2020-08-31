@@ -6,6 +6,7 @@ from typing import List
 
 import pytest
 from pydantic import parse_obj_as
+from sqlalchemy.exc import OperationalError
 
 from acamodels import ArchiveFile
 from digiarch.database import FileDB
@@ -20,9 +21,6 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 async def db_conn(temp_dir):
-    from pathlib import Path
-
-    print(Path.home())
     file_db = FileDB(f"sqlite:///{temp_dir}/test.db")
     await file_db.connect()
     yield file_db
@@ -34,6 +32,12 @@ def files(docx_info, xls_info, adx_info):
     file_list = [{"path": docx_info}, {"path": xls_info}, {"path": adx_info}]
     files = parse_obj_as(List[ArchiveFile], file_list)
     return files
+
+
+class MockMetaData:
+    @staticmethod
+    def create_all():
+        raise OperationalError("test")
 
 
 # -----------------------------------------------------------------------------
@@ -66,3 +70,21 @@ class TestFileDB:
         await file_db.update_files([updated_file])
         db_files = await file_db.get_files()
         assert updated_file in db_files
+
+    async def test_exception(self, db_conn, monkeypatch, temp_dir):
+        def raise_op_error(*args):
+            raise OperationalError("Bad Error", orig=None, params=None)
+
+        def pass_op_error(*args):
+            raise OperationalError(
+                "IdentificationWarnings",
+                orig=None,
+                params=None,
+            )
+
+        monkeypatch.setattr(FileDB.sql_meta, "create_all", raise_op_error)
+        with pytest.raises(OperationalError):
+            FileDB(f"sqlite:///{temp_dir}/test.db")
+
+        monkeypatch.setattr(FileDB.sql_meta, "create_all", pass_op_error)
+        assert FileDB(f"sqlite:///{temp_dir}/test.db")

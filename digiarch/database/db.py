@@ -51,7 +51,7 @@ class FileDB(Database):
         [(files.c.puid.is_(None), "None")],
         else_=files.c.puid,
     )
-    puid_group = (
+    sig_count = (
         sql.select(
             [
                 files.c.puid,
@@ -63,7 +63,7 @@ class FileDB(Database):
         .order_by(sql.desc("count"))
     )
     create_view("IdentificationWarnings", id_warnings, sql_meta)
-    create_view("SignatureCount", puid_group, sql_meta)
+    create_view("SignatureCount", sig_count, sql_meta)
 
     def __init__(self, url: str) -> None:
         super().__init__(url)
@@ -73,11 +73,13 @@ class FileDB(Database):
         try:
             self.sql_meta.create_all(engine)
         except OperationalError as error:
-            if "table IdentificationWarnings already exists" in str(error):
-                pass
-            elif "table SignatureCount already exists" in str(error):
+            warn_re = re.compile(
+                r"(?i)(IdentificationWarnings|SignatureCount)"
+            )
+            if warn_re.search(str(error)):
                 pass
             else:
+                print(str(error))
                 raise
 
     async def insert_files(self, files: List[ArchiveFile]) -> None:
