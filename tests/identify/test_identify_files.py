@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 
 import json
-from pathlib import Path
 from subprocess import CalledProcessError
 from unittest.mock import patch
 
@@ -53,7 +52,8 @@ class TestSFId:
     def test_json_error(self, docx_info):
         with pytest.raises(IdentificationError):
             with patch(
-                "json.loads", side_effect=json.JSONDecodeError,
+                "json.loads",
+                side_effect=json.JSONDecodeError,
             ):
                 sf_id(docx_info)
 
