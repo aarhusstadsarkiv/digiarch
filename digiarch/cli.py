@@ -72,7 +72,9 @@ async def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
 
     if file_data.metadata.empty_subdirs:
         click.secho(
-            "Warning! Empty subdirectories detected!", bold=True, fg="red",
+            "Warning! Empty subdirectories detected!",
+            bold=True,
+            fg="red",
         )
     if file_data.metadata.several_files:
         click.secho(
