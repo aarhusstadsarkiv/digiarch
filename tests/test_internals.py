@@ -2,9 +2,9 @@ import json
 from datetime import datetime
 from pathlib import Path
 
+import pytest
 from pydantic import ValidationError
 
-import pytest
 from digiarch.internals import DataJSONEncoder, FileData, Metadata, size_fmt
 
 

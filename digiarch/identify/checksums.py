@@ -12,8 +12,9 @@ from multiprocessing import Pool
 from pathlib import Path
 from typing import Any, Dict, ItemsView, List, Optional, Set
 
-from digiarch.internals import ArchiveFile, natsort_path, to_json
 from tqdm import tqdm
+
+from digiarch.internals import ArchiveFile, natsort_path, to_json
 
 # -----------------------------------------------------------------------------
 # Function Definitions

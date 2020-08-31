@@ -12,6 +12,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
+from tqdm import tqdm
+
 from digiarch.exceptions import FileCollectionError
 from digiarch.internals import (
     ArchiveFile,
@@ -20,7 +22,6 @@ from digiarch.internals import (
     natsort_path,
     size_fmt,
 )
-from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions

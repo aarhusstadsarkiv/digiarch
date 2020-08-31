@@ -9,8 +9,9 @@
 from pathlib import Path
 from typing import List, Set
 
-from digiarch.internals import IGNORED_EXTS, ArchiveFile
 from tqdm import tqdm
+
+from digiarch.internals import IGNORED_EXTS, ArchiveFile
 
 # -----------------------------------------------------------------------------
 # Function Definitions

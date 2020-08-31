@@ -7,10 +7,10 @@ from subprocess import CalledProcessError
 from unittest.mock import patch
 
 import pytest
+
 from acamodels import Identification
 from digiarch.exceptions import IdentificationError
 from digiarch.identify.identify_files import custom_id, sf_id
-
 
 # -----------------------------------------------------------------------------
 # Tests

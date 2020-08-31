@@ -9,8 +9,8 @@ The CLI implements several commands with suboptions.
 # -----------------------------------------------------------------------------
 
 import asyncio
-from functools import wraps
 from datetime import datetime
+from functools import wraps
 from pathlib import Path
 from typing import Any, Callable
 

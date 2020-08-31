@@ -10,8 +10,9 @@ import json
 from pathlib import Path
 from typing import List
 
-from digiarch.internals import ArchiveFile
 from tqdm import tqdm
+
+from digiarch.internals import ArchiveFile
 
 # -----------------------------------------------------------------------------
 # Function Definitions

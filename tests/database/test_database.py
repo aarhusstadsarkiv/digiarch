@@ -7,10 +7,9 @@ from typing import List
 import pytest
 from pydantic import parse_obj_as
 
+from acamodels import ArchiveFile
 from digiarch.database import FileDB
 from digiarch.identify.identify_files import identify
-from acamodels import ArchiveFile
-
 
 # -----------------------------------------------------------------------------
 # Fixtures

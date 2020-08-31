@@ -4,13 +4,16 @@
 # Imports
 # -----------------------------------------------------------------------------
 
+import re
 from typing import List
+
 import sqlalchemy as sql
-from sqlalchemy.exc import OperationalError
-from sqlalchemy_utils import create_view
-from pydantic import parse_obj_as
 from databases import Database
+from pydantic import parse_obj_as
+from sqlalchemy.exc import OperationalError
+
 from acamodels import ArchiveFile
+from sqlalchemy_utils import create_view
 
 # -----------------------------------------------------------------------------
 # Database class
@@ -45,7 +48,8 @@ class FileDB(Database):
 
     id_warnings = files.select().where(files.c.warning.isnot(None))
     puid_none = sql.case(
-        [(files.c.puid.is_(None), "None")], else_=files.c.puid,
+        [(files.c.puid.is_(None), "None")],
+        else_=files.c.puid,
     )
     puid_group = (
         sql.select(

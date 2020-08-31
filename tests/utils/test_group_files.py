@@ -5,6 +5,7 @@
 from pathlib import Path
 
 import pytest
+
 from digiarch.internals import ArchiveFile
 from digiarch.utils.group_files import grouping
 
