@@ -70,18 +70,16 @@ async def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
         click.secho(f"{init_file_data.json_file}", bold=True)
         file_data = FileData.from_json(init_file_data.json_file)
 
-    if file_data.metadata.empty_subdirs:
-        click.secho(
-            "Warning! Empty subdirectories detected!",
-            bold=True,
-            fg="red",
-        )
-    if file_data.metadata.several_files:
-        click.secho(
-            "Warning! Some directories have several files!",
-            bold=True,
-            fg="red",
-        )
+    # if file_data.metadata.empty_subdirs:
+    #     click.secho(
+    #         "Warning! Empty subdirectories detected!", bold=True, fg="red",
+    #     )
+    # if file_data.metadata.several_files:
+    #     click.secho(
+    #         "Warning! Some directories have several files!",
+    #         bold=True,
+    #         fg="red",
+    #     )
     ctx.obj = file_data
     if all:
         ctx.invoke(checksum)

@@ -80,10 +80,13 @@ def explore_dir(path: Path) -> FileData:
     metadata.file_count = file_count
     metadata.total_size = size_fmt(total_size)
 
-    if empty_subs:
-        metadata.empty_subdirs = empty_subs
-    if several_files:
-        metadata.several_files = several_files
+    # TODO
+    # empty dirs/multiple files from database
+    # check with first()
+    # if empty_subs:
+    #     metadata.empty_subdirs = empty_subs
+    # if several_files:
+    #     metadata.several_files = several_files
 
     # Update file data
     file_data.metadata = metadata

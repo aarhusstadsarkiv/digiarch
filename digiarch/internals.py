@@ -45,10 +45,9 @@ class Metadata(ACABase):
     processed_dir: Path
     file_count: Optional[int] = None
     total_size: Optional[str] = None
-    duplicates: Optional[int] = None
-    identification_warnings: Optional[int] = None
-    empty_subdirs: Optional[List[Path]] = None
-    several_files: Optional[List[Path]] = None
+    # duplicates: Optional[int] = None
+    # empty_subdirs: Optional[List[Path]] = None
+    # several_files: Optional[List[Path]] = None
 
 
 # File Data

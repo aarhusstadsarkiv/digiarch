@@ -8,11 +8,11 @@ import re
 from typing import List
 
 import sqlalchemy as sql
-from databases import Database
 from pydantic import parse_obj_as
 from sqlalchemy.exc import OperationalError
 
-from acamodels import ArchiveFile
+from databases import Database
+from digiarch.internals import ArchiveFile, Metadata
 from sqlalchemy_utils import create_view
 
 # -----------------------------------------------------------------------------
@@ -46,10 +46,21 @@ class FileDB(Database):
         sql.Column("warning", sql.String),
     )
 
+    multiple_files = sql.Table(
+        "MultipleFiles",
+        sql_meta,
+        sql.Column("path", sql.String, nullable=False),
+    )
+
+    empty_directories = sql.Table(
+        "EmptyDirectories",
+        sql_meta,
+        sql.Column("path", sql.String, nullable=False),
+    )
+
     id_warnings = files.select().where(files.c.warning.isnot(None))
     puid_none = sql.case(
-        [(files.c.puid.is_(None), "None")],
-        else_=files.c.puid,
+        [(files.c.puid.is_(None), "None")], else_=files.c.puid,
     )
     sig_count = (
         sql.select(
@@ -79,8 +90,16 @@ class FileDB(Database):
             if warn_re.search(str(error)):
                 pass
             else:
-                print(str(error))
                 raise
+
+    async def set_metadata(self, metadata: Metadata) -> None:
+        meta = {
+            "processed_dir": str(metadata.processed_dir),
+            **metadata.copy(exclude={"processed_dir"}).dict(),
+        }
+        await self.execute(query=self.metadata.delete())
+        async with self.transaction():
+            await self.execute(query=self.metadata.insert(), values=meta)
 
     async def insert_files(self, files: List[ArchiveFile]) -> None:
         query = self.files.insert()

@@ -8,7 +8,8 @@ import pytest
 from pydantic import parse_obj_as
 from sqlalchemy.exc import OperationalError
 
-from acamodels import ArchiveFile
+from digiarch.utils.path_utils import explore_dir
+from digiarch.internals import ArchiveFile, Metadata
 from digiarch.database import FileDB
 from digiarch.identify.identify_files import identify
 
@@ -46,6 +47,35 @@ class MockMetaData:
 
 
 class TestFileDB:
+    async def test_exception(self, db_conn, monkeypatch, temp_dir):
+        def raise_op_error(*args):
+            raise OperationalError("Bad Error", orig=None, params=None)
+
+        def pass_op_error(*args):
+            raise OperationalError(
+                "IdentificationWarnings", orig=None, params=None,
+            )
+
+        monkeypatch.setattr(FileDB.sql_meta, "create_all", raise_op_error)
+        with pytest.raises(OperationalError):
+            FileDB(f"sqlite:///{temp_dir}/test.db")
+
+        monkeypatch.setattr(FileDB.sql_meta, "create_all", pass_op_error)
+        assert FileDB(f"sqlite:///{temp_dir}/test.db")
+
+
+class TestMetadata:
+    async def test_set(self, db_conn, test_data_dir):
+        file_db = db_conn
+        file_data = explore_dir(test_data_dir)
+        metadata = file_data.metadata
+        await file_db.set_metadata(metadata)
+        query = file_db.metadata.select()
+        result = dict(await file_db.fetch_one(query=query))
+        assert metadata == Metadata(**result)
+
+
+class TestFiles:
     async def test_insert(self, db_conn, files, test_data_dir):
         file_db = db_conn
         files = identify(files, test_data_dir)
@@ -70,21 +100,3 @@ class TestFileDB:
         await file_db.update_files([updated_file])
         db_files = await file_db.get_files()
         assert updated_file in db_files
-
-    async def test_exception(self, db_conn, monkeypatch, temp_dir):
-        def raise_op_error(*args):
-            raise OperationalError("Bad Error", orig=None, params=None)
-
-        def pass_op_error(*args):
-            raise OperationalError(
-                "IdentificationWarnings",
-                orig=None,
-                params=None,
-            )
-
-        monkeypatch.setattr(FileDB.sql_meta, "create_all", raise_op_error)
-        with pytest.raises(OperationalError):
-            FileDB(f"sqlite:///{temp_dir}/test.db")
-
-        monkeypatch.setattr(FileDB.sql_meta, "create_all", pass_op_error)
-        assert FileDB(f"sqlite:///{temp_dir}/test.db")
