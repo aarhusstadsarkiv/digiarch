@@ -62,7 +62,9 @@ class TestExploreDir:
             return static_uuid
 
         monkeypatch.setattr(
-            acamodels.archive_file, "uuid4", uuid_return,
+            acamodels.archive_file,
+            "uuid4",
+            uuid_return,
         )
 
         file1_info = ArchiveFile(path=file1)

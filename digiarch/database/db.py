@@ -60,7 +60,8 @@ class FileDB(Database):
 
     id_warnings = files.select().where(files.c.warning.isnot(None))
     puid_none = sql.case(
-        [(files.c.puid.is_(None), "None")], else_=files.c.puid,
+        [(files.c.puid.is_(None), "None")],
+        else_=files.c.puid,
     )
     sig_count = (
         sql.select(

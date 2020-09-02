@@ -53,7 +53,9 @@ class TestFileDB:
 
         def pass_op_error(*args):
             raise OperationalError(
-                "IdentificationWarnings", orig=None, params=None,
+                "IdentificationWarnings",
+                orig=None,
+                params=None,
             )
 
         monkeypatch.setattr(FileDB.sql_meta, "create_all", raise_op_error)
