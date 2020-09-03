@@ -17,6 +17,7 @@ from typing import Any, Callable
 import click
 from click.core import Context
 
+from digiarch.database import FileDB
 from digiarch.exceptions import FileCollectionError
 from digiarch.identify import checksums, identify_files  # , reports
 from digiarch.internals import FileData, Metadata
@@ -53,22 +54,21 @@ async def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
     found in PATH.
     """
 
-    # Initialise FileData
-    metadata = Metadata(last_run=datetime.now(), processed_dir=Path(path))
-    init_file_data = FileData(metadata=metadata)
+    # Initialise FileDB
+    file_db = FileDB(f"sqlite:///{path}/test.db")
+    files = await file_db.get_files()
 
     # Collect file info and update file_data
-    if reindex or init_file_data.json_file.stat().st_size == 0:
+    if reindex or not files:
         click.secho("Collecting file information...", bold=True)
         try:
-            file_data = path_utils.explore_dir(Path(path))
+            await path_utils.explore_dir(Path(path), file_db)
         except FileCollectionError as error:
             raise click.ClickException(str(error))
 
     else:
         click.echo("Processing data from ", nl=False)
-        click.secho(f"{init_file_data.json_file}", bold=True)
-        file_data = FileData.from_json(init_file_data.json_file)
+        click.secho(f"{file_db.url}", bold=True)
 
     # if file_data.metadata.empty_subdirs:
     #     click.secho(
@@ -80,65 +80,69 @@ async def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
     #         bold=True,
     #         fg="red",
     #     )
-    ctx.obj = file_data
-    if all:
-        ctx.invoke(checksum)
-        ctx.invoke(identify)
-        ctx.invoke(report)
-        ctx.invoke(group)
-        ctx.invoke(dups)
-        ctx.exit()
+    ctx.obj = file_db
+    # if all:
+    #     await ctx.invoke(checksum)
+    #     # ctx.invoke(identify)
+    #     # ctx.invoke(report)
+    #     # ctx.invoke(group)
+    #     # ctx.invoke(dups)
+    #     ctx.exit()
 
 
 @cli.command()
 @click.pass_obj
-def checksum(file_data: FileData) -> None:
+@coro
+async def checksum(file_db: FileDB) -> None:
     """Generate file checksums using SHA-256."""
-    file_data.files = checksums.generate_checksums(file_data.files)
-    file_data.dump()
+    files = await file_db.get_files()
+    new_files = checksums.generate_checksums(files)
+    await file_db.set_files(new_files)
 
 
-@cli.command()
-@click.pass_obj
-def identify(file_data: FileData) -> None:
-    """Identify files using siegfried."""
-    click.secho("Identifying files... ", nl=False)
-    file_data.files = identify_files.identify(
-        file_data.files, file_data.metadata.processed_dir
-    )
-    file_data.dump()
-    click.secho(f"Successfully identified {len(file_data.files)} files.")
+# @cli.command()
+# @click.pass_obj
+# @coro
+# async def identify(file_db: FileDB) -> None:
+#     """Identify files using siegfried."""
+#     click.secho("Identifying files... ", nl=False)
+#     files = await file_db.get_files()
+#     new_files = identify_files.identify(
+#         files, file_data.metadata.processed_dir
+#     )
+#     file_data.dump()
+#     click.secho(f"Successfully identified {len(file_data.files)} files.")
 
 
-@cli.command()
-@click.pass_obj
-def report(file_data: FileData) -> None:
-    """Generate reports on files and directory structure."""
-    # reports.report_results(file_data.files, file_data.digiarch_dir)
+# @cli.command()
+# @click.pass_obj
+# def report(file_data: FileData) -> None:
+#     """Generate reports on files and directory structure."""
+#     # reports.report_results(file_data.files, file_data.digiarch_dir)
 
 
-@cli.command()
-@click.pass_obj
-def group(file_data: FileData) -> None:
-    """Generate lists of files grouped per file extension."""
-    group_files.grouping(file_data.files, file_data.digiarch_dir)
+# @cli.command()
+# @click.pass_obj
+# def group(file_data: FileData) -> None:
+#     """Generate lists of files grouped per file extension."""
+#     group_files.grouping(file_data.files, file_data.digiarch_dir)
 
 
-@cli.command()
-@click.pass_obj
-def dups(file_data: FileData) -> None:
-    """Check for file duplicates."""
-    checksums.check_duplicates(file_data.files, file_data.digiarch_dir)
+# @cli.command()
+# @click.pass_obj
+# def dups(file_data: FileData) -> None:
+#     """Check for file duplicates."""
+#     checksums.check_duplicates(file_data.files, file_data.digiarch_dir)
 
 
-@cli.command()
-@click.pass_obj
-def fix(file_data: FileData) -> None:
-    """Fix file extensions"""
-    fix_file_exts.fix_extensions(file_data.files)
-    click.secho("Rebuilding file information...", bold=True)
-    file_data = path_utils.explore_dir(Path(file_data.metadata.processed_dir))
-    file_data.dump()
+# @cli.command()
+# @click.pass_obj
+# def fix(file_data: FileData) -> None:
+#     """Fix file extensions"""
+#     fix_file_exts.fix_extensions(file_data.files)
+#     click.secho("Rebuilding file information...", bold=True)
+#     file_data = path_utils.explore_dir(Path(file_data.metadata.processed_dir))
+#     file_data.dump()
 
 
 @cli.resultcallback()

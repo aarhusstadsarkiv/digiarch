@@ -17,6 +17,8 @@ from digiarch.utils.path_utils import explore_dir
 # Fixtures
 # -----------------------------------------------------------------------------
 
+pytestmark = pytest.mark.asyncio
+
 
 @pytest.fixture
 def file_data(temp_dir):
@@ -33,14 +35,13 @@ def file_data(temp_dir):
 class TestExploreDir:
     """Class for testing the `explore_dir` function."""
 
-    def test_in_empty_dir(self, temp_dir, file_data):
+    async def test_in_empty_dir(self, temp_dir, file_data, db_conn):
         """`explore_dir` is invoked in an empty directory.
         The data file should be empty."""
         with pytest.raises(FileCollectionError):
-            explore_dir(temp_dir)
-        assert not file_data.digiarch_dir.exists()
+            await explore_dir(temp_dir, db_conn)
 
-    def test_with_files(self, temp_dir, monkeypatch):
+    async def test_with_files(self, temp_dir, db_conn, monkeypatch):
         """explore_dir is invoked in a non-empty directory,
         with files and non-empty sub-folders.
         The resulting JSON file should be populated,
@@ -69,23 +70,23 @@ class TestExploreDir:
 
         file2_info = ArchiveFile(path=file2)
 
-        file_data = explore_dir(temp_dir)
+        await explore_dir(temp_dir, db_conn)
+        files = await db_conn.get_files()
+        assert len(files) == 2
+        assert file1_info in files
+        assert file2_info in files
 
-        assert len(file_data.files) == 2
-        assert file1_info in file_data.files
-        assert file2_info in file_data.files
-
-    def test_with_empty_dirs(self, temp_dir):
+        # def test_with_empty_dirs(self, temp_dir):
         """Invoke in non-empty directory containing no files but one empty
         subdirectory. The files field of the returned FileData object should be
         empty, and the path to the empty subdirectory should exist in the
         Metadata field named empty_subdirectories."""
 
         # Populate temp_dir with an empty folder
-        testdir2 = temp_dir / "testdir2"
-        testdir2.mkdir()
+        # testdir2 = temp_dir / "testdir2"
+        # testdir2.mkdir()
 
-        file_data = explore_dir(temp_dir)
-        print(file_data)
-        assert len(file_data.files) == 0
-        # assert testdir2 in (file_data.metadata.empty_subdirs or [])
+        # file_data = explore_dir(temp_dir)
+        # print(file_data)
+        # assert len(file_data.files) == 0
+        # # assert testdir2 in (file_data.metadata.empty_subdirs or [])

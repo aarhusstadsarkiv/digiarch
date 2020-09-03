@@ -2,11 +2,13 @@
 # Imports & setup
 # -----------------------------------------------------------------------------
 
+from datetime import datetime
 from typing import List
 
 import pytest
 from pydantic import parse_obj_as
 from sqlalchemy.exc import OperationalError
+from freezegun import freeze_time
 
 from digiarch.utils.path_utils import explore_dir
 from digiarch.internals import ArchiveFile, Metadata
@@ -18,14 +20,6 @@ from digiarch.identify.identify_files import identify
 # -----------------------------------------------------------------------------
 
 pytestmark = pytest.mark.asyncio
-
-
-@pytest.fixture
-async def db_conn(temp_dir):
-    file_db = FileDB(f"sqlite:///{temp_dir}/test.db")
-    await file_db.connect()
-    yield file_db
-    await file_db.disconnect()
 
 
 @pytest.fixture
@@ -65,21 +59,27 @@ class TestFileDB:
 
 
 class TestMetadata:
+    @freeze_time("2012-08-06")
     async def test_set(self, db_conn, test_data_dir):
         file_db = db_conn
-        file_data = explore_dir(test_data_dir)
-        metadata = file_data.metadata
-        await file_db.set_metadata(metadata)
+        await explore_dir(test_data_dir, file_db)
+        # metadata = file_data.metadata
+        # await file_db.set_metadata(metadata)
         query = file_db.metadata.select()
         result = dict(await file_db.fetch_one(query=query))
-        assert metadata == Metadata(**result)
+        metadata = Metadata(**result)
+        print(metadata)
+        assert metadata.last_run == datetime(2012, 8, 6, 0, 0)
+        assert metadata.processed_dir == test_data_dir
+        assert metadata.file_count == 3
+        assert metadata.total_size == "61.8 KiB"
 
 
 class TestFiles:
     async def test_insert(self, db_conn, files, test_data_dir):
         file_db = db_conn
         files = identify(files, test_data_dir)
-        await file_db.insert_files(files=files)
+        await file_db.set_files(files=files)
         query = file_db.files.select()
         rows = await file_db.fetch_all(query)
         db_files = parse_obj_as(List[ArchiveFile], rows)
@@ -88,15 +88,6 @@ class TestFiles:
     async def test_get(self, db_conn, files, test_data_dir):
         file_db = db_conn
         files = identify(files, test_data_dir)
-        await file_db.insert_files(files)
+        await file_db.set_files(files)
         db_files = await file_db.get_files()
         assert files == db_files
-
-    async def test_update(self, db_conn, files, test_data_dir):
-        file_db = db_conn
-        await file_db.insert_files(files)
-        db_files = await file_db.get_files()
-        updated_file = files[0].copy(update={"checksum": "test123"})
-        await file_db.update_files([updated_file])
-        db_files = await file_db.get_files()
-        assert updated_file in db_files

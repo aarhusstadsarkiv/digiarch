@@ -5,7 +5,7 @@
 # -----------------------------------------------------------------------------
 
 import re
-from typing import List
+from typing import List, Any
 
 import sqlalchemy as sql
 from pydantic import parse_obj_as
@@ -92,33 +92,29 @@ class FileDB(Database):
             else:
                 raise
 
+    async def delsert(self, table: sql.Table, values: Any) -> None:
+        delete = table.delete()
+        insert = table.insert()
+        async with self.transaction():
+            await self.execute(query=delete)
+            if isinstance(values, list):
+                await self.execute_many(query=insert, values=values)
+            else:
+                await self.execute(query=insert, values=values)
+
     async def set_metadata(self, metadata: Metadata) -> None:
         meta = {
             "processed_dir": str(metadata.processed_dir),
             **metadata.copy(exclude={"processed_dir"}).dict(),
         }
-        await self.execute(query=self.metadata.delete())
-        async with self.transaction():
-            await self.execute(query=self.metadata.insert(), values=meta)
+        await self.delsert(self.metadata, values=meta)
 
-    async def insert_files(self, files: List[ArchiveFile]) -> None:
-        query = self.files.insert()
+    async def set_files(self, files: List[ArchiveFile]) -> None:
         encoded_files = [file.encode() for file in files]
-        async with self.transaction():
-            await self.execute_many(query=query, values=encoded_files)
+        await self.delsert(self.files, values=encoded_files)
 
     async def get_files(self) -> List[ArchiveFile]:
         query = self.files.select()
         rows = await self.fetch_all(query)
         files = parse_obj_as(List[ArchiveFile], rows)
         return files
-
-    async def update_files(self, files: List[ArchiveFile]) -> None:
-        async with self.transaction():
-            for file in files:
-                query = (
-                    self.files.update()
-                    .where(self.files.c.uuid == str(file.uuid))
-                    .values(file.encode())
-                )
-                await self.execute(query)
