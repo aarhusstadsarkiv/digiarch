@@ -12,15 +12,16 @@ import asyncio
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, List, Dict
 
 import click
 from click.core import Context
+from pydantic import Field, root_validator
 
 from digiarch.database import FileDB
 from digiarch.exceptions import FileCollectionError
 from digiarch.identify import checksums, identify_files  # , reports
-from digiarch.internals import FileData, Metadata
+from digiarch.internals import Metadata, ArchiveFile, ACABase
 from digiarch.utils import fix_file_exts, group_files, path_utils
 
 # -----------------------------------------------------------------------------
@@ -41,6 +42,26 @@ def coro(func: Callable) -> Callable:
 # -----------------------------------------------------------------------------
 
 
+class FileData(ACABase):
+    main_dir: Path
+    data_dir: Path = Field(None)
+    db: FileDB
+    files: List[ArchiveFile]
+
+    class Config:
+        arbitrary_types_allowed = True
+
+    @root_validator
+    def create_dir(cls, fields: Dict[Any, Any]) -> Dict[Any, Any]:
+        main_dir = fields.get("main_dir")
+        data_dir = fields.get("data_dir")
+        if data_dir is None and main_dir:
+            data_dir = main_dir / "_digiarch"
+            data_dir.mkdir(exist_ok=True)
+            fields["data_dir"] = data_dir
+        return fields
+
+
 @click.group(invoke_without_command=True, chain=True)
 @click.argument(
     "path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
@@ -55,11 +76,11 @@ async def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
     """
 
     # Initialise FileDB
-    file_db = FileDB(f"sqlite:///{path}/test.db")
-    files = await file_db.get_files()
+    file_db: FileDB = FileDB(fr"sqlite:///{path}\test.db")
+    empty = await file_db.is_empty()
 
     # Collect file info and update file_data
-    if reindex or not files:
+    if reindex or empty:
         click.secho("Collecting file information...", bold=True)
         try:
             await path_utils.explore_dir(Path(path), file_db)
@@ -80,7 +101,8 @@ async def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
     #         bold=True,
     #         fg="red",
     #     )
-    ctx.obj = file_db
+    files: List[ArchiveFile] = await file_db.get_files()
+    ctx.obj = FileData(main_dir=path, db=file_db, files=files)
     # if all:
     #     await ctx.invoke(checksum)
     #     # ctx.invoke(identify)
@@ -92,12 +114,9 @@ async def cli(ctx: Context, path: str, reindex: bool, all: bool) -> None:
 
 @cli.command()
 @click.pass_obj
-@coro
-async def checksum(file_db: FileDB) -> None:
+def checksum(file_data: FileData) -> None:
     """Generate file checksums using SHA-256."""
-    files = await file_db.get_files()
-    new_files = checksums.generate_checksums(files)
-    await file_db.set_files(new_files)
+    file_data.files = checksums.generate_checksums(file_data.files)
 
 
 # @cli.command()
@@ -146,5 +165,9 @@ async def checksum(file_db: FileDB) -> None:
 
 
 @cli.resultcallback()
-def done(result: Any, **kwargs: Any) -> None:
+@coro
+async def done(result: Any, **kwargs: Any) -> None:
+    ctx = click.get_current_context()
+    file_data: FileData = ctx.obj
+    await file_data.db.set_files(file_data.files)
     click.secho("Done!", bold=True, fg="green")

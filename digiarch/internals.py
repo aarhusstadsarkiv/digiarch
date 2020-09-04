@@ -57,7 +57,8 @@ class Metadata(ACABase):
 class FileData(ACABase):
     """Data class collecting Metadata and list of FileInfo"""
 
-    metadata: Metadata
+    processed_dir: Path
+    digiarch_dir: Path = Field()
     files: List[ArchiveFile] = []
     # digiarch_dir: Path = Field(None)
 

@@ -93,6 +93,14 @@ class FileDB(Database):
             else:
                 raise
 
+    async def is_empty(self) -> bool:
+        query = self.files.select()
+        result = await self.fetch_one(query)
+        if result is None:
+            return True
+        else:
+            return False
+
     async def delsert(self, table: sql.Table, values: Any) -> None:
         delete = table.delete()
         insert = table.insert()
