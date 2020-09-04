@@ -15,6 +15,7 @@ from typing import List
 from tqdm import tqdm
 
 from digiarch.exceptions import FileCollectionError
+from digiarch.database import FileDB
 from digiarch.internals import (
     ArchiveFile,
     FileData,
@@ -28,14 +29,17 @@ from digiarch.internals import (
 # -----------------------------------------------------------------------------
 
 
-def explore_dir(path: Path) -> FileData:
+async def explore_dir(path: Path, db: FileDB) -> None:
     """Finds files and empty directories in the given path,
-    and collects them into a list of FileInfo objects.
+    and writes them to a file database.
 
     Parameters
     ----------
-    path : str
+    path : pathlib.Path
         The path in which to find files.
+
+    db: FileDB
+        File database to write results to
 
     Returns
     -------
@@ -49,12 +53,11 @@ def explore_dir(path: Path) -> FileData:
     total_size: int = 0
     file_count: int = 0
     metadata = Metadata(last_run=datetime.now(), processed_dir=path)
-    file_data = FileData(metadata=metadata)
-    main_dir_name: str = file_data.digiarch_dir.name
-
-    if not [child for child in path.iterdir() if child.name != main_dir_name]:
+    # file_data = FileData(metadata=metadata)
+    main_dir: Path = path / "_digiarch"
+    if not [child for child in path.iterdir() if child.name != main_dir.name]:
         # Path is empty, remove main directory and raise
-        shutil.rmtree(file_data.digiarch_dir)
+        shutil.rmtree(main_dir)
         raise FileCollectionError(f"{path} is empty! No files collected.")
 
     # Traverse given path, collect results.
@@ -62,9 +65,9 @@ def explore_dir(path: Path) -> FileData:
     for root, dirs, files in tqdm(
         os.walk(path, topdown=True), unit=" folders", desc="Processed"
     ):
-        if main_dir_name in dirs:
+        if main_dir.name in dirs:
             # Don't walk the _digiarch directory
-            dirs.remove(main_dir_name)
+            dirs.remove(main_dir.name)
         if not dirs and not files:
             # We found an empty subdirectory.
             empty_subs.append(Path(root))
@@ -76,6 +79,7 @@ def explore_dir(path: Path) -> FileData:
             total_size += cur_path.stat().st_size
             file_count += 1
 
+    dir_info = natsort_path(dir_info)
     # Update metadata
     metadata.file_count = file_count
     metadata.total_size = size_fmt(total_size)
@@ -89,10 +93,5 @@ def explore_dir(path: Path) -> FileData:
     #     metadata.several_files = several_files
 
     # Update file data
-    file_data.metadata = metadata
-    file_data.files = natsort_path(dir_info)
-
-    # Save file data
-    file_data.dump()
-
-    return file_data
+    await db.set_metadata(metadata)
+    await db.set_files(dir_info)

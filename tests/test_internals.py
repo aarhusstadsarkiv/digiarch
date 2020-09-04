@@ -29,10 +29,6 @@ class TestMetadata:
         assert metadata.processed_dir == Path(temp_dir)
         assert metadata.file_count is None
         assert metadata.total_size is None
-        # assert metadata.duplicates is None
-        # assert metadata.identification_warnings is None
-        # assert metadata.empty_subdirs is None
-        # assert metadata.several_files is None
 
     def test_post_init(self, temp_dir):
         cur_time = datetime.now()
@@ -52,28 +48,21 @@ class TestFileData:
         file_data = FileData(metadata=metadata)
         assert file_data.metadata == metadata
         assert file_data.files == []
-        assert file_data.digiarch_dir == Path(
-            metadata.processed_dir, "_digiarch"
-        )
-        assert (
-            file_data.json_file
-            == file_data.digiarch_dir / ".data" / "data.json"
-        )
 
-    def test_validators(self, temp_dir):
-        cur_time = datetime.now()
-        metadata = Metadata(last_run=cur_time, processed_dir=temp_dir)
-        with pytest.raises(
-            ValidationError, match="Invalid digiarch directory path"
-        ):
-            FileData(metadata=metadata, digiarch_dir=Path("fail"))
-        with pytest.raises(ValidationError, match="Invalid JSON file path"):
-            FileData(metadata=metadata, json_file=Path("fail"))
+    # def test_validators(self, temp_dir):
+    #     cur_time = datetime.now()
+    #     metadata = Metadata(last_run=cur_time, processed_dir=temp_dir)
+    #     with pytest.raises(
+    #         ValidationError, match="Invalid digiarch directory path"
+    #     ):
+    #         FileData(metadata=metadata, digiarch_dir=Path("fail"))
+    #     with pytest.raises(ValidationError, match="Invalid JSON file path"):
+    #         FileData(metadata=metadata, json_file=Path("fail"))
 
-        temp_json = temp_dir / "test.json"
-        temp_json.write_text("test")
-        assert FileData(metadata=metadata, digiarch_dir=temp_dir)
-        assert FileData(metadata=metadata, json_file=temp_json)
+    #     temp_json = temp_dir / "test.json"
+    #     temp_json.write_text("test")
+    #     assert FileData(metadata=metadata, digiarch_dir=temp_dir)
+    #     assert FileData(metadata=metadata, json_file=temp_json)
 
 
 class TestJSONEncode:

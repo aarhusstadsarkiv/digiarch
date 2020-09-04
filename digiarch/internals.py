@@ -59,41 +59,27 @@ class FileData(ACABase):
 
     metadata: Metadata
     files: List[ArchiveFile] = []
-    digiarch_dir: Path = Field(None)
-    json_file: Path = Field(None)
+    # digiarch_dir: Path = Field(None)
 
-    @root_validator
-    def create_directories(cls, fields: Dict[Any, Any]) -> Dict[Any, Any]:
-        metadata = fields.get("metadata")
-        digiarch_dir = fields.get("digiarch_dir")
-        json_file = fields.get("json_file")
-        if digiarch_dir is None and metadata:
-            digiarch_dir = metadata.processed_dir / "_digiarch"
-            digiarch_dir.mkdir(exist_ok=True)
-            fields["digiarch_dir"] = digiarch_dir
-        if json_file is None and digiarch_dir:
-            data_dir = digiarch_dir / ".data"
-            data_dir.mkdir(exist_ok=True)
-            json_file = data_dir / "data.json"
-            json_file.touch()
-            fields["json_file"] = json_file
-        return fields
+    # @root_validator
+    # def create_directories(cls, fields: Dict[Any, Any]) -> Dict[Any, Any]:
+    #     metadata = fields.get("metadata")
+    #     digiarch_dir = fields.get("digiarch_dir")
+    #     if digiarch_dir is None and metadata:
+    #         digiarch_dir = metadata.processed_dir / "_digiarch"
+    #         digiarch_dir.mkdir(exist_ok=True)
+    #         fields["digiarch_dir"] = digiarch_dir
+    #     return fields
 
-    @validator("digiarch_dir")
-    def check_digiarch_dir(cls, digiarch_dir: Path) -> Path:
-        if not digiarch_dir.is_dir():
-            raise ValueError("Invalid digiarch directory path")
-        return digiarch_dir
+    # @validator("digiarch_dir")
+    # def check_digiarch_dir(cls, digiarch_dir: Path) -> Path:
+    #     if not digiarch_dir.is_dir():
+    #         raise ValueError("Invalid digiarch directory path")
+    #     return digiarch_dir
 
-    @validator("json_file")
-    def check_json_file(cls, json_file: Path) -> Path:
-        if not json_file.is_file():
-            raise ValueError("Invalid JSON file path")
-        return json_file
-
-    def dump(self) -> None:
-        data = super().json(indent=2, ensure_ascii=False)
-        self.json_file.write_text(data, encoding="utf-8")
+    # def dump(self) -> None:
+    #     data = super().json(indent=2, ensure_ascii=False)
+    #     self.json_file.write_text(data, encoding="utf-8")
 
 
 # Utility

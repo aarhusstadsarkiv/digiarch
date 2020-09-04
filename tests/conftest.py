@@ -12,11 +12,14 @@ from pathlib import Path
 
 import pytest
 
+from digiarch.database import FileDB
 from digiarch.internals import FileData, Metadata
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
+
+pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture
@@ -68,3 +71,11 @@ def xls_info(test_data_dir):
 def adx_info(test_data_dir):
     adx_file: Path = test_data_dir / "adx_test.adx"
     return adx_file
+
+
+@pytest.fixture
+async def db_conn(main_dir):
+    file_db = FileDB(f"sqlite:///{main_dir}/test.db")
+    await file_db.connect()
+    yield file_db
+    await file_db.disconnect()
