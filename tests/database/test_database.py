@@ -9,11 +9,12 @@ import pytest
 from pydantic import parse_obj_as
 from sqlalchemy.exc import OperationalError
 from freezegun import freeze_time
+from acamodels import ArchiveFile
 
-from digiarch.utils.path_utils import explore_dir
-from digiarch.internals import ArchiveFile, Metadata
+from digiarch.core import explore_dir
+from digiarch.models import FileData, Metadata
 from digiarch.database import FileDB
-from digiarch.identify.identify_files import identify
+from digiarch.core.identify_files import identify
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -27,6 +28,19 @@ def files(docx_info, xls_info, adx_info):
     file_list = [{"path": docx_info}, {"path": xls_info}, {"path": adx_info}]
     files = parse_obj_as(List[ArchiveFile], file_list)
     return files
+
+
+@pytest.fixture
+def test_file_data(test_data_dir, db_conn):
+    return FileData(main_dir=test_data_dir, db=db_conn, files=[])
+
+
+@pytest.fixture
+async def db_conn(main_dir):
+    file_db = FileDB(f"sqlite:///{main_dir}/test.db")
+    await file_db.connect()
+    yield file_db
+    await file_db.disconnect()
 
 
 class MockMetaData:
@@ -62,9 +76,9 @@ class TestFileDB:
 
 class TestMetadata:
     @freeze_time("2012-08-06")
-    async def test_set(self, db_conn, test_data_dir):
+    async def test_set(self, db_conn, test_data_dir, test_file_data):
         file_db = db_conn
-        await explore_dir(test_data_dir, file_db)
+        await explore_dir(test_file_data)
         # metadata = file_data.metadata
         # await file_db.set_metadata(metadata)
         query = file_db.metadata.select()
@@ -74,7 +88,7 @@ class TestMetadata:
         assert metadata.last_run == datetime(2012, 8, 6, 0, 0)
         assert metadata.processed_dir == test_data_dir
         assert metadata.file_count == 3
-        assert metadata.total_size == "61.8 KiB"
+        assert metadata.total_size
 
 
 class TestFiles:

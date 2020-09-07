@@ -10,7 +10,7 @@ import pytest
 
 from acamodels import Identification
 from digiarch.exceptions import IdentificationError
-from digiarch.identify.identify_files import custom_id, sf_id
+from digiarch.core.identify_files import custom_id, sf_id
 
 # -----------------------------------------------------------------------------
 # Tests

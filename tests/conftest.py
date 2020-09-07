@@ -6,14 +6,11 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-import inspect
-from datetime import datetime
 from pathlib import Path
 
 import pytest
 
-from digiarch.database import FileDB
-from digiarch.internals import FileData, Metadata
+from digiarch.models import FileData
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -43,16 +40,16 @@ def data_file(main_dir):
     return data_file
 
 
-@pytest.fixture
-def file_data(temp_dir):
-    cur_time = datetime.now()
-    metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
-    return FileData(metadata=metadata)
+# @pytest.fixture
+# def file_data(temp_dir):
+#     cur_time = datetime.now()
+#     metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
+#     return FileData(metadata=metadata)
 
 
 @pytest.fixture
 def test_data_dir():
-    return Path(inspect.getfile(FileData)).parent.parent / "tests" / "_data"
+    return Path(__file__).parent.parent / "tests" / "_data"
 
 
 @pytest.fixture
@@ -74,8 +71,5 @@ def adx_info(test_data_dir):
 
 
 @pytest.fixture
-async def db_conn(main_dir):
-    file_db = FileDB(f"sqlite:///{main_dir}/test.db")
-    await file_db.connect()
-    yield file_db
-    await file_db.disconnect()
+def file_data(temp_dir):
+    return FileData(main_dir=temp_dir, files=[])

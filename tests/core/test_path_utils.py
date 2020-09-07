@@ -9,22 +9,16 @@ from uuid import uuid4
 import pytest
 
 import acamodels.archive_file
+from acamodels import ArchiveFile
 from digiarch.exceptions import FileCollectionError
-from digiarch.internals import ArchiveFile, FileData, Metadata
-from digiarch.utils.path_utils import explore_dir
+from digiarch.models import FileData
+from digiarch.core import explore_dir
 
 # -----------------------------------------------------------------------------
 # Fixtures
 # -----------------------------------------------------------------------------
 
 pytestmark = pytest.mark.asyncio
-
-
-@pytest.fixture
-def file_data(temp_dir):
-    cur_time = datetime.now()
-    metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
-    return FileData(metadata=metadata)
 
 
 # -----------------------------------------------------------------------------
@@ -35,13 +29,13 @@ def file_data(temp_dir):
 class TestExploreDir:
     """Class for testing the `explore_dir` function."""
 
-    async def test_in_empty_dir(self, temp_dir, file_data, db_conn):
+    async def test_in_empty_dir(self, file_data):
         """`explore_dir` is invoked in an empty directory.
         The data file should be empty."""
         with pytest.raises(FileCollectionError):
-            await explore_dir(temp_dir, db_conn)
+            await explore_dir(file_data)
 
-    async def test_with_files(self, temp_dir, db_conn, monkeypatch):
+    async def test_with_files(self, temp_dir, monkeypatch, file_data):
         """explore_dir is invoked in a non-empty directory,
         with files and non-empty sub-folders.
         The resulting JSON file should be populated,
@@ -71,9 +65,8 @@ class TestExploreDir:
         file1_info = ArchiveFile(path=file1)
 
         file2_info = ArchiveFile(path=file2)
-
-        await explore_dir(temp_dir, db_conn)
-        files = await db_conn.get_files()
+        await explore_dir(file_data)
+        files = await file_data.db.get_files()
         assert len(files) == 2
         assert file1_info in files
         assert file2_info in files

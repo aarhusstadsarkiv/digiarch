@@ -13,66 +13,66 @@ from pathlib import Path
 from typing import List
 
 from tqdm import tqdm
+from acamodels import ArchiveFile
 
 from digiarch.exceptions import FileCollectionError
-from digiarch.database import FileDB
-from digiarch.internals import (
-    ArchiveFile,
-    FileData,
-    Metadata,
-    natsort_path,
-    size_fmt,
-)
+from digiarch.models import FileData, Metadata
+from digiarch.core.utils import natsort_path, size_fmt
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
-async def explore_dir(path: Path, db: FileDB) -> None:
+async def explore_dir(file_data: FileData) -> List[str]:
     """Finds files and empty directories in the given path,
     and writes them to a file database.
 
     Parameters
     ----------
-    path : pathlib.Path
-        The path in which to find files.
-
-    db: FileDB
-        File database to write results to
+    file_data: models.FileData
+        File data model including main directory, data directory,
+        and file database.
 
     Returns
-    -------
-    empty_subs: List[str]
-        A list of empty subdirectory paths, if any such were found
+    ----------
+    List[str]
+        List of warnings encountered while parsing directories.
+
     """
     # Type declarations
     dir_info: List[ArchiveFile] = []
     empty_subs: List[Path] = []
-    several_files: List[Path] = []
+    multiple_files: List[Path] = []
+    warnings: List[str] = []
     total_size: int = 0
     file_count: int = 0
-    metadata = Metadata(last_run=datetime.now(), processed_dir=path)
-    # file_data = FileData(metadata=metadata)
-    main_dir: Path = path / "_digiarch"
-    if not [child for child in path.iterdir() if child.name != main_dir.name]:
+    main_dir: Path = file_data.main_dir
+    data_dir: Path = file_data.data_dir
+    metadata = Metadata(
+        last_run=datetime.now(), processed_dir=file_data.main_dir
+    )
+
+    if not [
+        child for child in main_dir.iterdir() if child.name != data_dir.name
+    ]:
         # Path is empty, remove main directory and raise
-        shutil.rmtree(main_dir)
-        raise FileCollectionError(f"{path} is empty! No files collected.")
+        shutil.rmtree(data_dir)
+        raise FileCollectionError(f"{main_dir} is empty! No files collected.")
 
     # Traverse given path, collect results.
     # tqdm is used to show progress of os.walk
     for root, dirs, files in tqdm(
-        os.walk(path, topdown=True), unit=" folders", desc="Processed"
+        os.walk(main_dir, topdown=True), unit=" folders", desc="Processed"
     ):
-        if main_dir.name in dirs:
+        if data_dir.name in dirs:
             # Don't walk the _digiarch directory
-            dirs.remove(main_dir.name)
+            dirs.remove(data_dir.name)
         if not dirs and not files:
             # We found an empty subdirectory.
             empty_subs.append(Path(root))
         if len(files) > 1:
-            several_files.append(Path(root))
+            multiple_files.append(Path(root))
         for file in files:
             cur_path = Path(root, file)
             dir_info.append(ArchiveFile(path=cur_path))
@@ -80,18 +80,21 @@ async def explore_dir(path: Path, db: FileDB) -> None:
             file_count += 1
 
     dir_info = natsort_path(dir_info)
+
     # Update metadata
     metadata.file_count = file_count
     metadata.total_size = size_fmt(total_size)
 
-    # TODO
-    # empty dirs/multiple files from database
-    # check with first()
-    # if empty_subs:
-    #     metadata.empty_subdirs = empty_subs
-    # if several_files:
-    #     metadata.several_files = several_files
+    # Update aux tables
+    if empty_subs:
+        await file_data.db.set_empty_subs(empty_subs)
+        warnings.append("Warning! Empty subdirectories detected!")
+    if multiple_files:
+        await file_data.db.set_multi_files(multiple_files)
+        warnings.append("Warning! Some directories have multiple files!")
 
-    # Update file data
-    await db.set_metadata(metadata)
-    await db.set_files(dir_info)
+    # Update db
+    await file_data.db.set_metadata(metadata)
+    await file_data.db.set_files(dir_info)
+
+    return warnings

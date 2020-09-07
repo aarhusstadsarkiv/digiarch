@@ -5,14 +5,16 @@
 # -----------------------------------------------------------------------------
 
 import re
+from pathlib import Path
 from typing import List, Any
 
 import sqlalchemy as sql
 from pydantic import parse_obj_as
 from sqlalchemy.exc import OperationalError
+from acamodels import ArchiveFile
 
 from databases import Database
-from digiarch.internals import ArchiveFile, Metadata
+from digiarch.models.metadata import Metadata
 from sqlalchemy_utils import create_view
 
 # -----------------------------------------------------------------------------
@@ -47,13 +49,13 @@ class FileDB(Database):
     )
 
     multiple_files = sql.Table(
-        "MultipleFiles",
+        "_MultipleFiles",
         sql_meta,
         sql.Column("path", sql.String, nullable=False),
     )
 
     empty_directories = sql.Table(
-        "EmptyDirectories",
+        "_EmptyDirectories",
         sql_meta,
         sql.Column("path", sql.String, nullable=False),
     )
@@ -74,8 +76,8 @@ class FileDB(Database):
         .group_by("puid")
         .order_by(sql.desc("count"))
     )
-    create_view("IdentificationWarnings", id_warnings, sql_meta)
-    create_view("SignatureCount", sig_count, sql_meta)
+    create_view("_IdentificationWarnings", id_warnings, sql_meta)
+    create_view("_SignatureCount", sig_count, sql_meta)
 
     def __init__(self, url: str) -> None:
         super().__init__(url)
@@ -127,3 +129,15 @@ class FileDB(Database):
         rows = await self.fetch_all(query)
         files = parse_obj_as(List[ArchiveFile], rows)
         return files
+
+    async def set_multi_files(self, multi_files: List[Path]) -> None:
+        await self.delsert(
+            self.multiple_files,
+            values=[{"path": str(path)} for path in multi_files],
+        )
+
+    async def set_empty_subs(self, empty_subs: List[Path]) -> None:
+        await self.delsert(
+            self.empty_directories,
+            values=[{"path": str(path)} for path in empty_subs],
+        )

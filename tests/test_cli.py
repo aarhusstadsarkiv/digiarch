@@ -2,7 +2,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-import json
+
 from pathlib import Path
 
 import pytest
@@ -28,7 +28,7 @@ def cli_run():
 class TestCli:
     """Class for testing the `cli` function."""
 
-    def test_main_cli_valid(self, cli_run, temp_dir):
+    def test_cli_valid(self, cli_run, temp_dir):
         """The cli is run with a valid path as argument.
         This should be successful, i.e. have exit code 0."""
         with cli_run.isolated_filesystem():
@@ -38,46 +38,51 @@ class TestCli:
             print(result.exc_info)
             assert result.exit_code == 0
 
-    def test_main_cli_invalid(self, cli_run):
+    def test_cli_invalid(self, cli_run):
         """The cli is run with an invalid path as argument.
         This should fail horribly, i.e. exit code != 0."""
         with cli_run.isolated_filesystem():
             args = ["/fail/"]
             result = cli_run.invoke(cli, args)
-            print(result.output)
-            assert False
             assert result.exit_code != 0
 
-    def test_main_cli_echos(self, cli_run, temp_dir, file_data):
+    def test_cli_echos(self, cli_run, temp_dir, file_data):
         """The cli is run given no data file, and so it should collect file
         information. Afterwards, it is called with an existing data file,
         and so it should echo which file it's working with."""
-        # with cli_run.isolated_filesystem():
-        #     args = [str(temp_dir)]
-        #     # Create an empty directory
-        #     empty_dir = temp_dir / "empty"
-        #     empty_dir.mkdir()
-        #     result = cli_run.invoke(cli, args)
-        #     assert "Warning! Empty subdirectories detected!" in result.output
-        #     assert "Collecting file information" in result.output
-        #     # Create a data file
-        #     new_file = file_data
-        #     new_file.dump()
-        #     result = cli_run.invoke(cli, args)
-        #     assert (
-        #         f"Processing data from {new_file.json_file}" in result.output
-        #     )
-        #     # Create several files in one folder
-        #     args = ["--reindex", str(temp_dir)]
-        #     file_1 = temp_dir / "file1.txt"
-        #     file_2 = temp_dir / "file2.txt"
-        #     file_1.touch()
-        #     file_2.touch()
-        #     result = cli_run.invoke(cli, args)
-        #     assert (
-        #         "Warning! Some directories have several files!"
-        #         in result.output
-        #     )
+        with cli_run.isolated_filesystem():
+            args = [str(temp_dir)]
+            # Create an empty directory
+            empty_dir = temp_dir / "empty"
+            empty_dir.mkdir()
+            result = cli_run.invoke(cli, args)
+            assert "Warning! Empty subdirectories detected!" in result.output
+            assert "Collecting file information" in result.output
+
+            # Create several files in one folder
+            args = ["--reindex", str(temp_dir)]
+            file_1 = temp_dir / "file1.txt"
+            file_2 = temp_dir / "file2.txt"
+            file_1.touch()
+            file_2.touch()
+            result = cli_run.invoke(cli, args)
+            assert (
+                "Warning! Some directories have multiple files!"
+                in result.output
+            )
+
+
+class TestOptions:
+    def test_reindex(self, cli_run, temp_dir):
+        pass
+
+
+class TestCommands:
+    def test_process(self, cli_run, temp_dir):
+        pass
+
+    def test_fix(self, cli_run, temp_dir):
+        pass
 
     # def test_reindex_option(self, cli_run, temp_dir, data_file):
     #     """The cli is run with a data file present, but the --reindex command
@@ -102,7 +107,8 @@ class TestCli:
     #         assert "Finding duplicates" in result.output
 
     # def test_report_command(self, cli_run, temp_dir):
-    #     """The cli is run with a valid path as argument and the report option.
+    #     """The cli is run with a valid path as argument and the report
+    # option.
     #     This should be successful, i.e. have exit code 0."""
     #     with cli_run.isolated_filesystem():
     #         Path(temp_dir, "test.txt").touch()
