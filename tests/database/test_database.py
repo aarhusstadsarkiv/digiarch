@@ -102,3 +102,10 @@ class TestFiles:
         await file_db.set_files(files)
         db_files = await file_db.get_files()
         assert files == db_files
+
+    async def test_is_empty(self, db_conn, files, test_data_dir):
+        file_db = db_conn
+        assert await file_db.is_empty()
+        files = identify(files, test_data_dir)
+        await file_db.set_files(files=files)
+        assert not await file_db.is_empty()
