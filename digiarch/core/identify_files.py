@@ -15,9 +15,9 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Dict, List
 
-from acamodels import Identification
+from acamodels import ArchiveFile, Identification
+from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
-from digiarch.internals import ArchiveFile, natsort_path
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -173,7 +173,8 @@ def update_file_info(
         signature=None,
         warning="No identification information obtained.",
     )
-    file_info.identification = id_info.get(file_info.path) or no_id
+    new_id = id_info.get(file_info.path) or no_id
+    file_info = file_info.copy(update=new_id.dict())
     return file_info
 
 
