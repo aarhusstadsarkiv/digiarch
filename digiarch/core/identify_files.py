@@ -15,8 +15,9 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Dict, List
 
+from acamodels import ArchiveFile, Identification
+from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
-from digiarch.internals import FileInfo, Identification, natsort_path
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -51,42 +52,42 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
 
         if sig_lwp.match(bof):
             file_id.puid = "x-fmt/340"
-            file_id.signame = "Lotus WordPro Document"
+            file_id.signature = "Lotus WordPro Document"
             if path.suffix.lower() != ".lwp":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_123.match(bof):
             file_id.puid = "aca-fmt/1"
-            file_id.signame = "Lotus 1-2-3 Spreadsheet"
+            file_id.signature = "Lotus 1-2-3 Spreadsheet"
             if path.suffix.lower() != ".123":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_word_markup.search(bof):
             file_id.puid = "aca-fmt/2"
-            file_id.signame = "Microsoft Word Markup"
+            file_id.signature = "Microsoft Word Markup"
             if path.suffix.lower() != ".doc":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_excel_markup.search(bof):
             file_id.puid = "aca-fmt/3"
-            file_id.signame = "Microsoft Excel Markup"
+            file_id.signature = "Microsoft Excel Markup"
             if path.suffix.lower() != ".xls":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_mmap.search(bof) or sig_mmap.search(eof):
             file_id.puid = "aca-fmt/4"
-            file_id.signame = "MindManager Mind Map"
+            file_id.signature = "MindManager Mind Map"
             if path.suffix.lower() != ".mmap":
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
         elif sig_gif_bof.match(bof) and sig_gif_eof.search(eof):
             file_id.puid = "fmt/4"
-            file_id.signame = "Graphics Interchange Format"
+            file_id.signature = "Graphics Interchange Format"
             if path.suffix.lower() != ".gif":
                 file_id.warning = "Extension mismatch"
             else:
@@ -147,10 +148,10 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             else:
                 puid = match.get("id")
 
-            signame = match.get("format")
+            signature = match.get("format")
             warning = match.get("warning", "").capitalize()
             file_identification = Identification(
-                puid=puid, signame=signame or None, warning=warning or None
+                puid=puid, signature=signature or None, warning=warning or None
             )
             if puid is None:
                 file_identification = custom_id(file_path, file_identification)
@@ -165,18 +166,19 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
 
 
 def update_file_info(
-    file_info: FileInfo, id_info: Dict[Path, Identification]
-) -> FileInfo:
+    file_info: ArchiveFile, id_info: Dict[Path, Identification]
+) -> ArchiveFile:
     no_id: Identification = Identification(
         puid=None,
-        signame=None,
+        signature=None,
         warning="No identification information obtained.",
     )
-    file_info.identification = id_info.get(file_info.path) or no_id
+    new_id = id_info.get(file_info.path) or no_id
+    file_info = file_info.copy(update=new_id.dict())
     return file_info
 
 
-def identify(files: List[FileInfo], path: Path) -> List[FileInfo]:
+def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     """Identify all files in a list, and return the updated list.
 
     Parameters
@@ -193,7 +195,7 @@ def identify(files: List[FileInfo], path: Path) -> List[FileInfo]:
 
     id_info: Dict[Path, Identification] = sf_id(path)
     _update = partial(update_file_info, id_info=id_info)
-    updated_files: List[FileInfo] = list(map(_update, files))
+    updated_files: List[ArchiveFile] = list(map(_update, files))
 
     return natsort_path(updated_files)
 
@@ -283,7 +285,7 @@ def identify(files: List[FileInfo], path: Path) -> List[FileInfo]:
 
 #     new_id: Identification = Identification(
 #         puid=None,
-#         signame=None,
+#         signature=None,
 #         warning="No identification information obtained.",
 #     )
 #     server: str = random.choice(servers)
@@ -308,7 +310,7 @@ def identify(files: List[FileInfo], path: Path) -> List[FileInfo]:
 #                 match = id_match
 
 #         new_id = new_id.replace(
-#             signame=match.get("format"), warning=match.get("warning")
+#             signature=match.get("format"), warning=match.get("warning")
 #         )
 #         if match.get("id", "").lower() == "unknown":
 #             new_id.puid = None
