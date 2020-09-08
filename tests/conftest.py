@@ -6,17 +6,16 @@
 # Imports
 # -----------------------------------------------------------------------------
 
+import inspect
+from datetime import datetime
 from pathlib import Path
 
 import pytest
-
-from digiarch.models import FileData
+from digiarch.internals import FileData, Metadata
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
-
-pytestmark = pytest.mark.asyncio
 
 
 @pytest.fixture
@@ -40,36 +39,13 @@ def data_file(main_dir):
     return data_file
 
 
-# @pytest.fixture
-# def file_data(temp_dir):
-#     cur_time = datetime.now()
-#     metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
-#     return FileData(metadata=metadata)
+@pytest.fixture
+def file_data(temp_dir):
+    cur_time = datetime.now()
+    metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
+    return FileData(metadata=metadata)
 
 
 @pytest.fixture
 def test_data_dir():
-    return Path(__file__).parent.parent / "tests" / "_data"
-
-
-@pytest.fixture
-def docx_info(test_data_dir):
-    docx_file: Path = test_data_dir / "docx_test.docx"
-    return docx_file
-
-
-@pytest.fixture
-def xls_info(test_data_dir):
-    xls_file: Path = test_data_dir / "xls_test.xls"
-    return xls_file
-
-
-@pytest.fixture
-def adx_info(test_data_dir):
-    adx_file: Path = test_data_dir / "adx_test.adx"
-    return adx_file
-
-
-@pytest.fixture
-def file_data(temp_dir):
-    return FileData(main_dir=temp_dir, files=[])
+    return Path(inspect.getfile(FileData)).parent.parent / "tests" / "_data"

@@ -10,12 +10,10 @@ import hashlib
 from collections import Counter
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Any, ItemsView, List, Optional, Set
+from typing import Any, Dict, ItemsView, List, Optional, Set
 
+from digiarch.internals import ArchiveFile, natsort_path, to_json
 from tqdm import tqdm
-
-from acamodels import ArchiveFile
-from digiarch.core.utils import natsort_path
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -134,32 +132,32 @@ def check_collisions(checksums: List[str]) -> Set[str]:
     return collisions
 
 
-# def check_duplicates(files: List[ArchiveFile], save_path: Path) -> None:
-#     """Generates a file with checksum collisions, indicating that duplicates
-#     are present.
+def check_duplicates(files: List[ArchiveFile], save_path: Path) -> None:
+    """Generates a file with checksum collisions, indicating that duplicates
+    are present.
 
-#     Parameters
-#     ----------
-#     files : List[FileInfo]
-#         Files for which duplicates should be checked.
-#     save_path : Path
-#         Path to which the checksum collision information should be saved.
-#     """
+    Parameters
+    ----------
+    files : List[FileInfo]
+        Files for which duplicates should be checked.
+    save_path : Path
+        Path to which the checksum collision information should be saved.
+    """
 
-#     # Initialise variables
-#     checksums: List[str] = [
-#         file.checksum for file in files if file.checksum is not None
-#     ]
-#     collisions: Set[str] = check_collisions(checksums)
-#     file_collisions: Dict[str, str] = dict()
+    # Initialise variables
+    checksums: List[str] = [
+        file.checksum for file in files if file.checksum is not None
+    ]
+    collisions: Set[str] = check_collisions(checksums)
+    file_collisions: Dict[str, str] = dict()
 
-#     for checksum in tqdm(collisions, desc="Finding duplicates"):
-#         hits = [
-#             {"name": file.name(), "path": file.path}
-#             for file in files
-#             if file.checksum == checksum
-#         ]
-#         file_collisions.update({checksum: hits})
+    for checksum in tqdm(collisions, desc="Finding duplicates"):
+        hits = [
+            {"name": file.name(), "path": file.path}
+            for file in files
+            if file.checksum == checksum
+        ]
+        file_collisions.update({checksum: hits})
 
-#     dups_file = save_path / "duplicate_files.json"
-#     to_json(file_collisions, dups_file)
+    dups_file = save_path / "duplicate_files.json"
+    to_json(file_collisions, dups_file)
