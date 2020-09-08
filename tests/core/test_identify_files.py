@@ -3,37 +3,14 @@
 # -----------------------------------------------------------------------------
 
 import json
-from pathlib import Path
 from subprocess import CalledProcessError
 from unittest.mock import patch
 
 import pytest
+
 from acamodels import Identification
+from digiarch.core.identify_files import custom_id, sf_id
 from digiarch.exceptions import IdentificationError
-from digiarch.identify.identify_files import custom_id, sf_id
-
-# -----------------------------------------------------------------------------
-# Fixtures
-# -----------------------------------------------------------------------------
-
-
-@pytest.fixture
-def adx_info(test_data_dir):
-    adx_file: Path = test_data_dir / "adx_test.adx"
-    return adx_file
-
-
-@pytest.fixture
-def docx_info(test_data_dir):
-    docx_file: Path = test_data_dir / "docx_test.docx"
-    return docx_file
-
-
-@pytest.fixture
-def xls_info(test_data_dir):
-    xls_file: Path = test_data_dir / "xls_test.xls"
-    return xls_file
-
 
 # -----------------------------------------------------------------------------
 # Tests
