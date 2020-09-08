@@ -5,9 +5,9 @@
 from pathlib import Path
 
 import pytest
-from acamodels import ArchiveFile
 
 import digiarch.core.checksums as check
+from acamodels import ArchiveFile
 
 # -----------------------------------------------------------------------------
 # Fixtures

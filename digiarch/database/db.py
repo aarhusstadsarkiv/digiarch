@@ -6,14 +6,14 @@
 
 import re
 from pathlib import Path
-from typing import List, Any
+from typing import Any, List
 
 import sqlalchemy as sql
+from databases import Database
 from pydantic import parse_obj_as
 from sqlalchemy.exc import OperationalError
-from acamodels import ArchiveFile
 
-from databases import Database
+from acamodels import ArchiveFile
 from digiarch.models.metadata import Metadata
 from sqlalchemy_utils import create_view
 

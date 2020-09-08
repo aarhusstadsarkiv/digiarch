@@ -10,9 +10,9 @@ import pytest
 
 import acamodels.archive_file
 from acamodels import ArchiveFile
+from digiarch.core import explore_dir
 from digiarch.exceptions import FileCollectionError
 from digiarch.models import FileData
-from digiarch.core import explore_dir
 
 # -----------------------------------------------------------------------------
 # Fixtures

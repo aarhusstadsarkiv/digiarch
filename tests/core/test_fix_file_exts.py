@@ -2,9 +2,9 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-from digiarch.core.identify_files import sf_id
 from acamodels import ArchiveFile
 from digiarch.core import fix_extensions
+from digiarch.core.identify_files import sf_id
 
 # -----------------------------------------------------------------------------
 # Tests

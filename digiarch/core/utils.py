@@ -4,8 +4,8 @@
 
 from typing import List
 
-from natsort import natsorted
 from acamodels import ArchiveFile
+from natsort import natsorted
 
 # -----------------------------------------------------------------------------
 # Utility functions

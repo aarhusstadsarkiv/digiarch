@@ -13,11 +13,11 @@ from pathlib import Path
 from typing import List
 
 from tqdm import tqdm
-from acamodels import ArchiveFile
 
+from acamodels import ArchiveFile
+from digiarch.core.utils import natsort_path, size_fmt
 from digiarch.exceptions import FileCollectionError
 from digiarch.models import FileData, Metadata
-from digiarch.core.utils import natsort_path, size_fmt
 
 # -----------------------------------------------------------------------------
 # Function Definitions

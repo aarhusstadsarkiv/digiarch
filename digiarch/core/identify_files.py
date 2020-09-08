@@ -15,9 +15,9 @@ from functools import partial
 from pathlib import Path
 from typing import Any, Dict, List
 
-from acamodels import Identification, ArchiveFile
-from digiarch.exceptions import IdentificationError
+from acamodels import ArchiveFile, Identification
 from digiarch.core.utils import natsort_path
+from digiarch.exceptions import IdentificationError
 
 # -----------------------------------------------------------------------------
 # Function Definitions

@@ -13,8 +13,8 @@ from pathlib import Path
 from typing import Any, ItemsView, List, Optional, Set
 
 from tqdm import tqdm
-from acamodels import ArchiveFile
 
+from acamodels import ArchiveFile
 from digiarch.core.utils import natsort_path
 
 # -----------------------------------------------------------------------------
