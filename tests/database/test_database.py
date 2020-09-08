@@ -31,11 +31,6 @@ def files(docx_info, xls_info, adx_info):
 
 
 @pytest.fixture
-def test_file_data(test_data_dir, db_conn):
-    return FileData(main_dir=test_data_dir, db=db_conn, files=[])
-
-
-@pytest.fixture
 async def db_conn(main_dir):
     file_db = FileDB(f"sqlite:///{main_dir}/test.db")
     await file_db.connect()
@@ -43,10 +38,11 @@ async def db_conn(main_dir):
     await file_db.disconnect()
 
 
-class MockMetaData:
-    @staticmethod
-    def create_all():
-        raise OperationalError("test")
+@pytest.fixture
+def test_file_data(test_data_dir, db_conn):
+    file_data = FileData(main_dir=test_data_dir, db=db_conn, files=[])
+    yield file_data
+    shutil.rmtree(file_data.data_dir, ignore_errors=True)
 
 
 # -----------------------------------------------------------------------------
@@ -79,8 +75,6 @@ class TestMetadata:
     async def test_set(self, db_conn, test_data_dir, test_file_data):
         file_db = db_conn
         await explore_dir(test_file_data)
-        # metadata = file_data.metadata
-        # await file_db.set_metadata(metadata)
         query = file_db.metadata.select()
         result = dict(await file_db.fetch_one(query=query))
         metadata = Metadata(**result)
