@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
+from acamodels import ArchiveFile
 
 from digiarch.cli import cli
 from digiarch.exceptions import FileCollectionError, IdentificationError
@@ -118,15 +119,19 @@ class TestCommands:
             result = cli_run.invoke(cli, args)
             assert "Error: Identification Error" in result.output
 
-    def test_fix(self, cli_run, temp_dir, monkeypatch):
+    def test_fix(self, cli_run, temp_dir, monkeypatch, xls_info):
         Path(temp_dir, "test.txt").touch()
         args = [str(temp_dir), "fix"]
 
         with cli_run.isolated_filesystem():
-            monkeypatch.setattr(core, "fix_extensions", lambda *args: False)
+            monkeypatch.setattr(core, "fix_extensions", lambda *args: [])
             result = cli_run.invoke(cli, args)
             assert "Info: No file extensions to fix" in result.output
 
-            monkeypatch.setattr(core, "fix_extensions", lambda *args: True)
+            monkeypatch.setattr(
+                core,
+                "fix_extensions",
+                lambda *args: [ArchiveFile(path=xls_info)],
+            )
             result = cli_run.invoke(cli, args)
             assert "Rebuilding file information" in result.output

@@ -124,6 +124,17 @@ class FileDB(Database):
         encoded_files = [file.encode() for file in files]
         await self.delsert(self.files, values=encoded_files)
 
+    async def update_files(self, new_files: List[ArchiveFile]) -> None:
+        encoded_files = [file.encode() for file in new_files]
+        async with self.transaction():
+            for file in encoded_files:
+                update = (
+                    self.files.update()
+                    .where(self.files.c.uuid == file["uuid"])
+                    .values(file)
+                )
+                await self.execute(update)
+
     async def get_files(self) -> List[ArchiveFile]:
         query = self.files.select()
         rows = await self.fetch_all(query)
