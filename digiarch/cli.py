@@ -100,8 +100,10 @@ async def fix(ctx: Context) -> None:
     fixed = core.fix_extensions(file_data.files)
     if fixed:
         click.secho("Rebuilding file information...", bold=True)
-        file_data = await core.explore_dir(file_data)
-        ctx.invoke(process)
+        new_files = core.identify(fixed, file_data.main_dir)
+        await file_data.db.update_files(new_files)
+        file_data.files = await file_data.db.get_files()
+        ctx.obj = file_data
     else:
         click.secho("Info: No file extensions to fix.", bold=True, fg="yellow")
 
