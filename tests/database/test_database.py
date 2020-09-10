@@ -109,3 +109,13 @@ class TestFiles:
         files = identify(files, test_data_dir)
         await file_db.set_files(files=files)
         assert not await file_db.is_empty()
+
+    async def test_update(self, db_conn, files, test_data_dir):
+        file_db = db_conn
+        files = identify(files, test_data_dir)
+        await file_db.set_files(files=files)
+        new_file = files[0]
+        new_file.checksum = "test"
+        await file_db.update_files([new_file])
+        updated_files = await file_db.get_files()
+        assert new_file in updated_files
