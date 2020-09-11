@@ -9,13 +9,14 @@ from pathlib import Path
 from typing import Any, List
 
 import sqlalchemy as sql
-from databases import Database
-from pydantic import parse_obj_as
-from sqlalchemy.exc import OperationalError
-
 from acamodels import ArchiveFile
-from digiarch.models.metadata import Metadata
+from databases import Database
+from pydantic import ValidationError, parse_obj_as
+from sqlalchemy.exc import OperationalError
 from sqlalchemy_utils import create_view
+
+from digiarch.exceptions import FileParseError
+from digiarch.models.metadata import Metadata
 
 # -----------------------------------------------------------------------------
 # Database class
@@ -124,10 +125,26 @@ class FileDB(Database):
         encoded_files = [file.encode() for file in files]
         await self.delsert(self.files, values=encoded_files)
 
+    async def update_files(self, new_files: List[ArchiveFile]) -> None:
+        encoded_files = [file.encode() for file in new_files]
+        async with self.transaction():
+            for file in encoded_files:
+                update = (
+                    self.files.update()
+                    .where(self.files.c.uuid == file["uuid"])
+                    .values(file)
+                )
+                await self.execute(update)
+
     async def get_files(self) -> List[ArchiveFile]:
         query = self.files.select()
         rows = await self.fetch_all(query)
-        files = parse_obj_as(List[ArchiveFile], rows)
+        try:
+            files = parse_obj_as(List[ArchiveFile], rows)
+        except ValidationError:
+            raise FileParseError(
+                "Failed to parse files as ArchiveFiles. Please reindex."
+            )
         return files
 
     async def set_multi_files(self, multi_files: List[Path]) -> None:
