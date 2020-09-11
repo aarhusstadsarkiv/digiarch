@@ -11,7 +11,6 @@ from acamodels import ArchiveFile
 from pydantic import BaseModel, ValidationError, parse_obj_as
 from sqlalchemy.exc import OperationalError
 
-import digiarch
 from digiarch.core import explore_dir
 from digiarch.core.identify_files import identify
 from digiarch.database import FileDB, db
