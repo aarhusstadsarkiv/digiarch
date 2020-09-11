@@ -6,17 +6,17 @@
 from pathlib import Path
 
 import pytest
-from click.testing import CliRunner
 from acamodels import ArchiveFile
+from click.testing import CliRunner
 
+from digiarch import core
 from digiarch.cli import cli
+from digiarch.database import db
 from digiarch.exceptions import (
     FileCollectionError,
-    IdentificationError,
     FileParseError,
+    IdentificationError,
 )
-from digiarch.database import db
-from digiarch import core
 
 # -----------------------------------------------------------------------------
 # Fixtures

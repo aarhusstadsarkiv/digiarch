@@ -19,8 +19,8 @@ from click.core import Context
 from digiarch import core
 from digiarch.exceptions import (
     FileCollectionError,
-    IdentificationError,
     FileParseError,
+    IdentificationError,
 )
 from digiarch.models import FileData
 

@@ -10,9 +10,8 @@ import json
 from pathlib import Path
 from typing import List
 
-from tqdm import tqdm
-
 from acamodels import ArchiveFile
+from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions

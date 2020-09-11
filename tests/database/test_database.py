@@ -7,11 +7,11 @@ from datetime import datetime
 from typing import List
 
 import pytest
-import digiarch
-from pydantic import parse_obj_as, ValidationError, BaseModel
+from acamodels import ArchiveFile
+from pydantic import BaseModel, ValidationError, parse_obj_as
 from sqlalchemy.exc import OperationalError
 
-from acamodels import ArchiveFile
+import digiarch
 from digiarch.core import explore_dir
 from digiarch.core.identify_files import identify
 from digiarch.database import FileDB, db

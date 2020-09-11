@@ -9,14 +9,14 @@ from pathlib import Path
 from typing import Any, List
 
 import sqlalchemy as sql
-from databases import Database
-from pydantic import parse_obj_as, ValidationError
-from sqlalchemy.exc import OperationalError
-
 from acamodels import ArchiveFile
-from digiarch.models.metadata import Metadata
-from digiarch.exceptions import FileParseError
+from databases import Database
+from pydantic import ValidationError, parse_obj_as
+from sqlalchemy.exc import OperationalError
 from sqlalchemy_utils import create_view
+
+from digiarch.exceptions import FileParseError
+from digiarch.models.metadata import Metadata
 
 # -----------------------------------------------------------------------------
 # Database class
