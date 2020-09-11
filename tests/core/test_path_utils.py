@@ -4,10 +4,10 @@
 
 from uuid import uuid4
 
-import pytest
-
 import acamodels.archive_file
+import pytest
 from acamodels import ArchiveFile
+
 from digiarch.core import explore_dir
 from digiarch.exceptions import FileCollectionError
 

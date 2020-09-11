@@ -7,13 +7,14 @@ from datetime import datetime
 from typing import List
 
 import pytest
-from pydantic import parse_obj_as
+from acamodels import ArchiveFile
+from pydantic import BaseModel, ValidationError, parse_obj_as
 from sqlalchemy.exc import OperationalError
 
-from acamodels import ArchiveFile
 from digiarch.core import explore_dir
 from digiarch.core.identify_files import identify
-from digiarch.database import FileDB
+from digiarch.database import FileDB, db
+from digiarch.exceptions import FileParseError
 from digiarch.models import FileData, Metadata
 from freezegun import freeze_time
 
@@ -96,12 +97,19 @@ class TestFiles:
         db_files = parse_obj_as(List[ArchiveFile], rows)
         assert files == db_files
 
-    async def test_get(self, db_conn, files, test_data_dir):
+    async def test_get(self, db_conn, files, test_data_dir, monkeypatch):
         file_db = db_conn
         files = identify(files, test_data_dir)
         await file_db.set_files(files)
         db_files = await file_db.get_files()
         assert files == db_files
+
+        def raise_val_error(*args):
+            raise ValidationError("test", BaseModel)
+
+        monkeypatch.setattr(db, "parse_obj_as", raise_val_error)
+        with pytest.raises(FileParseError):
+            await file_db.get_files()
 
     async def test_is_empty(self, db_conn, files, test_data_dir):
         file_db = db_conn

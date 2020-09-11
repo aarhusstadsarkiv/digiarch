@@ -17,7 +17,11 @@ import click
 from click.core import Context
 
 from digiarch import core
-from digiarch.exceptions import FileCollectionError, IdentificationError
+from digiarch.exceptions import (
+    FileCollectionError,
+    FileParseError,
+    IdentificationError,
+)
 from digiarch.models import FileData
 
 # -----------------------------------------------------------------------------
@@ -71,8 +75,12 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
     for warning in warnings:
         click.secho(warning, bold=True, fg="red")
 
-    file_data.files = await file_data.db.get_files()
-    ctx.obj = file_data
+    try:
+        file_data.files = await file_data.db.get_files()
+    except FileParseError as error:
+        raise click.ClickException(str(error))
+    else:
+        ctx.obj = file_data
 
 
 @cli.command()
