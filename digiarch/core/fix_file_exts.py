@@ -13,8 +13,6 @@ from typing import List
 from acamodels import ArchiveFile
 from tqdm import tqdm
 
-from acamodels import ArchiveFile
-
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
