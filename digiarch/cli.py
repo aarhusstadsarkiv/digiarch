@@ -17,7 +17,11 @@ import click
 from click.core import Context
 
 from digiarch import core
-from digiarch.exceptions import FileCollectionError, IdentificationError
+from digiarch.exceptions import (
+    FileCollectionError,
+    FileParseError,
+    IdentificationError,
+)
 from digiarch.models import FileData
 
 # -----------------------------------------------------------------------------
@@ -71,8 +75,12 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
     for warning in warnings:
         click.secho(warning, bold=True, fg="red")
 
-    file_data.files = await file_data.db.get_files()
-    ctx.obj = file_data
+    try:
+        file_data.files = await file_data.db.get_files()
+    except FileParseError as error:
+        raise click.ClickException(str(error))
+    else:
+        ctx.obj = file_data
 
 
 @cli.command()
@@ -100,8 +108,10 @@ async def fix(ctx: Context) -> None:
     fixed = core.fix_extensions(file_data.files)
     if fixed:
         click.secho("Rebuilding file information...", bold=True)
-        file_data = await core.explore_dir(file_data)
-        ctx.invoke(process)
+        new_files = core.identify(fixed, file_data.main_dir)
+        await file_data.db.update_files(new_files)
+        file_data.files = await file_data.db.get_files()
+        ctx.obj = file_data
     else:
         click.secho("Info: No file extensions to fix.", bold=True, fg="yellow")
 

@@ -19,3 +19,7 @@ class IdentificationError(DigiarchError):
 class FileCollectionError(DigiarchError):
     """Implements an error to raise if File discovery/collection or related
     functionality fails."""
+
+
+class FileParseError(DigiarchError):
+    """Implements an error to raise if file parsing fails"""

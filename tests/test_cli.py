@@ -6,11 +6,17 @@
 from pathlib import Path
 
 import pytest
+from acamodels import ArchiveFile
 from click.testing import CliRunner
 
-from digiarch.cli import cli
-from digiarch.exceptions import FileCollectionError, IdentificationError
 from digiarch import core
+from digiarch.cli import cli
+from digiarch.database import db
+from digiarch.exceptions import (
+    FileCollectionError,
+    FileParseError,
+    IdentificationError,
+)
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -48,16 +54,25 @@ class TestCli:
             result = cli_run.invoke(cli, args)
             assert result.exit_code != 0
 
-    def test_exceptions(self, cli_run, monkeypatch, temp_dir):
+    @pytest.mark.asyncio
+    def test_exceptions(self, cli_run, monkeypatch, temp_dir, file_data):
         def file_coll_error(*args):
             raise FileCollectionError("File Collection Error")
 
-        monkeypatch.setattr(core, "explore_dir", file_coll_error)
+        def file_parse_error(*args):
+            raise FileParseError("File Parse Error")
+
         Path(temp_dir, "test.txt").touch()
+        args = [str(temp_dir)]
         with cli_run.isolated_filesystem():
-            args = [str(temp_dir)]
+            monkeypatch.setattr(core, "explore_dir", file_coll_error)
             result = cli_run.invoke(cli, args)
             assert "Error: File Collection Error" in result.output
+            monkeypatch.undo()
+        with cli_run.isolated_filesystem():
+            monkeypatch.setattr(db.FileDB, "get_files", file_parse_error)
+            result = cli_run.invoke(cli, args)
+            assert "Error: File Parse Error" in result.output
 
     def test_cli_echos(self, cli_run, temp_dir, file_data, monkeypatch):
         """Runs the CLI with empty directories, multiple files, and
@@ -82,8 +97,12 @@ class TestCli:
                 in result.output
             )
 
+        with cli_run.isolated_filesystem():
             # File database has data
-            monkeypatch.setattr(file_data.db, "is_empty", lambda: False)
+            async def empty_false(*args):
+                return False
+
+            monkeypatch.setattr(db.FileDB, "is_empty", empty_false)
             result = cli_run.invoke(cli, args)
             assert "Processing data from" in result.output
 
@@ -92,8 +111,12 @@ class TestOptions:
     def test_reindex(self, cli_run, temp_dir, file_data, monkeypatch):
         Path(temp_dir, "test.txt").touch()
         args = ["--reindex", str(temp_dir)]
+
+        async def empty_false(*args):
+            return False
+
         # File database has data
-        monkeypatch.setattr(file_data.db, "is_empty", lambda: False)
+        monkeypatch.setattr(db.FileDB, "is_empty", empty_false)
 
         with cli_run.isolated_filesystem():
             # But we pass reindex, so file collection should happen anyway
@@ -118,15 +141,19 @@ class TestCommands:
             result = cli_run.invoke(cli, args)
             assert "Error: Identification Error" in result.output
 
-    def test_fix(self, cli_run, temp_dir, monkeypatch):
+    def test_fix(self, cli_run, temp_dir, monkeypatch, xls_info):
         Path(temp_dir, "test.txt").touch()
         args = [str(temp_dir), "fix"]
 
         with cli_run.isolated_filesystem():
-            monkeypatch.setattr(core, "fix_extensions", lambda *args: False)
+            monkeypatch.setattr(core, "fix_extensions", lambda *args: [])
             result = cli_run.invoke(cli, args)
             assert "Info: No file extensions to fix" in result.output
 
-            monkeypatch.setattr(core, "fix_extensions", lambda *args: True)
+            monkeypatch.setattr(
+                core,
+                "fix_extensions",
+                lambda *args: [ArchiveFile(path=xls_info)],
+            )
             result = cli_run.invoke(cli, args)
             assert "Rebuilding file information" in result.output
