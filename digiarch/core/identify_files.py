@@ -174,7 +174,13 @@ def update_file_info(
         signature=None,
         warning="No identification information obtained.",
     )
-    new_id = id_info.get(file_info.path) or no_id
+    new_id: Identification = id_info.get(file_info.path) or no_id
+    if file_info.path.stat().st_size == 0:
+        new_id = Identification(
+            puid=None,
+            signature=None,
+            warning="File is empty.",
+        )
     file_info = file_info.copy(update=new_id.dict())
     return file_info
 
