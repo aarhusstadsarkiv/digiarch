@@ -17,6 +17,7 @@ import click
 from click.core import Context
 
 from digiarch import core
+from digiarch import __version__
 from digiarch.exceptions import (
     FileCollectionError,
     FileParseError,
@@ -47,6 +48,7 @@ def coro(func: Callable) -> Callable:
     "path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
 )
 @click.option("--reindex", is_flag=True, help="Reindex the current directory.")
+@click.version_option(version=__version__)
 @click.pass_context
 @coro
 async def cli(ctx: Context, path: str, reindex: bool) -> None:
