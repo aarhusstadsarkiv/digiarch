@@ -109,3 +109,6 @@ process.yml
 # Sublime Text
 *.sublime-workspace
 *.sublime-project
+
+# VS Code
+.vscode/
