@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "0.8.1"
+version = "0.8.2"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
