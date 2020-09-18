@@ -1,22 +1,21 @@
 """File database backend"""
-
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 import re
 from pathlib import Path
-from typing import Any, List
+from typing import Any
+from typing import List
 
 import sqlalchemy as sql
 from acamodels import ArchiveFile
 from databases import Database
-from pydantic import ValidationError, parse_obj_as
-from sqlalchemy.exc import OperationalError
-from sqlalchemy_utils import create_view
-
 from digiarch.exceptions import FileParseError
 from digiarch.models.metadata import Metadata
+from pydantic import parse_obj_as
+from pydantic import ValidationError
+from sqlalchemy.exc import OperationalError
+from sqlalchemy_utils import create_view
 
 # -----------------------------------------------------------------------------
 # Database class

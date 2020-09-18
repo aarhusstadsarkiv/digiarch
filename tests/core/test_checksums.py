@@ -1,13 +1,11 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 from pathlib import Path
 
+import digiarch.core.checksums as check
 import pytest
 from acamodels import ArchiveFile
-
-import digiarch.core.checksums as check
 
 # -----------------------------------------------------------------------------
 # Fixtures

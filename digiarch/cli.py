@@ -3,26 +3,23 @@ use the functionality implemented in the :mod:`~digiarch` submodules.
 The CLI implements several commands with suboptions.
 
 """
-
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 import asyncio
 from functools import wraps
 from pathlib import Path
-from typing import Any, Callable, List
+from typing import Any
+from typing import Callable
+from typing import List
 
 import click
 from click.core import Context
-
-from digiarch import core
 from digiarch import __version__
-from digiarch.exceptions import (
-    FileCollectionError,
-    FileParseError,
-    IdentificationError,
-)
+from digiarch import core
+from digiarch.exceptions import FileCollectionError
+from digiarch.exceptions import FileParseError
+from digiarch.exceptions import IdentificationError
 from digiarch.models import FileData
 
 # -----------------------------------------------------------------------------
