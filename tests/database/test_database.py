@@ -1,22 +1,24 @@
 # -----------------------------------------------------------------------------
 # Imports & setup
 # -----------------------------------------------------------------------------
-
 import shutil
 from datetime import datetime
 from typing import List
 
 import pytest
 from acamodels import ArchiveFile
-from pydantic import BaseModel, ValidationError, parse_obj_as
-from sqlalchemy.exc import OperationalError
-
 from digiarch.core import explore_dir
 from digiarch.core.identify_files import identify
-from digiarch.database import FileDB, db
+from digiarch.database import db
+from digiarch.database import FileDB
 from digiarch.exceptions import FileParseError
-from digiarch.models import FileData, Metadata
+from digiarch.models import FileData
+from digiarch.models import Metadata
 from freezegun import freeze_time
+from pydantic import BaseModel
+from pydantic import parse_obj_as
+from pydantic import ValidationError
+from sqlalchemy.exc import OperationalError
 
 # -----------------------------------------------------------------------------
 # Fixtures

@@ -1,14 +1,16 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
+from typing import Dict
+from typing import List
 
-from acamodels import ACABase, ArchiveFile
-from pydantic import Field, root_validator
-
+from acamodels import ACABase
+from acamodels import ArchiveFile
 from digiarch.database import FileDB
+from pydantic import Field
+from pydantic import root_validator
 
 # -----------------------------------------------------------------------------
 # Model

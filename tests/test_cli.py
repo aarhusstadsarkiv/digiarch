@@ -1,22 +1,17 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
-
 from pathlib import Path
 
 import pytest
 from acamodels import ArchiveFile
 from click.testing import CliRunner
-
 from digiarch import core
 from digiarch.cli import cli
 from digiarch.database import db
-from digiarch.exceptions import (
-    FileCollectionError,
-    FileParseError,
-    IdentificationError,
-)
+from digiarch.exceptions import FileCollectionError
+from digiarch.exceptions import FileParseError
+from digiarch.exceptions import IdentificationError
 
 # -----------------------------------------------------------------------------
 # Fixtures

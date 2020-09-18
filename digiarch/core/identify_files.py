@@ -2,21 +2,20 @@
 `siegfried <https://github.com/richardlehane/siegfried>`_
 
 """
-
-
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 import json
 import re
 import subprocess
 from functools import partial
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any
+from typing import Dict
+from typing import List
 
-from acamodels import ArchiveFile, Identification
-
+from acamodels import ArchiveFile
+from acamodels import Identification
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
 

@@ -1,10 +1,9 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 from acamodels import ArchiveFile
-
-from digiarch.core.utils import natsort_path, size_fmt
+from digiarch.core.utils import natsort_path
+from digiarch.core.utils import size_fmt
 
 # -----------------------------------------------------------------------------
 # Tests

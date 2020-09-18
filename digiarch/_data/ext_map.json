@@ -11,5 +11,7 @@
   "fmt/40": "doc",
   "fmt/126": "ppt",
   "fmt/215": "pptx",
-  "fmt/412": "docx"
+  "fmt/340": "lwp",
+  "fmt/412": "docx",
+  "x-fmt/340": "lwp"
 }

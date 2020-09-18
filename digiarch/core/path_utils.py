@@ -1,11 +1,9 @@
 """Utilities for handling files, paths, etc.
 
 """
-
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 import os
 import shutil
 from datetime import datetime
@@ -13,11 +11,12 @@ from pathlib import Path
 from typing import List
 
 from acamodels import ArchiveFile
-from tqdm import tqdm
-
-from digiarch.core.utils import natsort_path, size_fmt
+from digiarch.core.utils import natsort_path
+from digiarch.core.utils import size_fmt
 from digiarch.exceptions import FileCollectionError
-from digiarch.models import FileData, Metadata
+from digiarch.models import FileData
+from digiarch.models import Metadata
+from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions

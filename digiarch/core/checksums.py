@@ -1,21 +1,22 @@
 """This module implements checksum generation and duplicate detection.
 
 """
-
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-
 import hashlib
 from collections import Counter
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Any, ItemsView, List, Optional, Set
+from typing import Any
+from typing import ItemsView
+from typing import List
+from typing import Optional
+from typing import Set
 
 from acamodels import ArchiveFile
-from tqdm import tqdm
-
 from digiarch.core.utils import natsort_path
+from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
 # Function Definitions
