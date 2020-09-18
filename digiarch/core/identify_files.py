@@ -16,6 +16,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 
 from acamodels import ArchiveFile, Identification
+
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
 
@@ -173,7 +174,13 @@ def update_file_info(
         signature=None,
         warning="No identification information obtained.",
     )
-    new_id = id_info.get(file_info.path) or no_id
+    new_id: Identification = id_info.get(file_info.path) or no_id
+    if file_info.path.stat().st_size == 0:
+        new_id = Identification(
+            puid=None,
+            signature=None,
+            warning="File is empty.",
+        )
     file_info = file_info.copy(update=new_id.dict())
     return file_info
 
@@ -198,126 +205,3 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     updated_files: List[ArchiveFile] = list(map(_update, files))
 
     return natsort_path(updated_files)
-
-
-# def identify(files: List[FileInfo]) -> List[FileInfo]:
-#     """Identify all files in a list, and return the updated list.
-
-#     Parameters
-#     ----------
-#     files : List[FileInfo]
-#         Files to identify.
-
-#     Returns
-#     -------
-#     List[FileInfo]
-#         Input files with updated Identification information.
-
-#     """
-
-#     updated_files: List[FileInfo]
-
-#     # Start siegfried server
-#     servers: List[str] = [
-#         f"localhost:{port}"
-# for port in range(1337, 1337 + mp.cpu_count() * 2)
-#     ]
-#     sf_procs: List[subprocess.Popen] = []
-#     for server in servers:
-#         proc = subprocess.Popen(
-#             ["sf", "-coe", "-serve", server],
-#             # stdout=subprocess.DEVNULL,
-#             # stderr=subprocess.DEVNULL,
-#         )
-#         sf_procs.append(proc)
-
-#     # Multiprocess identification
-#     pool = mp.Pool()
-#     _identify = partial(sf_id, servers=servers)
-#     try:
-#         updated_files = list(
-#             tqdm(
-#                 pool.imap_unordered(_identify, files),
-#                 desc="Identifying files",
-#                 unit="files",
-#                 total=len(files),
-#             )
-#         )
-#     except KeyboardInterrupt:
-#         pool.terminate()
-#         pool.join()
-#     finally:
-#         pool.close()
-#         pool.join()
-
-#     # Close sf servers
-#     for proc in sf_procs:
-#         proc.terminate()
-#         _, _ = proc.communicate()
-
-#     # Natsort list by file.path
-#     updated_files = natsort_path(updated_files)
-#     return updated_files
-
-
-# def sf_id(file: FileInfo, servers: List[str]) -> FileInfo:
-#     """Identify files using
-#     `siegfried <https://github.com/richardlehane/siegfried>`_ and update
-#     FileInfo with obtained PUID, signature name, and warning if applicable.
-
-#     Parameters
-#     ----------
-#     file : FileInfo
-#         The file to identify.
-
-#     Returns
-#     -------
-#     updated_file : FileInfo
-#         Input file with updated information in the Identification field.
-
-#     Raises
-#     ------
-#     IdentificationError
-#         If running siegfried or loading of the resulting YAML output fails,
-#         an IdentificationError is thrown.
-
-#     """
-
-#     new_id: Identification = Identification(
-#         puid=None,
-#         signature=None,
-#         warning="No identification information obtained.",
-#     )
-#     server: str = random.choice(servers)
-#     # with subprocess.Popen(["sf", "-serve", server]) as proc:
-
-#     base64_path: str = urlsafe_b64encode(bytes(file.path)).decode()
-#     id_response = requests.get(
-#         f"http://{server}/identify/{base64_path}?base64=true&format=json"
-#     )
-
-#     try:
-#         id_response.raise_for_status()
-#     except HTTPError as error:
-#         raise IdentificationError(error)
-#     else:
-#         id_result = id_response.json()
-
-#     for file_result in id_result.get("files", []):
-#         match: Dict[str, Any] = {}
-#         for id_match in file_result.get("matches"):
-#             if id_match.get("ns") == "pronom":
-#                 match = id_match
-
-#         new_id = new_id.replace(
-#             signature=match.get("format"), warning=match.get("warning")
-#         )
-#         if match.get("id", "").lower() == "unknown":
-#             new_id.puid = None
-#         else:
-#             new_id.puid = match.get("id")
-#         if isinstance(new_id.warning, str):
-#             new_id.warning = new_id.warning.capitalize() or None
-
-#     updated_file: FileInfo = file.replace(identification=new_id)
-#     return updated_file
