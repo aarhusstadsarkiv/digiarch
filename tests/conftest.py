@@ -18,8 +18,10 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def temp_dir(tmpdir_factory):
-    temp_dir: str = tmpdir_factory.mktemp("temp_dir")
-    return Path(temp_dir)
+    t_dir: str = tmpdir_factory.mktemp("temp_dir")
+    temp_dir: Path = Path(t_dir, "AARS.TEST")
+    temp_dir.mkdir(exist_ok=True)
+    return temp_dir
 
 
 @pytest.fixture
@@ -37,16 +39,9 @@ def data_file(main_dir):
     return data_file
 
 
-# @pytest.fixture
-# def file_data(temp_dir):
-#     cur_time = datetime.now()
-#     metadata = Metadata(last_run=cur_time, processed_dir=Path(temp_dir))
-#     return FileData(metadata=metadata)
-
-
 @pytest.fixture
 def test_data_dir():
-    return Path(__file__).parent.parent / "tests" / "_data"
+    return Path(__file__).parent.parent / "tests" / "_data" / "AARS.test_data"
 
 
 @pytest.fixture

@@ -50,7 +50,7 @@ class TestCli:
             assert result.exit_code != 0
 
     @pytest.mark.asyncio
-    def test_exceptions(self, cli_run, monkeypatch, temp_dir, file_data):
+    def test_exceptions(self, cli_run, monkeypatch, temp_dir):
         def file_coll_error(*args):
             raise FileCollectionError("File Collection Error")
 
@@ -69,7 +69,7 @@ class TestCli:
             result = cli_run.invoke(cli, args)
             assert "Error: File Parse Error" in result.output
 
-    def test_cli_echos(self, cli_run, temp_dir, file_data, monkeypatch):
+    def test_cli_echos(self, cli_run, temp_dir, monkeypatch):
         """Runs the CLI with empty directories, multiple files, and
         an already existing database."""
         args = [str(temp_dir)]
@@ -103,7 +103,7 @@ class TestCli:
 
 
 class TestOptions:
-    def test_reindex(self, cli_run, temp_dir, file_data, monkeypatch):
+    def test_reindex(self, cli_run, temp_dir, monkeypatch):
         Path(temp_dir, "test.txt").touch()
         args = ["--reindex", str(temp_dir)]
 
