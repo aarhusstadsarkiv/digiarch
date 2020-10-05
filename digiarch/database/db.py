@@ -43,6 +43,7 @@ class FileDB(Database):
         sql.Column("uuid", sql.String, nullable=False),
         sql.Column("path", sql.String, nullable=False),
         sql.Column("checksum", sql.String),
+        sql.Column("aars_path", sql.String, nullable=False),
         sql.Column("puid", sql.String),
         sql.Column("signature", sql.String),
         sql.Column("warning", sql.String),
