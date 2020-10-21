@@ -147,7 +147,7 @@ dev = ["pytest (>=5)", "pytest-cov", "coveralls", "black", "mypy", "pylint"]
 
 [[package]]
 name = "databases"
-version = "0.3.2"
+version = "0.4.0"
 description = "Async database support for Python."
 category = "main"
 optional = false
@@ -159,7 +159,7 @@ sqlalchemy = "*"
 
 [package.extras]
 mysql = ["aiomysql", "pymysql"]
-postgresql = ["asyncpg", "psycopg2-binary"]
+postgresql = ["asyncpg", "psycopg2"]
 postgresql_aiopg = ["aiopg"]
 sqlite = ["aiosqlite"]
 
@@ -715,7 +715,7 @@ socks = ["PySocks (>=1.5.6,<1.5.7 || >1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "258399ed8df8be7c44047a14dde6d562752d5c99167a505400d258214a21287d"
+content-hash = "41ae98fb75330f1c3d6eebd85d5e80741cf60fbcb9fe419c6b395757cf5b2986"
 
 [metadata.files]
 acamodels = [
@@ -806,8 +806,8 @@ dacite = [
     {file = "dacite-1.5.1.tar.gz", hash = "sha256:764c96e0304cb189628686689a163a6a3a8ce7bf3465f0a2d882a8b42f88108f"},
 ]
 databases = [
-    {file = "databases-0.3.2-py3-none-any.whl", hash = "sha256:ee8dcece15a86359ef06414a6afcc15da15f5d078dc09af2e3a5f9dbfee4dce9"},
-    {file = "databases-0.3.2.tar.gz", hash = "sha256:78b758884ca585b81272af1de697e0c8a3034de92bdd08e9ac47436ef0cdca56"},
+    {file = "databases-0.4.0-py3-none-any.whl", hash = "sha256:f8a2f48f17f39803d7b74e810be0ad4add030f392f178fc1ded374d80c9645a9"},
+    {file = "databases-0.4.0.tar.gz", hash = "sha256:8aac48977c3827a7c9bc4d94a0b138ac7fa60679facd3d4b15e4533f463e48fa"},
 ]
 docutils = [
     {file = "docutils-0.16-py2.py3-none-any.whl", hash = "sha256:0c5b78adfbf7762415433f5515cd5c9e762339e23369dbe8000d84a4bf4ab3af"},
