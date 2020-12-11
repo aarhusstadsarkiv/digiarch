@@ -39,6 +39,10 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
     sig_excel_markup = re.compile(
         r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,18}457863656C2E5368656574"
     )
+    sig_excel_xml = re.compile(
+        r"(?i)75726e3a736368656d61732d6d6963726f"
+        "736f66742d636f6d3a6f66666963653a657863656c"
+    )
     with path.open("rb") as file_bytes:
         # BOF
         bof = file_bytes.read(1024).hex()
@@ -71,7 +75,7 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
                 file_id.warning = "Extension mismatch"
             else:
                 file_id.warning = None
-        elif sig_excel_markup.search(bof):
+        elif sig_excel_markup.search(bof) or sig_excel_xml.search(bof):
             file_id.puid = "aca-fmt/3"
             file_id.signature = "Microsoft Excel Markup"
             if path.suffix.lower() != ".xls":
