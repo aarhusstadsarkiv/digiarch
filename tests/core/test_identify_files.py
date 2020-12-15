@@ -23,15 +23,6 @@ class TestSFId:
         assert result[docx_info].signature == "Microsoft Word for Windows"
         assert result[docx_info].warning is None
 
-    def test_unknown_puid(self, adx_info):
-        result = sf_id(adx_info)
-        assert result[adx_info].puid is None
-        assert result[adx_info].signature is None
-        assert (
-            result[adx_info].warning
-            == "No match; possibilities based on extension are fmt/840"
-        )
-
     def test_custom_markup(self, xls_info):
         result = sf_id(xls_info)
         assert result[xls_info].puid == "aca-fmt/3"
@@ -112,12 +103,8 @@ class TestCustomId:
         assert new_id.puid == "aca-fmt/2"
         assert new_id.signature == "Microsoft Word Markup"
         assert new_id.warning is None
-        word_markup_wrong_suffix = word_markup.with_suffix(".test")
-        word_markup_wrong_suffix.write_bytes(
-            bytes.fromhex(
-                "6e2070726f6769643d22576f72642e446f"
-                "63756d656e74223f3e3c773a776f726444"
-            )
+        word_markup_wrong_suffix = word_markup.rename(
+            word_markup.with_suffix(".fail")
         )
         new_id_wrong_suffix = custom_id(
             word_markup_wrong_suffix, word_markup_id
@@ -143,12 +130,8 @@ class TestCustomId:
         assert new_id.puid == "aca-fmt/3"
         assert new_id.signature == "Microsoft Excel Markup"
         assert new_id.warning is None
-        excel_markup_wrong_suffix = excel_markup.with_suffix(".test")
-        excel_markup_wrong_suffix.write_bytes(
-            bytes.fromhex(
-                "6d657461206e616d653d50726f67496420636f6e74656e"
-                "743d457863656c2e53686565743e0d0a3c6d657461206e"
-            )
+        excel_markup_wrong_suffix = excel_markup.rename(
+            excel_markup.with_suffix(".test")
         )
         new_id_wrong_suffix = custom_id(
             excel_markup_wrong_suffix, excel_markup_id
@@ -169,9 +152,8 @@ class TestCustomId:
         assert new_id.puid == "aca-fmt/4"
         assert new_id.signature == "MindManager Mind Map"
         assert new_id.warning is None
-        mmap_markup_wrong_suffix = mmap_markup.with_suffix(".test")
-        mmap_markup_wrong_suffix.write_bytes(
-            bytes.fromhex("4D696E644d616E61676572")
+        mmap_markup_wrong_suffix = mmap_markup.rename(
+            mmap_markup.with_suffix(".test")
         )
         new_id_wrong_suffix = custom_id(
             mmap_markup_wrong_suffix, mmap_markup_id
@@ -194,4 +176,22 @@ class TestCustomId:
         fail_id = custom_id(fail_gif_file, gif_id)
         assert fail_id.puid == "fmt/4"
         assert fail_id.signature == "Graphics Interchange Format"
+        assert fail_id.warning == "Extension mismatch"
+
+    def test_nsf(self, temp_dir):
+        nsf_file = temp_dir / "mock.nsf"
+        nsf_file.write_bytes(
+            bytes.fromhex(
+                "1a000004000029000000bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+            )
+        )
+        nsf_id = Identification(puid=None, signature=None, warning="fail")
+        new_id = custom_id(nsf_file, nsf_id)
+        assert new_id.puid == "aca-fmt/8"
+        assert new_id.signature == "Lotus Notes Database"
+        assert new_id.warning is None
+        fail_nsf_file = nsf_file.rename(nsf_file.with_suffix(".fail"))
+        fail_id = custom_id(fail_nsf_file, nsf_id)
+        assert fail_id.puid == "aca-fmt/8"
+        assert fail_id.signature == "Lotus Notes Database"
         assert fail_id.warning == "Extension mismatch"
