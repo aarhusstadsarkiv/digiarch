@@ -25,24 +25,14 @@ from digiarch.exceptions import IdentificationError
 
 
 def custom_id(path: Path, file_id: Identification) -> Identification:
-    sig_lwp = re.compile(
-        r"(?i)^576F726450726F0DFB000000000000"
-        "000005985C8172030040CCC1BFFFBDF970"
-    )
     sig_gif_bof = re.compile(r"(?i)^474946383961")
     sig_gif_eof = re.compile(r"(?i)3B")
-    sig_123 = re.compile(r"(?i)^00001A000(3|4|5)10040000000000")
+    sig_nsf_bof = re.compile(r"(?i)^1a000004000029000000")
+    sig_nsf_eof = re.compile(r"(?i)bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
     sig_mmap = re.compile(r"(?i)4D696E644d616E61676572")
-    sig_word_markup = re.compile(
-        r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,20}576f72642e446f63756d656e74"
-    )
-    sig_excel_markup = re.compile(
-        r"(?i)(50|70)726F67(49|69)64[0-9A-F]{2,18}457863656C2E5368656574"
-    )
-    sig_excel_xml = re.compile(
-        r"(?i)75726e3a736368656d61732d6d6963726f"
-        "736f66742d636f6d3a6f66666963653a657863656c"
-    )
+    sig_file = Path(__file__).parent / "custom_sigs.json"
+    signatures: List[Dict] = json.load(sig_file.open(encoding="utf-8"))
+
     with path.open("rb") as file_bytes:
         # BOF
         bof = file_bytes.read(1024).hex()
@@ -53,49 +43,39 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
             # File too small :)
             file_bytes.seek(-file_bytes.tell(), 2)
         eof = file_bytes.read(1024).hex()
+    if sig_mmap.search(bof) or sig_mmap.search(eof):
+        file_id.puid = "aca-fmt/4"
+        file_id.signature = "MindManager Mind Map"
+        if path.suffix.lower() != ".mmap":
+            file_id.warning = "Extension mismatch"
+        else:
+            file_id.warning = None
+    elif sig_gif_bof.match(bof) and sig_gif_eof.search(eof):
+        file_id.puid = "fmt/4"
+        file_id.signature = "Graphics Interchange Format"
+        if path.suffix.lower() != ".gif":
+            file_id.warning = "Extension mismatch"
+        else:
+            file_id.warning = None
+    elif sig_nsf_bof.search(bof) and sig_nsf_eof.search(eof):
+        file_id.puid = "aca-fmt/8"
+        file_id.signature = "Lotus Notes Database"
+        if path.suffix.lower() != ".nsf":
+            file_id.warning = "Extension mismatch"
+        else:
+            file_id.warning = None
+    else:
+        for sig in signatures:
+            pattern = re.compile(sig["pattern"])
+            if pattern.search(bof):
+                file_id.puid = sig["puid"]
+                file_id.signature = sig["signature"]
+                if path.suffix.lower() != sig["extension"]:
+                    file_id.warning = "Extension mismatch"
+                else:
+                    file_id.warning = None
+                break
 
-        if sig_lwp.match(bof):
-            file_id.puid = "x-fmt/340"
-            file_id.signature = "Lotus WordPro Document"
-            if path.suffix.lower() != ".lwp":
-                file_id.warning = "Extension mismatch"
-            else:
-                file_id.warning = None
-        elif sig_123.match(bof):
-            file_id.puid = "aca-fmt/1"
-            file_id.signature = "Lotus 1-2-3 Spreadsheet"
-            if path.suffix.lower() != ".123":
-                file_id.warning = "Extension mismatch"
-            else:
-                file_id.warning = None
-        elif sig_word_markup.search(bof):
-            file_id.puid = "aca-fmt/2"
-            file_id.signature = "Microsoft Word Markup"
-            if path.suffix.lower() != ".doc":
-                file_id.warning = "Extension mismatch"
-            else:
-                file_id.warning = None
-        elif sig_excel_markup.search(bof) or sig_excel_xml.search(bof):
-            file_id.puid = "aca-fmt/3"
-            file_id.signature = "Microsoft Excel Markup"
-            if path.suffix.lower() != ".xls":
-                file_id.warning = "Extension mismatch"
-            else:
-                file_id.warning = None
-        elif sig_mmap.search(bof) or sig_mmap.search(eof):
-            file_id.puid = "aca-fmt/4"
-            file_id.signature = "MindManager Mind Map"
-            if path.suffix.lower() != ".mmap":
-                file_id.warning = "Extension mismatch"
-            else:
-                file_id.warning = None
-        elif sig_gif_bof.match(bof) and sig_gif_eof.search(eof):
-            file_id.puid = "fmt/4"
-            file_id.signature = "Graphics Interchange Format"
-            if path.suffix.lower() != ".gif":
-                file_id.warning = "Extension mismatch"
-            else:
-                file_id.warning = None
     return file_id
 
 
