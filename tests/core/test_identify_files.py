@@ -195,3 +195,12 @@ class TestCustomId:
         assert fail_id.puid == "aca-fmt/8"
         assert fail_id.signature == "Lotus Notes Database"
         assert fail_id.warning == "Extension mismatch"
+
+    def test_id(self, temp_dir):
+        id_file = temp_dir / "mock.id"
+        id_file.write_bytes(bytes.fromhex("002e010000"))
+        id_id = Identification(puid=None, signature=None, warning="fail")
+        new_id = custom_id(id_file, id_id)
+        assert new_id.puid == "aca-fmt/7"
+        assert new_id.signature == "ID File"
+        assert new_id.warning == "Match on extension only"

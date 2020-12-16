@@ -57,6 +57,10 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
             file_id.warning = "Extension mismatch"
         else:
             file_id.warning = None
+    elif path.suffix.lower() == ".id":
+        file_id.puid = "aca-fmt/7"
+        file_id.signature = "ID File"
+        file_id.warning = "Match on extension only"
     elif sig_nsf_bof.search(bof) and sig_nsf_eof.search(eof):
         file_id.puid = "aca-fmt/8"
         file_id.signature = "Lotus Notes Database"

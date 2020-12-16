@@ -40,11 +40,5 @@
         "puid": "aca-fmt/6",
         "signature": "Lotus Approach Index File",
         "extension": ".adx"
-    },
-    {
-        "pattern": "(?i)002e010000",
-        "puid": "aca-fmt/7",
-        "signature": "Lotus Notes User ID File",
-        "extension": ".id"
     }
 ]
