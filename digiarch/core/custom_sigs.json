@@ -32,7 +32,7 @@
     {
         "pattern": "(?i)^1a000003000014000000",
         "puid": "aca-fmt/5",
-        "signature": "Lotus Note Template",
+        "signature": "Lotus Notes Template",
         "extension": ".ntf"
     },
     {
