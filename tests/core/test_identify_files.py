@@ -6,14 +6,37 @@ from subprocess import CalledProcessError
 from unittest.mock import patch
 
 import pytest
+from acamodels import ArchiveFile
 from acamodels import Identification
 from digiarch.core.identify_files import custom_id
+from digiarch.core.identify_files import identify
 from digiarch.core.identify_files import sf_id
 from digiarch.exceptions import IdentificationError
 
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
+
+
+class TestIdentify:
+    def test_valid_file(self, docx_info, test_data_dir):
+        docx = ArchiveFile(path=docx_info)
+        result = identify([docx], test_data_dir)
+        assert len(result) == 1
+        assert result[0].puid == "fmt/412"
+        assert result[0].signature == "Microsoft Word for Windows"
+        assert result[0].warning is None
+
+    def test_empty_file(self, temp_dir):
+        empty_file = temp_dir / "AARS.test" / "mock.empty"
+        empty_file.parent.mkdir()
+        empty_file.touch()
+        empty = ArchiveFile(path=empty_file)
+        result = identify([empty], temp_dir)
+        assert len(result) == 1
+        assert result[0].puid == "aca-error/1"
+        assert result[0].signature == "Empty file"
+        assert result[0].warning == "Error: File is empty"
 
 
 class TestSFId:
