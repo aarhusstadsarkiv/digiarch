@@ -27,7 +27,7 @@ sqlalchemy_utils = "^0.36.8"
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
 pytest-cov = "^2.11"
-mypy = "^0.800"
+mypy = "^0.812"
 black = "^20.8b1"
 sphinx = "^3.5.1"
 sphinx-click = "^2.5.0"
