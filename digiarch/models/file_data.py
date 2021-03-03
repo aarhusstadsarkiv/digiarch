@@ -32,7 +32,7 @@ class FileData(ACABase):
         data_dir = fields.get("data_dir")
         db = fields.get("db")
         if data_dir is None and main_dir:
-            data_dir = main_dir / "_digiarch"
+            data_dir = main_dir / "_metadata"
             data_dir.mkdir(exist_ok=True)
             fields["data_dir"] = data_dir
         if db is None and data_dir:
