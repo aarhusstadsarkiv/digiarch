@@ -26,7 +26,7 @@ def temp_dir(tmpdir_factory):
 
 @pytest.fixture
 def main_dir(temp_dir):
-    main_dir: Path = temp_dir / "_digiarch"
+    main_dir: Path = temp_dir / "_metadata"
     main_dir.mkdir(exist_ok=True)
     return main_dir
 
