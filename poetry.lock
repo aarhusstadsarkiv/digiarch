@@ -483,7 +483,7 @@ python-versions = "*"
 
 [[package]]
 name = "sphinx"
-version = "3.5.1"
+version = "3.5.2"
 description = "Python documentation generator"
 category = "dev"
 optional = false
@@ -709,7 +709,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "88156fd37e4aafbc0ecb6c342874c329355a6b1a5916761f5e85f75431890b1e"
+content-hash = "940bdfcf1deeca70ebde8efdb71e02df4bcb8d3fccf816053ac19b33e6483168"
 
 [metadata.files]
 acamodels = [
@@ -1053,8 +1053,8 @@ snowballstemmer = [
     {file = "snowballstemmer-2.0.0.tar.gz", hash = "sha256:df3bac3df4c2c01363f3dd2cfa78cce2840a79b9f1c2d2de9ce8d31683992f52"},
 ]
 sphinx = [
-    {file = "Sphinx-3.5.1-py3-none-any.whl", hash = "sha256:e90161222e4d80ce5fc811ace7c6787a226b4f5951545f7f42acf97277bfc35c"},
-    {file = "Sphinx-3.5.1.tar.gz", hash = "sha256:11d521e787d9372c289472513d807277caafb1684b33eb4f08f7574c405893a9"},
+    {file = "Sphinx-3.5.2-py3-none-any.whl", hash = "sha256:ef64a814576f46ec7de06adf11b433a0d6049be007fefe7fd0d183d28b581fac"},
+    {file = "Sphinx-3.5.2.tar.gz", hash = "sha256:672cfcc24b6b69235c97c750cb190a44ecd72696b4452acaf75c2d9cc78ca5ff"},
 ]
 sphinx-click = [
     {file = "sphinx-click-2.6.0.tar.gz", hash = "sha256:6d4a5c5c90644f9100dd0b53dc64ba29164337b13360fcc9f28385561026f1b2"},
