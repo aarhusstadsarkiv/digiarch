@@ -73,10 +73,14 @@ async def explore_dir(file_data: FileData) -> List[str]:
         if len(files) > 1:
             multiple_files.append(Path(root))
         for file in files:
-            cur_path = Path(root, file)
-            dir_info.append(ArchiveFile(path=cur_path))
-            total_size += cur_path.stat().st_size
-            file_count += 1
+            try:
+                cur_path = Path(root, file)
+                dir_info.append(ArchiveFile(path=cur_path))
+            except Exception as e:
+                raise FileCollectionError(e)
+            else:
+                total_size += cur_path.stat().st_size
+                file_count += 1
 
     dir_info = natsort_path(dir_info)
 

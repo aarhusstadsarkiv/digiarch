@@ -67,17 +67,10 @@ class TestExploreDir:
         assert file1_info in files
         assert file2_info in files
 
-        # def test_with_empty_dirs(self, temp_dir):
-        """Invoke in non-empty directory containing no files but one empty
-        subdirectory. The files field of the returned FileData object should be
-        empty, and the path to the empty subdirectory should exist in the
-        Metadata field named empty_subdirectories."""
+        # Make file collection fail
+        def fail(*args, **kwargs):
+            raise Exception("Oh no")
 
-        # Populate temp_dir with an empty folder
-        # testdir2 = temp_dir / "testdir2"
-        # testdir2.mkdir()
-
-        # file_data = explore_dir(temp_dir)
-        # print(file_data)
-        # assert len(file_data.files) == 0
-        # # assert testdir2 in (file_data.metadata.empty_subdirs or [])
+        monkeypatch.setattr(ArchiveFile, "__init__", fail)
+        with pytest.raises(FileCollectionError, match="Oh no"):
+            await explore_dir(file_data)
