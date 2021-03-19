@@ -143,6 +143,8 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
             )
             if puid is None:
                 file_identification = custom_id(file_path, file_identification)
+
+            # Possible MS Office files identified as markup (XML, HTML etc.)
             if (
                 puid in ["fmt/96", "fmt/101", "fmt/583", "x-fmt/263"]
                 and "Extension mismatch" in warning
