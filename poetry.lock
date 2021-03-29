@@ -147,7 +147,7 @@ dev = ["pytest (>=5)", "pytest-cov", "coveralls", "black", "mypy", "pylint"]
 
 [[package]]
 name = "databases"
-version = "0.4.2"
+version = "0.4.3"
 description = "Async database support for Python."
 category = "main"
 optional = false
@@ -155,7 +155,7 @@ python-versions = ">=3.6"
 
 [package.dependencies]
 aiosqlite = {version = "*", optional = true, markers = "extra == \"sqlite\""}
-sqlalchemy = "*"
+sqlalchemy = "<1.4"
 
 [package.extras]
 mysql = ["aiomysql"]
@@ -819,8 +819,8 @@ dacite = [
     {file = "dacite-1.6.0.tar.gz", hash = "sha256:d48125ed0a0352d3de9f493bf980038088f45f3f9d7498f090b50a847daaa6df"},
 ]
 databases = [
-    {file = "databases-0.4.2-py3-none-any.whl", hash = "sha256:44788f6fd344f27baa2be9b42c3926222932000a3ba7dce5a305167a2cb1f6bb"},
-    {file = "databases-0.4.2.tar.gz", hash = "sha256:2ca1b72f0209744e25fababc44c183e5fb6f7dd7af4274379f2ec6f14c00432a"},
+    {file = "databases-0.4.3-py3-none-any.whl", hash = "sha256:f82b02c28fdddf7ffe7ee1945f5abef44d687ba97b9a1c81492c7f035d4c90e6"},
+    {file = "databases-0.4.3.tar.gz", hash = "sha256:1521db7f6d3c581ff81b3552e130b27a13aefea2a57295e65738081831137afc"},
 ]
 docutils = [
     {file = "docutils-0.16-py2.py3-none-any.whl", hash = "sha256:0c5b78adfbf7762415433f5515cd5c9e762339e23369dbe8000d84a4bf4ab3af"},
