@@ -27,7 +27,6 @@ class File(ACABase):
 
     uuid: UUID4 = Field(None)
     checksum: Optional[str]
-    # aars_path: Path = Field(None)
     relative_path: Path = Field(None)
 
     # Validators
