@@ -193,11 +193,14 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     """
 
     id_info: Dict[Path, Identification] = sf_id(path)
-    # functools.partial: Return a new partial object which when called will behave
-    # like func called with the positional arguments args and keyword arguments keywords.
+    # functools.partial: Return a new partial object
+    # which when called will behave like func called with the
+    # positional arguments args and keyword arguments keywords.
 
-    # Create a partial function of update_file_info so that we can use map on it.
-    # map cannot be used on update_file_info itself since id_info can be shorter than files.
+    # Create a partial function of update_file_info
+    # so that we can use map on it.
+    # map cannot be used on update_file_info itself since id_info
+    # can be shorter than files.
     _update = partial(update_file_info, id_info=id_info)
     updated_files: List[ArchiveFile] = list(map(_update, files))
 

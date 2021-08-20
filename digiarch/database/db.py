@@ -123,10 +123,6 @@ class FileDB(Database):
 
     async def set_files(self, files: List[ArchiveFile]) -> None:
         encoded_files = [file.encode() for file in files]
-        # for file in encoded_files:
-        #   del file['path'] # This results in "Error: Failed to parse files as ArchiveFiles. Please reindex." on line 81 in cli.py
-        # since get_files parses the files as ArchiveFiles, but the path field was deleted when we saved the files to the db
-        # in order not to have a path column in the database with the absolute path.
         await self.delsert(self.files, values=encoded_files)
 
     async def update_files(self, new_files: List[ArchiveFile]) -> None:
