@@ -47,7 +47,7 @@ class File(ACABase):
     def set_uuid(cls, uuid: UUID4) -> UUID:
         return uuid or uuid4()
 
-    def read_text(self) -> str:
+    def read_text(self) -> Any:
         """Expose read_text() functionality from pathlib.
         Encoding is set to UTF-8.
 
@@ -58,7 +58,7 @@ class File(ACABase):
         """
         return self.path.read_text(encoding="utf-8")
 
-    def read_bytes(self) -> bytes:
+    def read_bytes(self) -> Any:
         """Expose read_bytes() functionality from pathlib.
 
         Returns
@@ -68,7 +68,7 @@ class File(ACABase):
         """
         return self.path.read_bytes()
 
-    def name(self) -> str:
+    def name(self) -> Any:
         """Get the file name.
 
         Returns
@@ -78,7 +78,7 @@ class File(ACABase):
         """
         return self.path.name
 
-    def ext(self) -> str:
+    def ext(self) -> Any:
         """Get the file extension.
 
         Returns
@@ -88,7 +88,7 @@ class File(ACABase):
         """
         return self.path.suffix.lower()
 
-    def size(self) -> str:
+    def size(self) -> Any:
         """Get the file size in human readable string format.
 
         Returns
