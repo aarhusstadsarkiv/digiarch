@@ -17,7 +17,7 @@ from typing import Set
 from digiarch.core.utils import natsort_path
 from tqdm import tqdm
 import os
-from core.ArchiveFileRel import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 
 # -----------------------------------------------------------------------------
 # Function Definitions
