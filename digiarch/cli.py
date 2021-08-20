@@ -15,7 +15,6 @@ from typing import List
 
 import click
 from click.core import Context
-from click.types import INT
 from digiarch import __version__
 from digiarch import core
 from digiarch.exceptions import FileCollectionError

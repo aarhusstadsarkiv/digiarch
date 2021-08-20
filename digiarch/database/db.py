@@ -9,7 +9,7 @@ from typing import List
 
 import sqlalchemy as sql
 from ..core.ArchiveFileRel import ArchiveFile
-from databases import Database, core
+from databases import Database
 from digiarch.exceptions import FileParseError
 from digiarch.models.metadata import Metadata
 from pydantic import parse_obj_as

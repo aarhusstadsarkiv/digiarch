@@ -2,12 +2,10 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-import re
+
 from pathlib import Path
 from typing import Any
-from typing import Dict
 from typing import Optional
-from typing import Pattern
 from uuid import UUID
 from uuid import uuid4
 
