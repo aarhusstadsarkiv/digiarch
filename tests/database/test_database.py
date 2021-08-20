@@ -7,7 +7,7 @@ from typing import List
 
 import pytest
 from acamodels import ArchiveFile
-from digiarch.core import explore_dir
+from digiarch.core.path_utils import explore_dir
 from digiarch.core.identify_files import identify
 from digiarch.database import db
 from digiarch.database import FileDB
