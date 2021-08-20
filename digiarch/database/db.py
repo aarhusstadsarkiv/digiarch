@@ -8,8 +8,8 @@ from typing import Any
 from typing import List
 
 import sqlalchemy as sql
-from acamodels import ArchiveFile
-from databases import Database
+from ..core.ArchiveFileRel import ArchiveFile
+from databases import Database, core
 from digiarch.exceptions import FileParseError
 from digiarch.models.metadata import Metadata
 from pydantic import parse_obj_as
@@ -41,9 +41,9 @@ class FileDB(Database):
         sql_meta,
         sql.Column("id", sql.Integer, primary_key=True, autoincrement=True),
         sql.Column("uuid", sql.String, nullable=False),
-        sql.Column("path", sql.String, nullable=False),
+        #sql.Column("path", sql.String, nullable=False),
         sql.Column("checksum", sql.String),
-        sql.Column("aars_path", sql.String, nullable=False),
+        sql.Column("relative_path", sql.String, nullable=False),
         sql.Column("puid", sql.String),
         sql.Column("signature", sql.String),
         sql.Column("warning", sql.String),
@@ -123,6 +123,10 @@ class FileDB(Database):
 
     async def set_files(self, files: List[ArchiveFile]) -> None:
         encoded_files = [file.encode() for file in files]
+        for file in encoded_files:
+            del file['path'] # This results in "Error: Failed to parse files as ArchiveFiles. Please reindex." on line 81 in cli.py
+            # since get_files parses the files as ArchiveFiles, but the path field was deleted when we saved the files to the db
+            # in order not to have a path column in the database with the absolute path. 
         await self.delsert(self.files, values=encoded_files)
 
     async def update_files(self, new_files: List[ArchiveFile]) -> None:

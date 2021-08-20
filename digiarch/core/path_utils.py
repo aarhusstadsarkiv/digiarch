@@ -10,13 +10,16 @@ from datetime import datetime
 from pathlib import Path
 from typing import List
 
-from acamodels import ArchiveFile
+
+from core.ArchiveFileRel import ArchiveFile
 from digiarch.core.utils import natsort_path
 from digiarch.core.utils import size_fmt
 from digiarch.exceptions import FileCollectionError
 from digiarch.models import FileData
 from digiarch.models import Metadata
 from tqdm import tqdm
+
+
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -61,11 +64,13 @@ async def explore_dir(file_data: FileData) -> List[str]:
 
     # Traverse given path, collect results.
     # tqdm is used to show progress of os.walk
+
     for root, dirs, files in tqdm(
         os.walk(main_dir, topdown=True), unit=" folders", desc="Processed"
     ):
+
         if data_dir.name in dirs:
-            # Don't walk the _digiarch directory
+            # Don't walk the _digiarch (_metadata) directory
             dirs.remove(data_dir.name)
         if not dirs and not files:
             # We found an empty subdirectory.
@@ -75,7 +80,7 @@ async def explore_dir(file_data: FileData) -> List[str]:
         for file in files:
             try:
                 cur_path = Path(root, file)
-                dir_info.append(ArchiveFile(path=cur_path))
+                dir_info.append(ArchiveFile(path=cur_path,))
             except Exception as e:
                 raise FileCollectionError(e)
             else:

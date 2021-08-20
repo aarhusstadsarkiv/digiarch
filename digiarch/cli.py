@@ -15,12 +15,14 @@ from typing import List
 
 import click
 from click.core import Context
+from click.types import INT
 from digiarch import __version__
 from digiarch import core
 from digiarch.exceptions import FileCollectionError
 from digiarch.exceptions import FileParseError
 from digiarch.exceptions import IdentificationError
 from digiarch.models import FileData
+import os
 
 # -----------------------------------------------------------------------------
 # Auxiliary functions
@@ -55,6 +57,7 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
 
     # Initialise
     in_path: Path = Path(path)
+    os.environ["ROOTPATH"] = path
     file_data: FileData = FileData(main_dir=in_path, files=[])
     empty: bool = await file_data.db.is_empty()
     warnings: List[str] = []
@@ -122,3 +125,6 @@ async def done(result: Any, **kwargs: Any) -> None:
     file_data: FileData = ctx.obj
     await file_data.db.set_files(file_data.files)
     click.secho("Done!", bold=True, fg="green")
+
+if __name__ == "__main__":
+    cli()
