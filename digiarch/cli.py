@@ -83,7 +83,7 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
         raise click.ClickException(str(error))
     else:
         ctx.obj = file_data
-        #process(ctx.obj)
+        # process(ctx.obj)
         _files = file_data.files
         _files = core.generate_checksums(_files)
         try:
@@ -92,9 +92,10 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
         except IdentificationError as error:
             raise click.ClickException(str(error))
         else:
-     #   click.secho(f"Successfully identified {len(_files)} files.")
+            #   click.secho(f"Successfully identified {len(_files)} files.")
             print("Finished identifying")
             file_data.files = _files
+
 
 @cli.command()
 @click.pass_obj
@@ -110,10 +111,10 @@ def process(file_data: FileData) -> None:
     except IdentificationError as error:
         raise click.ClickException(str(error))
     else:
-     #   click.secho(f"Successfully identified {len(_files)} files.")
+        #   click.secho(f"Successfully identified {len(_files)} files.")
         print("Finished identifying")
         file_data.files = _files
-    
+
 
 @cli.command()
 @click.pass_context
@@ -139,6 +140,7 @@ async def done(result: Any, **kwargs: Any) -> None:
     file_data: FileData = ctx.obj
     await file_data.db.set_files(file_data.files)
     click.secho("Done!", bold=True, fg="green")
+
 
 if __name__ == "__main__":
     cli()

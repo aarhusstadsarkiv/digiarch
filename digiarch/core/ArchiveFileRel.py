@@ -27,7 +27,6 @@ import os
 class File(ACABase):
     """File data model"""
 
-    
     uuid: UUID4 = Field(None)
     checksum: Optional[str]
     # aars_path: Path = Field(None)

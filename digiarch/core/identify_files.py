@@ -166,7 +166,7 @@ def update_file_info(
     )
     file_path = Path(os.environ["ROOTPATH"], file_info.relative_path)
     new_id: Identification = id_info.get(file_path) or no_id
-    
+
     if file_path.stat().st_size == 0:
         new_id = Identification(
             puid="aca-error/1",

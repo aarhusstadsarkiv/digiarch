@@ -23,6 +23,7 @@ from core.ArchiveFileRel import ArchiveFile
 # Function Definitions
 # -----------------------------------------------------------------------------
 
+
 def file_checksum(file: Path) -> str:
     """Calculate the checksum of an input file using BLAKE2.
 
@@ -64,7 +65,10 @@ def checksum_worker(file_info: ArchiveFile) -> ArchiveFile:
         The FileInfo object with an updated checksum value.
     """
 
-    checksum: Optional[str] = file_checksum(Path(os.environ["ROOTPATH"], file_info.relative_path)) or None
+    checksum: Optional[str] = (
+        file_checksum(Path(os.environ["ROOTPATH"], file_info.relative_path))
+        or None
+    )
     updated_file_info: ArchiveFile = file_info.copy(
         update={"checksum": checksum}
     )
