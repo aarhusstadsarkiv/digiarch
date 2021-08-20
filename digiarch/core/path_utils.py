@@ -80,7 +80,8 @@ async def explore_dir(file_data: FileData) -> List[str]:
         for file in files:
             try:
                 cur_path = Path(root, file)
-                dir_info.append(ArchiveFile(path=cur_path,))
+                cur_rel_path = cur_path.relative_to(os.environ["ROOTPATH"])
+                dir_info.append(ArchiveFile(relative_path = cur_rel_path))
             except Exception as e:
                 raise FileCollectionError(e)
             else:

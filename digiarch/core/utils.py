@@ -47,7 +47,7 @@ def natsort_path(file_list: List[ArchiveFile]) -> List[ArchiveFile]:
     """
 
     sorted_file_list: List[ArchiveFile] = natsorted(
-        file_list, key=lambda archive_file: str(archive_file.path)
+        file_list, key=lambda archive_file: str(archive_file.relative_path)
     )
 
     return sorted_file_list
