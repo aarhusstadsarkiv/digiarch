@@ -15,7 +15,7 @@ from typing import Any
 from typing import Dict
 from typing import List
 
-from core.ArchiveFileRel import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
