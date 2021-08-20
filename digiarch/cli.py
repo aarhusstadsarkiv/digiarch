@@ -83,8 +83,9 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
         raise click.ClickException(str(error))
     else:
         ctx.obj = file_data
-        process(ctx.obj)
-        _files = core.generate_checksums(file_data)
+        #process(ctx.obj)
+        _files = file_data.files
+        _files = core.generate_checksums(_files)
         try:
             print("Identifying")
             _files = core.identify(_files, file_data.main_dir)
