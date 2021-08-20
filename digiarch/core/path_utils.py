@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import List
 
 
-from core.ArchiveFileRel import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from digiarch.core.utils import natsort_path
 from digiarch.core.utils import size_fmt
 from digiarch.exceptions import FileCollectionError

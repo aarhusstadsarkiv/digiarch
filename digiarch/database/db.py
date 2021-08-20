@@ -8,7 +8,7 @@ from typing import Any
 from typing import List
 
 import sqlalchemy as sql
-from ..core.ArchiveFileRel import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from databases import Database
 from digiarch.exceptions import FileParseError
 from digiarch.models.metadata import Metadata
