@@ -4,7 +4,7 @@
 
 from typing import List
 
-from acamodels import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from natsort import natsorted
 
 # -----------------------------------------------------------------------------

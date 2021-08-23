@@ -3,9 +3,10 @@
 # -----------------------------------------------------------------------------
 from uuid import uuid4
 
-import acamodels.archive_file
+# import acamodels.archive_file. Replaced by line below.
+import digiarch.core.ArchiveFileRel
 import pytest
-from acamodels import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 
 from digiarch.core.path_utils import explore_dir
 from digiarch.exceptions import FileCollectionError
@@ -53,7 +54,7 @@ class TestExploreDir:
             return static_uuid
 
         monkeypatch.setattr(
-            acamodels.archive_file,
+            digiarch.core.ArchiveFileRel,
             "uuid4",
             uuid_return,
         )
