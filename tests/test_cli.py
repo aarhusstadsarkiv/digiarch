@@ -12,6 +12,7 @@ from digiarch.database import db
 from digiarch.exceptions import FileCollectionError
 from digiarch.exceptions import FileParseError
 from digiarch.exceptions import IdentificationError
+import os
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -32,17 +33,18 @@ class TestCli:
     """Class for testing the `cli` function."""
 
     def test_cli_valid(self, cli_run, temp_dir):
+        os.environ["ROOTPATH"] = temp_dir
         """The cli is run with a valid path as argument.
         This should be successful, i.e. have exit code 0."""
         Path(temp_dir, "test.txt").touch()
-        #with cli_run.isolated_filesystem():
-        args = [str(temp_dir)]
-        result = cli_run.invoke(cli, args)
-        print("Exc_info: {}".format(result.exc_info))
-        print("Exception: {}".format(result.exception))
-        print("Output: {}".format(result.output))
-        #print("Error: {}".format(result.stderr))
-        assert result.exit_code == 0
+        with cli_run.isolated_filesystem():
+            args = [str(temp_dir)]
+            result = cli_run.invoke(cli, args)
+            print("Exc_info: {}".format(result.exc_info))
+            print("Exception: {}".format(result.exception))
+            print("Output: {}".format(result.output))
+            #print("Error: {}".format(result.stderr))
+            assert result.exit_code == 0
 
     def test_cli_invalid(self, cli_run):
         """The cli is run with an invalid path as argument.
