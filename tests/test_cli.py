@@ -41,7 +41,7 @@ class TestCli:
             print("Exc_info: {}".format(result.exc_info))
             print("Exception: {}".format(result.exception))
             print("Output: {}".format(result.output))
-            print("Error: {}".format(result.stderr))
+            #print("Error: {}".format(result.stderr))
             assert result.exit_code == 0
 
     def test_cli_invalid(self, cli_run):
