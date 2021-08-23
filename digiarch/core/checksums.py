@@ -56,7 +56,7 @@ def checksum_worker(file_info: ArchiveFile) -> ArchiveFile:
 
     Parameters
     ----------
-    fileinfo : FileInfo
+    fileinfo : ArchiveFile
         The FileInfo object that must be updated with a new checksum value.
 
     Returns

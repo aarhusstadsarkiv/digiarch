@@ -52,7 +52,7 @@ class File(ACABase):
         str
             File text data.
         """
-        return self.path.read_text(encoding="utf-8")
+        return self.relative_path.read_text(encoding="utf-8")
 
     def read_bytes(self) -> Any:
         """Expose read_bytes() functionality from pathlib.
@@ -62,7 +62,7 @@ class File(ACABase):
         bytes
             File byte data.
         """
-        return self.path.read_bytes()
+        return self.relative_path.read_bytes()
 
     def name(self) -> Any:
         """Get the file name.
@@ -72,7 +72,7 @@ class File(ACABase):
         str
             File name.
         """
-        return self.path.name
+        return self.relative_path.name
 
     def ext(self) -> Any:
         """Get the file extension.
@@ -82,7 +82,7 @@ class File(ACABase):
         str
             File extension.
         """
-        return self.path.suffix.lower()
+        return self.relative_path.suffix.lower()
 
     def size(self) -> Any:
         """Get the file size in human readable string format.
@@ -92,7 +92,7 @@ class File(ACABase):
         str
             File size in human readable format.
         """
-        return size_fmt(self.path.stat().st_size)
+        return size_fmt(self.relative_path.stat().st_size)
 
 
 class ArchiveFile(Identification, File):

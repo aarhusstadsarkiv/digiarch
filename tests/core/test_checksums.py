@@ -6,6 +6,7 @@ from pathlib import Path
 import digiarch.core.checksums as check
 import pytest
 from digiarch.core.ArchiveFileRel import ArchiveFile
+
 # -----------------------------------------------------------------------------
 # Fixtures
 # -----------------------------------------------------------------------------
@@ -29,7 +30,7 @@ def test_file_1(temp_dir):
 
 @pytest.fixture
 def test_file_info(test_file_0):
-    return ArchiveFile(path=test_file_0)
+    return ArchiveFile(relative_path=test_file_0)
 
 
 # -----------------------------------------------------------------------------
@@ -60,12 +61,12 @@ class TestChecksumWorker:
 
 class TestGenerateChecksums:
     def test_with_files(self, test_file_0, test_file_1):
-        f_info_0 = ArchiveFile(path=test_file_0, checksum="test0")
-        f_info_1 = ArchiveFile(path=test_file_1, checksum="test1")
+        f_info_0 = ArchiveFile(relative_path=test_file_0, checksum="test0")
+        f_info_1 = ArchiveFile(relative_path=test_file_1, checksum="test1")
         files = [f_info_0, f_info_1]
         result = check.generate_checksums(files)
         for file in result:
-            assert file.checksum == check.file_checksum(file.path)
+            assert file.checksum == check.file_checksum(file.relative_path)
 
     def test_without_files(self):
         assert check.generate_checksums([]) == []

@@ -19,6 +19,7 @@ from pydantic import BaseModel
 from pydantic import parse_obj_as
 from pydantic import ValidationError
 from sqlalchemy.exc import OperationalError
+import os
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -29,7 +30,11 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def files(docx_info, xls_info, adx_info):
-    file_list = [{"path": docx_info}, {"path": xls_info}, {"path": adx_info}]
+    file_list = [
+        {"relative_path": docx_info},
+        {"relative_path": xls_info},
+        {"relative_path": adx_info},
+    ]
     files = parse_obj_as(List[ArchiveFile], file_list)
     return files
 
@@ -77,6 +82,7 @@ class TestFileDB:
 class TestMetadata:
     @freeze_time("2012-08-06")
     async def test_set(self, db_conn, test_data_dir, test_file_data):
+        os.environ["ROOTPATH"] = str(test_data_dir)
         file_db = db_conn
         await explore_dir(test_file_data)
         query = file_db.metadata.select()

@@ -10,6 +10,8 @@ from digiarch.core.ArchiveFileRel import ArchiveFile
 
 from digiarch.core.path_utils import explore_dir
 from digiarch.exceptions import FileCollectionError
+import os
+from pathlib import Path
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -38,14 +40,20 @@ class TestExploreDir:
         The resulting JSON file should be populated,
         and we should be able to reconstruct file infos."""
 
+        # Set the ROOTPATH environment variable for explore_dir.
+        os.environ["ROOTPATH"] = str(temp_dir)
         # Populate temp_dir and define file info
-        file1 = temp_dir / "test.txt"
-        file2 = temp_dir / "testdir" / "test.txt"
+        file1: Path = temp_dir / "test.txt"
+        file2: Path = temp_dir / "testdir" / "test.txt"
         file1.touch()
         file2.parent.mkdir()
         file2.touch()
         file1.write_text("test")
         file2.write_text("test")
+
+        print("File 1: {}".format(str(file1)))
+        print("File 2: {}".format(str(file2)))
+        print("Root Path: {}".format(os.environ["ROOTPATH"]))
 
         # Patch uuid
         static_uuid = uuid4()
@@ -59,9 +67,11 @@ class TestExploreDir:
             uuid_return,
         )
 
-        file1_info = ArchiveFile(path=file1)
+        # Since files from db.get_files() contains relative paths,
+        # the paths are stored as relative in file1_info and file2_info.
+        file1_info = ArchiveFile(relative_path=file1.relative_to(temp_dir))
+        file2_info = ArchiveFile(relative_path=file2.relative_to(temp_dir))
 
-        file2_info = ArchiveFile(path=file2)
         await explore_dir(file_data)
         files = await file_data.db.get_files()
         assert len(files) == 2

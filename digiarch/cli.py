@@ -91,7 +91,7 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
         except IdentificationError as error:
             raise click.ClickException(str(error))
         else:
-            #   click.secho(f"Successfully identified {len(_files)} files.")
+            click.secho(f"Successfully identified {len(_files)} files.")
             print("Finished identifying")
             file_data.files = _files
 
