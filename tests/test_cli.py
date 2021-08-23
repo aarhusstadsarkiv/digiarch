@@ -137,10 +137,9 @@ class TestCommands:
         def id_error(*args):
             raise IdentificationError("Identification Error")
 
-        args = [str(temp_dir), "process"]
-        Path(temp_dir, "test.txt").touch()
-
         with cli_run.isolated_filesystem():
+            args = [str(temp_dir), "process"]
+            Path(temp_dir, "test.txt").touch()
             result = cli_run.invoke(cli, args)
             assert result.exit_code == 0
             assert "Successfully identified 1 files" in result.output
