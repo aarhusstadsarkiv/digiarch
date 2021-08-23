@@ -138,7 +138,16 @@ class TestCommands:
             raise IdentificationError("Identification Error")
 
         with cli_run.isolated_filesystem():
-            args = [str(temp_dir), "process"]
+
+            os.environ["ROOTPATH"] = str(Path.cwd())
+            testdir = Path.cwd() / "testdir"
+            testdir.mkdir()
+            testdirfile = Path.cwd() / "testdir" / "test.txt"
+            testdirfile.touch()
+            result = cli_run.invoke(cli, [os.environ["ROOTPATH"]])
+
+
+            args = [os.environ["ROOTPATH"], "process"]
             Path(temp_dir, "test.txt").touch()
             result = cli_run.invoke(cli, args)
             assert result.exit_code == 0
