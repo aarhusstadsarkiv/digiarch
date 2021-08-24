@@ -79,21 +79,15 @@ async def explore_dir(file_data: FileData) -> List[str]:
         for file in files:
             try:
                 cur_path = Path(root, file)
-                print("Current path: {}".format(str(cur_path)))
-                print("Root path from explore dir: {}".format(os.environ["ROOTPATH"]))
                 cur_rel_path = cur_path.relative_to(Path(os.environ["ROOTPATH"]))
-                print("Path saved to db: {}".format(str(cur_rel_path)))
                 dir_info.append(ArchiveFile(relative_path=cur_rel_path))
-                print("Dir info list: {}".format(dir_info))
             except Exception as e:
                 raise FileCollectionError(e)
             else:
                 total_size += cur_path.stat().st_size
                 file_count += 1
-
-    print("Dir info list before natsort: {}".format(dir_info))
     dir_info = natsort_path(dir_info)
-    print("Dir info list after natsort: {}".format(dir_info))
+    
 
     # Update metadata
     metadata.file_count = file_count
@@ -110,8 +104,5 @@ async def explore_dir(file_data: FileData) -> List[str]:
     # Update db
     await file_data.db.set_metadata(metadata)
     await file_data.db.set_files(dir_info)
-    print("From update database: ")
-    for file in dir_info:
-        print(file.relative_path)
-
+    
     return warnings

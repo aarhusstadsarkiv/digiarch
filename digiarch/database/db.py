@@ -144,7 +144,7 @@ class FileDB(Database):
         except ValidationError:
             raise FileParseError(
                 """Failed to parse files as ArchiveFiles.
-                    Rows: {}
+                    Rows from database: {}
                 """.format(rows)
                 
             )
