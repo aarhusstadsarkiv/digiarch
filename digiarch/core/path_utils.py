@@ -80,9 +80,9 @@ async def explore_dir(file_data: FileData) -> List[str]:
             try:
                 cur_path = Path(root, file)
                 print("Current path: {}".format(str(cur_path)))
-                cur_rel_path = cur_path.relative_to(os.environ["ROOTPATH"])
                 print("Root path from explore dir: {}".format(os.environ["ROOTPATH"]))
-                print("Path saved to db: ".format(str(cur_rel_path)))
+                cur_rel_path = cur_path.relative_to(Path(os.environ["ROOTPATH"]))
+                print("Path saved to db: {}".format(str(cur_rel_path)))
                 dir_info.append(ArchiveFile(relative_path=cur_rel_path))
             except Exception as e:
                 raise FileCollectionError(e)
