@@ -8,7 +8,7 @@ from typing import Any
 from typing import List
 
 import sqlalchemy as sql
-from acamodels import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from databases import Database
 from digiarch.exceptions import FileParseError
 from digiarch.models.metadata import Metadata
@@ -41,9 +41,8 @@ class FileDB(Database):
         sql_meta,
         sql.Column("id", sql.Integer, primary_key=True, autoincrement=True),
         sql.Column("uuid", sql.String, nullable=False),
-        sql.Column("path", sql.String, nullable=False),
+        sql.Column("relative_path", sql.String, nullable=False),
         sql.Column("checksum", sql.String),
-        sql.Column("aars_path", sql.String, nullable=False),
         sql.Column("puid", sql.String),
         sql.Column("signature", sql.String),
         sql.Column("warning", sql.String),
@@ -143,7 +142,11 @@ class FileDB(Database):
             files = parse_obj_as(List[ArchiveFile], rows)
         except ValidationError:
             raise FileParseError(
-                "Failed to parse files as ArchiveFiles. Please reindex."
+                """Failed to parse files as ArchiveFiles.
+                    Rows from database: {}
+                """.format(
+                    rows
+                )
             )
         return files
 

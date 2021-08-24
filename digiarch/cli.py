@@ -21,6 +21,7 @@ from digiarch.exceptions import FileCollectionError
 from digiarch.exceptions import FileParseError
 from digiarch.exceptions import IdentificationError
 from digiarch.models import FileData
+import os
 
 # -----------------------------------------------------------------------------
 # Auxiliary functions
@@ -55,6 +56,7 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
 
     # Initialise
     in_path: Path = Path(path)
+    os.environ["ROOTPATH"] = path
     file_data: FileData = FileData(main_dir=in_path, files=[])
     empty: bool = await file_data.db.is_empty()
     warnings: List[str] = []
@@ -80,21 +82,35 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
         raise click.ClickException(str(error))
     else:
         ctx.obj = file_data
+        _files = file_data.files
+        _files = core.generate_checksums(_files)
+        try:
+            print("Identifying")
+            _files = core.identify(_files, file_data.main_dir)
+        except IdentificationError as error:
+            raise click.ClickException(str(error))
+        else:
+            click.secho(f"Successfully identified {len(_files)} files.")
+            print("Finished identifying")
+            file_data.files = _files
 
 
 @cli.command()
 @click.pass_obj
 def process(file_data: FileData) -> None:
     """Generate checksums and identify files."""
+    print("Generate checksums")
     _files = file_data.files
     _files = core.generate_checksums(_files)
     click.secho("Identifying files... ", nl=False)
     try:
+        print("Identifying")
         _files = core.identify(_files, file_data.main_dir)
     except IdentificationError as error:
         raise click.ClickException(str(error))
     else:
-        click.secho(f"Successfully identified {len(_files)} files.")
+        #   click.secho(f"Successfully identified {len(_files)} files.")
+        print("Finished identifying")
         file_data.files = _files
 
 
@@ -122,3 +138,7 @@ async def done(result: Any, **kwargs: Any) -> None:
     file_data: FileData = ctx.obj
     await file_data.db.set_files(file_data.files)
     click.secho("Done!", bold=True, fg="green")
+
+
+if __name__ == "__main__":
+    cli()

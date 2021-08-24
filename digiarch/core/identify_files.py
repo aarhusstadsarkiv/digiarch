@@ -8,13 +8,14 @@
 import json
 import re
 import subprocess
+import os
 from functools import partial
 from pathlib import Path
 from typing import Any
 from typing import Dict
 from typing import List
 
-from acamodels import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
@@ -163,8 +164,10 @@ def update_file_info(
         signature=None,
         warning="No identification information obtained.",
     )
-    new_id: Identification = id_info.get(file_info.path) or no_id
-    if file_info.path.stat().st_size == 0:
+    file_path = Path(os.environ["ROOTPATH"], file_info.relative_path)
+    new_id: Identification = id_info.get(file_path) or no_id
+
+    if file_path.stat().st_size == 0:
         new_id = Identification(
             puid="aca-error/1",
             signature="Empty file",
@@ -190,6 +193,14 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     """
 
     id_info: Dict[Path, Identification] = sf_id(path)
+    # functools.partial: Return a new partial object
+    # which when called will behave like func called with the
+    # positional arguments args and keyword arguments keywords.
+
+    # Create a partial function of update_file_info
+    # so that we can use map on it.
+    # map cannot be used on update_file_info itself since id_info
+    # can be shorter than files.
     _update = partial(update_file_info, id_info=id_info)
     updated_files: List[ArchiveFile] = list(map(_update, files))
 

@@ -10,7 +10,8 @@ import json
 from pathlib import Path
 from typing import List
 
-from acamodels import ArchiveFile
+
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from tqdm import tqdm
 
 # -----------------------------------------------------------------------------
@@ -30,8 +31,10 @@ def fix_extensions(files: List[ArchiveFile]) -> List[ArchiveFile]:
     for file in tqdm(
         to_fix, desc="Fixing file extensions", disable=not to_fix
     ):
-        new_name = file.path.with_name(f"{file.name()}.{ext_map[file.puid]}")
-        file.path.rename(new_name)
-        file.path = new_name
+        new_name = file.relative_path.with_name(
+            f"{file.name()}.{ext_map[file.puid]}"
+        )
+        file.relative_path.rename(new_name)
+        file.relative_path = new_name
 
     return to_fix

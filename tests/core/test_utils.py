@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from acamodels import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from digiarch.core.utils import natsort_path
 from digiarch.core.utils import size_fmt
 
@@ -19,6 +19,6 @@ def test_size_fmt():
 
 
 def test_natsort_path(xls_info, docx_info):
-    xls_file = ArchiveFile(path=xls_info)
-    docx_file = ArchiveFile(path=docx_info)
+    xls_file = ArchiveFile(relative_path=xls_info)
+    docx_file = ArchiveFile(relative_path=docx_info)
     assert natsort_path([xls_file, docx_file]) == [docx_file, xls_file]

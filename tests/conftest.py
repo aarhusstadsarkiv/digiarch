@@ -7,7 +7,6 @@
 from pathlib import Path
 
 import pytest
-from digiarch.models import FileData
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -64,4 +63,6 @@ def adx_info(test_data_dir):
 
 @pytest.fixture
 def file_data(temp_dir):
+    from digiarch.models import FileData
+
     return FileData(main_dir=temp_dir, files=[])

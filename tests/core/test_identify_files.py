@@ -6,7 +6,7 @@ from subprocess import CalledProcessError
 from unittest.mock import patch
 
 import pytest
-from acamodels import ArchiveFile
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
 from digiarch.core.identify_files import custom_id
 from digiarch.core.identify_files import identify
@@ -20,7 +20,7 @@ from digiarch.exceptions import IdentificationError
 
 class TestIdentify:
     def test_valid_file(self, docx_info, test_data_dir):
-        docx = ArchiveFile(path=docx_info)
+        docx = ArchiveFile(relative_path=docx_info)
         result = identify([docx], test_data_dir)
         assert len(result) == 1
         assert result[0].puid == "fmt/412"
@@ -31,7 +31,7 @@ class TestIdentify:
         empty_file = temp_dir / "AARS.test" / "mock.empty"
         empty_file.parent.mkdir()
         empty_file.touch()
-        empty = ArchiveFile(path=empty_file)
+        empty = ArchiveFile(relative_path=empty_file)
         result = identify([empty], temp_dir)
         assert len(result) == 1
         assert result[0].puid == "aca-error/1"
