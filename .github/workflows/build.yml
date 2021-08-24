@@ -1,6 +1,7 @@
 name: Deploy
 
 on:
+<<<<<<< HEAD
   # Trigger the workflow on push or pull request,
   # but only for the main branch
   push:
@@ -19,6 +20,17 @@ jobs:
         
   deploy:
     name: Deploy to PyPI
+=======
+  release:
+    tags:
+      - 'v*.*.*'
+  push:
+    tags:
+      - 'v*'
+jobs:   
+  build:
+    name: Build wheel
+>>>>>>> master
     runs-on: ubuntu-latest
     needs: check
     steps:
@@ -42,5 +54,10 @@ jobs:
           poetry config virtualenvs.create true
           poetry config virtualenvs.in-project true
           poetry install
+<<<<<<< HEAD
       - name: Build wheel
         run: poetry build
+=======
+      - name: Build project
+        run: poetry build
+>>>>>>> master
