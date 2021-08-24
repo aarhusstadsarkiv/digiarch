@@ -4,11 +4,14 @@ on:
   release:
     tags:
       - 'v*.*.*'
-
-jobs:
+  push:
+    tags:
+      - 'v*'
+jobs:   
   build:
-    name: Deploy to PyPI
+    name: Build wheel
     runs-on: ubuntu-latest
+    needs: check
     steps:
       - name: Checkout 
         uses: actions/checkout@v1
