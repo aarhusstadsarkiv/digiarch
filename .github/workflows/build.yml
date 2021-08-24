@@ -6,7 +6,8 @@ on:
       - 'v*.*.*'
 
 jobs:
-  Release:
+  build:
+    name: Deploy to PyPI
     runs-on: ubuntu-latest
     steps:
       - name: Checkout 
