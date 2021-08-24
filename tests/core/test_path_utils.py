@@ -24,7 +24,7 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def test_dir():           
-    os.environ["ROOTPATH"] = str(Path.cwd())
+    #os.environ["ROOTPATH"] = str(Path.cwd())
     test_dir: Path = Path.cwd() / "testdir"
     test_dir.mkdir()
     return test_dir
@@ -78,6 +78,8 @@ class TestExploreDir:
             uuid_return,
         )
 
+        print("file1_rel: {}".format(str(file1.relative_to(test_dir))))
+        print("file2_rel: {}".format(str(file2.relative_to(test_dir))))
         # Since files from db.get_files() contains relative paths,
         # the paths are stored as relative in file1_info and file2_info.
         file1_info = ArchiveFile(relative_path=file1.relative_to(test_dir))
