@@ -84,13 +84,16 @@ async def explore_dir(file_data: FileData) -> List[str]:
                 cur_rel_path = cur_path.relative_to(Path(os.environ["ROOTPATH"]))
                 print("Path saved to db: {}".format(str(cur_rel_path)))
                 dir_info.append(ArchiveFile(relative_path=cur_rel_path))
+                print("Dir info list: {}".format(dir_info))
             except Exception as e:
                 raise FileCollectionError(e)
             else:
                 total_size += cur_path.stat().st_size
                 file_count += 1
 
+    print("Dir info list before natsort: {}".format(dir_info))
     dir_info = natsort_path(dir_info)
+    print("Dir info list after natsort: {}".format(dir_info))
 
     # Update metadata
     metadata.file_count = file_count
