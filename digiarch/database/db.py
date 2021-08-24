@@ -143,7 +143,10 @@ class FileDB(Database):
             files = parse_obj_as(List[ArchiveFile], rows)
         except ValidationError:
             raise FileParseError(
-                "Failed to parse files as ArchiveFiles. Please reindex."
+                """Failed to parse files as ArchiveFiles.
+                    Rows: {}
+                """.format(rows)
+                
             )
         return files
 
