@@ -1,7 +1,6 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from pathlib import Path
 
 import pytest
 from digiarch.core.ArchiveFileRel import ArchiveFile
@@ -145,7 +144,6 @@ class TestCommands:
             testdirfile = Path.cwd() / "testdir" / "test.txt"
             testdirfile.touch()
             result = cli_run.invoke(cli, [os.environ["ROOTPATH"]])
-
 
             args = [os.environ["ROOTPATH"], "process"]
             result = cli_run.invoke(cli, args)

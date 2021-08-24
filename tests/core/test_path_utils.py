@@ -1,7 +1,7 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from tests.conftest import main_dir
+
 from digiarch.models.file_data import FileData
 from uuid import uuid4
 
@@ -22,18 +22,18 @@ import shutil
 
 pytestmark = pytest.mark.asyncio
 
+
 @pytest.fixture
-def test_dir():           
-    #os.environ["ROOTPATH"] = str(Path.cwd())
+def test_dir():
+    # os.environ["ROOTPATH"] = str(Path.cwd())
     test_dir: Path = Path.cwd() / "testdir"
     test_dir.mkdir()
     return test_dir
 
+
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
-
-
 
 
 class TestExploreDir:
@@ -80,7 +80,7 @@ class TestExploreDir:
 
         print("file1_rel: {}".format(str(file1.relative_to(test_dir))))
         print("file2_rel: {}".format(str(file2.relative_to(test_dir))))
-        
+
         # Since files from db.get_files() contains relative paths,
         # the paths are stored as relative in file1_info and file2_info.
         file1_info = ArchiveFile(relative_path=file1.relative_to(test_dir))
@@ -99,5 +99,5 @@ class TestExploreDir:
         monkeypatch.setattr(ArchiveFile, "__init__", fail)
         with pytest.raises(FileCollectionError, match="Oh no"):
             await explore_dir(file_data)
-        
+
         shutil.rmtree(test_dir)

@@ -79,7 +79,9 @@ async def explore_dir(file_data: FileData) -> List[str]:
         for file in files:
             try:
                 cur_path = Path(root, file)
-                cur_rel_path = cur_path.relative_to(Path(os.environ["ROOTPATH"]))
+                cur_rel_path = cur_path.relative_to(
+                    Path(os.environ["ROOTPATH"])
+                )
                 dir_info.append(ArchiveFile(relative_path=cur_rel_path))
             except Exception as e:
                 raise FileCollectionError(e)
@@ -87,7 +89,6 @@ async def explore_dir(file_data: FileData) -> List[str]:
                 total_size += cur_path.stat().st_size
                 file_count += 1
     dir_info = natsort_path(dir_info)
-    
 
     # Update metadata
     metadata.file_count = file_count
@@ -104,5 +105,5 @@ async def explore_dir(file_data: FileData) -> List[str]:
     # Update db
     await file_data.db.set_metadata(metadata)
     await file_data.db.set_files(dir_info)
-    
+
     return warnings

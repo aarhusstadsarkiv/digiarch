@@ -145,8 +145,9 @@ class FileDB(Database):
             raise FileParseError(
                 """Failed to parse files as ArchiveFiles.
                     Rows from database: {}
-                """.format(rows)
-                
+                """.format(
+                    rows
+                )
             )
         return files
 
