@@ -37,7 +37,7 @@ class File(ACABase):
         absolute_path = Path(os.environ["ROOTPATH"], path)
         if not absolute_path.resolve().is_file():
             raise ValueError("File does not exist")
-        return path.resolve()
+        return path
 
     @validator("uuid", pre=True, always=True)
     def set_uuid(cls, uuid: UUID4) -> UUID:
