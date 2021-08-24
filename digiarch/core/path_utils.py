@@ -107,5 +107,8 @@ async def explore_dir(file_data: FileData) -> List[str]:
     # Update db
     await file_data.db.set_metadata(metadata)
     await file_data.db.set_files(dir_info)
+    print("From update database: ")
+    for file in dir_info:
+        print(file.relative_path)
 
     return warnings
