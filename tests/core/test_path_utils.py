@@ -25,7 +25,6 @@ pytestmark = pytest.mark.asyncio
 
 @pytest.fixture
 def test_dir():
-    # os.environ["ROOTPATH"] = str(Path.cwd())
     test_dir: Path = Path.cwd() / "testdir"
     test_dir.mkdir()
     return test_dir

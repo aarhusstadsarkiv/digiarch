@@ -41,7 +41,6 @@ class FileDB(Database):
         sql_meta,
         sql.Column("id", sql.Integer, primary_key=True, autoincrement=True),
         sql.Column("uuid", sql.String, nullable=False),
-        # sql.Column("path", sql.String, nullable=False),
         sql.Column("relative_path", sql.String, nullable=False),
         sql.Column("checksum", sql.String),
         sql.Column("puid", sql.String),
