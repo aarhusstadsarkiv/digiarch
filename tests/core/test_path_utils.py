@@ -54,7 +54,7 @@ class TestExploreDir:
         # Set the ROOTPATH environment variable for explore_dir.
         os.environ["ROOTPATH"] = str(test_dir)
         # Populate temp_dir and define file info
-        file1: Path = test_dir / "test.txt"
+        file1: Path = test_dir / "new_test_file.txt"
         file2: Path = test_dir / "test" / "test.txt"
         file1.touch()
         file2.parent.mkdir()
@@ -80,6 +80,7 @@ class TestExploreDir:
 
         print("file1_rel: {}".format(str(file1.relative_to(test_dir))))
         print("file2_rel: {}".format(str(file2.relative_to(test_dir))))
+        
         # Since files from db.get_files() contains relative paths,
         # the paths are stored as relative in file1_info and file2_info.
         file1_info = ArchiveFile(relative_path=file1.relative_to(test_dir))
