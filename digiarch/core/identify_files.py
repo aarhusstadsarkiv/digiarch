@@ -1,6 +1,5 @@
 """Identify files using
-`siegfried <https://github.com/richardlehane/siegfried>`_
-
+`siegfried <https://github.com/richardlehane/siegfried>`
 """
 # -----------------------------------------------------------------------------
 # Imports
@@ -157,7 +156,7 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
 
 
 def is_binary(file: ArchiveFile) -> bool:
-    '''
+    """
     Description:
     ----------------
     Checks if an ArchiveFile is a txt file or binary.
@@ -166,7 +165,7 @@ def is_binary(file: ArchiveFile) -> bool:
     i.e. the text in the text file stops at the null byte).
     We also check if the hexadecimal pdf signature is in the file
     since some pdf files might not include the null byte.
-    '''
+    """
     pdf_signature = "25504446"
     bytes_of_file = file.read_bytes()
     if b"\x00" in bytes_of_file:
