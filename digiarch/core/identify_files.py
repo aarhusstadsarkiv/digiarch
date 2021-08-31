@@ -156,8 +156,11 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
     return id_dict
 
 def is_binary(file: ArchiveFile) -> ArchiveFile:
+    pdf_signature = "25504446"
     bytes_of_file = file.read_bytes()
     if b'\x00' in bytes_of_file:
+        return True
+    elif pdf_signature in bytes_of_file.hex():
         return True
     else:
         return False

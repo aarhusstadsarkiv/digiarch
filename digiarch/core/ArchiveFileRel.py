@@ -55,7 +55,7 @@ class File(ACABase):
         """
         return self.relative_path.read_text(encoding="utf-8")
 
-    def read_bytes(self) -> Any:
+    def read_bytes(self) -> bytes:
         """Expose read_bytes() functionality from pathlib.
 
         Returns
