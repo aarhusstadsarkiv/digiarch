@@ -204,7 +204,6 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
 
     """
 
-    # id_info is a dictionary that maps all files to an identification, not just one file.
     id_info: Dict[Path, Identification] = sf_id(path)
     # functools.partial: Return a new partial object
     # which when called will behave like func called with the
