@@ -28,6 +28,7 @@ class File(ACABase):
     uuid: UUID4 = Field(None)
     checksum: Optional[str]
     relative_path: Path = Field(None)
+    is_binary: bool = Field(None)
 
     # Validators
     @validator("relative_path")
@@ -54,7 +55,7 @@ class File(ACABase):
         """
         return self.relative_path.read_text(encoding="utf-8")
 
-    def read_bytes(self) -> Any:
+    def read_bytes(self) -> bytes:
         """Expose read_bytes() functionality from pathlib.
 
         Returns
@@ -62,7 +63,9 @@ class File(ACABase):
         bytes
             File byte data.
         """
-        return self.relative_path.read_bytes()
+
+        absolute_path: Path = Path(os.environ["ROOTPATH"], self.relative_path)
+        return absolute_path.read_bytes()
 
     def name(self) -> Any:
         """Get the file name.

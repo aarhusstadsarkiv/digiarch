@@ -156,6 +156,17 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
     return id_dict
 
 
+def is_binary(file: ArchiveFile) -> bool:
+    pdf_signature = "25504446"
+    bytes_of_file = file.read_bytes()
+    if b"\x00" in bytes_of_file:
+        return True
+    elif pdf_signature in bytes_of_file.hex():
+        return True
+    else:
+        return False
+
+
 def update_file_info(
     file_info: ArchiveFile, id_info: Dict[Path, Identification]
 ) -> ArchiveFile:
@@ -174,6 +185,7 @@ def update_file_info(
             warning="Error: File is empty",
         )
     file_info = file_info.copy(update=new_id.dict())
+    file_info.is_binary = is_binary(file_info)
     return file_info
 
 
