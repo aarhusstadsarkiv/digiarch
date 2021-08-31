@@ -156,10 +156,7 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
 
 
 def is_binary(file: ArchiveFile) -> bool:
-<<<<<<< HEAD
     """
-=======
->>>>>>> 130bcf184f84853a8777442a57cabb5314d04112
     Description:
     ----------------
     Checks if an ArchiveFile is a txt file or binary.
@@ -168,12 +165,7 @@ def is_binary(file: ArchiveFile) -> bool:
     i.e. the text in the text file stops at the null byte).
     We also check if the hexadecimal pdf signature is in the file
     since some pdf files might not include the null byte.
-<<<<<<< HEAD
     """
-=======
-    '''
-
->>>>>>> 130bcf184f84853a8777442a57cabb5314d04112
     pdf_signature = "25504446"
     bytes_of_file = file.read_bytes()
     if b"\x00" in bytes_of_file:
