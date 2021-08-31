@@ -155,15 +155,17 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
 
     return id_dict
 
+
 def is_binary(file: ArchiveFile) -> ArchiveFile:
     pdf_signature = "25504446"
     bytes_of_file = file.read_bytes()
-    if b'\x00' in bytes_of_file:
+    if b"\x00" in bytes_of_file:
         return True
     elif pdf_signature in bytes_of_file.hex():
         return True
     else:
         return False
+
 
 def update_file_info(
     file_info: ArchiveFile, id_info: Dict[Path, Identification]
@@ -216,5 +218,3 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     updated_files: List[ArchiveFile] = list(map(_update, files))
 
     return natsort_path(updated_files)
-
-
