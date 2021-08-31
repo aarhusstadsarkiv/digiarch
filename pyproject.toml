@@ -1,14 +1,13 @@
 [tool.poetry]
 name = "digiarch"
-version = "0.9.6"
+version = "0.9.10"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
-authors = ["Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
+authors = ["Aryan Muhammadi Landi <arml@aarhus.dk>", "Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
 readme = "README.md"
 homepage = "https://stadsarkiv.aarhus.dk/"
 repository = "https://github.com/aarhusstadsarkiv/digiarch"
-documentation = "https://digiarch.readthedocs.io/en/latest/"
-keywords = ["archiving", "preservation", "digiarch"]
+keywords = ["archiving", "preservation", "identification"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
@@ -29,9 +28,6 @@ pytest = "^6.2"
 pytest-cov = "^2.11"
 mypy = "^0.812"
 black = "^20.8b1"
-sphinx = "^3.5.4"
-sphinx-click = "^2.7.1"
-sphinx-rtd-theme = "^0.5.2"
 flake8 = "^3.9.0"
 pytest-asyncio = "^0.14.0"
 freezegun = "^1.1.0"
