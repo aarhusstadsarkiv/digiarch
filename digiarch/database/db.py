@@ -45,6 +45,7 @@ class FileDB(Database):
         sql.Column("checksum", sql.String),
         sql.Column("puid", sql.String),
         sql.Column("signature", sql.String),
+        sql.Column("is_binary", sql.Boolean),
         sql.Column("warning", sql.String),
     )
 

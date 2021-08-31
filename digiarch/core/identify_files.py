@@ -155,6 +155,12 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
 
     return id_dict
 
+def is_binary(file: ArchiveFile) -> ArchiveFile:
+    bytes_of_file = file.read_bytes()
+    if b'\x00' in bytes_of_file:
+        return True
+    else:
+        return False
 
 def update_file_info(
     file_info: ArchiveFile, id_info: Dict[Path, Identification]
@@ -174,6 +180,7 @@ def update_file_info(
             warning="Error: File is empty",
         )
     file_info = file_info.copy(update=new_id.dict())
+    file_info.is_binary = is_binary(file_info)
     return file_info
 
 
@@ -192,6 +199,7 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
 
     """
 
+    # id_info is a dictionary that maps all files to an identification, not just one file.
     id_info: Dict[Path, Identification] = sf_id(path)
     # functools.partial: Return a new partial object
     # which when called will behave like func called with the
@@ -205,3 +213,5 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     updated_files: List[ArchiveFile] = list(map(_update, files))
 
     return natsort_path(updated_files)
+
+
