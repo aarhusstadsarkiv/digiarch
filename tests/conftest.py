@@ -69,6 +69,7 @@ def file_data(temp_dir):
 
     return FileData(main_dir=temp_dir, files=[])
 
+
 @pytest.fixture
 def non_binary_file():
     os.environ["ROOTPATH"] = str(Path.cwd())
@@ -96,7 +97,7 @@ def binary_file():
         for x in range(width):
             row = row + (x, max(0, 255 - x - y), y)
         img.append(row)
-    with open(image_file_path, 'wb') as f:
+    with open(image_file_path, "wb") as f:
         w = png.Writer(width, height, greyscale=False)
         w.write(f, img)
     png_file = ArchiveFile(relative_path=image_file_relative_path)

@@ -2,10 +2,9 @@
 # Imports
 # -----------------------------------------------------------------------------
 import json
-from pathlib import Path
+
 from subprocess import CalledProcessError
 from unittest.mock import patch
-import os
 
 import pytest
 from digiarch.core.ArchiveFileRel import ArchiveFile
@@ -232,8 +231,7 @@ class TestCustomId:
         assert new_id.warning == "Match on extension only"
 
     def test_is_binary_false(self, non_binary_file):
-        assert is_binary(non_binary_file) == False
-        
+        assert is_binary(non_binary_file) is False
+
     def test_is_binary_true(self, binary_file):
-        assert is_binary(binary_file) == True
-        
+        assert is_binary(binary_file) is True
