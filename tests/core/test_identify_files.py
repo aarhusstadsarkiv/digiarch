@@ -2,6 +2,7 @@
 # Imports
 # -----------------------------------------------------------------------------
 import json
+
 from subprocess import CalledProcessError
 from unittest.mock import patch
 
@@ -11,6 +12,7 @@ from acamodels import Identification
 from digiarch.core.identify_files import custom_id
 from digiarch.core.identify_files import identify
 from digiarch.core.identify_files import sf_id
+from digiarch.core.identify_files import is_binary
 from digiarch.exceptions import IdentificationError
 
 # -----------------------------------------------------------------------------
@@ -227,3 +229,9 @@ class TestCustomId:
         assert new_id.puid == "aca-fmt/7"
         assert new_id.signature == "ID File"
         assert new_id.warning == "Match on extension only"
+
+    def test_is_binary_false(self, non_binary_file):
+        assert is_binary(non_binary_file) is False
+
+    def test_is_binary_true(self, binary_file):
+        assert is_binary(binary_file) is True
