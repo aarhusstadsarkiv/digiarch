@@ -4,9 +4,11 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from pathlib import Path
-
 import pytest
+import os
+import png
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -66,3 +68,37 @@ def file_data(temp_dir):
     from digiarch.models import FileData
 
     return FileData(main_dir=temp_dir, files=[])
+
+@pytest.fixture
+def non_binary_file():
+    os.environ["ROOTPATH"] = str(Path.cwd())
+    text_file_relative_path = Path("text_file.txt")
+    text_file_path = Path(os.environ["ROOTPATH"], text_file_relative_path)
+    text_file_path.touch()
+    text_file_path.write_text("Non binary file test.")
+    non_binary_file = ArchiveFile(relative_path=text_file_relative_path)
+    yield non_binary_file
+    text_file_path.unlink()
+
+
+@pytest.fixture
+def binary_file():
+    os.environ["ROOTPATH"] = str(Path.cwd())
+    image_file_relative_path = Path("image_file.png")
+    image_file_path = Path(os.environ["ROOTPATH"], image_file_relative_path)
+
+    # Creating a png image of 255 by 255.
+    width = 255
+    height = 255
+    img = []
+    for y in range(height):
+        row = ()
+        for x in range(width):
+            row = row + (x, max(0, 255 - x - y), y)
+        img.append(row)
+    with open(image_file_path, 'wb') as f:
+        w = png.Writer(width, height, greyscale=False)
+        w.write(f, img)
+    png_file = ArchiveFile(relative_path=image_file_relative_path)
+    yield png_file
+    image_file_path.unlink()
