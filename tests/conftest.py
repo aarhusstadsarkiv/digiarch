@@ -4,6 +4,7 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+from typing import Tuple, Union
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from pathlib import Path
 import pytest
@@ -93,7 +94,7 @@ def binary_file():
     height = 255
     img = []
     for y in range(height):
-        row = ()
+        row: Union[Tuple[int, int, int], Tuple] = ()
         for x in range(width):
             row = row + (x, max(0, 255 - x - y), y)
         img.append(row)
