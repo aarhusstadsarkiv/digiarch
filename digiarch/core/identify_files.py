@@ -167,10 +167,14 @@ def is_binary(file: ArchiveFile) -> bool:
     since some pdf files might not include the null byte.
     """
     pdf_signature = "25504446"
+    word_markup_puid = "aca-fmt/2"
     bytes_of_file = file.read_bytes()
+
     if b"\x00" in bytes_of_file:
         return True
     elif pdf_signature in bytes_of_file.hex():
+        return True
+    elif file.puid == word_markup_puid:
         return True
     else:
         return False
