@@ -25,11 +25,6 @@ from digiarch.exceptions import IdentificationError
 
 
 def custom_id(path: Path, file_id: Identification) -> Identification:
-    #sig_gif_bof = re.compile(r"(?i)^474946383961")
-    #sig_gif_eof = re.compile(r"(?i)3B")
-    #sig_nsf_bof = re.compile(r"(?i)^1a000004000029000000")
-    #sig_nsf_eof = re.compile(r"(?i)bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
-    #sig_mmap = re.compile(r"(?i)4D696E644d616E61676572")
     sig_file = Path(__file__).parent / "custom_sigs.json"
     signatures: List[Dict] = json.load(sig_file.open(encoding="utf-8"))
 
