@@ -40,5 +40,22 @@
         "puid": "aca-fmt/6",
         "signature": "Lotus Approach Index File",
         "extension": ".adx"
+    },
+
+    {
+        "bof": "(?i)^1a000004000029000000",
+        "eof": "(?i)bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "operator": "AND",
+        "signature": "Lotus Notes Database",
+        "extension": ".nsf"
+    },
+
+    {
+        "bof": "(?i)4D696E644d616E61676572",
+        "eof": "(?i)4D696E644d616E61676572",
+        "operator": "OR",
+        "signature": "MindManager Map",
+        "extension": ".mmap"
     }
+    
 ]
