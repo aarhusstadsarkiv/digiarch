@@ -18,16 +18,33 @@ from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
+import json
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
+def apply_map(bof_map, eof_map, bof, eof, operator):
+    if operator == "OR":
+        return bof_map.match(bof) or eof_map.search(eof)
+    elif operator == "AND":
+        return bof_map.match(bof) and eof_map.search(eof)
+    else:
+        raise ValueError("operator must be OR or AND")
+
 def custom_id(path: Path, file_id: Identification) -> Identification:
     sig_file = Path(__file__).parent / "custom_sigs.json"
     signatures: List[Dict] = json.load(sig_file.open(encoding="utf-8"))
-
+    maps = {}
+    for signature in signatures:
+        maps[signature["extension"]] = signature
+    sig_mmap = re.compile(maps[".mmap"]["bof"])
+    sig_gif_bof = re.compile(maps[".gif"])["bof"]
+    sig_gif_eof = re.compile(maps[".gif"])["eof"]
+    sig_nsf_bof = re.compile(maps[".nsf"]["bof"])
+    sig_nsf_eof = re.compile(maps[".nsf"]["eof"])
+    
     with path.open("rb") as file_bytes:
         # BOF
         bof = file_bytes.read(1024).hex()
@@ -38,7 +55,7 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
             # File too small :)
             file_bytes.seek(-file_bytes.tell(), 2)
         eof = file_bytes.read(1024).hex()
-    if sig_mmap.search(bof) or sig_mmap.search(eof):
+    if apply_map(sig_mmap, sig_mmap, bof, eof, "OR"):
         file_id.puid = "aca-fmt/4"
         file_id.signature = "MindManager Mind Map"
         if path.suffix.lower() != ".mmap":
