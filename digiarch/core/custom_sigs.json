@@ -56,7 +56,7 @@
         "eof": "(?i)4D696E644d616E61676572",
         "puid": "aca-fmt/4",
         "operator": "OR",
-        "signature": "MindManager Map",
+        "signature": "MindManager Mind Map",
         "extension": ".mmap"
     }
     
