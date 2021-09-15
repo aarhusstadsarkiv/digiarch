@@ -190,9 +190,7 @@ class TestCustomId:
     def test_gif(self, temp_dir):
         gif_file = temp_dir / "mock.gif"
         gif_file.write_bytes(bytes.fromhex("4749463839613B"))
-        gif_id = Identification(
-            puid=None, signature=None, warning="this is a warning"
-        )
+
         new_id_dict = sf_id(gif_file)
         assert new_id_dict[gif_file].puid == "fmt/4"
         assert new_id_dict[gif_file].signature == "Graphics Interchange Format"
@@ -200,7 +198,10 @@ class TestCustomId:
         fail_gif_file = gif_file.rename(gif_file.with_suffix(".fail"))
         fail_id_dict = sf_id(fail_gif_file)
         assert fail_id_dict[fail_gif_file].puid == "fmt/4"
-        assert fail_id_dict[fail_gif_file].signature == "Graphics Interchange Format"
+        assert (
+            fail_id_dict[fail_gif_file].signature
+            == "Graphics Interchange Format"
+        )
         assert fail_id_dict[fail_gif_file].warning == "Extension mismatch"
 
     def test_nsf(self, temp_dir):
@@ -228,7 +229,7 @@ class TestCustomId:
         new_id = custom_id(id_file, id_id)
         assert new_id.puid == "aca-fmt/7"
         assert new_id.signature == "ID File"
-        #assert new_id.warning == "Match on extension only"
+        # assert new_id.warning == "Match on extension only"
 
     def test_is_binary_false(self, non_binary_file):
         assert is_binary(non_binary_file) is False

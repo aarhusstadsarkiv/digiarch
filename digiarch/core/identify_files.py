@@ -18,13 +18,16 @@ from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
-import json
+
 
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
-def update_file_id(path, file_id, signature):
+
+def update_file_id(
+    path: Path, file_id: Identification, signature: Dict[str, str]
+) -> None:
     file_id.puid = signature["puid"]
     file_id.signature = signature["signature"]
     if path.suffix.lower() != signature["extension"]:
@@ -32,10 +35,11 @@ def update_file_id(path, file_id, signature):
     else:
         file_id.warning = None
 
+
 def custom_id(path: Path, file_id: Identification) -> Identification:
     sig_file = Path(__file__).parent / "custom_sigs.json"
     signatures: List[Dict] = json.load(sig_file.open(encoding="utf-8"))
-    
+
     with path.open("rb") as file_bytes:
         # BOF
         bof = file_bytes.read(1024).hex()
@@ -46,7 +50,7 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
             # File too small :)
             file_bytes.seek(-file_bytes.tell(), 2)
         eof = file_bytes.read(1024).hex()
-    '''if apply_map(sig_mmap, sig_mmap, bof, eof, "OR"):
+    """if apply_map(sig_mmap, sig_mmap, bof, eof, "OR"):
         file_id.puid = "aca-fmt/4"
         file_id.signature = "MindManager Mind Map"
         if path.suffix.lower() != ".mmap":
@@ -70,8 +74,8 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         if path.suffix.lower() != ".nsf":
             file_id.warning = "Extension mismatch"
         else:
-            file_id.warning = None'''
-    
+            file_id.warning = None"""
+
     for sig in signatures:
         if "bof" in sig:
             bof_pattern = re.compile(sig["bof"])
