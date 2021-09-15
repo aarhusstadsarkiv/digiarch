@@ -58,6 +58,15 @@
         "operator": "OR",
         "signature": "MindManager Mind Map",
         "extension": ".mmap"
+    },
+
+    {
+        "bof": "(?i)010000002E010000(43|03)000000",
+        "eof": "(?i)010000002E010000(43|03)000000",
+        "puid": "aca-fmt/7",
+        "operator": "OR",
+        "signature": "ID File",
+        "extension": ".id"
     }
     
 ]
