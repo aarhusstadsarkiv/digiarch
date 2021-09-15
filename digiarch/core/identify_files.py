@@ -19,17 +19,24 @@ from acamodels import Identification
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
 
+
 # -----------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
 
+def update_file_id(
+    path: Path, file_id: Identification, signature: Dict[str, str]
+) -> None:
+    file_id.puid = signature["puid"]
+    file_id.signature = signature["signature"]
+    if path.suffix.lower() != signature["extension"]:
+        file_id.warning = "Extension mismatch"
+    else:
+        file_id.warning = None
+
+
 def custom_id(path: Path, file_id: Identification) -> Identification:
-    sig_gif_bof = re.compile(r"(?i)^474946383961")
-    sig_gif_eof = re.compile(r"(?i)3B")
-    sig_nsf_bof = re.compile(r"(?i)^1a000004000029000000")
-    sig_nsf_eof = re.compile(r"(?i)bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb")
-    sig_mmap = re.compile(r"(?i)4D696E644d616E61676572")
     sig_file = Path(__file__).parent / "custom_sigs.json"
     signatures: List[Dict] = json.load(sig_file.open(encoding="utf-8"))
 
@@ -43,7 +50,7 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
             # File too small :)
             file_bytes.seek(-file_bytes.tell(), 2)
         eof = file_bytes.read(1024).hex()
-    if sig_mmap.search(bof) or sig_mmap.search(eof):
+    """if apply_map(sig_mmap, sig_mmap, bof, eof, "OR"):
         file_id.puid = "aca-fmt/4"
         file_id.signature = "MindManager Mind Map"
         if path.suffix.lower() != ".mmap":
@@ -67,19 +74,25 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
         if path.suffix.lower() != ".nsf":
             file_id.warning = "Extension mismatch"
         else:
-            file_id.warning = None
-    else:
-        for sig in signatures:
+            file_id.warning = None"""
+
+    for sig in signatures:
+        if "bof" in sig:
+            bof_pattern = re.compile(sig["bof"])
+            eof_pattern = re.compile(sig["eof"])
+            if sig["operator"] == "OR":
+                if bof_pattern.search(bof) or eof_pattern.search(eof):
+                    update_file_id(path, file_id, sig)
+                    break
+            elif sig["operator"] == "AND":
+                if bof_pattern.search(bof) and eof_pattern.search(eof):
+                    update_file_id(path, file_id, sig)
+                    break
+        else:
             pattern = re.compile(sig["pattern"])
             if pattern.search(bof):
-                file_id.puid = sig["puid"]
-                file_id.signature = sig["signature"]
-                if path.suffix.lower() != sig["extension"]:
-                    file_id.warning = "Extension mismatch"
-                else:
-                    file_id.warning = None
+                update_file_id(path, file_id, sig)
                 break
-
     return file_id
 
 
