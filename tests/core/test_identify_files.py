@@ -193,15 +193,15 @@ class TestCustomId:
         gif_id = Identification(
             puid=None, signature=None, warning="this is a warning"
         )
-        new_id = custom_id(gif_file, gif_id)
-        assert new_id.puid == "fmt/4"
-        assert new_id.signature == "Graphics Interchange Format"
-        assert new_id.warning is None
+        new_id_dict = sf_id(gif_file)
+        assert new_id_dict[gif_file].puid == "fmt/4"
+        assert new_id_dict[gif_file].signature == "Graphics Interchange Format"
+        assert new_id_dict[gif_file].warning is None
         fail_gif_file = gif_file.rename(gif_file.with_suffix(".fail"))
-        fail_id = custom_id(fail_gif_file, gif_id)
-        assert fail_id.puid == "fmt/4"
-        assert fail_id.signature == "Graphics Interchange Format"
-        assert fail_id.warning == "Extension mismatch"
+        fail_id_dict = sf_id(fail_gif_file)
+        assert fail_id_dict[fail_gif_file].puid == "fmt/4"
+        assert fail_id_dict[fail_gif_file].signature == "Graphics Interchange Format"
+        assert fail_id_dict[fail_gif_file].warning == "Extension mismatch"
 
     def test_nsf(self, temp_dir):
         nsf_file = temp_dir / "mock.nsf"
