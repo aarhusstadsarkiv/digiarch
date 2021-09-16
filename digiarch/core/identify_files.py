@@ -50,34 +50,9 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
             # File too small :)
             file_bytes.seek(-file_bytes.tell(), 2)
         eof = file_bytes.read(1024).hex()
-    """if apply_map(sig_mmap, sig_mmap, bof, eof, "OR"):
-        file_id.puid = "aca-fmt/4"
-        file_id.signature = "MindManager Mind Map"
-        if path.suffix.lower() != ".mmap":
-            file_id.warning = "Extension mismatch"
-        else:
-            file_id.warning = None
-    elif sig_gif_bof.match(bof) and sig_gif_eof.search(eof):
-        file_id.puid = "fmt/4"
-        file_id.signature = "Graphics Interchange Format"
-        if path.suffix.lower() != ".gif":
-            file_id.warning = "Extension mismatch"
-        else:
-            file_id.warning = None
-    elif path.suffix.lower() == ".id":
-        file_id.puid = "aca-fmt/7"
-        file_id.signature = "ID File"
-        file_id.warning = "Match on extension only"
-    elif sig_nsf_bof.search(bof) and sig_nsf_eof.search(eof):
-        file_id.puid = "aca-fmt/8"
-        file_id.signature = "Lotus Notes Database"
-        if path.suffix.lower() != ".nsf":
-            file_id.warning = "Extension mismatch"
-        else:
-            file_id.warning = None"""
 
     for sig in signatures:
-        if "bof" in sig:
+        if "bof" in sig and "eof" in sig:
             bof_pattern = re.compile(sig["bof"])
             eof_pattern = re.compile(sig["eof"])
             if sig["operator"] == "OR":
@@ -88,9 +63,14 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
                 if bof_pattern.search(bof) and eof_pattern.search(eof):
                     update_file_id(path, file_id, sig)
                     break
-        else:
-            pattern = re.compile(sig["pattern"])
-            if pattern.search(bof):
+        elif "bof" in sig:
+            bof_pattern = re.compile(sig["bof"])
+            if bof_pattern.search(bof):
+                update_file_id(path, file_id, sig)
+                break
+        elif "eof" in sig:
+            eof_pattern = re.compile(sig["eof"])
+            if eof_pattern.search(eof):
                 update_file_id(path, file_id, sig)
                 break
     return file_id
