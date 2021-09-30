@@ -63,6 +63,17 @@
         "puid": "aca-fmt/7",
         "signature": "ID File",
         "extension": ".id"
+    },
+    
+
+
+    {
+        "bof": "(?i)474946383961",
+        "puid": "fmt/4",
+        "signature": "GIF 1989a",
+        "extension": ".gif"
     }
+
+
     
 ]

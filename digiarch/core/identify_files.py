@@ -10,15 +10,14 @@ import subprocess
 import os
 from functools import partial
 from pathlib import Path
-from typing import Any
+from typing import Any, Tuple
 from typing import Dict
 from typing import List
-from digiarch.cli import process
 
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
-from digiarch.core.checksums import file_checksum
-from digiarch.core.utils import natsort_path, size_fmt
+
+from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
 from PIL import Image
 
@@ -175,20 +174,39 @@ def is_binary(file: ArchiveFile) -> bool:
     else:
         return False
 
-def is_preservable(file: ArchiveFile) -> tuple:
-    image_format_codes = ["fmt/3", "fmt/4", "fmt/11", "fmt/13", "fmt/41", "fmt/42", "fmt/43", "fmt/44", "fmt/115", "fmt/116", "fmt/124", "fmt/353", "fmt/645", "fmt/881",  "x-fmt/390", "x-fmt/391"]
+
+def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
+    image_format_codes = [
+        "fmt/3",
+        "fmt/4",
+        "fmt/11",
+        "fmt/13",
+        "fmt/41",
+        "fmt/42",
+        "fmt/43",
+        "fmt/44",
+        "fmt/115",
+        "fmt/116",
+        "fmt/124",
+        "fmt/353",
+        "fmt/645",
+        "fmt/881",
+        "x-fmt/390",
+        "x-fmt/391",
+    ]
     if file.puid in image_format_codes:
         if image_is_preservable(file):
-           return (True, None)
+            return (True, None)
         else:
             return (False, "Image contains less than 20000 pixels.")
     elif file.is_binary:
-        if file.size_as_int >  1024:
+        if file.size_as_int() > 1024:
             return (True, None)
         else:
             return (False, "Binary file is less than 1 kb.")
     else:
-        return True
+        return (True, None)
+
 
 def image_is_preservable(file: ArchiveFile) -> bool:
     if "ROOTPATH" in os.environ:
@@ -202,7 +220,6 @@ def image_is_preservable(file: ArchiveFile) -> bool:
             return False
         else:
             return True
-
 
 
 def update_file_info(
@@ -254,10 +271,4 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     _update = partial(update_file_info, id_info=id_info)
     updated_files: List[ArchiveFile] = list(map(_update, files))
 
-    preservable_info = {}
-
-    for file in files:
-        preservable = is_preservable(file)
-        preservable_info[file.uuid] = preservable
-
-    return natsort_path(updated_files), preservable_info
+    return natsort_path(updated_files)
