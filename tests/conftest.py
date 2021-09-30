@@ -101,6 +101,30 @@ def binary_file():
     with open(image_file_path, "wb") as f:
         w = png.Writer(width, height, greyscale=False)
         w.write(f, img)
-    png_file = ArchiveFile(relative_path=image_file_relative_path)
+    png_file = ArchiveFile(relative_path=image_file_relative_path,  puid="fmt/11", signature = "PNG file")
+    yield png_file
+    image_file_path.unlink()
+
+
+
+@pytest.fixture
+def small_binary_file():
+    os.environ["ROOTPATH"] = str(Path.cwd())
+    image_file_relative_path = Path("image_file.png")
+    image_file_path = Path(os.environ["ROOTPATH"], image_file_relative_path)
+
+    # Creating a png image of 255 by 255.
+    width = 50
+    height = 50
+    img = []
+    for y in range(height):
+        row: Union[Tuple[int, int, int], Tuple] = ()
+        for x in range(width):
+            row = row + (x, max(0, 255 - x - y), y)
+        img.append(row)
+    with open(image_file_path, "wb") as f:
+        w = png.Writer(width, height, greyscale=False)
+        w.write(f, img)
+    png_file = ArchiveFile(relative_path=image_file_relative_path, puid="fmt/11", signature = "PNG file")
     yield png_file
     image_file_path.unlink()
