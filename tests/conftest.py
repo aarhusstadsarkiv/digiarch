@@ -101,10 +101,13 @@ def binary_file():
     with open(image_file_path, "wb") as f:
         w = png.Writer(width, height, greyscale=False)
         w.write(f, img)
-    png_file = ArchiveFile(relative_path=image_file_relative_path,  puid="fmt/11", signature = "PNG file")
+    png_file = ArchiveFile(
+        relative_path=image_file_relative_path,
+        puid="fmt/11",
+        signature="PNG file",
+    )
     yield png_file
     image_file_path.unlink()
-
 
 
 @pytest.fixture
@@ -125,6 +128,10 @@ def small_binary_file():
     with open(image_file_path, "wb") as f:
         w = png.Writer(width, height, greyscale=False)
         w.write(f, img)
-    png_file = ArchiveFile(relative_path=image_file_relative_path, puid="fmt/11", signature = "PNG file")
+    png_file = ArchiveFile(
+        relative_path=image_file_relative_path,
+        puid="fmt/11",
+        signature="PNG file",
+    )
     yield png_file
     image_file_path.unlink()
