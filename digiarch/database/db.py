@@ -64,7 +64,6 @@ class FileDB(Database):
     preservable_info = sql.Table(
         "Preservable_info",
         sql_meta,
-        # sql.Column("id", sql.Integer, primary_key=True, autoincrement=True),
         sql.Column("uuid", sql.String, primary_key=True, nullable=False),
         sql.Column("is_preservable", sql.Boolean, nullable=False),
         sql.Column("ignore reason", sql.String),
