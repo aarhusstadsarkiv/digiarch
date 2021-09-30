@@ -104,7 +104,7 @@ def process(file_data: FileData) -> None:
     _files = core.generate_checksums(_files)
     click.secho("Identifying files... ", nl=False)
     try:
-        _files = core.identify(_files, file_data.main_dir)
+        _files, preservable_info = core.identify(_files, file_data.main_dir)
     except IdentificationError as error:
         raise click.ClickException(str(error))
     else:
