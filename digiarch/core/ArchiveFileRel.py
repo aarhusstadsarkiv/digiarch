@@ -35,14 +35,32 @@ class File(ACABase):
     def path_must_be_file(cls, path: Path) -> Path:
         """Resolves the file path and validates that it points
         to an existing file."""
-        absolute_path = Path(os.environ["ROOTPATH"], path)
-        if not absolute_path.resolve().is_file():
-            raise ValueError("File does not exist")
-        return path
+        if "ROOTPATH" in os.environ:
+            if os.name == "posix":
+                posix_path = str(path).replace("\\", "/")
+                absolute_path = Path(os.environ["ROOTPATH"], posix_path)
+                # print(absolute_path)
+            else:
+                absolute_path = Path(os.environ["ROOTPATH"], path)
+            if not absolute_path.resolve().is_file():
+                raise ValueError(
+                    f"File with path {absolute_path} does not exist"
+                )
+        else:
+            if not path.resolve().is_file():
+                raise ValueError(f"File with path {path} does not exist")
+        if os.name == "posix":
+            return Path(str(path).replace("\\", "/"))
+        else:
+            return path
 
     @validator("uuid", pre=True, always=True)
     def set_uuid(cls, uuid: UUID4) -> UUID:
         return uuid or uuid4()
+
+    def get_absolute_path(self) -> Path:
+        absolute_path = Path(os.environ["ROOTPATH"], self.relative_path)
+        return absolute_path
 
     def read_text(self) -> Any:
         """Expose read_text() functionality from pathlib.
@@ -53,7 +71,8 @@ class File(ACABase):
         str
             File text data.
         """
-        return self.relative_path.read_text(encoding="utf-8")
+
+        return self.get_absolute_path().read_text(encoding="utf-8")
 
     def read_bytes(self) -> bytes:
         """Expose read_bytes() functionality from pathlib.
@@ -64,8 +83,7 @@ class File(ACABase):
             File byte data.
         """
 
-        absolute_path: Path = Path(os.environ["ROOTPATH"], self.relative_path)
-        return absolute_path.read_bytes()
+        return self.get_absolute_path().read_bytes()
 
     def name(self) -> Any:
         """Get the file name.
@@ -95,7 +113,17 @@ class File(ACABase):
         str
             File size in human readable format.
         """
-        return size_fmt(self.relative_path.stat().st_size)
+        return size_fmt(self.get_absolute_path().stat().st_size)
+
+    def size_as_int(self) -> Any:
+        """Get the file size in human readable string format.
+
+        Returns
+        -------
+        str
+            File size in human readable format.
+        """
+        return self.get_absolute_path().stat().st_size
 
 
 class ArchiveFile(Identification, File):

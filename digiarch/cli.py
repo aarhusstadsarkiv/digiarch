@@ -9,7 +9,7 @@ The CLI implements several commands with suboptions.
 import asyncio
 from functools import wraps
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict
 from typing import Callable
 from typing import List
 
@@ -17,6 +17,7 @@ import click
 from click.core import Context
 from digiarch import __version__
 from digiarch import core
+from digiarch.core.identify_files import is_preservable
 from digiarch.exceptions import FileCollectionError
 from digiarch.exceptions import FileParseError
 from digiarch.exceptions import IdentificationError
@@ -130,12 +131,30 @@ async def fix(ctx: Context) -> None:
         click.secho("Info: No file extensions to fix.", bold=True, fg="yellow")
 
 
+def get_preservable_info(file_data: FileData) -> List[Dict]:
+    information = []
+
+    for file in file_data.files:
+        preservable_info: Dict[str, Any] = {}
+        preservable = is_preservable(file)
+        preservable_info["uuid"] = str(file.uuid)
+        preservable_info["is_preservable"] = preservable[0]
+        preservable_info["ignore reason"] = preservable[1]
+        information.append(preservable_info)
+
+    return information
+
+
 @cli.resultcallback()
 @coro
 async def done(result: Any, **kwargs: Any) -> None:
     ctx = click.get_current_context()
     file_data: FileData = ctx.obj
     await file_data.db.set_files(file_data.files)
+
+    information = get_preservable_info(file_data)
+    await file_data.db.set_preservable_info(information)
+
     click.secho("Done!", bold=True, fg="green")
 
 

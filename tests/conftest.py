@@ -53,6 +53,12 @@ def docx_info(test_data_dir):
 
 
 @pytest.fixture
+def python_wiki(test_data_dir):
+    python_wiki: Path = test_data_dir / "Python_wiki.docx"
+    return python_wiki
+
+
+@pytest.fixture
 def xls_info(test_data_dir):
     xls_file: Path = test_data_dir / "xls_test.xls"
     return xls_file
@@ -101,6 +107,69 @@ def binary_file():
     with open(image_file_path, "wb") as f:
         w = png.Writer(width, height, greyscale=False)
         w.write(f, img)
-    png_file = ArchiveFile(relative_path=image_file_relative_path)
+    png_file = ArchiveFile(
+        relative_path=image_file_relative_path,
+        puid="fmt/11",
+        signature="PNG file",
+    )
     yield png_file
     image_file_path.unlink()
+
+
+@pytest.fixture
+def small_binary_file():
+    os.environ["ROOTPATH"] = str(Path.cwd())
+    image_file_relative_path = Path("image_file.png")
+    image_file_path = Path(os.environ["ROOTPATH"], image_file_relative_path)
+
+    # Creating a png image of 255 by 255.
+    width = 50
+    height = 50
+    img = []
+    for y in range(height):
+        row: Union[Tuple[int, int, int], Tuple] = ()
+        for x in range(width):
+            row = row + (x, max(0, 255 - x - y), y)
+        img.append(row)
+    with open(image_file_path, "wb") as f:
+        w = png.Writer(width, height, greyscale=False)
+        w.write(f, img)
+    png_file = ArchiveFile(
+        relative_path=image_file_relative_path,
+        puid="fmt/11",
+        signature="PNG file",
+    )
+    yield png_file
+    image_file_path.unlink()
+
+
+@pytest.fixture
+def very_small_binary_file():
+    os.environ["ROOTPATH"] = str(Path.cwd())
+    file_relative_path = Path("very_small_file.claus")
+    file_path = Path(os.environ["ROOTPATH"], file_relative_path)
+    newFileBytes = [123, 3, 255, 0, 100]
+    with open(file_path, "wb") as write_bytes:
+        for byte in newFileBytes:
+            write_bytes.write(byte.to_bytes(1, byteorder="big"))
+
+    very_small_binary_file = ArchiveFile(
+        relative_path=file_relative_path,
+        puid="fmt/11000000000",
+        signature="Claus file",
+        is_binary=True,
+    )
+    yield very_small_binary_file
+    file_path.unlink()
+
+
+@pytest.fixture
+def python_wiki_binary_file(python_wiki):
+
+    larger_binary_file = ArchiveFile(
+        relative_path=python_wiki,
+        puid="fmt/fmt/412",
+        signature="Docx file",
+        is_binary=True,
+    )
+    return larger_binary_file

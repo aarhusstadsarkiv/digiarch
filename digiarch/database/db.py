@@ -4,7 +4,7 @@
 # -----------------------------------------------------------------------------
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, Dict
 from typing import List
 
 import sqlalchemy as sql
@@ -59,6 +59,14 @@ class FileDB(Database):
         "_EmptyDirectories",
         sql_meta,
         sql.Column("path", sql.String, nullable=False),
+    )
+
+    preservable_info = sql.Table(
+        "Preservable_info",
+        sql_meta,
+        sql.Column("uuid", sql.String, primary_key=True, nullable=False),
+        sql.Column("is_preservable", sql.Boolean, nullable=False),
+        sql.Column("ignore reason", sql.String),
     )
 
     id_warnings = files.select().where(files.c.warning.isnot(None))
@@ -124,6 +132,13 @@ class FileDB(Database):
     async def set_files(self, files: List[ArchiveFile]) -> None:
         encoded_files = [file.encode() for file in files]
         await self.delsert(self.files, values=encoded_files)
+
+    async def set_preservable_info(self, preservable_info: List[Dict]) -> None:
+        delete = self.preservable_info.delete()
+        insert = self.preservable_info.insert()
+        async with self.transaction():
+            await self.execute(query=delete)
+            await self.execute_many(query=insert, values=preservable_info)
 
     async def update_files(self, new_files: List[ArchiveFile]) -> None:
         encoded_files = [file.encode() for file in new_files]
