@@ -257,4 +257,4 @@ class TestCustomId:
     def test_is_preservable_non_binary_file(
         self, non_binary_file: ArchiveFile
     ):
-        assert is_preservable(non_binary_file)[0] is False
+        assert is_preservable(non_binary_file)[0] is True

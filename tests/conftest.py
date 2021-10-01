@@ -173,4 +173,3 @@ def python_wiki_binary_file(python_wiki):
         is_binary=True,
     )
     return larger_binary_file
-    
