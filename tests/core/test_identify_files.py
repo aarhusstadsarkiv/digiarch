@@ -252,3 +252,9 @@ class TestCustomId:
         self, very_small_binary_file: ArchiveFile
     ):
         assert is_preservable(very_small_binary_file)[0] is False
+
+    # All non binary (i.e. text) files are considered as preservable
+    def test_is_preservable_non_binary_file(
+        self, non_binary_file: ArchiveFile
+    ):
+        assert is_preservable(non_binary_file)[0] is False
