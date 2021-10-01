@@ -91,7 +91,7 @@ class TestMetadata:
         print(metadata)
         assert metadata.last_run == datetime(2012, 8, 6, 0, 0)
         assert metadata.processed_dir == test_data_dir
-        assert metadata.file_count == 3
+        assert metadata.file_count == 4
         assert metadata.total_size
 
 

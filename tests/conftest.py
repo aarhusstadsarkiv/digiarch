@@ -53,6 +53,12 @@ def docx_info(test_data_dir):
 
 
 @pytest.fixture
+def python_wiki(test_data_dir):
+    python_wiki: Path = test_data_dir / "Python_wiki.docx"
+    return python_wiki
+
+
+@pytest.fixture
 def xls_info(test_data_dir):
     xls_file: Path = test_data_dir / "xls_test.xls"
     return xls_file
@@ -135,3 +141,35 @@ def small_binary_file():
     )
     yield png_file
     image_file_path.unlink()
+
+
+@pytest.fixture
+def very_small_binary_file():
+    os.environ["ROOTPATH"] = str(Path.cwd())
+    file_relative_path = Path("very_small_file.claus")
+    file_path = Path(os.environ["ROOTPATH"], file_relative_path)
+    newFileBytes = [123, 3, 255, 0, 100]
+    with open(file_path, "wb") as write_bytes:
+        for byte in newFileBytes:
+            write_bytes.write(byte.to_bytes(1, byteorder="big"))
+
+    very_small_binary_file = ArchiveFile(
+        relative_path=file_relative_path,
+        puid="fmt/11000000000",
+        signature="Claus file",
+        is_binary=True,
+    )
+    yield very_small_binary_file
+    file_path.unlink()
+
+
+@pytest.fixture
+def python_wiki_binary_file(python_wiki):
+
+    larger_binary_file = ArchiveFile(
+        relative_path=python_wiki,
+        puid="fmt/fmt/412",
+        signature="Docx file",
+        is_binary=True,
+    )
+    return larger_binary_file

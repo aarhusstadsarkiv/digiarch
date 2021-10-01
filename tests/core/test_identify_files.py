@@ -237,8 +237,18 @@ class TestCustomId:
     def test_is_binary_true(self, binary_file):
         assert is_binary(binary_file) is True
 
-    def test_is_preservable_true(self, binary_file):
+    def test_is_preservable_image_true(self, binary_file):
         assert is_preservable(binary_file)[0] is True
 
-    def test_is_preservable_false(self, small_binary_file):
+    def test_is_preservable_image_false(self, small_binary_file):
         assert is_preservable(small_binary_file)[0] is False
+
+    def test_is_preservable_binary_file_true(
+        self, python_wiki_binary_file: ArchiveFile
+    ):
+        assert is_preservable(python_wiki_binary_file)[0] is True
+
+    def test_is_preservable_binary_file_false(
+        self, very_small_binary_file: ArchiveFile
+    ):
+        assert is_preservable(very_small_binary_file)[0] is False
