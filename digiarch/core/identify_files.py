@@ -226,6 +226,7 @@ def image_is_preservable(file: ArchiveFile) -> bool:
                 return True
     except PIL.UnidentifiedImageError:
         print(f"PIL could not open the file: {file.relative_path}")
+        return True
 
 
 def update_file_info(
