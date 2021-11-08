@@ -137,10 +137,10 @@ def get_preservable_info(file_data: FileData) -> List[Dict]:
     for file in file_data.files:
         preservable_info: Dict[str, Any] = {}
         preservable = is_preservable(file)
-        preservable_info["uuid"] = str(file.uuid)
-        preservable_info["is_preservable"] = preservable[0]
-        preservable_info["ignore reason"] = preservable[1]
-        information.append(preservable_info)
+        if preservable[0] == False:
+            preservable_info["uuid"] = str(file.uuid)
+            preservable_info["ignore reason"] = preservable[1]
+            information.append(preservable_info)
 
     return information
 

@@ -14,12 +14,15 @@ from typing import Any, Tuple
 from typing import Dict
 from typing import List
 
+import PIL
+
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
 
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
 from PIL import Image
+from multiprocessing import Pool
 
 
 # -----------------------------------------------------------------------------
@@ -213,13 +216,16 @@ def image_is_preservable(file: ArchiveFile) -> bool:
         file_path = Path(os.environ["ROOTPATH"], file.relative_path)
     else:
         file_path = file.relative_path
-    with Image.open(file_path) as im:
-        width, height = im.size
-        pixel_amount = width * height
-        if pixel_amount < 20000:
-            return False
-        else:
-            return True
+    try:
+        with Image.open(file_path) as im:
+            width, height = im.size
+            pixel_amount = width * height
+            if pixel_amount < 20000:
+                return False
+            else:
+                return True
+    except PIL.UnidentifiedImageError:
+        print(f"PIL could not open the file: {file.relative_path}")
 
 
 def update_file_info(
@@ -269,6 +275,8 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     # map cannot be used on update_file_info itself since id_info
     # can be shorter than files.
     _update = partial(update_file_info, id_info=id_info)
-    updated_files: List[ArchiveFile] = list(map(_update, files))
+    print("Multiprocess")
+    with Pool(5) as p:
+        updated_files: List[ArchiveFile] = p.map(_update, files, 10000)
 
     return natsort_path(updated_files)
