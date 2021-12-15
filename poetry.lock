@@ -221,11 +221,11 @@ python-versions = "*"
 
 [[package]]
 name = "natsort"
-version = "7.1.1"
+version = "8.0.2"
 description = "Simple yet flexible natural sorting in Python."
 category = "main"
 optional = false
-python-versions = ">=3.4"
+python-versions = ">=3.6"
 
 [package.extras]
 fast = ["fastnumbers (>=2.0.0)"]
@@ -524,7 +524,7 @@ socks = ["PySocks (>=1.5.6,!=1.5.7,<2.0)"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "2958f288668614914751f9b4baf28c96cfd6b8d39a68649a7735ba3ce1a81ce2"
+content-hash = "cc266661291cf0fb252c1e2f3c6c805a688e920af2fd9ba24d8c46240767b300"
 
 [metadata.files]
 acamodels = [
@@ -677,8 +677,8 @@ mypy-extensions = [
     {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
 ]
 natsort = [
-    {file = "natsort-7.1.1-py3-none-any.whl", hash = "sha256:d0f4fc06ca163fa4a5ef638d9bf111c67f65eedcc7920f98dec08e489045b67e"},
-    {file = "natsort-7.1.1.tar.gz", hash = "sha256:00c603a42365830c4722a2eb7663a25919551217ec09a243d3399fa8dd4ac403"},
+    {file = "natsort-8.0.2-py3-none-any.whl", hash = "sha256:09cff3cabb617f9794f643758ab5b337c1c0af1a6df11edf5c04de496fd7fb26"},
+    {file = "natsort-8.0.2.tar.gz", hash = "sha256:feb87e0ce1dc1f8f3f21e18a85216c790e746d76a5ff6889563394605f504a2b"},
 ]
 packaging = [
     {file = "packaging-21.0-py3-none-any.whl", hash = "sha256:c86254f9220d55e31cc94d69bade760f0847da8000def4dfe1c6b872fd14ff14"},
