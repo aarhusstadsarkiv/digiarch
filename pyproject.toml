@@ -23,7 +23,7 @@ databases = {extras = ["sqlite"], version = ">=0.3.2,<0.5.0"}
 acamodels = "^0.5.3"
 sqlalchemy_utils = ">=0.36.8,<0.38.0"
 pypng = "^0.0.21"
-Pillow = "^8.3.2"
+Pillow = ">=8.3.2,<10.0.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^6.2"
