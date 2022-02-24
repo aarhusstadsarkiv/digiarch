@@ -29,6 +29,7 @@ class File(ACABase):
     checksum: Optional[str]
     relative_path: Path = Field(None)
     is_binary: bool = Field(None)
+    file_size_in_bytes: int = Field(None)
 
     # Validators
     @validator("relative_path")
