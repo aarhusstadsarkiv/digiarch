@@ -11,7 +11,7 @@ keywords = ["archiving", "preservation", "identification"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-click = "^7.0"
+click = ">=7,<9"
 tqdm = "^4.36"
 dacite = "^1.0"
 python-dateutil = "^2.8.1"
