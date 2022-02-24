@@ -248,6 +248,7 @@ def update_file_info(
         )
     file_info = file_info.copy(update=new_id.dict())
     file_info.is_binary = is_binary(file_info)
+    file_info.file_size_in_bytes = file_path.stat().st_size
     return file_info
 
 
