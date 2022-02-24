@@ -11,11 +11,11 @@ from digiarch.core.utils import size_fmt
 
 
 def test_size_fmt():
-    assert size_fmt(2 ** 0) == "1.0 B"
-    assert size_fmt(2 ** 10) == "1.0 KiB"
-    assert size_fmt(2 ** 20) == "1.0 MiB"
-    assert size_fmt(2 ** 30) == "1.0 GiB"
-    assert size_fmt(2 ** 40) == "1.0 TiB"
+    assert size_fmt(2**0) == "1.0 B"
+    assert size_fmt(2**10) == "1.0 KiB"
+    assert size_fmt(2**20) == "1.0 MiB"
+    assert size_fmt(2**30) == "1.0 GiB"
+    assert size_fmt(2**40) == "1.0 TiB"
 
 
 def test_natsort_path(xls_info, docx_info):
