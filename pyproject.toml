@@ -30,7 +30,8 @@ pytest = "^6.2"
 pytest-cov = "^2.11"
 mypy = "^0.812"
 black = "^20.8b1"
-flake8 = "^3.9.0"
+
+flake8 = "^4.0.1"
 pytest-asyncio = "^0.18.1"
 freezegun = "^1.1.0"
 
