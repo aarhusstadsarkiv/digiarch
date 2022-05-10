@@ -61,7 +61,6 @@ class TestCli:
             result = cli_run.invoke(cli, args)
             assert result.exit_code != 0
 
-    @pytest.mark.asyncio
     def test_exceptions(self, cli_run, monkeypatch, temp_dir):
         def file_coll_error(*args):
             raise FileCollectionError("File Collection Error")

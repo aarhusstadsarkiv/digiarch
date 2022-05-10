@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "0.9.10"
+version = "0.9.12"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Aryan Muhammadi Landi <arml@aarhus.dk>", "Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -45,4 +45,7 @@ exclude = ".venv"
 [build-system]
 requires = ["poetry>=0.12"]
 build-backend = "poetry.masonry.api"
+
+[tool.pytest.ini_options]
+asyncio_mode="strict"
 
