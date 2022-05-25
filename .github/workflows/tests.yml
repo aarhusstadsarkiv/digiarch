@@ -63,7 +63,7 @@ jobs:
           poetry install
       - name: Install siegfried
         run: |
-          go get github.com/richardlehane/siegfried/cmd/sf
+          go install github.com/richardlehane/siegfried/cmd/sf
           sf -update
       - name: Test and generate coverage report
         run: |
