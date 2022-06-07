@@ -28,7 +28,7 @@ Pillow = ">=8.3.2,<10.0.0"
 [tool.poetry.dev-dependencies]
 pytest = "^7.0"
 pytest-cov = "^3.0"
-mypy = "^0.812"
+mypy = "^0.961"
 black = "^22.1"
 
 flake8 = "^4.0.1"
