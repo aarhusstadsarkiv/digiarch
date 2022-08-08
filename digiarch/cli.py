@@ -145,7 +145,7 @@ def get_preservable_info(file_data: FileData) -> List[Dict]:
     return information
 
 
-@cli.resultcallback()
+@cli.result_callback()
 @coro
 async def done(result: Any, **kwargs: Any) -> None:
     ctx = click.get_current_context()

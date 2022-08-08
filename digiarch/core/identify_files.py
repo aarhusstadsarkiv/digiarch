@@ -193,7 +193,6 @@ def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
         "fmt/124",
         "fmt/353",
         "fmt/645",
-        "fmt/881",
         "x-fmt/390",
         "x-fmt/391",
     ]

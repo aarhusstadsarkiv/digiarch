@@ -6,6 +6,7 @@ from datetime import datetime
 from typing import List
 
 import pytest
+import pytest_asyncio
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from digiarch.core.path_utils import explore_dir
 from digiarch.core.identify_files import identify
@@ -39,7 +40,7 @@ def files(docx_info, xls_info, adx_info):
     return files
 
 
-@pytest.fixture
+@pytest_asyncio.fixture
 async def db_conn(main_dir):
     file_db = FileDB(f"sqlite:///{main_dir}/test.db")
     await file_db.connect()
