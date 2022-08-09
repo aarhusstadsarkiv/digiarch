@@ -5,7 +5,6 @@
 # Imports
 # -----------------------------------------------------------------------------
 import json
-import pdb
 import re
 import subprocess
 import os
@@ -139,7 +138,9 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
                 signature_and_version = f"{signature} ({version})"
             warning = match.get("warning", "").capitalize()
             file_identification = Identification(
-                puid=puid, signature=signature_and_version or None, warning=warning or None
+                puid=puid,
+                signature=signature_and_version or None,
+                warning=warning or None,
             )
             if puid is None:
                 file_identification = custom_id(file_path, file_identification)
