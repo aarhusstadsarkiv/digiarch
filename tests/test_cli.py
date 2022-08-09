@@ -7,12 +7,15 @@ from digiarch.core.ArchiveFileRel import ArchiveFile
 from click.testing import CliRunner
 from digiarch import core
 from digiarch.cli import cli
+from digiarch.cli import get_preservable_info
 from digiarch.database import db
 from digiarch.exceptions import FileCollectionError
 from digiarch.exceptions import FileParseError
 from digiarch.exceptions import IdentificationError
 import os
 from pathlib import Path
+
+from digiarch.models import FileData
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -24,6 +27,15 @@ def cli_run():
     return CliRunner()
 
 
+@pytest.fixture
+def file_data():
+    _file_data: FileData = FileData(main_dir=Path.cwd(), files=[])
+    yield _file_data
+    file_db_path = Path.cwd() / "_metadata" / "files.db"
+    file_db_path.unlink()
+    file_db_path.parent.rmdir()
+
+
 # -----------------------------------------------------------------------------
 # Tests
 # -----------------------------------------------------------------------------
@@ -33,17 +45,6 @@ class TestCli:
     """Class for testing the `cli` function."""
 
     def test_cli_valid(self, cli_run, temp_dir):
-        '''os.environ["ROOTPATH"] = str(temp_dir)
-        """The cli is run with a valid path as argument.
-        This should be successful, i.e. have exit code 0."""
-        Path(temp_dir, "test.txt").touch()
-        with cli_run.isolated_filesystem():
-            args = [str(temp_dir)]
-            result = cli_run.invoke(cli, args)
-            print("Exc_info: {}".format(result.exc_info))
-            print("Exception: {}".format(result.exception))
-            print("Output: {}".format(result.output))
-            #print("Error: {}".format(result.stderr))'''
         with cli_run.isolated_filesystem():
             os.environ["ROOTPATH"] = str(Path.cwd())
             testdir = Path.cwd() / "testdir"
@@ -173,3 +174,14 @@ class TestCommands:
             )
             result = cli_run.invoke(cli, args)
             assert "Rebuilding file information" in result.output
+
+
+class TestPreservableInfo:
+    def test_get_preservable_info(self, very_small_binary_file, file_data):
+        file_data.files.append(very_small_binary_file)
+        information = get_preservable_info(file_data)
+        assert len(information) == 1
+        assert information[0]["uuid"] == str(very_small_binary_file.uuid)
+        assert (
+            information[0]["ignore reason"] == "Binary file is less than 1 kb."
+        )

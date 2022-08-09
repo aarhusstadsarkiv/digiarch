@@ -9,7 +9,11 @@ from unittest.mock import patch
 import pytest
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
-from digiarch.core.identify_files import custom_id, is_preservable
+from digiarch.core.identify_files import (
+    custom_id,
+    is_preservable,
+    image_is_preservable,
+)
 from digiarch.core.identify_files import identify
 from digiarch.core.identify_files import sf_id
 from digiarch.core.identify_files import is_binary
@@ -237,6 +241,8 @@ class TestCustomId:
     def test_is_binary_true(self, binary_file):
         assert is_binary(binary_file) is True
 
+
+class TestIsPreservable:
     def test_is_preservable_image_true(self, binary_file):
         assert is_preservable(binary_file)[0] is True
 
@@ -258,3 +264,11 @@ class TestCustomId:
         self, non_binary_file: ArchiveFile
     ):
         assert is_preservable(non_binary_file)[0] is True
+
+    def test_image_is_preservable_on_pillow_exception(
+        self, very_small_binary_file
+    ):
+        # If pillow cannot parse an image file, it should
+        # still be marked as preservable
+        # but looked at manually at some point.
+        assert image_is_preservable(very_small_binary_file) is True

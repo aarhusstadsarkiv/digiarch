@@ -63,11 +63,10 @@ class FileDB(Database):
     )
 
     preservable_info = sql.Table(
-        "Preservable_info",
+        "Not_preservable",
         sql_meta,
         sql.Column("uuid", sql.String, primary_key=True, nullable=False),
-        sql.Column("is_preservable", sql.Boolean, nullable=False),
-        sql.Column("ignore reason", sql.String),
+        sql.Column("ignore reason", sql.String, nullable=False),
     )
 
     id_warnings = files.select().where(files.c.warning.isnot(None))
