@@ -234,7 +234,9 @@ def image_is_preservable(file: ArchiveFile) -> bool:
         return True
     except Image.DecompressionBombError:
         print(
-            f"Parsing the file {file.relative_path} gave a decompression bomb error."
+            "Parsing the file {} gave a decompression bomb error.".format(
+                file.relative_path
+            )
         )
         print("Inspect the file manually.")
         return True
