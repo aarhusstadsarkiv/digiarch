@@ -73,11 +73,41 @@
     },
 
     {
-        
         "bof": "(?i)010690080004000000000001000100010790060008000000E404000000000000E80001088007001800000049504D2E4D6963726F736F6674204D61696C2E4E6F746500310801",
         "puid": "aca-fmt/9",
         "signature": "Microsoft email attachments archive (winmail)",
         "extension": ".dat"
+    }
+
+    ,
+
+    {
+        "bof": "(?i)41636365737356657273696F6E.{0,1024}30362E",
+        "puid": "aca-fmt/10",
+        "signature": "MS Access 95",
+        "extension": ".mdb"
+    },
+
+    {
+        "bof": "(?i)41636365737356657273696F6E.{0,1024}30372E",
+        "puid": "aca-fmt/11",
+        "signature": "MS Access 97",
+        "extension": ".mdb"
+    },
+
+
+    {
+        "bof": "(?i)410063006300650073007300560065007200730069006F006E.{0,2048}300038002E00",
+        "puid": "aca-fmt/12",
+        "signature": "MS Access 2000",
+        "extension": ".mdb"
+    },
+
+    {
+        "bof": "(?i)410063006300650073007300560065007200730069006F006E.{0,2048}300039002E00",
+        "puid": "aca-fmt/13",
+        "signature": "MS Access 2002/3",
+        "extension": ".mdb"
     }
    
 ]
