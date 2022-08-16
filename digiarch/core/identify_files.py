@@ -233,9 +233,12 @@ def image_is_preservable(file: ArchiveFile) -> bool:
         print(f"PIL could not open the file: {file.relative_path}")
         return True
     except Image.DecompressionBombError:
-        print(f"Parsing the file {file.relative_path} gave a decompression bomb error.")
+        print(
+            f"Parsing the file {file.relative_path} gave a decompression bomb error."
+        )
         print("Inspect the file manually.")
         return True
+
 
 def update_file_info(
     file_info: ArchiveFile, id_info: Dict[Path, Identification]
