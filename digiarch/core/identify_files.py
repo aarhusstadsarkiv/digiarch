@@ -232,7 +232,10 @@ def image_is_preservable(file: ArchiveFile) -> bool:
     except PIL.UnidentifiedImageError:
         print(f"PIL could not open the file: {file.relative_path}")
         return True
-
+    except Image.DecompressionBombError:
+        print(f"Parsing the file {file.relative_path} gave a decompression bomb error.")
+        print("Inspect the file manually.")
+        return True
 
 def update_file_info(
     file_info: ArchiveFile, id_info: Dict[Path, Identification]
@@ -282,7 +285,6 @@ def identify(files: List[ArchiveFile], path: Path) -> List[ArchiveFile]:
     # map cannot be used on update_file_info itself since id_info
     # can be shorter than files.
     _update = partial(update_file_info, id_info=id_info)
-    print("Multiprocess")
     with Pool(5) as p:
         updated_files: List[ArchiveFile] = p.map(_update, files, 10000)
 
