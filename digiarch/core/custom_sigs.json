@@ -77,9 +77,22 @@
         "puid": "aca-fmt/9",
         "signature": "Microsoft email attachments archive (winmail)",
         "extension": ".dat"
-    }
+    },
 
-    ,
+
+    {
+        "bof": "(?i)010690080004000000000001000100010790060008000000E404000000000000E800010",
+        "puid": "aca-fmt/9",
+        "signature": "Microsoft email attachments archive (winmail)",
+        "extension": ".dat"
+    },
+
+    {
+        "bof": "(?i)^789F3E22",
+        "puid": "aca-fmt/9",
+        "signature": "Microsoft email attachments archive (winmail)",
+        "extension": ".dat"
+    },
 
     {
         "bof": "(?i)41636365737356657273696F6E.{0,1024}30362E",
