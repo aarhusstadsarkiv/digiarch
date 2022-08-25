@@ -1,4 +1,5 @@
 [
+
     {
         "bof": "(?i)^576F726450726F0DFB000000000000000005985C8172030040CCC1BFFFBDF970",
         "puid": "x-fmt/340",
@@ -121,6 +122,26 @@
         "puid": "aca-fmt/13",
         "signature": "MS Access 2002/3",
         "extension": ".mdb"
+    },
+
+    {
+        "bof": "(?i)^000100005374616E64617264204A65742044420000000000",
+        "puid": "aca-fmt/14",
+        "signature": "MS Access database unspecified version (Jet 3 DB)",
+        "extension": ".mdb"
+    },
+
+    {
+        "bof": "(?i)^000100005374616E64617264204A65742044420001000000",
+        "puid": "aca-fmt/15",
+        "signature": "MS Access database unspecified version (Jet 4 DB)",
+        "extension": ".mdb"
+    },
+
+    {
+        "bof": "(?i)000100005374616E646172642041434520444200",
+        "puid": "aca-fmt/16",
+        "signature": "MS Access database unspecified version (ACE DB)",
+        "extension": ".mdb"
     }
-   
 ]
