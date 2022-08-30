@@ -5,14 +5,18 @@
 # Imports
 # -----------------------------------------------------------------------------
 import json
+import pdb
 import re
 import subprocess
 import os
+import logging as log
+from logging import Logger
 from functools import partial
 from pathlib import Path
-from typing import Any, Tuple
+from typing import Any, Tuple, Union
 from typing import Dict
 from typing import List
+from threading import Lock
 
 import PIL
 
@@ -203,7 +207,7 @@ def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
         "x-fmt/391",
     ]
     if file.puid in image_format_codes:
-        if image_is_preservable(file):
+        if image_is_preservable(file, lock=None):
             return (True, None)
         else:
             return (False, "Image contains less than 20000 pixels.")
@@ -216,29 +220,50 @@ def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
         return (True, None)
 
 
-def image_is_preservable(file: ArchiveFile) -> bool:
-    if "ROOTPATH" in os.environ:
-        file_path = Path(os.environ["ROOTPATH"], file.relative_path)
-    else:
-        file_path = file.relative_path
-    try:
-        with Image.open(file_path) as im:
+def open_image_file(file_path) -> bool:
+    with Image.open(file_path) as im:
             width, height = im.size
             pixel_amount = width * height
             if pixel_amount < 20000:
                 return False
             else:
                 return True
+
+
+
+def image_is_preservable(file: ArchiveFile, lock: Union[Lock, None] = None) -> bool:
+    # set up a log file to keep track of decompresion bombs  
+    logger: Logger = log.getLogger('image_is_preservable')
+    file_handler = log.FileHandler("pillow_decompressionbomb.log", mode="w", encoding="utf-8")
+    log_fmt = log.Formatter(
+        fmt="%(asctime)s - %(levelname)s: %(message)s",
+        datefmt="%Y-%m-%d %H:%M:%S",
+    )
+    file_handler.setFormatter(log_fmt)
+    logger.addHandler(file_handler)
+    logger.setLevel(log.INFO)
+    if "ROOTPATH" in os.environ:
+        file_path = Path(os.environ["ROOTPATH"], file.relative_path)
+    else:
+        file_path = file.relative_path
+    try:
+        return open_image_file(file_path)
     except PIL.UnidentifiedImageError:
         print(f"PIL could not open the file: {file.relative_path}")
         return True
+    except Image.DecompressionBombWarning:
+        if lock:
+            with lock:
+                logger.warning("The file {} threw a decompresionbomb warning".format(file.relative_path))
+        else:
+            logger.warning("The file {} threw a decompresionbomb warning".format(file.relative_path))
+        return True
     except Image.DecompressionBombError:
-        print(
-            "Parsing the file {} gave a decompression bomb error.".format(
-                file.relative_path
-            )
-        )
-        print("Inspect the file manually.")
+        if lock:
+            with lock:
+                logger.error("The file {} threw a decompresionbomb error".format(file.relative_path))
+        else:
+            logger.error("The file {} threw a decompresionbomb error".format(file.relative_path))
         return True
 
 

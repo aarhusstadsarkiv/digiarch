@@ -25,6 +25,12 @@ def temp_dir(tmpdir_factory):
     temp_dir.mkdir(exist_ok=True)
     return temp_dir
 
+@pytest.fixture
+def pillow_log():
+    path_to_file: Path = 'pillow_decompressionbomb.log'
+    yield path_to_file
+    os.remove(path_to_file)
+
 
 @pytest.fixture
 def main_dir(temp_dir):

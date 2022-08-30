@@ -2,22 +2,34 @@
 # Imports
 # -----------------------------------------------------------------------------
 import json
+import os
+import pdb
 
+from pathlib import Path
+from threading import Lock
+from PIL.Image import DecompressionBombError
+from PIL.Image import DecompressionBombWarning
 from subprocess import CalledProcessError
+import unittest
 from unittest.mock import patch
+from unittest.mock import Mock
 
 import pytest
+from pytest import MonkeyPatch
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
 from digiarch.core.identify_files import (
     custom_id,
     is_preservable,
     image_is_preservable,
+    open_image_file
 )
 from digiarch.core.identify_files import identify
 from digiarch.core.identify_files import sf_id
 from digiarch.core.identify_files import is_binary
 from digiarch.exceptions import IdentificationError
+from PIL import Image 
+
 
 # -----------------------------------------------------------------------------
 # Tests
@@ -280,3 +292,35 @@ class TestIsPreservable:
         # still be marked as preservable
         # but looked at manually at some point.
         assert image_is_preservable(very_small_binary_file) is True
+    
+    # GIVEN a too large file (mimmicked by a monkeypatch)
+    # WHEN a decompressionbomberror is thrown
+    # THEN a log file should be created and contain info about it
+    def test_decrompresionbomb_log_error(self, binary_file, monkeypatch, pillow_log: Path):
+        lock: Lock = Lock()
+        def mock_open(*args, **kwargs):
+            raise DecompressionBombError
+        monkeypatch.setattr("digiarch.core.identify_files.open_image_file", mock_open)
+        image_is_preservable(binary_file, lock)
+        assert pillow_log.exists()
+        with open(pillow_log, mode='r') as file:
+            line = file.readline()
+            assert 'ERROR: The file image_file.png threw an decompresionbomb error' in line
+
+    # GIVEN a too large file (mimmicked by a monkeypatch)
+    # WHEN a decompressionbombwarning is thrown
+    # THEN a log file should be created and contain info about it
+
+    def test_decrompresionbomb_log_warning(self, binary_file, monkeypatch, pillow_log: Path):
+        def mock_open(*args, **kwargs):
+            raise DecompressionBombWarning
+        monkeypatch.setattr("digiarch.core.identify_files.open_image_file", mock_open)
+        lock: Lock = Lock()
+        image_is_preservable(binary_file, lock)
+        assert pillow_log.exists()
+        with open(pillow_log, mode='r') as file:
+            line = file.readline()
+            assert 'WARNING: The file image_file.png threw an decompresionbomb warning' in line
+                
+        
+        
