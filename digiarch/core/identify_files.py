@@ -12,6 +12,7 @@ import logging as log
 from logging import Logger
 from functools import partial
 from pathlib import Path
+from threading import Lock
 from typing import Any, Tuple
 from typing import Dict
 from typing import List
@@ -230,8 +231,10 @@ def open_image_file(file_path: Path) -> bool:
 
 def image_is_preservable(
     file: ArchiveFile,
+    lock: Lock
 ) -> bool:
     # set up a log file to keep track of decompresion bombs
+    lock.acquire()
     logger: Logger = log.getLogger("image_is_preservable")
     file_handler = log.FileHandler(
         "pillow_decompressionbomb.log", mode="w", encoding="utf-8"
@@ -248,9 +251,12 @@ def image_is_preservable(
     else:
         file_path = file.relative_path
     try:
-        return open_image_file(file_path)
+        result: bool = open_image_file(file_path)
+        lock.release()
+        return result
     except PIL.UnidentifiedImageError:
         print(f"PIL could not open the file: {file.relative_path}")
+        lock.release()
         return True
     except Image.DecompressionBombWarning:
         logger.warning(
@@ -258,6 +264,7 @@ def image_is_preservable(
                 file.relative_path
             )
         )
+        lock.release()
         return True
     except Image.DecompressionBombError:
         logger.error(
@@ -265,6 +272,7 @@ def image_is_preservable(
                 file.relative_path
             )
         )
+        lock.release()
         return True
 
 
