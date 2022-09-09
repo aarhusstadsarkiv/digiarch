@@ -260,10 +260,12 @@ def image_is_preservable(
     try:
         result: bool = open_image_file(file_path)
         lock.release()
+        del log.Logger.manager.loggerDict["image_is_preservable"]
         return result
     except PIL.UnidentifiedImageError:
         print(f"PIL could not open the file: {file.relative_path}")
         lock.release()
+        del log.Logger.manager.loggerDict["image_is_preservable"]
         return True
     except Image.DecompressionBombWarning:
         logger.warning(
@@ -272,6 +274,7 @@ def image_is_preservable(
             )
         )
         lock.release()
+        del log.Logger.manager.loggerDict["image_is_preservable"]
         return True
     except Image.DecompressionBombError:
         logger.error(
@@ -280,6 +283,7 @@ def image_is_preservable(
             )
         )
         lock.release()
+        del log.Logger.manager.loggerDict["image_is_preservable"]
         return True
 
 
