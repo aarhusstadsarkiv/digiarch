@@ -188,6 +188,7 @@ def is_binary(file: ArchiveFile) -> bool:
 
 
 def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
+    lock: Lock = Lock()  # Used by image_is_preservable
     image_format_codes = [
         "fmt/3",
         "fmt/4",
@@ -206,7 +207,7 @@ def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
         "x-fmt/391",
     ]
     if file.puid in image_format_codes:
-        if image_is_preservable(file):
+        if image_is_preservable(file, lock):
             return (True, None)
         else:
             return (False, "Image contains less than 20000 pixels.")
@@ -229,23 +230,29 @@ def open_image_file(file_path: Path) -> bool:
             return True
 
 
-def image_is_preservable(
-    file: ArchiveFile,
-    lock: Lock
-) -> bool:
-    # set up a log file to keep track of decompresion bombs
-    lock.acquire()
+def setup_logger() -> Logger:
     logger: Logger = log.getLogger("image_is_preservable")
     file_handler = log.FileHandler(
         "pillow_decompressionbomb.log", mode="w", encoding="utf-8"
     )
     log_fmt = log.Formatter(
         fmt="%(asctime)s - %(levelname)s: %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
+        datefmt="%Y-%M-%D %H:%M:%S",
     )
     file_handler.setFormatter(log_fmt)
     logger.addHandler(file_handler)
     logger.setLevel(log.INFO)
+    return logger
+
+
+def image_is_preservable(
+    file: ArchiveFile, lock: Lock, logger: Logger = None
+) -> bool:
+    # set up a log file to keep track of decompresion bombs
+    # if no log file is passed (default behaviour)
+    if logger is None:
+        logger = setup_logger()
+    lock.acquire()
     if "ROOTPATH" in os.environ:
         file_path = Path(os.environ["ROOTPATH"], file.relative_path)
     else:

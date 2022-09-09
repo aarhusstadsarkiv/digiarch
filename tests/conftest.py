@@ -4,9 +4,12 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+from logging import Logger
+from threading import Lock
 from typing import Tuple, Union
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from pathlib import Path
+from digiarch.core.identify_files import setup_logger
 import pytest
 import os
 import png
@@ -173,3 +176,15 @@ def python_wiki_binary_file(python_wiki):
         is_binary=True,
     )
     return larger_binary_file
+
+
+@pytest.fixture
+def lock():
+    lock: Lock = Lock()
+    yield lock
+
+
+@pytest.fixture
+def log():
+    log: Logger = setup_logger()
+    yield log
