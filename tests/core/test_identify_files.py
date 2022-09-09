@@ -327,10 +327,17 @@ class TestIsPreservable:
         )
 
         image_is_preservable(binary_file, lock, logger=log)
+        # The assertions are ugly and not best practice. They are used to
+        # check multiple lines of the file, and if one of them contains the
+        # warning then the test should assert True
         with open(pathToFile, mode="r", encoding="utf-8") as file:
-            line = file.readline()
-            assert (
-                "WARNING: The file image_file.png threw a"
-                " decompresionbomb warning\n" in line
-            )
-        file.close()
+            for line in file.readlines():
+                if (
+                    "WARNING: The file image_file.png threw a "
+                    "decompresionbomb warning\n" in line
+                ):
+                    assert True
+                    return
+                else:
+                    continue
+            assert False

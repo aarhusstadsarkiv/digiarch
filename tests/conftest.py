@@ -188,3 +188,10 @@ def lock():
 def log():
     log: Logger = setup_logger()
     yield log
+
+
+@pytest.fixture(scope="session", autouse=True)
+def destroy_log():
+    yield
+    path_to_log: Path = Path("pillow_decompressionbomb.log")
+    os.remove(path_to_log)

@@ -233,7 +233,7 @@ def open_image_file(file_path: Path) -> bool:
 def setup_logger() -> Logger:
     logger: Logger = log.getLogger("image_is_preservable")
     file_handler = log.FileHandler(
-        "pillow_decompressionbomb.log", mode="w", encoding="utf-8"
+        "pillow_decompressionbomb.log", mode="a", encoding="utf-8"
     )
     log_fmt = log.Formatter(
         fmt="%(asctime)s - %(levelname)s: %(message)s",
