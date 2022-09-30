@@ -5,4 +5,6 @@
 Go og Siegfried
 
 ### Installation
-Preferred way of installation is to install master-branch via pipx `pipx install git+https://github.com/aarhusstadsarkiv/digiarch.git`
+Preferred way of installation is to install master-branch via pipx 
+
+`pipx install git+https://github.com/aarhusstadsarkiv/digiarch.git`
