@@ -3,7 +3,6 @@
 # -----------------------------------------------------------------------------
 
 import pytest
-from digiarch.core.ArchiveFileRel import ArchiveFile
 from click.testing import CliRunner
 from digiarch import core
 from digiarch.cli import cli
@@ -153,6 +152,7 @@ class TestCommands:
             monkeypatch.setattr(core, "identify", id_error)
             result = cli_run.invoke(cli, args)
             assert "Error: Identification Error" in result.output
+
 
 class TestPreservableInfo:
     def test_get_preservable_info(self, very_small_binary_file, file_data):
