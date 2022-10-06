@@ -154,28 +154,6 @@ class TestCommands:
             result = cli_run.invoke(cli, args)
             assert "Error: Identification Error" in result.output
 
-    def test_fix(self, cli_run, temp_dir, monkeypatch, xls_info):
-        with cli_run.isolated_filesystem():
-            os.environ["ROOTPATH"] = str(Path.cwd())
-            testdir = Path.cwd() / "testdir"
-            testdir.mkdir()
-            testdirfile = Path.cwd() / "testdir" / "test.txt"
-            testdirfile.touch()
-            args = [os.environ["ROOTPATH"], "fix"]
-
-            monkeypatch.setattr(core, "fix_extensions", lambda *args: [])
-            result = cli_run.invoke(cli, args)
-            assert "Info: No file extensions to fix" in result.output
-
-            monkeypatch.setattr(
-                core,
-                "fix_extensions",
-                lambda *args: [ArchiveFile(path=xls_info)],
-            )
-            result = cli_run.invoke(cli, args)
-            assert "Rebuilding file information" in result.output
-
-
 class TestPreservableInfo:
     def test_get_preservable_info(self, very_small_binary_file, file_data):
         file_data.files.append(very_small_binary_file)
