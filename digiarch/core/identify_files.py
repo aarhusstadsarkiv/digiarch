@@ -219,15 +219,19 @@ def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
     else:
         return (True, None)
 
-
-def open_image_file(file_path: Path) -> bool:
+def getPixelAmount(file_path: Path) -> int:
     with Image.open(file_path) as im:
         width, height = im.size
-        pixel_amount = width * height
-        if pixel_amount < 20000:
-            return False
-        else:
-            return True
+        pixelAmount = width * height
+        return pixelAmount
+
+def isImagePreservable(file_path: Path) -> bool:
+    pixel_amount = getPixelAmount(file_path)
+    if pixel_amount < 20000:
+        return False
+    else:
+        return True
+   
 
 
 def setup_logger() -> Logger:
@@ -249,7 +253,8 @@ def image_is_preservable(
     file: ArchiveFile, lock: Lock, logger: Logger = None
 ) -> bool:
     # set up a log file to keep track of decompresion bombs
-    # if no log file is passed (default behaviour)
+    # if no log file is passed (default behaviour)¨
+    result = False
     if logger is None:
         logger = setup_logger()
     lock.acquire()
@@ -258,37 +263,30 @@ def image_is_preservable(
     else:
         file_path = file.relative_path
     try:
-        result: bool = open_image_file(file_path)
-        lock.release()
-        log_dict: dict = log.Logger.manager.loggerDict  # type: ignore
-        del log_dict["image_is_preservable"]
-        return result
+        result: bool = isImagePreservable(file_path)
     except PIL.UnidentifiedImageError:
         print(f"PIL could not open the file: {file.relative_path}")
-        lock.release()
-        log_dict: dict = log.Logger.manager.loggerDict  # type: ignore
-        del log_dict["image_is_preservable"]
-        return True
+        result = True
     except Image.DecompressionBombWarning:
         logger.warning(
             "The file {} threw a decompresionbomb warning".format(
                 file.relative_path
             )
         )
-        lock.release()
-        log_dict: dict = log.Logger.manager.loggerDict  # type: ignore
-        del log_dict["image_is_preservable"]
-        return True
+        result = True
     except Image.DecompressionBombError:
         logger.error(
             "The file {} threw a decompresionbomb error".format(
                 file.relative_path
             )
         )
+        result = True
+    finally:
+        del log.Logger.manager.loggerDict["image_is_preservable"]
         lock.release()
-        log_dict: dict = log.Logger.manager.loggerDict  # type: ignore
-        del log_dict["image_is_preservable"]
-        return True
+        return result
+
+
 
 
 def update_file_info(

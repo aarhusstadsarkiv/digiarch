@@ -301,7 +301,7 @@ class TestIsPreservable:
             raise DecompressionBombError
 
         monkeypatch.setattr(
-            "digiarch.core.identify_files.open_image_file", mock_open
+            "digiarch.core.identify_files.isImagePreservable", mock_open
         )
         image_is_preservable(binary_file, lock, logger=log)
         assert os.path.exists(pathToFile)
@@ -323,7 +323,7 @@ class TestIsPreservable:
             raise DecompressionBombWarning
 
         monkeypatch.setattr(
-            "digiarch.core.identify_files.open_image_file", mock_open
+            "digiarch.core.identify_files.isImagePreservable", mock_open
         )
 
         image_is_preservable(binary_file, lock, logger=log)

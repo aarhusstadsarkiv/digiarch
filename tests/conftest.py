@@ -181,17 +181,12 @@ def python_wiki_binary_file(python_wiki):
 @pytest.fixture
 def lock():
     lock: Lock = Lock()
-    yield lock
+    return lock
 
 
-@pytest.fixture
+@pytest.fixture(scope="session")
 def log():
     log: Logger = setup_logger()
-    yield log
-
-
-@pytest.fixture(scope="session", autouse=True)
-def destroy_log():
-    yield
+    yield log    
     path_to_log: Path = Path("pillow_decompressionbomb.log")
     os.remove(path_to_log)
