@@ -282,6 +282,7 @@ class TestIsPreservable:
     def test_image_is_preservable_on_pillow_exception(
         self, very_small_binary_file
     ):
+        """DocTest"""
         # If pillow cannot parse an image file, it should
         # still be marked as preservable
         # but looked at manually at some point.
@@ -292,7 +293,7 @@ class TestIsPreservable:
     # WHEN a decompressionbomberror is thrown
     # THEN a log file should be created and contain info about it
     def test_decrompresionbomb_log_error(
-        self, binary_file, monkeypatch, lock, log
+        self, binary_file, monkeypatch, lock
     ):
 
         pathToFile: Path = Path("pillow_decompressionbomb.log")
@@ -300,21 +301,28 @@ class TestIsPreservable:
         def mock_open(*args, **kwargs):
             raise DecompressionBombError
 
+        
         monkeypatch.setattr(
             "digiarch.core.identify_files.isImagePreservable", mock_open
         )
-        image_is_preservable(binary_file, lock, logger=log)
+        image_is_preservable(binary_file, lock)
+
         assert os.path.exists(pathToFile)
         with open(pathToFile, mode="r", encoding="utf-8") as file:
-            line = file.readline()
-            assert (
-                "ERROR: The file image_file.png threw "
-                "a decompresionbomb error\n" in line
-            )
-        file.close()
+            for line in file.readlines():
+                if (
+                    "ERROR: The file image_file.png threw "
+                    "a decompresionbomb error\n" in line
+                ):
+                    assert True
+                    return
+                else:
+                    continue
+            assert False
+
 
     def test_decrompresionbomb_log_warning(
-        self, binary_file, monkeypatch, lock, log
+        self, binary_file, monkeypatch, lock
     ):
 
         pathToFile: Path = Path("pillow_decompressionbomb.log")
@@ -326,7 +334,8 @@ class TestIsPreservable:
             "digiarch.core.identify_files.isImagePreservable", mock_open
         )
 
-        image_is_preservable(binary_file, lock, logger=log)
+        image_is_preservable(binary_file, lock)
+        assert os.path.exists(pathToFile)
         # The assertions are ugly and not best practice. They are used to
         # check multiple lines of the file, and if one of them contains the
         # warning then the test should assert True

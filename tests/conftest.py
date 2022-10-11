@@ -178,15 +178,15 @@ def python_wiki_binary_file(python_wiki):
     return larger_binary_file
 
 
-@pytest.fixture
-def lock():
+@pytest.fixture(scope="session")
+def lock() -> Lock:
     lock: Lock = Lock()
     return lock
 
-
-@pytest.fixture(scope="session")
-def log():
-    log: Logger = setup_logger()
-    yield log    
-    path_to_log: Path = Path("pillow_decompressionbomb.log")
-    os.remove(path_to_log)
+# HACK: This is the only way to delete the log- created in a threadsafe manner
+# If we set it up through an normal fixture with yield we get an win32 error
+# And we are not allowed to acces the file.
+@pytest.fixture(scope="session", autouse=True)
+def teardown_log():
+    yield
+    os.remove("pillow_decompressionbomb.log")

@@ -241,7 +241,7 @@ def setup_logger() -> Logger:
     )
     log_fmt = log.Formatter(
         fmt="%(asctime)s - %(levelname)s: %(message)s",
-        datefmt="%Y-%M-%D %H:%M:%S",
+        datefmt="%D %H:%M:%S",
     )
     file_handler.setFormatter(log_fmt)
     logger.addHandler(file_handler)
@@ -254,12 +254,12 @@ def image_is_preservable(
 ) -> bool:
     # set up a log file to keep track of decompresion bombs
     # if no log file is passed (default behaviour)¨
+    lock.acquire()
     result = False
     if logger is None:
-        logger = setup_logger()
-    lock.acquire()
+        logger: Logger = setup_logger()
     if "ROOTPATH" in os.environ:
-        file_path = Path(os.environ["ROOTPATH"], file.relative_path)
+        file_path: Path = Path(os.environ["ROOTPATH"], file.relative_path)
     else:
         file_path = file.relative_path
     try:
@@ -282,9 +282,14 @@ def image_is_preservable(
         )
         result = True
     finally:
-        del log.Logger.manager.loggerDict["image_is_preservable"]
-        lock.release()
-        return result
+        try:
+            del log.Logger.manager.loggerDict["image_is_preservable"]
+        except KeyError:
+            #Do nothing, the log manager has been deleted by a different process. 
+            pass
+        finally:
+            lock.release()
+            return result
 
 
 
