@@ -143,5 +143,13 @@
         "puid": "aca-fmt/16",
         "signature": "MS Access database unspecified version (ACE DB)",
         "extension": ".mdb"
+    },
+
+    {
+        
+        "bof": "(?i)00A0E150E161BA2A6AB1A2A2FA5A9B5A7B5D90F1723131F2B0F17234F57639CA4A9A0A8ADA4A8AD161A390D1137A5A9B5A4A8ADB2B6DCBDBDF42B2F55C8CCD8C7CBD0D3D7FDC2C2F90",
+        "puid": "aca-fmt/17",
+        "signature": "MapInfo MAP file",
+        "extension": ".MAP"
     }
 ]
