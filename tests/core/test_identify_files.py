@@ -292,16 +292,13 @@ class TestIsPreservable:
     # GIVEN a too large file (mimmicked by a monkeypatch)
     # WHEN a decompressionbomberror is thrown
     # THEN a log file should be created and contain info about it
-    def test_decrompresionbomb_log_error(
-        self, binary_file, monkeypatch, lock
-    ):
+    def test_decrompresionbomb_log_error(self, binary_file, monkeypatch, lock):
 
         pathToFile: Path = Path("pillow_decompressionbomb.log")
 
         def mock_open(*args, **kwargs):
             raise DecompressionBombError
 
-        
         monkeypatch.setattr(
             "digiarch.core.identify_files.isImagePreservable", mock_open
         )
@@ -319,7 +316,6 @@ class TestIsPreservable:
                 else:
                     continue
             assert False
-
 
     def test_decrompresionbomb_log_warning(
         self, binary_file, monkeypatch, lock

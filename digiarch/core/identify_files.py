@@ -219,11 +219,13 @@ def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
     else:
         return (True, None)
 
+
 def getPixelAmount(file_path: Path) -> int:
     with Image.open(file_path) as im:
         width, height = im.size
-        pixelAmount = width * height
+        pixelAmount: int = width * height
         return pixelAmount
+
 
 def isImagePreservable(file_path: Path) -> bool:
     pixel_amount = getPixelAmount(file_path)
@@ -231,7 +233,6 @@ def isImagePreservable(file_path: Path) -> bool:
         return False
     else:
         return True
-   
 
 
 def setup_logger() -> Logger:
@@ -249,21 +250,19 @@ def setup_logger() -> Logger:
     return logger
 
 
-def image_is_preservable(
-    file: ArchiveFile, lock: Lock, logger: Logger = None
-) -> bool:
+def image_is_preservable(file: ArchiveFile, lock: Lock) -> bool:
     # set up a log file to keep track of decompresion bombs
     # if no log file is passed (default behaviour)¨
     lock.acquire()
-    result = False
-    if logger is None:
-        logger: Logger = setup_logger()
+    result: bool = False
+    logger: Logger = setup_logger()
+
     if "ROOTPATH" in os.environ:
         file_path: Path = Path(os.environ["ROOTPATH"], file.relative_path)
     else:
         file_path = file.relative_path
     try:
-        result: bool = isImagePreservable(file_path)
+        result = isImagePreservable(file_path)
     except PIL.UnidentifiedImageError:
         print(f"PIL could not open the file: {file.relative_path}")
         result = True
@@ -285,13 +284,12 @@ def image_is_preservable(
         try:
             del log.Logger.manager.loggerDict["image_is_preservable"]
         except KeyError:
-            #Do nothing, the log manager has been deleted by a different process. 
+            # Do nothing, the log manager has been
+            # deleted by a different process.
             pass
         finally:
             lock.release()
             return result
-
-
 
 
 def update_file_info(

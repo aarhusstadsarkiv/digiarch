@@ -4,12 +4,10 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
-from logging import Logger
 from threading import Lock
 from typing import Tuple, Union
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from pathlib import Path
-from digiarch.core.identify_files import setup_logger
 import pytest
 import os
 import png
@@ -182,6 +180,7 @@ def python_wiki_binary_file(python_wiki):
 def lock() -> Lock:
     lock: Lock = Lock()
     return lock
+
 
 # HACK: This is the only way to delete the log- created in a threadsafe manner
 # If we set it up through an normal fixture with yield we get an win32 error
