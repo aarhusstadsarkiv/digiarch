@@ -5,7 +5,6 @@ import json
 import os
 
 from pathlib import Path
-from threading import Lock
 from PIL.Image import DecompressionBombError
 from PIL.Image import DecompressionBombWarning
 from subprocess import CalledProcessError
@@ -257,42 +256,45 @@ class TestCustomId:
 
 
 class TestIsPreservable:
-    def test_is_preservable_image_true(self, binary_file):
-        assert is_preservable(binary_file)[0] is True
+    def test_is_preservable_image_true(self, binary_file, get_log):
+        assert is_preservable(binary_file, get_log)[0] is True
 
-    def test_is_preservable_image_false(self, small_binary_file):
-        assert is_preservable(small_binary_file)[0] is False
+    def test_is_preservable_image_false(self, small_binary_file, get_log):
+        assert is_preservable(small_binary_file, get_log)[0] is False
 
     def test_is_preservable_binary_file_true(
-        self, python_wiki_binary_file: ArchiveFile
+        self, python_wiki_binary_file: ArchiveFile, get_log
     ):
-        assert is_preservable(python_wiki_binary_file)[0] is True
+        assert is_preservable(python_wiki_binary_file, get_log)[0] is True
 
     def test_is_preservable_binary_file_false(
-        self, very_small_binary_file: ArchiveFile
+        self, very_small_binary_file: ArchiveFile, get_log
     ):
-        assert is_preservable(very_small_binary_file)[0] is False
+        assert is_preservable(very_small_binary_file, get_log)[0] is False
 
     # All non binary (i.e. text) files are considered as preservable
     def test_is_preservable_non_binary_file(
-        self, non_binary_file: ArchiveFile
+        self, non_binary_file: ArchiveFile, get_log
     ):
-        assert is_preservable(non_binary_file)[0] is True
+        assert is_preservable(non_binary_file, get_log)[0] is True
 
     def test_image_is_preservable_on_pillow_exception(
-        self, very_small_binary_file
+        self, very_small_binary_file, lock, get_log
     ):
         """DocTest"""
         # If pillow cannot parse an image file, it should
         # still be marked as preservable
         # but looked at manually at some point.
-        lock: Lock = Lock()
-        assert image_is_preservable(very_small_binary_file, lock) is True
+        assert (
+            image_is_preservable(very_small_binary_file, lock, get_log) is True
+        )
 
     # GIVEN a too large file (mimmicked by a monkeypatch)
     # WHEN a decompressionbomberror is thrown
     # THEN a log file should be created and contain info about it
-    def test_decrompresionbomb_log_error(self, binary_file, monkeypatch, lock):
+    def test_decrompresionbomb_log_error(
+        self, binary_file, monkeypatch, lock, get_log
+    ):
 
         pathToFile: Path = Path("pillow_decompressionbomb.log")
 
@@ -302,7 +304,7 @@ class TestIsPreservable:
         monkeypatch.setattr(
             "digiarch.core.identify_files.isImagePreservable", mock_open
         )
-        image_is_preservable(binary_file, lock)
+        image_is_preservable(binary_file, lock, get_log)
 
         assert os.path.exists(pathToFile)
         with open(pathToFile, mode="r", encoding="utf-8") as file:
@@ -318,7 +320,7 @@ class TestIsPreservable:
             assert False
 
     def test_decrompresionbomb_log_warning(
-        self, binary_file, monkeypatch, lock
+        self, binary_file, monkeypatch, lock, get_log
     ):
 
         pathToFile: Path = Path("pillow_decompressionbomb.log")
@@ -330,7 +332,7 @@ class TestIsPreservable:
             "digiarch.core.identify_files.isImagePreservable", mock_open
         )
 
-        image_is_preservable(binary_file, lock)
+        image_is_preservable(binary_file, lock, get_log)
         assert os.path.exists(pathToFile)
         # The assertions are ugly and not best practice. They are used to
         # check multiple lines of the file, and if one of them contains the

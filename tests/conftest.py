@@ -6,8 +6,10 @@
 # -----------------------------------------------------------------------------
 from threading import Lock
 from typing import Tuple, Union
+from digiarch.cli import setup_logger
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from pathlib import Path
+from logging import Logger
 import pytest
 import os
 import png
@@ -182,10 +184,12 @@ def lock() -> Lock:
     return lock
 
 
-# HACK: This is the only way to delete the log- created in a threadsafe manner
-# If we set it up through an normal fixture with yield we get an win32 error
-# And we are not allowed to acces the file.
-@pytest.fixture(scope="session", autouse=True)
-def teardown_log():
-    yield
-    os.remove("pillow_decompressionbomb.log")
+# FIXME: For some reason, we end op with 2
+# error and warning statements. This indicates that the setup_logger
+# function is called more than once. Further more,
+# it is impossible to delete the log after the tests.
+# the os.remove function throws an WinError 32
+@pytest.fixture(scope="session")
+def get_log() -> Logger:
+    log: Logger = setup_logger()
+    return log

@@ -8,7 +8,6 @@ import json
 import re
 import subprocess
 import os
-import logging as log
 from logging import Logger
 from functools import partial
 from pathlib import Path
@@ -187,7 +186,7 @@ def is_binary(file: ArchiveFile) -> bool:
         return False
 
 
-def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
+def is_preservable(file: ArchiveFile, log: Logger) -> Tuple[bool, Any]:
     lock: Lock = Lock()  # Used by image_is_preservable
     image_format_codes = [
         "fmt/3",
@@ -207,7 +206,7 @@ def is_preservable(file: ArchiveFile) -> Tuple[bool, Any]:
         "x-fmt/391",
     ]
     if file.puid in image_format_codes:
-        if image_is_preservable(file, lock):
+        if image_is_preservable(file, lock, log):
             return (True, None)
         else:
             return (False, "Image contains less than 20000 pixels.")
@@ -235,27 +234,12 @@ def isImagePreservable(file_path: Path) -> bool:
         return True
 
 
-def setup_logger() -> Logger:
-    logger: Logger = log.getLogger("image_is_preservable")
-    file_handler = log.FileHandler(
-        "pillow_decompressionbomb.log", mode="a", encoding="utf-8"
-    )
-    log_fmt = log.Formatter(
-        fmt="%(asctime)s - %(levelname)s: %(message)s",
-        datefmt="%D %H:%M:%S",
-    )
-    file_handler.setFormatter(log_fmt)
-    logger.addHandler(file_handler)
-    logger.setLevel(log.INFO)
-    return logger
+def image_is_preservable(
+    file: ArchiveFile, lock: Lock, logger: Logger
+) -> bool:
 
-
-def image_is_preservable(file: ArchiveFile, lock: Lock) -> bool:
-    # set up a log file to keep track of decompresion bombs
-    # if no log file is passed (default behaviour)¨
     lock.acquire()
     result: bool = False
-    logger: Logger = setup_logger()
 
     if "ROOTPATH" in os.environ:
         file_path: Path = Path(os.environ["ROOTPATH"], file.relative_path)
@@ -281,15 +265,8 @@ def image_is_preservable(file: ArchiveFile, lock: Lock) -> bool:
         )
         result = True
     finally:
-        try:
-            del log.Logger.manager.loggerDict["image_is_preservable"]
-        except KeyError:
-            # Do nothing, the log manager has been
-            # deleted by a different process.
-            pass
-        finally:
-            lock.release()
-            return result
+        lock.release()
+        return result
 
 
 def update_file_info(
