@@ -116,21 +116,22 @@ def process(file_data: FileData) -> None:
         file_data.files = _files
 
 
-@cli.command()
-@click.pass_context
-@coro
-async def fix(ctx: Context) -> None:
-    """Fix file extensions - files should be identified first."""
-    file_data = ctx.obj
-    fixed = core.fix_extensions(file_data.files)
-    if fixed:
-        click.secho("Rebuilding file information...", bold=True)
-        new_files = core.identify(fixed, file_data.main_dir)
-        await file_data.db.update_files(new_files)
-        file_data.files = await file_data.db.get_files()
-        ctx.obj = file_data
-    else:
-        click.secho("Info: No file extensions to fix.", bold=True, fg="yellow")
+# @cli.command()
+# @click.pass_context
+# @coro
+# async def fix(ctx: Context) -> None:
+#     """Fix file extensions - files should be identified first."""
+#     file_data = ctx.obj
+#     fixed = core.fix_extensions(file_data.files)
+#     if fixed:
+#         click.secho("Rebuilding file information...", bold=True)
+#         new_files = core.identify(fixed, file_data.main_dir)
+#         await file_data.db.update_files(new_files)
+#         file_data.files = await file_data.db.get_files()
+#         ctx.obj = file_data
+#     else:
+#         click.secho("Info: No file extensions to fix.",
+#                       bold=True, fg="yellow")
 
 
 def setup_logger() -> Logger:
