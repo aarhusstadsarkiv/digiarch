@@ -115,6 +115,7 @@ def process(file_data: FileData) -> None:
         print("Finished identifying")
         file_data.files = _files
 
+
 @cli.command()
 @click.pass_context
 @coro
@@ -145,6 +146,7 @@ def setup_logger() -> Logger:
     logger.addHandler(file_handler)
     logger.setLevel(log.INFO)
     return logger
+
 
 def get_preservable_info(file_data: FileData) -> List[Dict]:
     log: Logger = setup_logger()
