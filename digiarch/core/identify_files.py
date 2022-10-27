@@ -5,7 +5,6 @@
 # Imports
 # -----------------------------------------------------------------------------
 import json
-import pdb
 import re
 import subprocess
 import os
@@ -148,7 +147,7 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
                 signature=signature_and_version or None,
                 warning=warning or None,
             )
-            # pdb.set_trace()
+
             if puid is None or puid in RUN_CUSTOM_FORMATS:
                 file_identification = custom_id(file_path, file_identification)
 
