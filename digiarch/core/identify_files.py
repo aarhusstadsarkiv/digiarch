@@ -24,6 +24,8 @@ from digiarch.exceptions import IdentificationError
 from PIL import Image
 from multiprocessing import Pool
 
+RUN_CUSTOM_FORMATS = ["fmt/111"]
+SIZE_OF_KILO_BYTE = 1024
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -47,14 +49,14 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
 
     with path.open("rb") as file_bytes:
         # BOF
-        bof = file_bytes.read(1024).hex()
+        bof = file_bytes.read(SIZE_OF_KILO_BYTE * 2).hex()
         # Navigate to EOF
         try:
             file_bytes.seek(-1024, 2)
         except OSError:
             # File too small :)
             file_bytes.seek(-file_bytes.tell(), 2)
-        eof = file_bytes.read(1024).hex()
+        eof = file_bytes.read(SIZE_OF_KILO_BYTE).hex()
 
     for sig in signatures:
         if "bof" in sig and "eof" in sig:
@@ -145,7 +147,8 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
                 signature=signature_and_version or None,
                 warning=warning or None,
             )
-            if puid is None:
+
+            if puid is None or puid in RUN_CUSTOM_FORMATS:
                 file_identification = custom_id(file_path, file_identification)
 
             # Possible MS Office files identified as markup (XML, HTML etc.)

@@ -151,5 +151,13 @@
         "puid": "aca-fmt/17",
         "signature": "MapInfo MAP file",
         "extension": ".MAP"
+    },
+
+    {
+        
+        "bof": "(?i)41007000700072006F0061006300680044006F006300",
+        "puid": "aca-fmt/18",
+        "signature": "Lotus Approach View File",
+        "extension": ".apr"
     }
 ]
