@@ -28,8 +28,6 @@ from PIL import Image
 from multiprocessing import Pool
 
 
-
-
 # ----------------------------------------------------------------------------
 # Redefinition of relevant warnings
 # ----------------------------------------------------------------------------

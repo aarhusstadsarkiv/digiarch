@@ -316,7 +316,7 @@ class TestIsPreservable:
         # same test method
         # second part of the test:
 
-        def mock_open(*args, **kwargs):
+        def mock_open(*args, **kwargs):  # type: ignore
             raise DecompressionBombWarning
 
         monkeypatch.setattr(
