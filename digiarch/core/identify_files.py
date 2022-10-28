@@ -24,7 +24,7 @@ from digiarch.exceptions import IdentificationError
 from PIL import Image
 from multiprocessing import Pool
 
-RUN_CUSTOM_FORMATS = ["fmt/111"]
+RUN_CUSTOM_FORMATS = ["fmt/111", "fmt/1600", "fmt/1730"]
 SIZE_OF_KILO_BYTE = 1024
 
 # -----------------------------------------------------------------------------
