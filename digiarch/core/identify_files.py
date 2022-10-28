@@ -8,6 +8,7 @@ import json
 import re
 import subprocess
 import os
+import warnings
 import logging as log
 from logging import Logger
 from functools import partial
@@ -27,7 +28,16 @@ from PIL import Image
 from multiprocessing import Pool
 
 
-# -----------------------------------------------------------------------------
+
+
+# ----------------------------------------------------------------------------
+# Redefinition of relevant warnings
+# ----------------------------------------------------------------------------
+
+warnings.filterwarnings("error", category=Image.DecompressionBombWarning)
+
+
+# ------------------------------------------------------------------------------
 # Function Definitions
 # -----------------------------------------------------------------------------
 
@@ -232,6 +242,7 @@ def image_is_preservable(
     file: ArchiveFile,
 ) -> bool:
     # set up a log file to keep track of decompresion bombs
+
     logger: Logger = log.getLogger("image_is_preservable")
     file_handler = log.FileHandler(
         "pillow_decompressionbomb.log", mode="w", encoding="utf-8"
