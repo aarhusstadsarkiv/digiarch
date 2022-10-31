@@ -21,8 +21,8 @@ from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
 
 
-# formats that we test against our own formats, no matter that Siegfried already
-# identified them.
+# formats that we test against our own formats, no matter that Siegfried
+# already identified them.
 RERUN_FORMATS = [
     "fmt/111",  # why do we re-run these?
     "x-fmt/111",  # .TAB-files related to GIS is identified as plaintext
