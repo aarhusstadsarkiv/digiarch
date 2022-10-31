@@ -24,10 +24,14 @@ from digiarch.exceptions import IdentificationError
 from PIL import Image
 from multiprocessing import Pool
 
+
 RERUN_FORMATS = [
     "fmt/111",  # why do we re-run these?
     "x-fmt/111",  # .TAB-files related to GIS is identified as plaintext
+    "fmt/1600",  # Both fmt/1600 and fmt/1630 identify .dat-files in extension
+    "fmt/1730",  # only, which is a bad idea. They are sometimes winmail.dat
 ]
+
 SIZE_OF_KILO_BYTE = 1024
 
 # -----------------------------------------------------------------------------
