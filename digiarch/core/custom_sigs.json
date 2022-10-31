@@ -1,5 +1,4 @@
 [
-
     {
         "bof": "(?i)^576F726450726F0DFB000000000000000005985C8172030040CCC1BFFFBDF970",
         "puid": "x-fmt/340",
@@ -42,7 +41,6 @@
         "signature": "Lotus Approach Index File",
         "extension": ".adx"
     },
-
     {
         "bof": "(?i)^1a000004000029000000",
         "eof": "(?i)bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
@@ -51,7 +49,6 @@
         "signature": "Lotus Notes Database",
         "extension": ".nsf"
     },
-
     {
         "bof": "(?i)4D696E644d616E61676572",
         "puid": "aca-fmt/4",
@@ -65,99 +62,88 @@
         "signature": "ID File",
         "extension": ".id"
     },
-
     {
         "bof": "(?i)474946383961",
         "puid": "fmt/4",
         "signature": "GIF 1989a",
         "extension": ".gif"
     },
-
     {
         "bof": "(?i)010690080004000000000001000100010790060008000000E404000000000000E80001088007001800000049504D2E4D6963726F736F6674204D61696C2E4E6F746500310801",
         "puid": "aca-fmt/9",
         "signature": "Microsoft email attachments archive (winmail)",
         "extension": ".dat"
     },
-
-
     {
         "bof": "(?i)010690080004000000000001000100010790060008000000E404000000000000E800010",
         "puid": "aca-fmt/9",
         "signature": "Microsoft email attachments archive (winmail)",
         "extension": ".dat"
     },
-
     {
         "bof": "(?i)^789F3E22",
         "puid": "aca-fmt/9",
         "signature": "Microsoft email attachments archive (winmail)",
         "extension": ".dat"
     },
-
     {
         "bof": "(?i)41636365737356657273696F6E.{0,1024}30362E",
         "puid": "aca-fmt/10",
         "signature": "MS Access 95",
         "extension": ".mdb"
     },
-
     {
         "bof": "(?i)41636365737356657273696F6E.{0,1024}30372E",
         "puid": "aca-fmt/11",
         "signature": "MS Access 97",
         "extension": ".mdb"
     },
-
-
     {
         "bof": "(?i)410063006300650073007300560065007200730069006F006E.{0,2048}300038002E00",
         "puid": "aca-fmt/12",
         "signature": "MS Access 2000",
         "extension": ".mdb"
     },
-
     {
         "bof": "(?i)410063006300650073007300560065007200730069006F006E.{0,2048}300039002E00",
         "puid": "aca-fmt/13",
         "signature": "MS Access 2002/3",
         "extension": ".mdb"
     },
-
     {
         "bof": "(?i)^000100005374616E64617264204A65742044420000000000",
         "puid": "aca-fmt/14",
         "signature": "MS Access database unspecified version (Jet 3 DB)",
         "extension": ".mdb"
     },
-
     {
         "bof": "(?i)^000100005374616E64617264204A65742044420001000000",
         "puid": "aca-fmt/15",
         "signature": "MS Access database unspecified version (Jet 4 DB)",
         "extension": ".mdb"
     },
-
     {
         "bof": "(?i)000100005374616E646172642041434520444200",
         "puid": "aca-fmt/16",
         "signature": "MS Access database unspecified version (ACE DB)",
         "extension": ".mdb"
     },
-
     {
-        
-        "bof": "(?i)00A0E150E161BA2A6AB1A2A2FA5A9B5A7B5D90F1723131F2B0F17234F57639CA4A9A0A8ADA4A8AD161A390D1137A5A9B5A4A8ADB2B6DCBDBDF42B2F55C8CCD8C7CBD0D3D7FDC2C2F90",
+        "bof": "(?i)00A0E150E161BA2A6AB1A2A2FA5A9B5A7B5D90F1723131F2B0F17234F57639CA4A9A0A8ADA4A8AD161A390D1137",
         "puid": "aca-fmt/17",
         "signature": "MapInfo MAP file",
-        "extension": ".MAP"
+        "extension": ".map"
     },
-
     {
-        
         "bof": "(?i)41007000700072006F0061006300680044006F006300",
         "puid": "aca-fmt/18",
         "signature": "Lotus Approach View File",
         "extension": ".apr"
+    },
+    {
+        "bof": "(?i)^217461626C650D0A2176657273696F6E.{20,512}446566696E6974696F6E205461626C65",
+        "puid": "aca-fmt/19",
+        "signature": "MapInfo TAB file",
+        "extension": ".tab"
     }
 ]

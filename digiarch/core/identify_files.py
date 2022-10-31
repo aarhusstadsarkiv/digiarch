@@ -24,7 +24,14 @@ from digiarch.exceptions import IdentificationError
 from PIL import Image
 from multiprocessing import Pool
 
-RUN_CUSTOM_FORMATS = ["fmt/111", "fmt/1600", "fmt/1730"]
+
+RERUN_FORMATS = [
+    "fmt/111",  # why do we re-run these?
+    "x-fmt/111",  # .TAB-files related to GIS is identified as plaintext
+    "fmt/1600",  # Both fmt/1600 and fmt/1630 identify .dat-files in extension
+    "fmt/1730",  # only, which is a bad idea. They are sometimes winmail.dat
+]
+
 SIZE_OF_KILO_BYTE = 1024
 
 # -----------------------------------------------------------------------------
@@ -37,10 +44,13 @@ def update_file_id(
 ) -> None:
     file_id.puid = signature["puid"]
     file_id.signature = signature["signature"]
-    if path.suffix.lower() != signature["extension"]:
+    if path.suffix.lower() != signature["extension"].lower():
         file_id.warning = "Extension mismatch"
     else:
         file_id.warning = None
+
+
+# def is_gis_file(file_path: Path) -> bool:
 
 
 def custom_id(path: Path, file_id: Identification) -> Identification:
@@ -148,7 +158,12 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
                 warning=warning or None,
             )
 
-            if puid is None or puid in RUN_CUSTOM_FORMATS:
+            # unindentified files
+            if puid is None:
+                file_identification = custom_id(file_path, file_identification)
+
+            # re-identify files, warnings or not!
+            if puid in RERUN_FORMATS:
                 file_identification = custom_id(file_path, file_identification)
 
             # Possible MS Office files identified as markup (XML, HTML etc.)
@@ -157,6 +172,7 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
                 and "Extension mismatch" in warning
             ):
                 file_identification = custom_id(file_path, file_identification)
+
             id_dict.update({file_path: file_identification})
 
     return id_dict
