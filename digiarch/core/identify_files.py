@@ -40,7 +40,7 @@ def update_file_id(
 ) -> None:
     file_id.puid = signature["puid"]
     file_id.signature = signature["signature"]
-    if path.suffix.lower() != signature["extension"]:
+    if path.suffix.lower() != signature["extension"].lower():
         file_id.warning = "Extension mismatch"
     else:
         file_id.warning = None
