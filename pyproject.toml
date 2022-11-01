@@ -8,6 +8,7 @@ readme = "README.md"
 homepage = "https://stadsarkiv.aarhus.dk/"
 repository = "https://github.com/aarhusstadsarkiv/digiarch"
 keywords = ["archiving", "preservation", "identification"]
+include = ["pyproject.toml"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
