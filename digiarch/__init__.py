@@ -1,5 +1,18 @@
 # This is how to get version information
 # NB! Doesn't work with pyinstaller
 # from importlib.metadata import version  # type: ignore
+from pathlib import Path
 
-__version__ = "0.9.18"  # version("digiarch")
+
+def get_version() -> str:
+    version: str = "Ukendt version"
+    file: str = "pyproject.toml"
+    with open(Path(__file__).absolute().parent.parent / file) as i:
+        for line in i.readlines():
+            if line.startswith("version"):
+                version = line[line.index('"') + 1 : -2]
+    return version
+
+
+# __version__ = "0.9.18"
+__version__ = get_version()

@@ -1,9 +1,6 @@
 """Identify files using
 `siegfried <https://github.com/richardlehane/siegfried>`
 """
-# -----------------------------------------------------------------------------
-# Imports
-# -----------------------------------------------------------------------------
 import json
 import re
 import subprocess
@@ -13,30 +10,26 @@ from pathlib import Path
 from typing import Any, Tuple
 from typing import Dict
 from typing import List
-
-import PIL
-
-from digiarch.core.ArchiveFileRel import ArchiveFile
-from acamodels import Identification
-
-from digiarch.core.utils import natsort_path
-from digiarch.exceptions import IdentificationError
-from PIL import Image
 from multiprocessing import Pool
 
+from PIL import Image
+import PIL
+from acamodels import Identification
 
+from digiarch.core.ArchiveFileRel import ArchiveFile
+from digiarch.core.utils import natsort_path
+from digiarch.exceptions import IdentificationError
+
+
+# formats that we test against our own formats, no matter that Siegfried
+# already identified them.
 RERUN_FORMATS = [
     "fmt/111",  # why do we re-run these?
     "x-fmt/111",  # .TAB-files related to GIS is identified as plaintext
     "fmt/1600",  # Both fmt/1600 and fmt/1630 identify .dat-files in extension
     "fmt/1730",  # only, which is a bad idea. They are sometimes winmail.dat
 ]
-
 SIZE_OF_KILO_BYTE = 1024
-
-# -----------------------------------------------------------------------------
-# Function Definitions
-# -----------------------------------------------------------------------------
 
 
 def update_file_id(
@@ -48,9 +41,6 @@ def update_file_id(
         file_id.warning = "Extension mismatch"
     else:
         file_id.warning = None
-
-
-# def is_gis_file(file_path: Path) -> bool:
 
 
 def custom_id(path: Path, file_id: Identification) -> Identification:
