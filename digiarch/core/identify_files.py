@@ -25,12 +25,9 @@ from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
 from PIL import Image
 from multiprocessing import Pool
+import warnings
 
-
-# -----------------------------------------------------------------------------
-# Function Definitions
-# -----------------------------------------------------------------------------
-
+warnings.filterwarnings("error", category=Image.DecompressionBombWarning)
 
 def update_file_id(
     path: Path, file_id: Identification, signature: Dict[str, str]
