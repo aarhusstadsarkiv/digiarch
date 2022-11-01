@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "0.9.18"
+version = "0.9.22"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Aryan Muhammadi Landi <arml@aarhus.dk>", "Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -8,6 +8,7 @@ readme = "README.md"
 homepage = "https://stadsarkiv.aarhus.dk/"
 repository = "https://github.com/aarhusstadsarkiv/digiarch"
 keywords = ["archiving", "preservation", "identification"]
+include = ["pyproject.toml"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
