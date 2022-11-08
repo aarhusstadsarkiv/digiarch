@@ -5,25 +5,24 @@ import json
 import re
 import subprocess
 import os
+import PIL
+import warnings
 from logging import Logger
 from functools import partial
 from pathlib import Path
 from threading import Lock
+from PIL import Image
 from typing import Any, Tuple
 from typing import Dict
 from typing import List
 from multiprocessing import Pool
 
-from PIL import Image
-import PIL
 from acamodels import Identification
 
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
-from PIL import Image
-from multiprocessing import Pool
-import warnings
+
 
 warnings.filterwarnings("error", category=Image.DecompressionBombWarning)
 
