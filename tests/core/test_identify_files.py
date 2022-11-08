@@ -2,7 +2,11 @@
 # Imports
 # -----------------------------------------------------------------------------
 import json
+import os
 
+from pathlib import Path
+from PIL.Image import DecompressionBombError
+from PIL.Image import DecompressionBombWarning
 from subprocess import CalledProcessError
 from unittest.mock import patch
 
@@ -18,6 +22,7 @@ from digiarch.core.identify_files import identify
 from digiarch.core.identify_files import sf_id
 from digiarch.core.identify_files import is_binary
 from digiarch.exceptions import IdentificationError
+
 
 # -----------------------------------------------------------------------------
 # Tests
@@ -280,3 +285,48 @@ class TestIsPreservable:
         # still be marked as preservable
         # but looked at manually at some point.
         assert image_is_preservable(very_small_binary_file) is True
+
+    # GIVEN a too large file (mimmicked by a monkeypatch)
+    # WHEN a decompressionbomberror is thrown
+    # THEN a log file should be created and contain info about it
+    def test_decrompresionbomb_log_error(self, binary_file, monkeypatch):
+
+        pathToFile: Path = Path("pillow_decompressionbomb.log")
+
+        def mock_open(*args, **kwargs):
+            raise DecompressionBombError
+
+        monkeypatch.setattr(
+            "digiarch.core.identify_files.open_image_file", mock_open
+        )
+        image_is_preservable(binary_file)
+        assert os.path.exists(pathToFile)
+        with open(pathToFile, mode="r") as file:
+            line = file.readline()
+            assert (
+                "ERROR: The file image_file.png threw "
+                "a decompresionbomb error\n" in line
+            )
+        file.close()
+        # this should be two test. But they need to run
+        # sequentially, otherwise they try to
+        # edit the same file at the same time. This is a
+        # workaround, where we force them to
+        # run sequentially by having them be in the
+        # same test method
+        # second part of the test:
+
+        def mock_open(*args, **kwargs):  # type: ignore
+            raise DecompressionBombWarning
+
+        monkeypatch.setattr(
+            "digiarch.core.identify_files.open_image_file", mock_open
+        )
+
+        image_is_preservable(binary_file)
+        with open(pathToFile, mode="r") as file:
+            line = file.readline()
+            assert (
+                "WARNING: The file image_file.png threw a"
+                " decompresionbomb warning\n" in line
+            )
