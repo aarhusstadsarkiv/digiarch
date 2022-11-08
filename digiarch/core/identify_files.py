@@ -1,9 +1,6 @@
 """Identify files using
 `siegfried <https://github.com/richardlehane/siegfried>`
 """
-# -----------------------------------------------------------------------------
-# Imports
-# -----------------------------------------------------------------------------
 import json
 import re
 import subprocess
@@ -15,12 +12,13 @@ from threading import Lock
 from typing import Any, Tuple
 from typing import Dict
 from typing import List
+from multiprocessing import Pool
 
+from PIL import Image
 import PIL
-
-from digiarch.core.ArchiveFileRel import ArchiveFile
 from acamodels import Identification
 
+from digiarch.core.ArchiveFileRel import ArchiveFile
 from digiarch.core.utils import natsort_path
 from digiarch.exceptions import IdentificationError
 from PIL import Image
@@ -30,12 +28,23 @@ import warnings
 warnings.filterwarnings("error", category=Image.DecompressionBombWarning)
 
 
+# formats that we test against our own formats, no matter that Siegfried
+# already identified them.
+RERUN_FORMATS = [
+    "fmt/111",  # why do we re-run these?
+    "x-fmt/111",  # .TAB-files related to GIS is identified as plaintext
+    "fmt/1600",  # Both fmt/1600 and fmt/1630 identify .dat-files in extension
+    "fmt/1730",  # only, which is a bad idea. They are sometimes winmail.dat
+]
+SIZE_OF_KILO_BYTE = 1024
+
+
 def update_file_id(
     path: Path, file_id: Identification, signature: Dict[str, str]
 ) -> None:
     file_id.puid = signature["puid"]
     file_id.signature = signature["signature"]
-    if path.suffix.lower() != signature["extension"]:
+    if path.suffix.lower() != signature["extension"].lower():
         file_id.warning = "Extension mismatch"
     else:
         file_id.warning = None
@@ -47,14 +56,14 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
 
     with path.open("rb") as file_bytes:
         # BOF
-        bof = file_bytes.read(1024).hex()
+        bof = file_bytes.read(SIZE_OF_KILO_BYTE * 2).hex()
         # Navigate to EOF
         try:
             file_bytes.seek(-1024, 2)
         except OSError:
             # File too small :)
             file_bytes.seek(-file_bytes.tell(), 2)
-        eof = file_bytes.read(1024).hex()
+        eof = file_bytes.read(SIZE_OF_KILO_BYTE).hex()
 
     for sig in signatures:
         if "bof" in sig and "eof" in sig:
@@ -145,7 +154,13 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
                 signature=signature_and_version or None,
                 warning=warning or None,
             )
+
+            # unindentified files
             if puid is None:
+                file_identification = custom_id(file_path, file_identification)
+
+            # re-identify files, warnings or not!
+            if puid in RERUN_FORMATS:
                 file_identification = custom_id(file_path, file_identification)
 
             # Possible MS Office files identified as markup (XML, HTML etc.)
@@ -154,6 +169,7 @@ def sf_id(path: Path) -> Dict[Path, Identification]:
                 and "Extension mismatch" in warning
             ):
                 file_identification = custom_id(file_path, file_identification)
+
             id_dict.update({file_path: file_identification})
 
     return id_dict
