@@ -155,7 +155,7 @@ class FileDB(Database):
         query = self.files.select()
         rows = await self.fetch_all(query)
         try:
-            files = parse_obj_as(List[ArchiveFile], rows)
+            files: List[ArchiveFile] = parse_obj_as(List[ArchiveFile], rows)
         except ValidationError:
             raise FileParseError(
                 """Failed to parse files as ArchiveFiles.
