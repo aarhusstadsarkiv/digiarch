@@ -6,7 +6,6 @@ import re
 import subprocess
 import os
 import warnings
-import logging as log
 from logging import Logger
 from functools import partial
 from pathlib import Path
