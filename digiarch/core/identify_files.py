@@ -5,12 +5,13 @@ import json
 import re
 import subprocess
 import os
-import PIL
 import warnings
+import logging as log
 from logging import Logger
 from functools import partial
 from pathlib import Path
 from threading import Lock
+import PIL
 from PIL import Image
 from typing import Any, Tuple
 from typing import Dict
