@@ -4,7 +4,7 @@ on: [pull_request]
 
 jobs:
   call-linting-from-utils:
-    uses: aarhusstadsarkiv/acautils/.github/workflows/linting.yml@073c8a34410576650737df4e711ea0dbd94d5713
+    uses: aarhusstadsarkiv/acautils/.github/workflows/linting.yml@main
 
   test:
     name: Run tests & get coverage
