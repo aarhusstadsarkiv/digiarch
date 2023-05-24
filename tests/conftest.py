@@ -4,9 +4,12 @@
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
+from threading import Lock
 from typing import Tuple, Union
+from digiarch.cli import setup_logger
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from pathlib import Path
+from logging import Logger
 import pytest
 import os
 import png
@@ -173,3 +176,20 @@ def python_wiki_binary_file(python_wiki):
         is_binary=True,
     )
     return larger_binary_file
+
+
+@pytest.fixture(scope="session")
+def lock() -> Lock:
+    lock: Lock = Lock()
+    return lock
+
+
+# FIXME: For some reason, we end op with 2
+# error and warning statements. This indicates that the setup_logger
+# function is called more than once. Further more,
+# it is impossible to delete the log after the tests.
+# the os.remove function throws an WinError 32
+@pytest.fixture(scope="session")
+def get_log() -> Logger:
+    log: Logger = setup_logger()
+    return log

@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any, Dict
 from typing import Callable
 from typing import List
+import logging as log
+from logging import Logger
 
 import click
 from click.core import Context
@@ -114,12 +116,46 @@ def process(file_data: FileData) -> None:
         file_data.files = _files
 
 
+# @cli.command()
+# @click.pass_context
+# @coro
+# async def fix(ctx: Context) -> None:
+#     """Fix file extensions - files should be identified first."""
+#     file_data = ctx.obj
+#     fixed = core.fix_extensions(file_data.files)
+#     if fixed:
+#         click.secho("Rebuilding file information...", bold=True)
+#         new_files = core.identify(fixed, file_data.main_dir)
+#         await file_data.db.update_files(new_files)
+#         file_data.files = await file_data.db.get_files()
+#         ctx.obj = file_data
+#     else:
+#         click.secho("Info: No file extensions to fix.",
+#                       bold=True, fg="yellow")
+
+
+def setup_logger() -> Logger:
+    logger: Logger = log.getLogger("image_is_preservable")
+    file_handler = log.FileHandler(
+        "pillow_decompressionbomb.log", mode="a", encoding="utf-8"
+    )
+    log_fmt = log.Formatter(
+        fmt="%(asctime)s - %(levelname)s: %(message)s",
+        datefmt="%D %H:%M:%S",
+    )
+    file_handler.setFormatter(log_fmt)
+    logger.addHandler(file_handler)
+    logger.setLevel(log.INFO)
+    return logger
+
+
 def get_preservable_info(file_data: FileData) -> List[Dict]:
+    log: Logger = setup_logger()
     information = []
 
     for file in file_data.files:
         preservable_info: Dict[str, Any] = {}
-        preservable = is_preservable(file)
+        preservable = is_preservable(file, log)
         if preservable[0] is False:
             preservable_info["uuid"] = str(file.uuid)
             preservable_info["ignore reason"] = preservable[1]
