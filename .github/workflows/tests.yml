@@ -40,9 +40,5 @@ jobs:
           sf -update
       - name: Test and generate coverage report
         run: |
-          poetry run pytest --cov=digiarch --cov-report=xml
-      - name: Upload to codecov
-        uses: codecov/codecov-action@v3
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          fail_ci_if_error: true
+          poetry run coverage run -m pytest
+          poetry run coverage report -m --fail-under=80 --skip-empty --skip-covered
