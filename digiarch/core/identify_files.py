@@ -232,15 +232,15 @@ def is_preservable(file: ArchiveFile, log: Logger) -> Tuple[bool, Any]:
         return (True, None)
 
 
-def getPixelAmount(file_path: Path) -> int:
+def get_pixel_amount(file_path: Path) -> int:
     with Image.open(file_path) as im:
         width, height = im.size
         pixelAmount: int = width * height
         return pixelAmount
 
 
-def isImagePreservable(file_path: Path) -> bool:
-    pixel_amount = getPixelAmount(file_path)
+def check_if_preservable(file_path: Path) -> bool:
+    pixel_amount = get_pixel_amount(file_path)
     if pixel_amount < 20000:
         return False
     else:
@@ -259,7 +259,7 @@ def image_is_preservable(
     else:
         file_path = file.relative_path
     try:
-        result = isImagePreservable(file_path)
+        result = check_if_preservable(file_path)
     except PIL.UnidentifiedImageError:
         print(f"PIL could not open the file: {file.relative_path}")
         result = True
