@@ -20,7 +20,7 @@ from multiprocessing import Pool
 from acamodels import Identification
 
 from digiarch.core.ArchiveFileRel import ArchiveFile
-from digiarch.core.utils import natsort_path
+from digiarch.core.utils import costum_sigs, natsort_path, to_re_identify
 from digiarch.exceptions import IdentificationError
 
 
@@ -29,12 +29,7 @@ warnings.filterwarnings("error", category=Image.DecompressionBombWarning)
 
 # formats that we test against our own formats, no matter that Siegfried
 # already identified them.
-RERUN_FORMATS = [
-    "fmt/111",  # why do we re-run these?
-    "x-fmt/111",  # .TAB-files related to GIS is identified as plaintext
-    "fmt/1600",  # Both fmt/1600 and fmt/1630 identify .dat-files in extension
-    "fmt/1730",  # only, which is a bad idea. They are sometimes winmail.dat
-]
+RERUN_FORMATS = to_re_identify()
 SIZE_OF_KILO_BYTE = 1024
 
 
@@ -50,9 +45,8 @@ def update_file_id(
 
 
 def custom_id(path: Path, file_id: Identification) -> Identification:
-    sig_file = Path(__file__).parent / "custom_sigs.json"
-    signatures: List[Dict] = json.load(sig_file.open(encoding="utf-8"))
-
+    signatures: list[dict] = costum_sigs()
+    
     with path.open("rb") as file_bytes:
         # BOF
         bof = file_bytes.read(SIZE_OF_KILO_BYTE * 2).hex()

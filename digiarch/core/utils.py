@@ -2,7 +2,10 @@
 # Imports
 # -----------------------------------------------------------------------------
 
+from functools import lru_cache
 from typing import List
+
+import httpx
 
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from natsort import natsorted
@@ -51,3 +54,43 @@ def natsort_path(file_list: List[ArchiveFile]) -> List[ArchiveFile]:
     )
 
     return sorted_file_list
+
+@lru_cache()
+def to_re_identify() -> dict[str,str]:
+    """Gets the json file with the different formats that we wish to reidentify.
+
+    Is kept updated on the reference-files repo. The function caches the result,
+    soo multiple calls in the same run should not be an issue.
+    """
+    response: httpx.Response = httpx.get(
+        "https://raw.githubusercontent.com/aarhusstadsarkiv/reference-files/main/to_reidentify.json",
+    )
+    if response.status_code != 200:
+        raise ConnectionError
+    
+    re_identify_map: dict[str, str] = response.json()
+    
+    if re_identify_map is None:
+        raise ConnectionError
+   
+    return re_identify_map
+
+@lru_cache()
+def costum_sigs() -> list[dict]:
+    """Gets the json file with our own costum formats in a list.
+
+    Is kept updated on the reference-files repo. The function caches the result,
+    soo multiple calls in the same run should not be an issue.
+    """
+    response: httpx.Response = httpx.get(
+        "https://raw.githubusercontent.com/aarhusstadsarkiv/reference-files/main/custom_signatures.json",
+    )
+    if response.status_code != 200:
+        raise ConnectionError
+    
+    re_identify_map: list[dict] = response.json()
+    
+    if re_identify_map is None:
+        raise ConnectionError
+   
+    return re_identify_map
