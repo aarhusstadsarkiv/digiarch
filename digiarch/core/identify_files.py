@@ -38,8 +38,7 @@ def update_file_id(path: Path, file_id: Identification, signature: dict[str, str
 
 
 def custom_id(path: Path, file_id: Identification) -> Identification:
-    sig_file = Path(__file__).parent / "custom_sigs.json"
-    signatures: list[dict] = json.load(sig_file.open(encoding="utf-8"))
+    signatures: list[dict] = costum_sigs()
 
     with path.open("rb") as file_bytes:
         # BOF

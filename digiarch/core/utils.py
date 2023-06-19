@@ -55,8 +55,9 @@ def natsort_path(file_list: list[ArchiveFile]) -> list[ArchiveFile]:
 
     return sorted_file_list
 
-@lru_cache()
-def to_re_identify() -> dict[str,str]:
+
+@lru_cache
+def to_re_identify() -> dict[str, str]:
     """Gets the json file with the different formats that we wish to reidentify.
 
     Is kept updated on the reference-files repo. The function caches the result,
@@ -72,10 +73,11 @@ def to_re_identify() -> dict[str,str]:
 
     if re_identify_map is None:
         raise ConnectionError
-   
+
     return re_identify_map
 
-@lru_cache()
+
+@lru_cache
 def costum_sigs() -> list[dict]:
     """Gets the json file with our own costum formats in a list.
 
@@ -87,10 +89,10 @@ def costum_sigs() -> list[dict]:
     )
     if response.status_code != 200:
         raise ConnectionError
-    
+
     re_identify_map: list[dict] = response.json()
-    
+
     if re_identify_map is None:
         raise ConnectionError
-   
+
     return re_identify_map
