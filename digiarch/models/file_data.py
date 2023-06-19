@@ -3,14 +3,12 @@
 # -----------------------------------------------------------------------------
 from pathlib import Path
 from typing import Any
-from typing import Dict
-from typing import List
 
 from acamodels import ACABase
+from pydantic import Field, root_validator
+
 from digiarch.core.ArchiveFileRel import ArchiveFile
 from digiarch.database import FileDB
-from pydantic import Field
-from pydantic import root_validator
 
 # -----------------------------------------------------------------------------
 # Model
@@ -21,13 +19,13 @@ class FileData(ACABase):
     main_dir: Path
     data_dir: Path = Field(None)
     db: FileDB = Field(None)
-    files: List[ArchiveFile]
+    files: list[ArchiveFile]
 
     class Config:
         arbitrary_types_allowed = True
 
     @root_validator
-    def create_dir(cls, fields: Dict[Any, Any]) -> Dict[Any, Any]:
+    def create_dir(cls, fields: dict[Any, Any]) -> dict[Any, Any]:
         main_dir = fields.get("main_dir")
         data_dir = fields.get("data_dir")
         db = fields.get("db")

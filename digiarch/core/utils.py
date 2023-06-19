@@ -2,13 +2,13 @@
 # Imports
 # -----------------------------------------------------------------------------
 
+
 from functools import lru_cache
-from typing import List
 
 import httpx
+from natsort import natsorted
 
 from digiarch.core.ArchiveFileRel import ArchiveFile
-from natsort import natsorted
 
 # -----------------------------------------------------------------------------
 # Utility functions
@@ -23,7 +23,7 @@ def size_fmt(size: float) -> str:
     size : float
         The file size in bytes.
 
-    Returns
+    Returns:
     -------
     str
         Human readable string representing size in binary multiples.
@@ -35,7 +35,7 @@ def size_fmt(size: float) -> str:
     return f"{size:.1f} {unit}"
 
 
-def natsort_path(file_list: List[ArchiveFile]) -> List[ArchiveFile]:
+def natsort_path(file_list: list[ArchiveFile]) -> list[ArchiveFile]:
     """Naturally sort a list of FileInfo objects by their paths.
 
     Parameters
@@ -43,14 +43,14 @@ def natsort_path(file_list: List[ArchiveFile]) -> List[ArchiveFile]:
     file_list : List[FileInfo]
         The list of FileInfo objects to be sorted.
 
-    Returns
+    Returns:
     -------
     List[ArchiveFile]
         The list of FileInfo objects naturally sorted by their path.
     """
-
-    sorted_file_list: List[ArchiveFile] = natsorted(
-        file_list, key=lambda archive_file: str(archive_file.relative_path)
+    sorted_file_list: list[ArchiveFile] = natsorted(
+        file_list,
+        key=lambda archive_file: str(archive_file.relative_path),
     )
 
     return sorted_file_list
@@ -67,9 +67,9 @@ def to_re_identify() -> dict[str,str]:
     )
     if response.status_code != 200:
         raise ConnectionError
-    
+
     re_identify_map: dict[str, str] = response.json()
-    
+
     if re_identify_map is None:
         raise ConnectionError
    

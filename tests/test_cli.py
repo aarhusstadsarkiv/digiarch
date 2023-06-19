@@ -2,18 +2,16 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-import pytest
-from click.testing import CliRunner
-from digiarch import core
-from digiarch.cli import cli
-from digiarch.cli import get_preservable_info
-from digiarch.database import db
-from digiarch.exceptions import FileCollectionError
-from digiarch.exceptions import FileParseError
-from digiarch.exceptions import IdentificationError
 import os
 from pathlib import Path
 
+import pytest
+from click.testing import CliRunner
+
+from digiarch import core
+from digiarch.cli import cli, get_preservable_info
+from digiarch.database import db
+from digiarch.exceptions import FileCollectionError, FileParseError, IdentificationError
 from digiarch.models import FileData
 
 # -----------------------------------------------------------------------------
@@ -21,12 +19,12 @@ from digiarch.models import FileData
 # -----------------------------------------------------------------------------
 
 
-@pytest.fixture
+@pytest.fixture()
 def cli_run():
     return CliRunner()
 
 
-@pytest.fixture
+@pytest.fixture()
 def file_data():
     _file_data: FileData = FileData(main_dir=Path.cwd(), files=[])
     yield _file_data
@@ -43,7 +41,7 @@ def file_data():
 class TestCli:
     """Class for testing the `cli` function."""
 
-    def test_cli_valid(self, cli_run, temp_dir):
+    def test_cli_valid(self, cli_run):
         with cli_run.isolated_filesystem():
             os.environ["ROOTPATH"] = str(Path.cwd())
             testdir = Path.cwd() / "testdir"
@@ -55,7 +53,9 @@ class TestCli:
 
     def test_cli_invalid(self, cli_run):
         """The cli is run with an invalid path as argument.
-        This should fail horribly, i.e. exit code != 0."""
+
+        This should fail horribly, i.e. exit code != 0.
+        """
         with cli_run.isolated_filesystem():
             args = ["/fail/"]
             result = cli_run.invoke(cli, args)
@@ -81,8 +81,7 @@ class TestCli:
             assert "Error: File Parse Error" in result.output
 
     def test_cli_echos(self, cli_run, temp_dir, monkeypatch):
-        """Runs the CLI with empty directories, multiple files, and
-        an already existing database."""
+        """Runs the CLI with empty directories, multiple files, and an already existing database."""
         args = [str(temp_dir)]
         with cli_run.isolated_filesystem():
             # Create an empty directory
@@ -98,10 +97,7 @@ class TestCli:
             file_1.touch()
             file_2.touch()
             result = cli_run.invoke(cli, args)
-            assert (
-                "Warning! Some directories have multiple files!"
-                in result.output
-            )
+            assert "Warning! Some directories have multiple files!" in result.output
 
         with cli_run.isolated_filesystem():
             # File database has data
@@ -131,7 +127,7 @@ class TestOptions:
 
 
 class TestCommands:
-    def test_process(self, cli_run, temp_dir, monkeypatch):
+    def test_process(self, cli_run, monkeypatch):
         def id_error(*args):
             raise IdentificationError("Identification Error")
 
@@ -160,6 +156,4 @@ class TestPreservableInfo:
         information = get_preservable_info(file_data)
         assert len(information) == 1
         assert information[0]["uuid"] == str(very_small_binary_file.uuid)
-        assert (
-            information[0]["ignore reason"] == "Binary file is less than 1 kb."
-        )
+        assert information[0]["ignore reason"] == "Binary file is less than 1 kb."
