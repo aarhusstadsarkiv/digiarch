@@ -1,21 +1,20 @@
-"""File database backend"""
+"""File database backend."""
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
 import re
 from pathlib import Path
-from typing import Any, Dict
-from typing import List
+from typing import Any
 
 import sqlalchemy as sql
-from digiarch.core.ArchiveFileRel import ArchiveFile
 from databases import Database
-from digiarch.exceptions import FileParseError
-from digiarch.models.metadata import Metadata
-from pydantic import parse_obj_as
-from pydantic import ValidationError
+from pydantic import ValidationError, parse_obj_as
 from sqlalchemy.exc import OperationalError
 from sqlalchemy_utils import create_view
+
+from digiarch.core.ArchiveFileRel import ArchiveFile
+from digiarch.exceptions import FileParseError
+from digiarch.models.metadata import Metadata
 
 # -----------------------------------------------------------------------------
 # Database class
@@ -23,7 +22,7 @@ from sqlalchemy_utils import create_view
 
 
 class FileDB(Database):
-    """File database"""
+    """File database."""
 
     sql_meta = sql.MetaData()
 
@@ -80,7 +79,7 @@ class FileDB(Database):
                 files.c.puid,
                 files.c.signature,
                 sql.func.count(puid_none).label("count"),
-            ]
+            ],
         )
         .group_by("puid")
         .order_by(sql.desc("count"))
@@ -90,15 +89,11 @@ class FileDB(Database):
 
     def __init__(self, url: str) -> None:
         super().__init__(url)
-        engine = sql.create_engine(
-            url, connect_args={"check_same_thread": False}
-        )
+        engine = sql.create_engine(url, connect_args={"check_same_thread": False})
         try:
             self.sql_meta.create_all(engine)
         except OperationalError as error:
-            warn_re = re.compile(
-                r"(?i)(IdentificationWarnings|SignatureCount)"
-            )
+            warn_re = re.compile(r"(?i)(IdentificationWarnings|SignatureCount)")
             if warn_re.search(str(error)):
                 pass
             else:
@@ -107,12 +102,9 @@ class FileDB(Database):
     async def is_empty(self) -> bool:
         query = self.files.select()
         result = await self.fetch_one(query)
-        if result is None:
-            return True
-        else:
-            return False
+        return result is None
 
-    async def delsert(self, table: sql.Table, values: Any) -> None:
+    async def delsert(self, table: sql.Table, values: Any) -> None:  # noqa: ANN401
         delete = table.delete()
         insert = table.insert()
         async with self.transaction():
@@ -129,50 +121,46 @@ class FileDB(Database):
         }
         await self.delsert(self.metadata, values=meta)
 
-    async def set_files(self, files: List[ArchiveFile]) -> None:
+    async def set_files(self, files: list[ArchiveFile]) -> None:
         encoded_files = [file.encode() for file in files]
         await self.delsert(self.files, values=encoded_files)
 
-    async def set_preservable_info(self, preservable_info: List[Dict]) -> None:
+    async def set_preservable_info(self, preservable_info: list[dict]) -> None:
         delete = self.preservable_info.delete()
         insert = self.preservable_info.insert()
         async with self.transaction():
             await self.execute(query=delete)
             await self.execute_many(query=insert, values=preservable_info)
 
-    async def update_files(self, new_files: List[ArchiveFile]) -> None:
+    async def update_files(self, new_files: list[ArchiveFile]) -> None:
         encoded_files = [file.encode() for file in new_files]
         async with self.transaction():
             for file in encoded_files:
-                update = (
-                    self.files.update()
-                    .where(self.files.c.uuid == file["uuid"])
-                    .values(file)
-                )
+                update = self.files.update().where(self.files.c.uuid == file["uuid"]).values(file)
                 await self.execute(update)
 
-    async def get_files(self) -> List[ArchiveFile]:
+    async def get_files(self) -> list[ArchiveFile]:
         query = self.files.select()
         rows = await self.fetch_all(query)
         try:
-            files: List[ArchiveFile] = parse_obj_as(List[ArchiveFile], rows)
+            files: list[ArchiveFile] = parse_obj_as(list[ArchiveFile], rows)
         except ValidationError:
             raise FileParseError(
                 """Failed to parse files as ArchiveFiles.
                     Rows from database: {}
                 """.format(
-                    rows
-                )
+                    rows,
+                ),
             )
         return files
 
-    async def set_multi_files(self, multi_files: List[Path]) -> None:
+    async def set_multi_files(self, multi_files: list[Path]) -> None:
         await self.delsert(
             self.multiple_files,
             values=[{"path": str(path)} for path in multi_files],
         )
 
-    async def set_empty_subs(self, empty_subs: List[Path]) -> None:
+    async def set_empty_subs(self, empty_subs: list[Path]) -> None:
         await self.delsert(
             self.empty_directories,
             values=[{"path": str(path)} for path in empty_subs],

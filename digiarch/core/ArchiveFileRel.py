@@ -3,19 +3,15 @@
 # -----------------------------------------------------------------------------
 
 
+import os
 from pathlib import Path
-from typing import Any
 from typing import Optional
-from uuid import UUID
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 from acamodels._internals import size_fmt
 from acamodels.aca_base import ACABase
 from acamodels.identification import Identification
-from pydantic import Field
-from pydantic import UUID4
-from pydantic import validator
-import os
+from pydantic import UUID4, Field, validator
 
 # -----------------------------------------------------------------------------
 # Model
@@ -23,7 +19,7 @@ import os
 
 
 class File(ACABase):
-    """File data model"""
+    """File data model."""
 
     uuid: UUID4 = Field(None)
     checksum: Optional[str]
@@ -34,8 +30,7 @@ class File(ACABase):
     # Validators
     @validator("relative_path")
     def path_must_be_file(cls, path: Path) -> Path:
-        """Resolves the file path and validates that it points
-        to an existing file."""
+        """Resolves the file path and validates that it points to an existing file."""
         if "ROOTPATH" in os.environ:
             if os.name == "posix":
                 posix_path = str(path).replace("\\", "/")
@@ -44,9 +39,7 @@ class File(ACABase):
             else:
                 absolute_path = Path(os.environ["ROOTPATH"], path)
             if not absolute_path.resolve().is_file():
-                raise ValueError(
-                    f"File with path {absolute_path} does not exist"
-                )
+                raise ValueError(f"File with path {absolute_path} does not exist")
         else:
             if not path.resolve().is_file():
                 raise ValueError(f"File with path {path} does not exist")
@@ -60,68 +53,66 @@ class File(ACABase):
         return uuid or uuid4()
 
     def get_absolute_path(self) -> Path:
-        absolute_path = Path(os.environ["ROOTPATH"], self.relative_path)
-        return absolute_path
+        return Path(os.environ["ROOTPATH"], self.relative_path)
 
-    def read_text(self) -> Any:
-        """Expose read_text() functionality from pathlib.
+    def read_text(self) -> str:
+        """Expose read text functionality from pathlib.
+
         Encoding is set to UTF-8.
 
-        Returns
+        Returns:
         -------
         str
             File text data.
         """
-
         return self.get_absolute_path().read_text(encoding="utf-8")
 
     def read_bytes(self) -> bytes:
         """Expose read_bytes() functionality from pathlib.
 
-        Returns
+        Returns:
         -------
         bytes
             File byte data.
-        """
-
+        """  # noqa: D402
         return self.get_absolute_path().read_bytes()
 
-    def name(self) -> Any:
+    def name(self) -> str:
         """Get the file name.
 
-        Returns
+        Returns:
         -------
         str
             File name.
         """
         return self.relative_path.name
 
-    def ext(self) -> Any:
+    def ext(self) -> str:
         """Get the file extension.
 
-        Returns
+        Returns:
         -------
         str
             File extension.
         """
         return self.relative_path.suffix.lower()
 
-    def size(self) -> Any:
+    def size(self) -> str:
         """Get the file size in human readable string format.
 
-        Returns
+        Returns:
         -------
         str
             File size in human readable format.
         """
-        return size_fmt(self.get_absolute_path().stat().st_size)
+        return str(size_fmt(self.get_absolute_path().stat().st_size))
 
-    def size_as_int(self) -> Any:
+    def size_as_int(self) -> int:
         """Get the file size in human readable string format.
 
-        Returns
+        Returns:
         -------
-        str
+        int
             File size in human readable format.
         """
         return self.get_absolute_path().stat().st_size

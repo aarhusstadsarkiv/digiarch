@@ -14,7 +14,7 @@ from acamodels import ACABase
 
 
 class Metadata(ACABase):
-    """Data class for keeping track of metadata used in data.json"""
+    """Data class for keeping track of metadata used in data.json."""
 
     last_run: datetime
     processed_dir: Path
