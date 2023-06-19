@@ -1,28 +1,26 @@
 """This implements the Command Line Interface which enables the user to
 use the functionality implemented in the :mod:`~digiarch` submodules.
 The CLI implements several commands with suboptions.
-
-"""
+"""  # noqa: D205
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
 import asyncio
+import logging as log
+import os
+from collections.abc import Callable
 from functools import wraps
+from logging import Logger
 from pathlib import Path
-from typing import Any, Dict
-from typing import Callable
-from typing import List
+from typing import Any
 
 import click
 from click.core import Context
-from digiarch import __version__
-from digiarch import core
+
+from digiarch import __version__, core
 from digiarch.core.identify_files import is_preservable
-from digiarch.exceptions import FileCollectionError
-from digiarch.exceptions import FileParseError
-from digiarch.exceptions import IdentificationError
+from digiarch.exceptions import FileCollectionError, FileParseError, IdentificationError
 from digiarch.models import FileData
-import os
 
 # -----------------------------------------------------------------------------
 # Auxiliary functions
@@ -31,7 +29,7 @@ import os
 
 def coro(func: Callable) -> Callable:
     @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:
+    def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
         return asyncio.run(func(*args, **kwargs))
 
     return wrapper
@@ -43,24 +41,19 @@ def coro(func: Callable) -> Callable:
 
 
 @click.group(invoke_without_command=True, chain=True)
-@click.argument(
-    "path", type=click.Path(exists=True, file_okay=False, resolve_path=True)
-)
+@click.argument("path", type=click.Path(exists=True, file_okay=False, resolve_path=True))
 @click.option("--reindex", is_flag=True, help="Reindex the current directory.")
 @click.version_option(version=__version__)
 @click.pass_context
 @coro
 async def cli(ctx: Context, path: str, reindex: bool) -> None:
-    """Used for indexing, reporting on, and identifying files
-    found in PATH.
-    """
-
+    """Used for indexing, reporting on, and identifying files found in PATH."""
     # Initialise
     in_path: Path = Path(path)
     os.environ["ROOTPATH"] = path
     file_data: FileData = FileData(main_dir=in_path, files=[])
     empty: bool = await file_data.db.is_empty()
-    warnings: List[str] = []
+    warnings: list[str] = []
 
     # Collect file info and update file_data
     if reindex or empty:
@@ -114,12 +107,44 @@ def process(file_data: FileData) -> None:
         file_data.files = _files
 
 
-def get_preservable_info(file_data: FileData) -> List[Dict]:
+# @cli.command()
+# @click.pass_context
+# @coro
+# async def fix(ctx: Context) -> None:
+#     """Fix file extensions - files should be identified first."""
+#     file_data = ctx.obj
+#     fixed = core.fix_extensions(file_data.files)
+#     if fixed:
+#         click.secho("Rebuilding file information...", bold=True)
+#         new_files = core.identify(fixed, file_data.main_dir)
+#         await file_data.db.update_files(new_files)
+#         file_data.files = await file_data.db.get_files()
+#         ctx.obj = file_data
+#     else:
+#         click.secho("Info: No file extensions to fix.",
+#                       bold=True, fg="yellow")
+
+
+def setup_logger() -> Logger:
+    logger: Logger = log.getLogger("image_is_preservable")
+    file_handler = log.FileHandler("pillow_decompressionbomb.log", mode="a", encoding="utf-8")
+    log_fmt = log.Formatter(
+        fmt="%(asctime)s - %(levelname)s: %(message)s",
+        datefmt="%D %H:%M:%S",
+    )
+    file_handler.setFormatter(log_fmt)
+    logger.addHandler(file_handler)
+    logger.setLevel(log.INFO)
+    return logger
+
+
+def get_preservable_info(file_data: FileData) -> list[dict]:
+    log: Logger = setup_logger()
     information = []
 
     for file in file_data.files:
-        preservable_info: Dict[str, Any] = {}
-        preservable = is_preservable(file)
+        preservable_info: dict[str, Any] = {}
+        preservable = is_preservable(file, log)
         if preservable[0] is False:
             preservable_info["uuid"] = str(file.uuid)
             preservable_info["ignore reason"] = preservable[1]
@@ -130,7 +155,7 @@ def get_preservable_info(file_data: FileData) -> List[Dict]:
 
 @cli.result_callback()
 @coro
-async def done(result: Any, **kwargs: Any) -> None:
+async def done(result: Any, **kwargs: Any) -> None:  # noqa: ANN401
     ctx = click.get_current_context()
     file_data: FileData = ctx.obj
     await file_data.db.set_files(file_data.files)
