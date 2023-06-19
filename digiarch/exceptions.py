@@ -1,6 +1,4 @@
-"""Custom exceptions defined for use in digiarch modules.
-
-"""
+"""Custom exceptions defined for use in digiarch modules."""
 
 # -----------------------------------------------------------------------------
 # Classes
@@ -12,14 +10,12 @@ class DigiarchError(Exception):
 
 
 class IdentificationError(DigiarchError):
-    """Implements an error to raise if identification or related
-    functionality fails."""
+    """Implements an error to raise if identification or related functionality fails."""
 
 
 class FileCollectionError(DigiarchError):
-    """Implements an error to raise if File discovery/collection or related
-    functionality fails."""
+    """Implements an error to raise if File discovery/collection or related functionality fails."""
 
 
 class FileParseError(DigiarchError):
-    """Implements an error to raise if file parsing fails"""
+    """Implements an error to raise if file parsing fails."""

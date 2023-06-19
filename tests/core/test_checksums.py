@@ -3,8 +3,9 @@
 # -----------------------------------------------------------------------------
 from pathlib import Path
 
-import digiarch.core.checksums as check
 import pytest
+
+import digiarch.core.checksums as check
 from digiarch.core.ArchiveFileRel import ArchiveFile
 
 # -----------------------------------------------------------------------------
@@ -12,7 +13,7 @@ from digiarch.core.ArchiveFileRel import ArchiveFile
 # -----------------------------------------------------------------------------
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_file_0(temp_dir):
     test_file = Path(temp_dir).joinpath("test0.txt")
     with test_file.open("w") as file:
@@ -20,7 +21,7 @@ def test_file_0(temp_dir):
     return test_file
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_file_1(temp_dir):
     test_file = Path(temp_dir).joinpath("test1.txt")
     with test_file.open("w") as file:
@@ -28,7 +29,7 @@ def test_file_1(temp_dir):
     return test_file
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_file_info(test_file_0):
     return ArchiveFile(relative_path=test_file_0)
 
@@ -44,8 +45,7 @@ class TestFileChecksum:
 
     def test_with_file(self, test_file_0):
         assert (
-            check.file_checksum(test_file_0)
-            == "5feceb66ffc86f38d952786c6d696c79"
+            check.file_checksum(test_file_0) == "5feceb66ffc86f38d952786c6d696c79"
             "c2dbc239dd4e91b46729d73a27fb57e9"
         )
 
@@ -53,8 +53,7 @@ class TestFileChecksum:
 class TestChecksumWorker:
     def test_with_file(self, test_file_info):
         assert (
-            check.checksum_worker(test_file_info).checksum
-            == "5feceb66ffc86f38d952786c6d696c79"
+            check.checksum_worker(test_file_info).checksum == "5feceb66ffc86f38d952786c6d696c79"
             "c2dbc239dd4e91b46729d73a27fb57e9"
         )
 
@@ -80,7 +79,7 @@ class TestGenerateChecksums:
 
         # This monkeypatching makes imap_unordered fail rather horribly :)
         monkeypatch.setattr(check, "checksum_worker", mock_err)
-        with pytest.raises(Exception):
+        with pytest.raises(Exception):  # noqa: PT011
             check.generate_checksums(files)
 
 

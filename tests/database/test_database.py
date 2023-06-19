@@ -1,26 +1,22 @@
 # -----------------------------------------------------------------------------
 # Imports & setup
 # -----------------------------------------------------------------------------
+import os
 import shutil
 from datetime import datetime
-from typing import List
 
 import pytest
 import pytest_asyncio
-from digiarch.core.ArchiveFileRel import ArchiveFile
-from digiarch.core.path_utils import explore_dir
-from digiarch.core.identify_files import identify
-from digiarch.database import db
-from digiarch.database import FileDB
-from digiarch.exceptions import FileParseError
-from digiarch.models import FileData
-from digiarch.models import Metadata
 from freezegun import freeze_time
-from pydantic import BaseModel
-from pydantic import parse_obj_as
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError, parse_obj_as
 from sqlalchemy.exc import OperationalError
-import os
+
+from digiarch.core.ArchiveFileRel import ArchiveFile
+from digiarch.core.identify_files import identify
+from digiarch.core.path_utils import explore_dir
+from digiarch.database import FileDB, db
+from digiarch.exceptions import FileParseError
+from digiarch.models import FileData, Metadata
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -29,15 +25,14 @@ import os
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.fixture
+@pytest.fixture()
 def files(docx_info, xls_info, adx_info):
     file_list = [
         {"relative_path": docx_info},
         {"relative_path": xls_info},
         {"relative_path": adx_info},
     ]
-    files = parse_obj_as(List[ArchiveFile], file_list)
-    return files
+    return parse_obj_as(list[ArchiveFile], file_list)
 
 
 @pytest_asyncio.fixture
@@ -48,7 +43,7 @@ async def db_conn(main_dir):
     await file_db.disconnect()
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_file_data(test_data_dir, db_conn):
     file_data = FileData(main_dir=test_data_dir, db=db_conn, files=[])
     yield file_data
@@ -61,7 +56,7 @@ def test_file_data(test_data_dir, db_conn):
 
 
 class TestFileDB:
-    async def test_exception(self, db_conn, monkeypatch, temp_dir):
+    async def test_exception(self, monkeypatch, temp_dir):
         def raise_op_error(*args):
             raise OperationalError("Bad Error", orig=None, params=None)
 
@@ -90,7 +85,7 @@ class TestMetadata:
         result = dict(await file_db.fetch_one(query=query))
         metadata = Metadata(**result)
         print(metadata)
-        assert metadata.last_run == datetime(2012, 8, 6, 0, 0)
+        assert metadata.last_run == datetime(2012, 8, 6, 0, 0)  # noqa: DTZ001
         assert metadata.processed_dir == test_data_dir
         assert metadata.file_count == 4
         assert metadata.total_size
@@ -103,7 +98,7 @@ class TestFiles:
         await file_db.set_files(files=files)
         query = file_db.files.select()
         rows = await file_db.fetch_all(query)
-        db_files = parse_obj_as(List[ArchiveFile], rows)
+        db_files = parse_obj_as(list[ArchiveFile], rows)
         assert files == db_files
 
     async def test_get(self, db_conn, files, test_data_dir, monkeypatch):

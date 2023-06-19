@@ -1,23 +1,19 @@
-"""This module implements checksum generation and duplicate detection.
-
-"""
+"""This module implements checksum generation and duplicate detection."""
 # -----------------------------------------------------------------------------
 # Imports
 # -----------------------------------------------------------------------------
 import hashlib
+import os
 from collections import Counter
+from collections.abc import ItemsView
 from multiprocessing import Pool
 from pathlib import Path
-from typing import Any
-from typing import ItemsView
-from typing import List
-from typing import Optional
-from typing import Set
+from typing import Any, Optional
 
-from digiarch.core.utils import natsort_path
 from tqdm import tqdm
-import os
+
 from digiarch.core.ArchiveFileRel import ArchiveFile
+from digiarch.core.utils import natsort_path
 
 # -----------------------------------------------------------------------------
 # Function Definitions
@@ -33,13 +29,12 @@ def file_checksum(file: Path) -> str:
         The file for which to calculate the checksum. Expects a `pathlib.Path`
         object.
 
-    Returns
+    Returns:
     -------
     str
         The hex checksum of the input file.
 
     """
-
     checksum: str = ""
     hasher: Any = hashlib.sha256()
 
@@ -48,7 +43,7 @@ def file_checksum(file: Path) -> str:
             hasher.update(f.read())
             checksum = hasher.hexdigest()
 
-    return checksum
+    return checksum  # noqa: RET504
 
 
 def checksum_worker(file_info: ArchiveFile) -> ArchiveFile:
@@ -59,39 +54,33 @@ def checksum_worker(file_info: ArchiveFile) -> ArchiveFile:
     fileinfo : ArchiveFile
         The FileInfo object that must be updated with a new checksum value.
 
-    Returns
+    Returns:
     -------
     FileInfo
         The FileInfo object with an updated checksum value.
     """
-
     checksum: Optional[str] = (
-        file_checksum(Path(os.environ["ROOTPATH"], file_info.relative_path))
-        or None
+        file_checksum(Path(os.environ["ROOTPATH"], file_info.relative_path)) or None
     )
-    updated_file_info: ArchiveFile = file_info.copy(
-        update={"checksum": checksum}
-    )
+    updated_file_info: ArchiveFile = file_info.copy(update={"checksum": checksum})
     return updated_file_info
 
 
-def generate_checksums(files: List[ArchiveFile]) -> List[ArchiveFile]:
-    """Multiprocesses a list of FileInfo object in order to assign
-    new checksums.
+def generate_checksums(files: list[ArchiveFile]) -> list[ArchiveFile]:
+    """Multiprocesses a list of FileInfo object in order to assign new checksums.
 
     Parameters
     ----------
     files : List[FileInfo]
         List of FileInfo objects that need checksums.
 
-    Returns
+    Returns:
     -------
     List[FileInfo]
         The updated list of FileInfo objects.
     """
-
     # Assign variables
-    updated_files: List[ArchiveFile] = []
+    updated_files: list[ArchiveFile] = []
 
     # Multiprocess checksum generation
     pool = Pool()
@@ -102,7 +91,7 @@ def generate_checksums(files: List[ArchiveFile]) -> List[ArchiveFile]:
                 desc="Generating checksums",
                 unit=" files",
                 total=len(files),
-            )
+            ),
         )
     except (KeyboardInterrupt, Exception):
         pool.terminate()
@@ -114,8 +103,9 @@ def generate_checksums(files: List[ArchiveFile]) -> List[ArchiveFile]:
     return natsort_path(updated_files)
 
 
-def check_collisions(checksums: List[str]) -> Set[str]:
+def check_collisions(checksums: list[str]) -> set[str]:
     """Checks checksum collisions given a list of checksums as strings.
+
     Returns a set of collisions if any such are found.
 
     Parameters
@@ -123,13 +113,13 @@ def check_collisions(checksums: List[str]) -> Set[str]:
     checksums : List[str]
         List of checksums that must be checked for collisions.
 
-    Returns
+    Returns:
     -------
     Set[str]
         A set of colliding checksums. Empty if none are found.
     """
     checksum_counts: ItemsView[str, int] = Counter(checksums).items()
-    collisions: Set[str] = set()
+    collisions: set[str] = set()
 
     for checksum, count in checksum_counts:
         if count > 1:

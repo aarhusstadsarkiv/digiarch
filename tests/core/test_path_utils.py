@@ -2,19 +2,19 @@
 # Imports
 # -----------------------------------------------------------------------------
 
-from digiarch.models.file_data import FileData
+import os
+import shutil
+from pathlib import Path
 from uuid import uuid4
+
+import pytest
 
 # import acamodels.archive_file. Replaced by line below.
 import digiarch.core.ArchiveFileRel
-import pytest
 from digiarch.core.ArchiveFileRel import ArchiveFile
-
 from digiarch.core.path_utils import explore_dir
 from digiarch.exceptions import FileCollectionError
-import os
-from pathlib import Path
-import shutil
+from digiarch.models.file_data import FileData
 
 # -----------------------------------------------------------------------------
 # Fixtures
@@ -23,7 +23,7 @@ import shutil
 pytestmark = pytest.mark.asyncio
 
 
-@pytest.fixture
+@pytest.fixture()
 def test_dir():
     test_dir: Path = Path.cwd() / "testdir"
     test_dir.mkdir()
@@ -39,17 +39,16 @@ class TestExploreDir:
     """Class for testing the `explore_dir` function."""
 
     async def test_in_empty_dir(self, file_data):
-        """`explore_dir` is invoked in an empty directory.
-        The data file should be empty."""
+        """`explore_dir` is invoked in an empty directory. The data file should be empty."""
         with pytest.raises(FileCollectionError):
             await explore_dir(file_data)
 
     async def test_with_files(self, test_dir: Path, monkeypatch):
-        """explore_dir is invoked in a non-empty directory,
-        with files and non-empty sub-folders.
-        The resulting JSON file should be populated,
-        and we should be able to reconstruct file infos."""
+        """explore_dir is invoked in a non-empty directory, with files and non-empty sub-folders.
 
+        The resulting JSON file should be populated,
+        and we should be able to reconstruct file infos.
+        """
         # Set the ROOTPATH environment variable for explore_dir.
         os.environ["ROOTPATH"] = str(test_dir)
         # Populate temp_dir and define file info
@@ -61,8 +60,8 @@ class TestExploreDir:
         file1.write_text("test")
         file2.write_text("test")
 
-        print("File 1: {}".format(str(file1)))
-        print("File 2: {}".format(str(file2)))
+        print(f"File 1: {file1!s}")
+        print(f"File 2: {file2!s}")
         print("Root Path: {}".format(os.environ["ROOTPATH"]))
 
         # Patch uuid
@@ -77,8 +76,8 @@ class TestExploreDir:
             uuid_return,
         )
 
-        print("file1_rel: {}".format(str(file1.relative_to(test_dir))))
-        print("file2_rel: {}".format(str(file2.relative_to(test_dir))))
+        print(f"file1_rel: {file1.relative_to(test_dir)!s}")
+        print(f"file2_rel: {file2.relative_to(test_dir)!s}")
 
         # Since files from db.get_files() contains relative paths,
         # the paths are stored as relative in file1_info and file2_info.
