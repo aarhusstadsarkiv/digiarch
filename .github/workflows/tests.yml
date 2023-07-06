@@ -15,10 +15,10 @@ jobs:
         uses: tarides/changelog-check-action@v2
       - name: Checkout 
         uses: actions/checkout@v1
-      - name: Set up Python 3.8
+      - name: Set up Python 3.9
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Set up poetry
         uses: snok/install-poetry@v1
       - name: Set up go 1.14
