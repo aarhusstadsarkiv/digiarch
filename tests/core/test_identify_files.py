@@ -174,12 +174,12 @@ class TestCustomId:
 
         new_id_dict = sf_id(gif_file)
         assert new_id_dict[gif_file].puid == "fmt/4"
-        assert new_id_dict[gif_file].signature == "Graphics Interchange Format (89a)"
+        assert new_id_dict[gif_file].signature == "GIF 1989a"
         assert new_id_dict[gif_file].warning is None
         fail_gif_file = gif_file.rename(gif_file.with_suffix(".fail"))
         fail_id_dict = sf_id(fail_gif_file)
         assert fail_id_dict[fail_gif_file].puid == "fmt/4"
-        assert fail_id_dict[fail_gif_file].signature == "Graphics Interchange Format (89a)"
+        assert fail_id_dict[fail_gif_file].signature == "GIF 1989a"
         assert fail_id_dict[fail_gif_file].warning == "Extension mismatch"
 
     def test_nsf(self, temp_dir):

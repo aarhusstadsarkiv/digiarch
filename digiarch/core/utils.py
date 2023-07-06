@@ -3,6 +3,10 @@
 # -----------------------------------------------------------------------------
 
 
+from functools import lru_cache
+from typing import Any, Optional
+
+import httpx
 from natsort import natsorted
 
 from digiarch.core.ArchiveFileRel import ArchiveFile
@@ -51,3 +55,57 @@ def natsort_path(file_list: list[ArchiveFile]) -> list[ArchiveFile]:
     )
 
     return sorted_file_list
+
+
+@lru_cache
+def to_re_identify() -> dict[str, str]:
+    """Gets the json file with the different formats that we wish to reidentify.
+
+    Is kept updated on the reference-files repo. The function caches the result,
+    soo multiple calls in the same run should not be an issue.
+    """
+    response = httpx.get(
+        "https://raw.githubusercontent.com/aarhusstadsarkiv/reference-files/add-version-to-files/to_convert.json",
+    )
+    if response.status_code != 200:
+        raise ConnectionError
+
+    response_dict: dict[str, Any] = response.json()
+
+    if response_dict is None:
+        raise ConnectionError
+
+    data_map: Optional[dict[str, Any]] = response_dict.get("data")
+
+    if data_map is None:
+        raise ValueError(
+            "No data key in the respons. Seems to be a problem with to_convert on ref. repo",
+        )
+    return data_map
+
+
+@lru_cache
+def costum_sigs() -> list[dict]:
+    """Gets the json file with our own costum formats in a list.
+
+    Is kept updated on the reference-files repo. The function caches the result,
+    soo multiple calls in the same run should not be an issue.
+    """
+    response = httpx.get(
+        "https://raw.githubusercontent.com/aarhusstadsarkiv/reference-files/add-version-to-files/custom_signatures.json",
+    )
+    if response.status_code != 200:
+        raise ConnectionError
+
+    response_dict: dict[str, Any] = response.json()
+
+    if response_dict is None:
+        raise ConnectionError
+
+    data_map: Optional[list[dict]] = response_dict.get("data")
+
+    if data_map is None:
+        raise ValueError(
+            "No data key in the respons. Seems to be a problem with to_convert on ref. repo",
+        )
+    return data_map
