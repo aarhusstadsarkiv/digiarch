@@ -1,5 +1,7 @@
 # Changelog
 
+## 0.9.22
+- added check to ensure opdates of the changelog
 ## 0.9.21
 - fixed missing identification of aca-fmt/17 (MapInfo Map Files)
 
