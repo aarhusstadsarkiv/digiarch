@@ -1,5 +1,8 @@
 # Changelog
 
+
+## 0.9.22a
+- added functionality to get and handle versions from the reference files repo
 ## 0.9.22
 - added check to ensure opdates of the changelog
 ## 0.9.21
