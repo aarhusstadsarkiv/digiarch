@@ -4,7 +4,7 @@
 
 
 from functools import lru_cache
-from typing import Any, Optional, Tuple
+from typing import Any, Optional
 
 import httpx
 from natsort import natsorted
@@ -58,7 +58,7 @@ def natsort_path(file_list: list[ArchiveFile]) -> list[ArchiveFile]:
 
 
 @lru_cache
-def to_re_identify() -> ():
+def to_re_identify() -> tuple[dict[str, Any], str]:
     """Gets the json file with the different formats that we wish to reidentify.
 
     Is kept updated on the reference-files repo. The function caches the result,
@@ -89,7 +89,7 @@ def to_re_identify() -> ():
 
 
 @lru_cache
-def costum_sigs() -> ():
+def costum_sigs() -> tuple[list[dict], str]:
     """Gets the json file with our own costum formats in a list.
 
     Is kept updated on the reference-files repo. The function caches the result,
