@@ -11,8 +11,10 @@ jobs:
     name: Run tests & get coverage
     runs-on: ubuntu-latest
     steps:
-      - name: Check CHANGELOG.MD for changes
+      - name: Check Changelog Action
         uses: tarides/changelog-check-action@v2
+        with:
+          changelog: CHANGELOG.md
       - name: Checkout 
         uses: actions/checkout@v1
       - name: Set up Python 3.9
