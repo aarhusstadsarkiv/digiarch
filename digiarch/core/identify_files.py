@@ -24,7 +24,7 @@ warnings.filterwarnings("error", category=Image.DecompressionBombWarning)
 
 # formats that we test against our own formats, no matter that Siegfried
 # already identified them.
-RERUN_FORMATS = to_re_identify()
+RERUN_FORMATS = to_re_identify()[0]
 SIZE_OF_KILO_BYTE = 1024
 
 
@@ -38,7 +38,7 @@ def update_file_id(path: Path, file_id: Identification, signature: dict[str, str
 
 
 def custom_id(path: Path, file_id: Identification) -> Identification:
-    signatures: list[dict] = costum_sigs()
+    signatures: list[dict] = costum_sigs()[0]
 
     with path.open("rb") as file_bytes:
         # BOF

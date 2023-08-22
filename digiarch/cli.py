@@ -13,12 +13,14 @@ from functools import wraps
 from logging import Logger
 from pathlib import Path
 from typing import Any
+from acamodels import ArchiveFile
 
 import click
 from click.core import Context
 
 from digiarch import __version__, core
 from digiarch.core.identify_files import is_preservable
+from digiarch.core.utils import costum_sigs, to_re_identify
 from digiarch.exceptions import FileCollectionError, FileParseError, IdentificationError
 from digiarch.models import FileData
 
@@ -94,7 +96,11 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
 def process(file_data: FileData) -> None:
     """Generate checksums and identify files."""
     print("Generate checksums")
-    _files = file_data.files
+    versions: tuple[str, str] = (to_re_identify()[1], costum_sigs()[1])
+    print("Using the following versionf from reference files: \n"
+          f"to_convert version {versions[0]} \n"
+          f"costume_signature version {versions[1]}")
+    _files: list[ArchiveFile] = file_data.files
     _files = core.generate_checksums(_files)
     click.secho("Identifying files... ", nl=False)
     try:

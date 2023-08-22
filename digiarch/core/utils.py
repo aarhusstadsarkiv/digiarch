@@ -4,7 +4,7 @@
 
 
 from functools import lru_cache
-from typing import Any, Optional
+from typing import Any, Optional, Tuple
 
 import httpx
 from natsort import natsorted
@@ -58,7 +58,7 @@ def natsort_path(file_list: list[ArchiveFile]) -> list[ArchiveFile]:
 
 
 @lru_cache
-def to_re_identify() -> dict[str, str]:
+def to_re_identify() -> ():
     """Gets the json file with the different formats that we wish to reidentify.
 
     Is kept updated on the reference-files repo. The function caches the result,
@@ -76,16 +76,20 @@ def to_re_identify() -> dict[str, str]:
         raise ConnectionError
 
     data_map: Optional[dict[str, Any]] = response_dict.get("data")
+    version: Optional[str] = response_dict.get("version")
 
     if data_map is None:
         raise ValueError(
             "No data key in the respons. Seems to be a problem with to_convert on ref. repo",
         )
-    return data_map
+    if version is None:
+        version = "Not specified by reference repo"
+
+    return (data_map, version)
 
 
 @lru_cache
-def costum_sigs() -> list[dict]:
+def costum_sigs() -> ():
     """Gets the json file with our own costum formats in a list.
 
     Is kept updated on the reference-files repo. The function caches the result,
@@ -103,9 +107,13 @@ def costum_sigs() -> list[dict]:
         raise ConnectionError
 
     data_map: Optional[list[dict]] = response_dict.get("data")
+    version: Optional[str] = response_dict.get("version")
 
     if data_map is None:
         raise ValueError(
             "No data key in the respons. Seems to be a problem with to_convert on ref. repo",
         )
-    return data_map
+    if version is None:
+        version = "Not specified by reference repo"
+
+    return (data_map, version)
