@@ -1,7 +1,7 @@
 # Changelog
 
 ## 0.9.22a
-- added ability to get reference files version and print this
+- added ability to get reference files version and is printing it to stdout
 ## 0.9.22
 - added check to ensure updates of the changelog
 ## 0.9.21
