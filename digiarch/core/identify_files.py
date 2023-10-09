@@ -118,8 +118,11 @@ def sf_id(path: Path, log: Optional[Logger] = None) -> dict[Path, Identification
     results_dict: Optional[dict] = id_result.get("identifiers", None)[0]
     if results_dict and log:
         DROID_file_version: Optional[str] = results_dict.get("details")
-        log.info("Running sf with the following version of DROID: " +
-                 DROID_file_version if DROID_file_version else "")
+        log.info(
+            "Running sf with the following version of DROID: " + DROID_file_version
+            if DROID_file_version
+            else ""
+        )
     for file_result in id_result.get("files", []):
         match: dict[str, Any] = {}
         for id_match in file_result.get("matches"):
@@ -281,7 +284,9 @@ def update_file_info(file_info: ArchiveFile, id_info: dict[Path, Identification]
     return file_info
 
 
-def identify(files: list[ArchiveFile], path: Path, log: Optional[Logger] = None) -> list[ArchiveFile]:
+def identify(
+    files: list[ArchiveFile], path: Path, log: Optional[Logger] = None
+) -> list[ArchiveFile]:
     """Identify all files in a list, and return the updated list.
 
     Args:

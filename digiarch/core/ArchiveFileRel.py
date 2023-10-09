@@ -97,7 +97,7 @@ class File(ACABase):
         """
         return self.relative_path.suffix.lower()
 
-    def size(self) -> str: # type: ignore
+    def size(self) -> str:  # type: ignore
         """Get the file size in human readable string format.
 
         Returns:
