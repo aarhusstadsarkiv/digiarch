@@ -9,7 +9,7 @@ from logging import Logger
 from multiprocessing import Pool
 from pathlib import Path
 from threading import Lock
-from typing import Any
+from typing import Any, Optional
 
 import PIL
 from acamodels import Identification
@@ -75,7 +75,7 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
     return file_id
 
 
-def sf_id(path: Path) -> dict[Path, Identification]:
+def sf_id(path: Path, log: Logger = None) -> dict[Path, Identification]:
     """Identify files using `siegfried <https://github.com/richardlehane/siegfried>`.
 
     Also updates FileInfo with obtained PUID, signature name, and warning if applicable.
@@ -113,6 +113,12 @@ def sf_id(path: Path) -> dict[Path, Identification]:
     except Exception as error:
         raise IdentificationError(error)
 
+    # We get identifiers as a list containing the ditionary, 
+    # soo we have to get the one element our of it
+    results_dict: Optional(dict, None) = id_result.get('identifiers')[0]
+    DROID_file_version: Optional(str, None) = results_dict.get('details')
+    if log:
+        log.info("Running sf with the following version of DROID: " + DROID_file_version)
     for file_result in id_result.get("files", []):
         match: dict[str, Any] = {}
         for id_match in file_result.get("matches"):
@@ -129,8 +135,11 @@ def sf_id(path: Path) -> dict[Path, Identification]:
             version = match.get("version")
             if signature:
                 signature_and_version = f"{signature} ({version})"
-            warning = match.get("warning", "").capitalize()
-            file_size = file_result.get('filesize')
+            warning: str = match.get("warning", "").capitalize()
+            file_size: int = file_result.get('filesize')
+            file_errors: Optional(str, None) = file_result.get('errors', None)
+            if file_errors:
+                warning = warning + " ; Errors: " + file_errors
             file_identification = Identification(
                 puid=puid,
                 signature=signature_and_version or None,
@@ -271,21 +280,18 @@ def update_file_info(file_info: ArchiveFile, id_info: dict[Path, Identification]
     return file_info
 
 
-def identify(files: list[ArchiveFile], path: Path) -> list[ArchiveFile]:
+def identify(files: list[ArchiveFile], path: Path, log: Logger = None) -> list[ArchiveFile]:
     """Identify all files in a list, and return the updated list.
 
-    Parameters
-    ----------
-    files : List[FileInfo]
-        Files to identify.
+    Args:
+        files (list[ArchiveFile]): Files to identify
+        path (Path): _description_
+        log (Logger): Log to be used to write to. If none is given, nothing is added to the log.
 
     Returns:
-    -------
-    List[FileInfo]
-        Input files with updated Identification information.
-
+        list[ArchiveFile]: Input files with updated Identification information.
     """
-    id_info: dict[Path, Identification] = sf_id(path)
+    id_info: dict[Path, Identification] = sf_id(path, log)
     # functools.partial: Return a new partial object
     # which when called will behave like func called with the
     # positional arguments args and keyword arguments keywords.
