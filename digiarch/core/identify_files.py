@@ -78,7 +78,7 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
 def sf_id(path: Path) -> dict[Path, Identification]:
     """Identify files using `siegfried <https://github.com/richardlehane/siegfried>`.
 
-    Alsio updates FileInfo with obtained PUID, signature name, and warning if applicable.
+    Also updates FileInfo with obtained PUID, signature name, and warning if applicable.
 
     Parameters
     ----------
@@ -94,7 +94,7 @@ def sf_id(path: Path) -> dict[Path, Identification]:
     Raises:
     ------
     IdentificationError
-        If running siegfried or loading of the resulting JSON output fails,
+        While siegfried or loading of the resulting JSON output fails,
         an IdentificationError is thrown.
     """
     id_dict: dict[Path, Identification] = {}
@@ -126,14 +126,16 @@ def sf_id(path: Path) -> dict[Path, Identification]:
 
             signature_and_version = None
             signature = match.get("format")
-            version = match["version"]
+            version = match.get("version")
             if signature:
                 signature_and_version = f"{signature} ({version})"
             warning = match.get("warning", "").capitalize()
+            file_size = file_result.get('filesize')
             file_identification = Identification(
                 puid=puid,
                 signature=signature_and_version or None,
                 warning=warning or None,
+                size=file_size,
             )
 
             # unindentified files
@@ -255,6 +257,7 @@ def update_file_info(file_info: ArchiveFile, id_info: dict[Path, Identification]
     )
     file_path = Path(os.environ["ROOTPATH"], file_info.relative_path)
     new_id: Identification = id_info.get(file_path) or no_id
+    file_size = id_info.get('size')
 
     if file_path.stat().st_size == 0:
         new_id = Identification(
@@ -264,7 +267,7 @@ def update_file_info(file_info: ArchiveFile, id_info: dict[Path, Identification]
         )
     file_info = file_info.copy(update=new_id.dict())
     file_info.is_binary = is_binary(file_info)
-    file_info.file_size_in_bytes = file_path.stat().st_size
+    file_info.file_size_in_bytes = file_size
     return file_info
 
 
