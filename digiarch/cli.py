@@ -34,6 +34,7 @@ def coro(func: Callable) -> Callable:
 
     return wrapper
 
+
 def setup_logger() -> Logger:
     logger: Logger = log.getLogger("image_is_preservable")
     file_handler = log.FileHandler("pillow_decompressionbomb.log", mode="a", encoding="utf-8")
@@ -45,6 +46,7 @@ def setup_logger() -> Logger:
     logger.addHandler(file_handler)
     logger.setLevel(log.INFO)
     return logger
+
 
 # -----------------------------------------------------------------------------
 # CLI

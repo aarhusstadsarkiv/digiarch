@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.9.23
+- added which version of DRIOD we use to the log
+- makes sure we use most / all of the avaivable info given by `sf`
+
 ## 0.9.22
 - added check to ensure opdates of the changelog
 ## 0.9.21

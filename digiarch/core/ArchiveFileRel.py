@@ -25,7 +25,7 @@ class File(ACABase):
     checksum: Optional[str]
     relative_path: Path = Field(None)
     is_binary: bool = Field(None)
-    file_size_in_bytes: int = Field(None)
+    size: int = Field(None)
 
     # Validators
     @validator("relative_path")
@@ -97,7 +97,7 @@ class File(ACABase):
         """
         return self.relative_path.suffix.lower()
 
-    def size(self) -> str:
+    def size(self) -> str: # type: ignore
         """Get the file size in human readable string format.
 
         Returns:
