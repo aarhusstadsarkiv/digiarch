@@ -75,7 +75,7 @@ def custom_id(path: Path, file_id: Identification) -> Identification:
     return file_id
 
 
-def sf_id(path: Path, log: Logger = None) -> dict[Path, Identification]:
+def sf_id(path: Path, log: Optional[Logger] = None) -> dict[Path, Identification]:
     """Identify files using `siegfried <https://github.com/richardlehane/siegfried>`.
 
     Also updates FileInfo with obtained PUID, signature name, and warning if applicable.
@@ -113,11 +113,11 @@ def sf_id(path: Path, log: Logger = None) -> dict[Path, Identification]:
     except Exception as error:
         raise IdentificationError(error)
 
-    # We get identifiers as a list containing the ditionary, 
+    # We get identifiers as a list containing the ditionary,
     # soo we have to get the one element our of it
-    results_dict: Optional(dict, None) = id_result.get('identifiers')[0]
-    DROID_file_version: Optional(str, None) = results_dict.get('details')
-    if log:
+    results_dict: Optional[dict] = id_result.get("identifiers", None)[0]
+    if results_dict and log:
+        DROID_file_version: Optional[str] = results_dict.get("details")
         log.info("Running sf with the following version of DROID: " + DROID_file_version)
     for file_result in id_result.get("files", []):
         match: dict[str, Any] = {}
@@ -136,8 +136,8 @@ def sf_id(path: Path, log: Logger = None) -> dict[Path, Identification]:
             if signature:
                 signature_and_version = f"{signature} ({version})"
             warning: str = match.get("warning", "").capitalize()
-            file_size: int = file_result.get('filesize')
-            file_errors: Optional(str, None) = file_result.get('errors', None)
+            file_size: int = file_result.get("filesize")
+            file_errors: Optional[str] = file_result.get("errors", None)
             if file_errors:
                 warning = warning + " ; Errors: " + file_errors
             file_identification = Identification(
@@ -266,9 +266,9 @@ def update_file_info(file_info: ArchiveFile, id_info: dict[Path, Identification]
     )
     file_path = Path(os.environ["ROOTPATH"], file_info.relative_path)
     new_id: Identification = id_info.get(file_path) or no_id
-    file_size = id_info.get('size')
+    file_size = new_id.size
 
-    if file_path.stat().st_size == 0:
+    if file_size == 0:
         new_id = Identification(
             puid="aca-error/1",
             signature="Empty file",
@@ -276,7 +276,7 @@ def update_file_info(file_info: ArchiveFile, id_info: dict[Path, Identification]
         )
     file_info = file_info.copy(update=new_id.dict())
     file_info.is_binary = is_binary(file_info)
-    file_info.file_size_in_bytes = file_size
+    file_info.size = file_size
     return file_info
 
 
