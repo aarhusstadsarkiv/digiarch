@@ -49,7 +49,7 @@ def setup_logger() -> Logger:
     logger.setLevel(log.INFO)
     return logger
 
-  
+
 def get_version_from_ref() -> str:
     """Gets the fist 7 characters of the github SHA for reference files.
 
@@ -68,6 +68,7 @@ def get_version_from_ref() -> str:
 # -----------------------------------------------------------------------------
 # CLI
 # -----------------------------------------------------------------------------
+
 
 @click.group(invoke_without_command=True, chain=True)
 @click.argument("path", type=click.Path(exists=True, file_okay=False, resolve_path=True))
