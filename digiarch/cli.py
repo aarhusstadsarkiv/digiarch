@@ -6,6 +6,7 @@ The CLI implements several commands with suboptions.
 # Imports
 # -----------------------------------------------------------------------------
 import asyncio
+import json
 import logging as log
 import os
 from collections.abc import Callable
@@ -13,6 +14,7 @@ from functools import wraps
 from logging import Logger
 from pathlib import Path
 from typing import Any
+from urllib.request import urlopen
 
 import click
 from click.core import Context
@@ -47,11 +49,25 @@ def setup_logger() -> Logger:
     logger.setLevel(log.INFO)
     return logger
 
+  
+def get_version_from_ref() -> str:
+    """Gets the fist 7 characters of the github SHA for reference files.
+
+    Returns:
+        str: first 7 characters from github SHA.
+    """
+    res = urlopen("https://api.github.com/repos/aarhusstadsarkiv/reference-files/commits/main")
+    ref_res_decoded = json.loads(res.read())
+    sha = ref_res_decoded.get("sha")
+    if isinstance(sha, str):  # We check if there has been any mistake (mostly to make mypy happy)
+        return sha[:6]
+    else:
+        return "N/A"
+
 
 # -----------------------------------------------------------------------------
 # CLI
 # -----------------------------------------------------------------------------
-
 
 @click.group(invoke_without_command=True, chain=True)
 @click.argument("path", type=click.Path(exists=True, file_okay=False, resolve_path=True))
@@ -108,6 +124,7 @@ def process(file_data: FileData) -> None:
     """Generate checksums and identify files."""
     log: Logger = setup_logger()
     print("Generate checksums")
+    print(f"Using version {get_version_from_ref()} of reference files")
     _files = file_data.files
     _files = core.generate_checksums(_files)
     click.secho("Identifying files... ", nl=False)
