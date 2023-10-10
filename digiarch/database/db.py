@@ -45,7 +45,7 @@ class FileDB(Database):
         sql.Column("puid", sql.String),
         sql.Column("signature", sql.String),
         sql.Column("is_binary", sql.Boolean),
-        sql.Column("file_size_in_bytes", sql.Integer),
+        sql.Column("size", sql.Integer),
         sql.Column("warning", sql.String),
     )
 

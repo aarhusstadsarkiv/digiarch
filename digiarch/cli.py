@@ -37,6 +37,19 @@ def coro(func: Callable) -> Callable:
     return wrapper
 
 
+def setup_logger() -> Logger:
+    logger: Logger = log.getLogger("image_is_preservable")
+    file_handler = log.FileHandler("pillow_decompressionbomb.log", mode="a", encoding="utf-8")
+    log_fmt = log.Formatter(
+        fmt="%(asctime)s - %(levelname)s: %(message)s",
+        datefmt="%D %H:%M:%S",
+    )
+    file_handler.setFormatter(log_fmt)
+    logger.addHandler(file_handler)
+    logger.setLevel(log.INFO)
+    return logger
+
+
 def get_version_from_ref() -> str:
     """Gets the fist 7 characters of the github SHA for reference files.
 
@@ -110,13 +123,14 @@ async def cli(ctx: Context, path: str, reindex: bool) -> None:
 @click.pass_obj
 def process(file_data: FileData) -> None:
     """Generate checksums and identify files."""
+    log: Logger = setup_logger()
     print("Generate checksums")
     print(f"Using version {get_version_from_ref()} of reference files")
     _files = file_data.files
     _files = core.generate_checksums(_files)
     click.secho("Identifying files... ", nl=False)
     try:
-        _files = core.identify(_files, file_data.main_dir)
+        _files = core.identify(_files, file_data.main_dir, log=log)
     except IdentificationError as error:
         raise click.ClickException(str(error))
     else:
@@ -141,19 +155,6 @@ def process(file_data: FileData) -> None:
 #     else:
 #         click.secho("Info: No file extensions to fix.",
 #                       bold=True, fg="yellow")
-
-
-def setup_logger() -> Logger:
-    logger: Logger = log.getLogger("image_is_preservable")
-    file_handler = log.FileHandler("pillow_decompressionbomb.log", mode="a", encoding="utf-8")
-    log_fmt = log.Formatter(
-        fmt="%(asctime)s - %(levelname)s: %(message)s",
-        datefmt="%D %H:%M:%S",
-    )
-    file_handler.setFormatter(log_fmt)
-    logger.addHandler(file_handler)
-    logger.setLevel(log.INFO)
-    return logger
 
 
 def get_preservable_info(file_data: FileData) -> list[dict]:

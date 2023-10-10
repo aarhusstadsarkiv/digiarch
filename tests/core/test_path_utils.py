@@ -26,7 +26,7 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture()
 def test_dir():
     test_dir: Path = Path.cwd() / "testdir"
-    test_dir.mkdir()
+    test_dir.mkdir(exist_ok=True)
     return test_dir
 
 

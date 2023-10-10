@@ -128,7 +128,7 @@ class TestOptions:
 
 class TestCommands:
     def test_process(self, cli_run, monkeypatch):
-        def id_error(*args):
+        def id_error(*args, **kwargs):
             raise IdentificationError("Identification Error")
 
         with cli_run.isolated_filesystem():
