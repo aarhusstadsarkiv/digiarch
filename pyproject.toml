@@ -12,33 +12,19 @@ include = ["pyproject.toml"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-click = ">=7,<9"
-tqdm = "^4.36"
-natsort = ">=7.0.1,<9.0.0"
-pydantic = "^1.6.1"
-sqlalchemy = "~1.3"
-databases = {extras = ["sqlite"], version = ">=0.3.2,<0.5.0"}
-acamodels = "^0.5.3"
-sqlalchemy_utils = ">=0.36.8,<0.39.0"
-Pillow = ">=8.3.2,<10.0.0"
-httpx = "^0.24.1"
-pypng = "^0.20220715.0"
-
-[tool.poetry.scripts]
-digiarch = "digiarch.cli:cli"
+acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v1.0.0"}
 
 [tool.poetry.group.dev.dependencies]
-mypy = "^1.3.0"
 pytest = "^7.0"
 black = "^22.1"
-freezegun = "^1.1.0"
-pytest-asyncio = "^0.18.1"
 ruff = "^0.0.272"
-deptry = "^0.12.0"
 coverage = "^7.2.7"
 
+[tool.poetry.scripts]
+digiarch = "digiarch.cli:app"
+
 [tool.black]
-line-length = 100
+line-length = 120
 exclude = ".venv"
 
 [tool.ruff]
