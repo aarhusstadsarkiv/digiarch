@@ -1,189 +1,191 @@
-"""This implements the Command Line Interface which enables the user to
-use the functionality implemented in the :mod:`~digiarch` submodules.
-The CLI implements several commands with suboptions.
-"""  # noqa: D205
-# -----------------------------------------------------------------------------
-# Imports
-# -----------------------------------------------------------------------------
-import asyncio
-import json
-import logging as log
-import os
-from collections.abc import Callable
-from functools import wraps
 from logging import Logger
+from os import environ
 from pathlib import Path
-from typing import Any
-from urllib.request import urlopen
+from sys import stdout
+from traceback import format_tb
+from typing import Optional
+from typing import Union
 
-import click
-from click.core import Context
+import yaml
+from acacore.models.file import File
+from acacore.models.history import HistoryEntry
+from acacore.models.reference_files import Action
+from acacore.models.reference_files import CustomSignature
+from acacore.models.reference_files import RenameAction
+from acacore.reference_files import get_actions
+from acacore.reference_files import get_custom_signatures
+from acacore.siegfried import Siegfried
+from acacore.siegfried.siegfried import TSignature
+from acacore.utils.functions import find_files
+from acacore.utils.helpers import ExceptionManager
+from acacore.utils.log import setup_logger
+from click import Choice
+from click import Context
+from click import Path as ClickPath
+from click import argument
+from click import group
+from click import option
+from click import pass_context
+from click import version_option
+from pydantic import TypeAdapter
 
-from digiarch import __version__, core
-from digiarch.core.identify_files import is_preservable
-from digiarch.exceptions import FileCollectionError, FileParseError, IdentificationError
-from digiarch.models import FileData
-
-# -----------------------------------------------------------------------------
-# Auxiliary functions
-# -----------------------------------------------------------------------------
-
-
-def coro(func: Callable) -> Callable:
-    @wraps(func)
-    def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
-        return asyncio.run(func(*args, **kwargs))
-
-    return wrapper
-
-
-def setup_logger() -> Logger:
-    logger: Logger = log.getLogger("image_is_preservable")
-    file_handler = log.FileHandler("pillow_decompressionbomb.log", mode="a", encoding="utf-8")
-    log_fmt = log.Formatter(
-        fmt="%(asctime)s - %(levelname)s: %(message)s",
-        datefmt="%D %H:%M:%S",
-    )
-    file_handler.setFormatter(log_fmt)
-    logger.addHandler(file_handler)
-    logger.setLevel(log.INFO)
-    return logger
+from .__version__ import __version__
+from .database import FileDB
 
 
-def get_version_from_ref() -> str:
-    """Gets the fist 7 characters of the github SHA for reference files.
+def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], tuple[None, None]]:
+    old_path: Path = file.get_absolute_path()
 
-    Returns:
-        str: first 7 characters from github SHA.
+    if action.on_extension_mismatch and (not file.warning or "extension mismatch" not in file.warning):
+        return None, None
+
+    new_suffixes: list[str] = [action.extension] if not action.append else [*old_path.suffixes, action.extension]
+    new_path: Path = old_path.with_suffix("".join(new_suffixes))
+    if old_path == new_path:
+        return None, None
+    old_path.rename(new_path)
+    return old_path, new_path
+
+
+@group("digiarch", no_args_is_help=True)
+@version_option(__version__)
+def app():
     """
-    res = urlopen("https://api.github.com/repos/aarhusstadsarkiv/reference-files/commits/main")
-    ref_res_decoded = json.loads(res.read())
-    sha = ref_res_decoded.get("sha")
-    if isinstance(sha, str):  # We check if there has been any mistake (mostly to make mypy happy)
-        return sha[:6]
+    Generate and operate on the files' database used by other Aarhus Stadsarkiv tools.
+    """
+    pass
+
+
+@app.command("identify", no_args_is_help=True, short_help="Generate a files' database for a folder.")
+@argument(
+    "root",
+    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
+)
+@option(
+    "--siegfried-path",
+    type=ClickPath(dir_okay=False, resolve_path=True, path_type=Path),
+    default=None,
+    help="The path to the Siegfried executable.",
+)
+@option(
+    "--siegfried-signature",
+    type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
+    default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
+)
+@option(
+    "--update-siegfried-signature/--no-update-siegfried-signature",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Control whether Siegfried should update its signature.",
+)
+@option(
+    "--actions",
+    "actions_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True, path_type=Path),
+    default=None,
+    help="Path to a YAML file containing file format actions.",
+)
+@option(
+    "--custom-signatures",
+    "custom_signatures_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True, path_type=Path),
+    default=None,
+    help="Path to a JSON file containing custom signature specifications.",
+)
+@pass_context
+def app_process(
+    ctx: Context,
+    root: Path,
+    siegfried_path: Optional[Path],
+    siegfried_signature: TSignature,
+    update_siegfried_signature: bool,
+    actions_file: Optional[Path],
+    custom_signatures_file: Optional[Path],
+):
+    """
+    Process a folder (ROOT) recursively and populate a files' database.
+
+    Each file is identified with Siegfried and an action is assigned to it.
+    Files that need re-identification, renaming, or ignoring are processed accordingly.
+
+    Files that are already in the database are not processed.
+    """
+    siegfried = Siegfried(siegfried_path or Path(environ["GOPATH"], "bin", "sf"), f"{siegfried_signature}.sig")
+    if update_siegfried_signature:
+        siegfried.update(siegfried_signature)
+
+    actions: dict[str, Action]
+    custom_signatures: list[CustomSignature]
+
+    if actions_file:
+        actions = TypeAdapter(dict[str, Action]).validate_python(yaml.load(actions_file.open(), yaml.Loader))
     else:
-        return "N/A"
+        actions = get_actions()
 
-
-# -----------------------------------------------------------------------------
-# CLI
-# -----------------------------------------------------------------------------
-
-
-@click.group(invoke_without_command=True, chain=True)
-@click.argument("path", type=click.Path(exists=True, file_okay=False, resolve_path=True))
-@click.option("--reindex", is_flag=True, help="Reindex the current directory.")
-@click.version_option(version=__version__)
-@click.pass_context
-@coro
-async def cli(ctx: Context, path: str, reindex: bool) -> None:
-    """Used for indexing, reporting on, and identifying files found in PATH."""
-    # Initialise
-    in_path: Path = Path(path)
-    os.environ["ROOTPATH"] = path
-    file_data: FileData = FileData(main_dir=in_path, files=[])
-    empty: bool = await file_data.db.is_empty()
-    warnings: list[str] = []
-
-    # Collect file info and update file_data
-    if reindex or empty:
-        click.secho("Collecting file information...", bold=True)
-        try:
-            warnings = await core.explore_dir(file_data)
-        except FileCollectionError as error:
-            raise click.ClickException(str(error))
-
+    if custom_signatures_file:
+        custom_signatures = TypeAdapter(list[CustomSignature]).validate_json(custom_signatures_file.read_text())
     else:
-        click.echo("Processing data from ", nl=False)
-        click.secho(f"{file_data.db.url}", bold=True)
+        custom_signatures = get_custom_signatures()
 
-    for warning in warnings:
-        click.secho(warning, bold=True, fg="red")
+    database_path: Path = root / "_metadata" / "files.db"
+    database_path.parent.mkdir(exist_ok=True)
 
-    try:
-        file_data.files = await file_data.db.get_files()
-    except FileParseError as error:
-        raise click.ClickException(str(error))
-    else:
-        ctx.obj = file_data
-        """_files = file_data.files
-        _files = core.generate_checksums(_files)
-        try:
-            print("Identifying")
-            _files = core.identify(_files, file_data.main_dir)
-        except IdentificationError as error:
-            raise click.ClickException(str(error))
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+    logger_stdout: Logger = setup_logger(program_name + "_std_out", streams=[stdout])
+
+    with FileDB(database_path) as database:
+        database.init()
+        program_start: HistoryEntry = HistoryEntry.command_history(ctx, "start")
+        database.history.insert(program_start)
+        logger.info(program_start.operation)
+
+        with ExceptionManager(BaseException) as exception:
+            for path in find_files(root, exclude=[database_path.parent]):
+                if database.file_exists(path, root):
+                    continue
+
+                file_history: list[HistoryEntry] = []
+                file = File.from_file(path, root, siegfried, actions, custom_signatures)
+
+                if file.action_data and file.action_data.rename:
+                    old_path, new_path = handle_rename(file, file.action_data.rename)
+                    if new_path:
+                        file = File.from_file(new_path, root, siegfried, actions, custom_signatures)
+                        file_history.append(
+                            HistoryEntry.command_history(
+                                ctx,
+                                "file:action:rename",
+                                file.uuid,
+                                [old_path.relative_to(root), new_path.relative_to(root)],
+                            )
+                        )
+
+                database.files.insert(file, exist_ok=True)
+
+                logger_stdout.info(
+                    f"{HistoryEntry.command_history(ctx, ':file:new').operation} "
+                    f"{file.relative_path} {file.puid} {file.action}"
+                )
+
+                for entry in file_history:
+                    logger.info(f"{entry.operation} {entry.uuid}")
+                    database.history.insert(entry)
+
+        program_end: HistoryEntry = HistoryEntry.command_history(
+            ctx,
+            "end",
+            data=1 if exception.exception else 0,
+            reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
+        )
+        if exception.exception:
+            logger.error(f"{program_end.operation} {repr(exception.exception)}")
         else:
-            click.secho(f"Successfully identified {len(_files)} files.")
-            print("Finished identifying")
-            file_data.files = _files"""
+            logger.info(program_end.operation)
 
-
-@cli.command()
-@click.pass_obj
-def process(file_data: FileData) -> None:
-    """Generate checksums and identify files."""
-    log: Logger = setup_logger()
-    print("Generate checksums")
-    print(f"Using version {get_version_from_ref()} of reference files")
-    _files = file_data.files
-    _files = core.generate_checksums(_files)
-    click.secho("Identifying files... ", nl=False)
-    try:
-        _files = core.identify(_files, file_data.main_dir, log=log)
-    except IdentificationError as error:
-        raise click.ClickException(str(error))
-    else:
-        click.secho(f"Successfully identified {len(_files)} files.")
-        print("Finished identifying")
-        file_data.files = _files
-
-
-# @cli.command()
-# @click.pass_context
-# @coro
-# async def fix(ctx: Context) -> None:
-#     """Fix file extensions - files should be identified first."""
-#     file_data = ctx.obj
-#     fixed = core.fix_extensions(file_data.files)
-#     if fixed:
-#         click.secho("Rebuilding file information...", bold=True)
-#         new_files = core.identify(fixed, file_data.main_dir)
-#         await file_data.db.update_files(new_files)
-#         file_data.files = await file_data.db.get_files()
-#         ctx.obj = file_data
-#     else:
-#         click.secho("Info: No file extensions to fix.",
-#                       bold=True, fg="yellow")
-
-
-def get_preservable_info(file_data: FileData) -> list[dict]:
-    log: Logger = setup_logger()
-    information = []
-
-    for file in file_data.files:
-        preservable_info: dict[str, Any] = {}
-        preservable = is_preservable(file, log)
-        if preservable[0] is False:
-            preservable_info["uuid"] = str(file.uuid)
-            preservable_info["ignore reason"] = preservable[1]
-            information.append(preservable_info)
-
-    return information
-
-
-@cli.result_callback()
-@coro
-async def done(result: Any, **kwargs: Any) -> None:  # noqa: ANN401
-    ctx = click.get_current_context()
-    file_data: FileData = ctx.obj
-    await file_data.db.set_files(file_data.files)
-
-    information = get_preservable_info(file_data)
-    await file_data.db.set_preservable_info(information)
-
-    click.secho("Done!", bold=True, fg="green")
-
-
-if __name__ == "__main__":
-    cli()
+        if database.is_open:
+            database.history.insert(program_end)
+            database.commit()
