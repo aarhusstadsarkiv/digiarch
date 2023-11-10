@@ -25,8 +25,7 @@ def files_folder(tests_folder: Path) -> Path:
 def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
     new_files_folder: Path = tests_folder / f"_{files_folder.name}"
 
-    if new_files_folder.is_dir():
-        rm_tree(new_files_folder)
+    rm_tree(new_files_folder)
 
     new_files_folder.mkdir(parents=True, exist_ok=True)
 
