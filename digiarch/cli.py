@@ -8,6 +8,8 @@ from typing import Union
 
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
+from acacore.models.reference_files import Action
+from acacore.models.reference_files import CustomSignature
 from acacore.models.reference_files import RenameAction
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
@@ -24,6 +26,8 @@ from click import group
 from click import option
 from click import pass_context
 from click import version_option
+from pydantic import TypeAdapter
+import yaml
 
 from .database import FileDB
 
@@ -63,19 +67,52 @@ def app():
     type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
     default="pronom",
 )
+@option("--update-siegfried-signature", is_flag=True, default=False)
+@option(
+    "--actions",
+    "actions_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True, path_type=Path),
+    default=None,
+)
+@option(
+    "--custom-signatures",
+    "custom_signatures_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True, path_type=Path),
+    default=None,
+)
 @pass_context
-def app_process(ctx: Context, root: Path, siegfried_path: Optional[Path], siegfried_signature: TSignature):
+def app_process(
+    ctx: Context,
+    root: Path,
+    siegfried_path: Optional[Path],
+    siegfried_signature: TSignature,
+    update_siegfried_signature: bool,
+    actions_file: Optional[Path],
+    custom_signatures_file: Optional[Path],
+):
+    siegfried = Siegfried(siegfried_path or Path(environ["GOPATH"], "bin", "sf"), f"{siegfried_signature}.sig")
+    if update_siegfried_signature:
+        siegfried.update(siegfried_signature)
+
+    actions: dict[str, Action]
+    custom_signatures: list[CustomSignature]
+
+    if actions_file:
+        actions = TypeAdapter(dict[str, Action]).validate_python(yaml.load(actions_file.open(), yaml.Loader))
+    else:
+        actions = get_actions()
+
+    if custom_signatures_file:
+        custom_signatures = TypeAdapter(list[CustomSignature]).validate_json(custom_signatures_file.read_text())
+    else:
+        custom_signatures = get_custom_signatures()
+
     database_path: Path = root / "_metadata" / "files.db"
     database_path.parent.mkdir(exist_ok=True)
-
-    siegfried = Siegfried(siegfried_path or Path(environ["GOPATH"], "bin", "sf"))
-    siegfried.update(siegfried_signature)
 
     program_name: str = ctx.find_root().command.name
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
     logger_stdout: Logger = setup_logger(program_name + "_std_out", streams=[stdout])
-
-    actions, custom_signatures = get_actions(), get_custom_signatures()
 
     with FileDB(database_path) as database, ExceptionManager(BaseException) as exception:
         database.init()
