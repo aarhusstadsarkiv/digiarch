@@ -6,6 +6,8 @@ from traceback import format_tb
 from typing import Optional
 from typing import Union
 
+import yaml
+from acacore.__version__ import __version__
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -27,7 +29,6 @@ from click import option
 from click import pass_context
 from click import version_option
 from pydantic import TypeAdapter
-import yaml
 
 from .database import FileDB
 
@@ -46,13 +47,16 @@ def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], 
     return old_path, new_path
 
 
-@group("digiarch")
-@version_option("")
+@group("digiarch", no_args_is_help=True)
+@version_option(__version__)
 def app():
+    """
+    Generate and operate on the files' database used by other Aarhus Stadsarkiv tools.
+    """
     pass
 
 
-@app.command("process")
+@app.command("process", no_args_is_help=True, short_help="Generate a files' database for a folder.")
 @argument(
     "root",
     type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
@@ -61,24 +65,35 @@ def app():
     "--siegfried-path",
     type=ClickPath(dir_okay=False, resolve_path=True, path_type=Path),
     default=None,
+    help="The path to the Siegfried executable.",
 )
 @option(
     "--siegfried-signature",
     type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
     default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
 )
-@option("--update-siegfried-signature", is_flag=True, default=False)
+@option(
+    "--update-siegfried-signature/--no-update-siegfried-signature",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Control whether Siegfried should update its signature.",
+)
 @option(
     "--actions",
     "actions_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True, path_type=Path),
     default=None,
+    help="Path to a YAML file containing file format actions.",
 )
 @option(
     "--custom-signatures",
     "custom_signatures_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True, path_type=Path),
     default=None,
+    help="Path to a JSON file containing custom signature specifications.",
 )
 @pass_context
 def app_process(
@@ -90,6 +105,14 @@ def app_process(
     actions_file: Optional[Path],
     custom_signatures_file: Optional[Path],
 ):
+    """
+    Process a folder (ROOT) recursively and populate a files' database.
+
+    Each file is identified with Siegfried and an action is assigned to it.
+    Files that need re-identification, renaming, or ignoring are processed accordingly.
+
+    Files that are already in the database are not processed.
+    """
     siegfried = Siegfried(siegfried_path or Path(environ["GOPATH"], "bin", "sf"), f"{siegfried_signature}.sig")
     if update_siegfried_signature:
         siegfried.update(siegfried_signature)
