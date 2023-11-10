@@ -1,7 +1,14 @@
 # Changelog
 
+## 0.9.23
+- added which version of DRIOD we use to the log
+- makes sure we use most / all of the avaivable info given by `sf`
+
+## 0.9.22a
+- added ability to get reference files version and is printing it to stdout
+
 ## 0.9.22
-- added check to ensure opdates of the changelog
+- added check to ensure updates of the changelog
 ## 0.9.21
 - fixed missing identification of aca-fmt/17 (MapInfo Map Files)
 

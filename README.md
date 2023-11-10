@@ -1,5 +1,5 @@
 ## Digiarch
-[![Tests](https://github.com/aarhusstadsarkiv/digiarch/workflows/Tests/badge.svg?branch=master)](https://github.com/aarhusstadsarkiv/digiarch/actions?query=workflow%3ATests+branch%3Amaster) [![codecov](https://codecov.io/gh/aarhusstadsarkiv/digiarch/branch/master/graph/badge.svg)](https://codecov.io/gh/aarhusstadsarkiv/digiarch) [![PyPI](https://badge.fury.io/py/digiarch.svg)](https://badge.fury.io/py/digiarch)
+[![Tests](https://github.com/aarhusstadsarkiv/digiarch/workflows/Tests/badge.svg?branch=master)](https://github.com/aarhusstadsarkiv/digiarch/actions?query=workflow%3ATests+branch%3Amaster) [![PyPI](https://badge.fury.io/py/digiarch.svg)](https://badge.fury.io/py/digiarch)
 
 ### Forudsætninger
 Go og Siegfried
