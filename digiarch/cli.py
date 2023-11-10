@@ -56,7 +56,7 @@ def app():
     pass
 
 
-@app.command("process", no_args_is_help=True, short_help="Generate a files' database for a folder.")
+@app.command("identify", no_args_is_help=True, short_help="Generate a files' database for a folder.")
 @argument(
     "root",
     type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
