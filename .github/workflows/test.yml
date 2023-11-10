@@ -44,7 +44,7 @@ jobs:
       - run: poetry install
       - run: go install github.com/richardlehane/siegfried/cmd/sf@latest
       - name: Update Siegfried Signature
-        run: /home/runner/go/bin/sf -update
+        run: /home/runner/go/bin/sf -sig pronom.sig -update
       - name: Unit test
         env:
           GOPATH: /home/runner/go
