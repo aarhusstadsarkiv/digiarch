@@ -137,45 +137,43 @@ def app_process(
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
     logger_stdout: Logger = setup_logger(program_name + "_std_out", streams=[stdout])
 
-    with FileDB(database_path) as database, ExceptionManager(BaseException) as exception:
+    with FileDB(database_path) as database:
         database.init()
-        database.commit()
-
         program_start: HistoryEntry = HistoryEntry.command_history(ctx, "start")
-
         database.history.insert(program_start)
         logger.info(program_start.operation)
 
-        for path in find_files(root, exclude=[database_path.parent]):
-            if database.file_exists(path, root):
-                continue
+        with ExceptionManager(BaseException) as exception:
+            for path in find_files(root, exclude=[database_path.parent]):
+                if database.file_exists(path, root):
+                    continue
 
-            file_history: list[HistoryEntry] = []
-            file = File.from_file(path, root, siegfried, actions, custom_signatures)
+                file_history: list[HistoryEntry] = []
+                file = File.from_file(path, root, siegfried, actions, custom_signatures)
 
-            if file.action_data and file.action_data.rename:
-                old_path, new_path = handle_rename(file, file.action_data.rename)
-                if new_path:
-                    file = File.from_file(new_path, root, siegfried, actions, custom_signatures)
-                    file_history.append(
-                        HistoryEntry.command_history(
-                            ctx,
-                            "file:action:rename",
-                            file.uuid,
-                            [old_path.relative_to(root), new_path.relative_to(root)],
+                if file.action_data and file.action_data.rename:
+                    old_path, new_path = handle_rename(file, file.action_data.rename)
+                    if new_path:
+                        file = File.from_file(new_path, root, siegfried, actions, custom_signatures)
+                        file_history.append(
+                            HistoryEntry.command_history(
+                                ctx,
+                                "file:action:rename",
+                                file.uuid,
+                                [old_path.relative_to(root), new_path.relative_to(root)],
+                            )
                         )
-                    )
 
-            database.files.insert(file, exist_ok=True)
+                database.files.insert(file, exist_ok=True)
 
-            logger_stdout.info(
-                f"{HistoryEntry.command_history(ctx, ':file:new').operation} "
-                f"{file.relative_path} {file.puid} {file.action}"
-            )
+                logger_stdout.info(
+                    f"{HistoryEntry.command_history(ctx, ':file:new').operation} "
+                    f"{file.relative_path} {file.puid} {file.action}"
+                )
 
-            for entry in file_history:
-                logger.info(f"{entry.operation} {entry.uuid}")
-                database.history.insert(entry)
+                for entry in file_history:
+                    logger.info(f"{entry.operation} {entry.uuid}")
+                    database.history.insert(entry)
 
         program_end: HistoryEntry = HistoryEntry.command_history(
             ctx,
