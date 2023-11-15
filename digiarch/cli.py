@@ -29,13 +29,13 @@ from acacore.siegfried.siegfried import TSignature
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
+from click import argument
 from click import Choice
 from click import Context
-from click import Path as ClickPath
-from click import argument
 from click import group
 from click import option
 from click import pass_context
+from click import Path as ClickPath
 from click import version_option
 from pydantic import TypeAdapter
 
@@ -251,7 +251,7 @@ def app_edit_action(
     data_json: Optional[str],
 ):
     data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
-    assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"
+    assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"  # noqa: UP038
     database_path: Path = root / "_metadata" / "files.db"
 
     if not database_path.is_file():
