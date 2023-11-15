@@ -1,3 +1,4 @@
+from json import loads
 from logging import Logger
 from os import environ
 from pathlib import Path
@@ -11,8 +12,15 @@ import yaml
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
+from acacore.models.reference_files import ActionData
+from acacore.models.reference_files import ConvertAction
 from acacore.models.reference_files import CustomSignature
+from acacore.models.reference_files import ExtractAction
+from acacore.models.reference_files import IgnoreAction
+from acacore.models.reference_files import ManualAction
+from acacore.models.reference_files import ReIdentifyAction
 from acacore.models.reference_files import RenameAction
+from acacore.models.reference_files import ReplaceAction
 from acacore.models.reference_files import TActionType
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
@@ -21,13 +29,13 @@ from acacore.siegfried.siegfried import TSignature
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
-from click import argument
 from click import Choice
 from click import Context
+from click import Path as ClickPath
+from click import argument
 from click import group
 from click import option
 from click import pass_context
-from click import Path as ClickPath
 from click import version_option
 from pydantic import TypeAdapter
 
@@ -230,8 +238,20 @@ def app_edit():
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
+@option("--data", type=(str, str), multiple=True)
+@option("--data-json", type=str, default=None)
 @pass_context
-def app_edit_action(ctx: Context, root: Path, uuids: tuple[UUID], action: TActionType, reason: str):
+def app_edit_action(
+    ctx: Context,
+    root: Path,
+    uuids: tuple[UUID],
+    action: TActionType,
+    reason: str,
+    data: tuple[tuple[str, str]],
+    data_json: Optional[str],
+):
+    data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
+    assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"
     database_path: Path = root / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -256,6 +276,28 @@ def app_edit_action(ctx: Context, root: Path, uuids: tuple[UUID], action: TActio
                     continue
 
                 file.action = action
+
+                if data_parsed:
+                    file.action_data = file.action_data or ActionData()
+                    if action == "convert":
+                        file.action_data.convert = (
+                            [ConvertAction.model_validate(data_parsed)]
+                            if isinstance(data_parsed, dict)
+                            else ActionData(convert=data_parsed).convert
+                        )
+                    elif action == "extract":
+                        file.action_data.extract = ExtractAction.model_validate(data_parsed)
+                    elif action == "replace":
+                        file.action_data.replace = ReplaceAction.model_validate(data_parsed)
+                    elif action == "manual":
+                        file.action_data.manual = ManualAction.model_validate(data_parsed)
+                    elif action == "rename":
+                        file.action_data.rename = RenameAction.model_validate(data_parsed)
+                    elif action == "ignore":
+                        file.action_data.ignore = IgnoreAction.model_validate(data_parsed)
+                    elif action == "reidentify":
+                        file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
+
                 database.files.insert(file, replace=True)
 
                 history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action", uuid, action, reason)
