@@ -47,13 +47,39 @@ def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], 
     return old_path, new_path
 
 
+def handle_start(ctx: Context, database: FileDB, *loggers: Logger):
+    program_start: HistoryEntry = HistoryEntry.command_history(ctx, "start")
+
+    database.history.insert(program_start)
+
+    for logger in loggers:
+        logger.info(program_start.operation)
+
+
+def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *loggers: Logger, commit: bool = True):
+    program_end: HistoryEntry = HistoryEntry.command_history(
+        ctx,
+        "end",
+        data=1 if exception.exception else 0,
+        reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
+    )
+
+    for logger in loggers:
+        if exception.exception:
+            logger.error(f"{program_end.operation} {exception.exception!r}")
+        else:
+            logger.info(program_end.operation)
+
+    if database.is_open:
+        database.history.insert(program_end)
+        if commit:
+            database.commit()
+
+
 @group("digiarch", no_args_is_help=True)
 @version_option(__version__)
 def app():
-    """
-    Generate and operate on the files' database used by other Aarhus Stadsarkiv tools.
-    """
-    pass
+    """Generate and operate on the files' database used by other Aarhus Stadsarkiv tools."""
 
 
 @app.command("identify", no_args_is_help=True, short_help="Generate a files' database for a folder.")
@@ -139,9 +165,7 @@ def app_process(
 
     with FileDB(database_path) as database:
         database.init()
-        program_start: HistoryEntry = HistoryEntry.command_history(ctx, "start")
-        database.history.insert(program_start)
-        logger.info(program_start.operation)
+        handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
             for path in find_files(root, exclude=[database_path.parent]):
@@ -161,31 +185,18 @@ def app_process(
                                 "file:action:rename",
                                 file.uuid,
                                 [old_path.relative_to(root), new_path.relative_to(root)],
-                            )
+                            ),
                         )
 
                 database.files.insert(file, exist_ok=True)
 
                 logger_stdout.info(
                     f"{HistoryEntry.command_history(ctx, ':file:new').operation} "
-                    f"{file.relative_path} {file.puid} {file.action}"
+                    f"{file.relative_path} {file.puid} {file.action}",
                 )
 
                 for entry in file_history:
                     logger.info(f"{entry.operation} {entry.uuid}")
                     database.history.insert(entry)
 
-        program_end: HistoryEntry = HistoryEntry.command_history(
-            ctx,
-            "end",
-            data=1 if exception.exception else 0,
-            reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
-        )
-        if exception.exception:
-            logger.error(f"{program_end.operation} {repr(exception.exception)}")
-        else:
-            logger.info(program_end.operation)
-
-        if database.is_open:
-            database.history.insert(program_end)
-            database.commit()
+        handle_end(ctx, database, exception, logger)
