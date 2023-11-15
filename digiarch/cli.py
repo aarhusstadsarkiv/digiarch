@@ -233,13 +233,26 @@ def app_edit():
 )
 @argument(
     "action",
+    metavar="ACTION",
     nargs=1,
     type=Choice(("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify")),
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--data", type=(str, str), multiple=True)
-@option("--data-json", type=str, default=None)
+@option(
+    "--data",
+    metavar="<FIELD VALUE>",
+    type=(str, str),
+    multiple=True,
+    help="Data to be used to replace existing action data for the specified action.",
+)
+@option(
+    "--data-json",
+    metavar="JSON",
+    type=str,
+    default=None,
+    help="Data to be used to replace existing action data for the specified action, in JSON format.",
+)
 @pass_context
 def app_edit_action(
     ctx: Context,
@@ -250,6 +263,24 @@ def app_edit_action(
     data: tuple[tuple[str, str]],
     data_json: Optional[str],
 ):
+    """
+    Change the action of one or more files in the files' database for the ROOT folder to ACTION.
+
+    Files are updated even if their action value is already set to ACTION.
+
+    The action data for the given files is not touched unless the --data or --data-json options are used.
+    The --data option takes precedence.
+
+    \b
+    Available ACTION values are:
+        * convert
+        * extract
+        * replace
+        * manual
+        * rename
+        * ignore
+        * reidentify
+    """  # noqa: D301
     data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
     assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"  # noqa: UP038
     database_path: Path = root / "_metadata" / "files.db"
