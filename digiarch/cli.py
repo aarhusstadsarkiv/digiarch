@@ -5,6 +5,7 @@ from sys import stdout
 from traceback import format_tb
 from typing import Optional
 from typing import Union
+from uuid import UUID
 
 import yaml
 from acacore.models.file import File
@@ -12,6 +13,7 @@ from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
 from acacore.models.reference_files import CustomSignature
 from acacore.models.reference_files import RenameAction
+from acacore.models.reference_files import TActionType
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
 from acacore.siegfried import Siegfried
@@ -198,5 +200,64 @@ def app_process(
                 for entry in file_history:
                     logger.info(f"{entry.operation} {entry.uuid}")
                     database.history.insert(entry)
+
+        handle_end(ctx, database, exception, logger)
+
+
+@app.group("edit", no_args_is_help=True)
+def app_edit():
+    """Edit a files' database."""
+
+
+@app_edit.command("action", no_args_is_help=True)
+@argument(
+    "root",
+    nargs=1,
+    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
+)
+@argument(
+    "uuids",
+    metavar="UUID...",
+    nargs=-1,
+    type=UUID,
+    required=True,
+    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+)
+@argument(
+    "action",
+    nargs=1,
+    type=Choice(("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify")),
+    required=True,
+)
+@argument("reason", nargs=1, type=str, required=True)
+@pass_context
+def app_edit_action(ctx: Context, root: Path, uuids: tuple[UUID], action: TActionType, reason: str):
+    database_path: Path = root / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            for uuid in uuids:
+                file: Optional[File] = database.files.select(
+                    where="uuid = ?", limit=1, parameters=[str(uuid)]
+                ).fetchone()
+
+                if not file:
+                    logger.error(f"{HistoryEntry.command_history(ctx, 'file:select')} {uuid} not found")
+                    continue
+
+                file.action = action
+                database.files.insert(file, replace=True)
+
+                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action", uuid, action, reason)
+                logger.info(f"{history.operation} {history.uuid} {history.data} {history.reason}")
+                database.history.insert(history)
 
         handle_end(ctx, database, exception, logger)
