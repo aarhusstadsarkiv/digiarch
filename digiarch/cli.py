@@ -246,7 +246,9 @@ def app_edit_action(ctx: Context, root: Path, uuids: tuple[UUID], action: TActio
         with ExceptionManager(BaseException) as exception:
             for uuid in uuids:
                 file: Optional[File] = database.files.select(
-                    where="uuid = ?", limit=1, parameters=[str(uuid)]
+                    where="uuid = ?",
+                    limit=1,
+                    parameters=[str(uuid)],
                 ).fetchone()
 
                 if not file:
