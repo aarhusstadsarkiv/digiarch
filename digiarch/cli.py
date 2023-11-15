@@ -21,13 +21,13 @@ from acacore.siegfried.siegfried import TSignature
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
+from click import argument
 from click import Choice
 from click import Context
-from click import Path as ClickPath
-from click import argument
 from click import group
 from click import option
 from click import pass_context
+from click import Path as ClickPath
 from click import version_option
 from pydantic import TypeAdapter
 

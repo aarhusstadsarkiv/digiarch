@@ -1,0 +1,16 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns="http://www.sa.dk/xmlns/siard/1.0/schema0/table1.xsd" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://www.sa.dk/xmlns/siard/1.0/schema0/table1.xsd" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="table">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element minOccurs="0" maxOccurs="unbounded" name="row" type="rowType" />
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+  <xs:complexType name="rowType">
+    <xs:sequence>
+      <xs:element minOccurs="1" name="c1" type="xs:integer" />
+      <xs:element minOccurs="1" name="c2" type="xs:string" />
+    </xs:sequence>
+  </xs:complexType>
+</xs:schema>
