@@ -19,13 +19,13 @@ from acacore.siegfried.siegfried import TSignature
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
+from click import argument
 from click import Choice
 from click import Context
-from click import Path as ClickPath
-from click import argument
 from click import group
 from click import option
 from click import pass_context
+from click import Path as ClickPath
 from click import version_option
 from pydantic import TypeAdapter
 
@@ -50,10 +50,7 @@ def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], 
 @group("digiarch", no_args_is_help=True)
 @version_option(__version__)
 def app():
-    """
-    Generate and operate on the files' database used by other Aarhus Stadsarkiv tools.
-    """
-    pass
+    """Generate and operate on the files' database used by other Aarhus Stadsarkiv tools."""
 
 
 @app.command("identify", no_args_is_help=True, short_help="Generate a files' database for a folder.")
@@ -161,14 +158,14 @@ def app_process(
                                 "file:action:rename",
                                 file.uuid,
                                 [old_path.relative_to(root), new_path.relative_to(root)],
-                            )
+                            ),
                         )
 
                 database.files.insert(file, exist_ok=True)
 
                 logger_stdout.info(
                     f"{HistoryEntry.command_history(ctx, ':file:new').operation} "
-                    f"{file.relative_path} {file.puid} {file.action}"
+                    f"{file.relative_path} {file.puid} {file.action}",
                 )
 
                 for entry in file_history:
@@ -182,7 +179,7 @@ def app_process(
             reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
         )
         if exception.exception:
-            logger.error(f"{program_end.operation} {repr(exception.exception)}")
+            logger.error(f"{program_end.operation} {exception.exception!r}")
         else:
             logger.info(program_end.operation)
 

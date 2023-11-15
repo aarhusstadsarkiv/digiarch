@@ -1,0 +1,2921 @@
+aca-error/1:
+  name: Empty File
+  action: ignore
+  ignore:
+    reasoning: It's an empty file! Not preservation-worthy
+aca-error/2:
+  name: Corrupt file
+  action: ignore
+  ignore:
+    reasoning: It's a corrupt file! Not preservation-worthy
+aca-fmt/1:
+  name: Lotus 1-2-3 Worksheet
+  action: convert
+  convert:
+    - converter: symphovert
+      converter_type: master
+      outputs:
+        - ods
+    - converter: libre
+      converter_type: statutory
+      outputs:
+        - ods
+        - pdf
+aca-fmt/2:
+  name: Microsoft Word Markup
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+aca-fmt/3:
+  name: Microsoft Excel Markup
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+aca-fmt/4:
+  name: MindManager Mind Map
+  action: ignore
+  ignore:
+    reasoning: Proprietary mind map file. Not preservation-worthy
+aca-fmt/5:
+  name: Lotus Notes Template
+  action: ignore
+  ignore:
+    reasoning: A database template. Not preservation-worthy
+aca-fmt/6:
+  name: Lotus Approach Index File
+  action: ignore
+  ignore:
+    reasoning: A file exclusively containing database indexing. Not preservation-worthy
+aca-fmt/7:
+  name: ID File
+  action: ignore
+  ignore:
+    reasoning: User ID files. Not preservation-worthy
+aca-fmt/9:
+  name: Transport Neutral Encapsulation Format (TNEF)/Microsoft email attachments
+    archive (winmail)
+  action: extract
+  extract:
+    tool: tnefparse
+    extension: .dat
+    dir_suffix: .mail_extraction
+aca-fmt/20:
+  name: MapInfo TAB file
+  action: convert
+  convert:
+    - converter: gis
+      converter_type: master
+      outputs:
+        - tab
+fmt/3:
+  name: Graphics Interchange Format 87a
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/4:
+  name: Graphics Interchange Format 89a
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/5:
+  name: Audio/Video Interleaved Format
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+fmt/11:
+  name: Portable Network Graphics 1.0
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/12:
+  name: Portable Network Graphics 1.1
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+fmt/13:
+  name: Portable Network Graphics 1.2
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/14:
+  name: Acrobat PDF 1.0 - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/15:
+  name: Acrobat PDF 1.1 - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/16:
+  name: Acrobat PDF 1.2 - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/17:
+  name: Acrobat PDF 1.3 - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/18:
+  name: Acrobat PDF 1.4 - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/19:
+  name: Acrobat PDF 1.5 - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/20:
+  name: Acrobat PDF 1.6 - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/21:
+  name: AutoCAD Drawing 1.0
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/22:
+  name: AutoCAD Drawing 1.2
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/23:
+  name: AutoCAD Drawing 1.3
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/24:
+  name: AutoCAD Drawing 1.4
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/25:
+  name: AutoCAD Drawing 2.0
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/26:
+  name: AutoCAD Drawing 2.1
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/27:
+  name: AutoCAD Drawing 2.2
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/28:
+  name: AutoCAD Drawing 2.5
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/29:
+  name: AutoCAD Drawing 2.6
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/30:
+  name: AutoCAD Drawing R9
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/31:
+  name: AutoCAD Drawing R10
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/32:
+  name: AutoCAD Drawing R11/12
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/33:
+  name: AutoCAD Drawing R13
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/34:
+  name: AutoCAD Drawing R14
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/35:
+  name: AutoCAD Drawing 2000-2002
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/36:
+  name: AutoCAD Drawing 2004-2005
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/37:
+  name: Microsoft Word for Windows Document 1.0
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/38:
+  name: Microsoft Word for Windows Document 2.0
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/39:
+  name: Microsoft Word Document 95
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/40:
+  name: Microsoft Word Document 97-2003
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/41:
+  name: Raw JPEG Stream
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/42:
+  name: JPEG File Interchange Format 1.00
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/43:
+  name: JPEG File Interchange Format 1.01
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/44:
+  name: JPEG File Interchange Format 1.02
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/45:
+  name: Rich Text Format 1.0-1.4
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/50:
+  name: Rich Text Format 1.5-1.6
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/52:
+  name: Rich Text Format 1.7
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/53:
+  name: Rich Text Format 1.8
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/55:
+  name: Microsoft Excel 2.x Worksheet (xls)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/56:
+  name: Microsoft Excel 3.0 Worksheet (xls)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/57:
+  name: Microsoft Excel 4.0 Worksheet (xls) 4S
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/58:
+  name: Microsoft Excel 4.0 Workbook (xls) 4W
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/59:
+  name: Microsoft Excel 5.0/95 Workbook (xls)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/61:
+  name: Microsoft Excel 97 Workbook (xls) 8
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/63:
+  name: Drawing Interchange File Format (ASCII)
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/64:
+  name: Drawing Interchange File Format (ASCII) 1.0
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/65:
+  name: Drawing Interchange File Format (ASCII) 1.2
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/66:
+  name: Drawing Interchange File Format (ASCII) 1.3
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/67:
+  name: Drawing Interchange File Format (ASCII) 1.4
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/68:
+  name: Drawing Interchange File Format (ASCII) 2.0
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/69:
+  name: Drawing Interchange File Format (ASCII) 2.1
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/70:
+  name: Drawing Interchange File Format (ASCII) 2.2
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/71:
+  name: Drawing Interchange File Format (ASCII) 2.5
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/72:
+  name: Drawing Interchange File Format (ASCII) 2.6
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dxf
+        - pdf
+        - svg
+fmt/73:
+  name: Drawing Interchange File Format (ASCII) R9
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/74:
+  name: Drawing Interchange File Format (ASCII) R10
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/75:
+  name: Drawing Interchange File Format (ASCII) R11/12
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/76:
+  name: Drawing Interchange File Format (ASCII) R13
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/77:
+  name: Drawing Interchange File Format (ASCII) R14
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/78:
+  name: Drawing Interchange File Format (ASCII) 2000-2002
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/79:
+  name: Drawing Interchange File Format (ASCII) 2004/2005/2006
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/80:
+  name: Drawing Interchange File Format (Binary) R10
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/81:
+  name: Drawing Interchange File Format (Binary) R11/12
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/82:
+  name: Drawing Interchange File Format (Binary) R13
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/83:
+  name: Drawing Interchange File Format (Binary) R14
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/84:
+  name: Drawing Interchange File Format (Binary) 2000-2002
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/85:
+  name: Drawing Interchange File Format (Binary) 2004-2006
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/90:
+  name: PCX 5
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+fmt/95:
+  name: Acrobat PDF/A - Portable Document Format 1a
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/96:
+  name: Hypertext Markup Language
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+fmt/98:
+  name: Hypertext Markup Language 3.2
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+fmt/99:
+  name: Hypertext Markup Language 4.0
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+fmt/100:
+  name: Hypertext Markup Language 4.01
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+fmt/101:
+  name: Extensible Markup Language 1.0
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/102:
+  name: Extensible Hypertext Markup Language 1.0
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+fmt/109:
+  name: Macromedia Flash 6
+  action: ignore
+  ignore:
+    reasoning: Flash is no longer supported, and it is in a very messy format - The
+      file can be a image, video or interactive game. It might not be preservation-worthy,
+      but either way we don't know how to handle it
+fmt/110:
+  name: Macromedia Flash 7
+  action: ignore
+  ignore:
+    reasoning: Flash is no longer supported, and it is in a very messy format - The
+      file can be a image, video or interactive game. It might not be preservation-worthy,
+      but either way we don't know how to handle it
+fmt/111:
+  name: OLE2 Compound Document Format
+  action: reidentify
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+  reidentify:
+    reasoning: why do we re-run these?
+fmt/115:
+  name: Windows Bitmap 2.0
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/116:
+  name: Windows Bitmap 3.0
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/117:
+  name: Windows Bitmap 3.0 NT
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+fmt/122:
+  name: Encapsulated PostScript File Format 1.2
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/123:
+  name: Encapsulated PostScript File Format 2.0
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/124:
+  name: Encapsulated PostScript File Format 3
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/125:
+  name: Microsoft Powerpoint Presentation 95
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odp
+        - pdf
+fmt/126:
+  name: Microsoft Powerpoint Presentation 97-2003
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odp
+        - pdf
+fmt/132:
+  name: Windows Media Audio
+  action: convert
+  convert:
+    - converter: audio
+      converter_type: master
+      outputs:
+        - flac
+fmt/133:
+  name: Windows Media Video
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+fmt/134:
+  name: MPEG 1/2 Audio Layer 3
+  action: convert
+  convert:
+    - converter: audio
+      converter_type: master
+      outputs:
+        - flac
+fmt/136:
+  name: OpenDocument Text 1.0
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/137:
+  name: OpenDocument Spreadsheet 1.0
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/141:
+  name: Waveform Audio (PCMWAVEFORMAT)
+  action: convert
+  convert:
+    - converter: audio
+      converter_type: master
+      outputs:
+        - flac
+fmt/142:
+  name: Waveform Audio (WAVEFORMATEX)
+  action: convert
+  convert:
+    - converter: audio
+      converter_type: master
+      outputs:
+        - flac
+fmt/146:
+  name: Acrobat PDF/X - Portable Document Format - Exchange 1a:2003
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/155:
+  name: Geographic Tagged Image File Format (GeoTIFF)
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+fmt/157:
+  name: Acrobat PDF/X - Portable Document Format - Exchange 1a:2001
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/158:
+  name: Acrobat PDF/X - Portable Document Format - Exchange 3:2002
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/163:
+  name: Microsoft Works Word Processor 1-3 for DOS and 2 for Windows
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/199:
+  name: MPEG-4 Media File
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+  rename:
+    extension: ".mp4"
+    append: true
+    on_extension_mismatch: true
+fmt/206:
+  name: Structured Query Language Data
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/208:
+  name: Binary File
+  action: ignore
+  ignore:
+    reasoning: Binary File. Not preservation-worthy
+fmt/212:
+  name: Information or Setup File
+  action: ignore
+  ignore:
+    reasoning: unknown. Not preservation-worthy
+fmt/214:
+  name: Microsoft Excel for Windows 2007 onwards
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/215:
+  name: Microsoft Powerpoint for Windows 2007 onwards
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odp
+        - pdf
+fmt/217:
+  name: PaintShop Pro Browser Cache File
+  action: ignore
+  ignore:
+    reasoning: PaintShop Pro Browser Cache is a thumbnail image format associated
+      with PaintShop Pro. Not preservation-worthy
+fmt/233:
+  name: Microsoft Works Word Processor 3-4 for Windows
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/244:
+  name: Keyhole Markup Language (XML)
+  action: convert
+  convert:
+    - converter: gis
+      converter_type: master
+      outputs:
+        - GML3
+fmt/258:
+  name: Microsoft Works Word Processor 5-6
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/276:
+  name: Acrobat PDF 1.7 - Portable Document Format 1.7
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/277:
+  name: ESRI Arc/View Shapefile Index
+  action: ignore
+  ignore:
+    reasoning: Index file for gis project. Picked up and used by the GIS-procesor
+fmt/279:
+  name: FLAC (Free Lossless Audio Codec)
+  action: convert
+  convert:
+    - converter: audio
+      converter_type: master
+      outputs:
+        - flac
+    - converter: audio
+      converter_type: statutory
+      outputs:
+        - mp3
+fmt/290:
+  name: OpenDocument Text 1.1
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+fmt/291:
+  name: OpenDocument Text 1.2
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/292:
+  name: OpenDocument Presentation 1.1
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+fmt/294:
+  name: OpenDocument Spreadsheet 1.1
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/295:
+  name: OpenDocument Spreadsheet 1.2
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/296:
+  name: OpenDocument Graphics
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - svg
+        - pdf
+fmt/297:
+  name: OpenDocument Graphics
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - svg
+        - pdf
+fmt/319:
+  name: ESRI Spatial Index File
+  action: ignore
+  ignore:
+    reasoning: A 2 part indexing file for spatial data. Picked up and used by the
+      GIS-procesor
+fmt/320:
+  name: ESRI Shapefile Projection (Well-Known Text) Format
+  action: ignore
+  ignore:
+    reasoning: Projections Definition file; stores coordinate system information..
+      Picked up and used by the GIS-procesor
+fmt/331:
+  name: Autorun Configuration File
+  action: ignore
+  ignore:
+    reasoning: A Windows file usually found on CDs or DVDs or Blurays, telling the
+      OS what executable to run when the disc is played. Not preservation-worthy
+fmt/332:
+  name: ESRI Arc/View Project (3.x)
+  action: ignore
+  ignore:
+    reasoning: An ESRI GIS project file. Not preservation-worthy
+fmt/340:
+  name: ''
+  action: convert
+  convert:
+    - converter: symphovert
+      converter_type: master
+      outputs:
+        - odt
+fmt/345:
+  name: Microsoft Windows Enhanced Metafile 3.0
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+fmt/353:
+  name: Tagged Image File Format
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+    - converter: copy
+      converter_type: statutory
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/354:
+  name: Acrobat PDF/A - Portable Document Format 1b
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/355:
+  name: Rich Text Format 1.9
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/356:
+  name: Adaptive Multi-Rate Audio
+  action: convert
+  convert:
+    - converter: audio
+      converter_type: master
+      outputs:
+        - flac
+fmt/357:
+  name: 3GPP Audio/Video File
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+fmt/388:
+  name: Internet Calendar and Scheduling format
+  action: convert
+  convert:
+    - converter: text
+      converter_type: master
+      outputs:
+        - tif
+fmt/394:
+  name: DS_store file (MAC)
+  action: ignore
+  ignore:
+    reasoning: A macOS file used by the operating system to store folder metadata,
+      like icon position and bg image. Not preservation-worthy
+fmt/395:
+  name: vCard
+  action: ignore
+  ignore:
+    reasoning: Windows native contact files. Not preservation-worthy
+fmt/411:
+  name: RAR Archive version 2.9
+  action: extract
+  extract:
+    tool: patool
+    extension: .rar
+    dir_suffix: .archive_extraction
+fmt/412:
+  name: Microsoft Word for Windows 2007 onwards
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/414:
+  name: Audio Interchange File Format
+  action: convert
+  convert:
+    - converter: audio
+      converter_type: master
+      outputs:
+        - flac
+fmt/422:
+  name: Adobe Illustrator 6.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/428:
+  name: CorelDraw Drawing
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - svg
+        - pdf
+fmt/433:
+  name: Drawing Interchange File Format (ASCII) 2007/2008/2009
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/434:
+  name: AutoCAD Drawing 2010/2011/2012
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/435:
+  name: Drawing Interchange File Format (ASCII) 2010/2012/2014
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/440:
+  name: Microsoft Project 2007
+  action: ignore
+  ignore:
+    reasoning: Project files. Not preservation-worthy
+fmt/442:
+  name: Microsoft Visio (generic)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - svg
+        - pdf
+fmt/443:
+  name: Microsoft Visio Drawing 2003-2010
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - svg
+        - pdf
+fmt/445:
+  name: Microsoft Excel Macro-Enabled 2007
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/471:
+  name: Hypertext Markup Language 5
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+fmt/473:
+  name: Microsoft Office Owner File
+  action: ignore
+  ignore:
+    reasoning: A temporary file created by Windows Office when a document is open,
+      containing account logon info. Not preservation-worthy
+fmt/474:
+  name: Windows Help File
+  action: ignore
+  ignore:
+    reasoning: Microsoft WinHelp is a proprietary format for online help files that
+      can be displayed by the Microsoft Help browse. Not preservation-worthy
+fmt/475:
+  name: Microsoft Management Console Snap-in Control file
+  action: ignore
+  ignore:
+    reasoning: Related to Microsoft administrative file control. Not preservation-worthy
+fmt/476:
+  name: Acrobat PDF/A - Portable Document Format (2a)
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/477:
+  name: Acrobat PDF/A - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/478:
+  name: Acrobat PDF/A - Portable Document Format (2u)
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/479:
+  name: Acrobat PDF/A - Portable Document Format (3a)
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/480:
+  name: Acrobat PDF/A - Portable Document Format (3b)
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/484:
+  name: 7Zip format
+  action: extract
+  extract:
+    tool: py7zr
+    extension: .7z
+    dir_suffix: .archive_extraction
+fmt/487:
+  name: Macro Enabled Microsoft Powerpoint 2007 Onwards
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odp
+        - pdf
+fmt/488:
+  name: Acrobat PDF/X - Portable Document Format - Exchange PDF/X-4
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/493:
+  name: Acrobat PDF/E - Portable Document Format for Engineering PDF/E-1
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/494:
+  name: Microsoft Office Encrypted Document (2007 Onwards)
+  action: ignore
+  ignore:
+    reasoning: A password protected office document. Password protected
+fmt/500:
+  name: Internet Explorer for Mac cache file
+  action: ignore
+  ignore:
+    reasoning: An Internet Explorer cache file. Not preservation-worthy
+fmt/503:
+  name: AppleDouble Resource Fork 2
+  action: ignore
+  ignore:
+    reasoning: 'The resource fork is a construct of the Mac OS operating system used
+      to store structured data in a file, alongside unstructured data stored within
+      the data fork. The format specification is available here: https://support.apple.com/kb/TA32537?viewlocale=en_US
+      The format lacks an extension, and is instead represented by a file name consisting
+      of ._<filename resource fork belongs to>. It might not be preservation-worthy,
+      but either way we don''t know how to handle it'
+fmt/505:
+  name: Adobe Flash 8
+  action: ignore
+  ignore:
+    reasoning: Flash is no longer supported, and it is in a very messy format - The
+      file can be a image, video or interactive game. It might not be preservation-worthy,
+      but either way we don't know how to handle it
+fmt/507:
+  name: Adobe Flash 10
+  action: ignore
+  ignore:
+    reasoning: Flash is no longer supported, and it is in a very messy format - The
+      file can be a image, video or interactive game. It might not be preservation-worthy,
+      but either way we don't know how to handle it
+fmt/509:
+  name: Adobe PostScript Font Metrics file
+  action: ignore
+  ignore:
+    reasoning: Part of the PostScript Type 1 font format family. On Windows, Type
+      1 fonts consist of a PostScript Font Binary (.PFB) file, plus a corresponding
+      PostScript Font Metrics (.PFM) file. (Some very old Type 1 fonts may ship with
+      a .PFB, .AFM, and .INF file. Installing such fonts will create a .PFM file from
+      the .AFM and .INF files.). Not preservation-worthy
+fmt/520:
+  name: OpenType Font File
+  action: ignore
+  ignore:
+    reasoning: A font file. Not preservation-worthy
+fmt/523:
+  name: Macro enabled Microsoft Word Document OOXML 2007 Onwards
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/524:
+  name: Microsoft Office Theme
+  action: ignore
+  ignore:
+    reasoning: Exclusively contains font, color, layout, etc. template settings for
+      a Microsoft Office document. Not preservation-worthy
+fmt/525:
+  name: Adobe Printer Font Binary
+  action: ignore
+  ignore:
+    reasoning: Part of the PostScript Type 1 font format family. On Windows, Type
+      1 fonts consist of a PostScript Font Binary (.PFB) file, plus a corresponding
+      PostScript Font Metrics (.PFM) file. (Some very old Type 1 fonts may ship with
+      a .PFB, .AFM, and .INF file. Installing such fonts will create a .PFM file from
+      the .AFM and .INF files.). Not preservation-worthy
+fmt/526:
+  name: Adobe Font List
+  action: ignore
+  ignore:
+    reasoning: A cache of font files installed for Adobe products, createed by the
+      programs themselves. Not preservation-worthy
+fmt/531:
+  name: AutoCAD Drawing 2013/2014
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/532:
+  name: Drawing Interchange File Format (ASCII) 2013/2014/2015/2016/2017
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/550:
+  name: Adobe InDesign Document CS4
+  action: ignore
+  ignore:
+    reasoning: File used by adobe software for image editing and manipulation. Not
+      preservable, we are unable to open and convert this format without and photoshop
+      license. The files also rarely if ever contains presevable info.
+fmt/551:
+  name: Adobe InDesign Document CS5
+  action: ignore
+  ignore:
+    reasoning: File used by adobe software for image editing and manipulation. Not
+      preservable, we are unable to open and convert this format without and photoshop
+      license. The files also rarely if ever contains presevable info.
+fmt/557:
+  name: Adobe Illustrator 8.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/558:
+  name: Adobe Illustrator 9.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/559:
+  name: Adobe Illustrator 10.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/560:
+  name: Adobe Illustrator 11.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/561:
+  name: Adobe Illustrator 12.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/562:
+  name: Adobe Illustrator 13.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/563:
+  name: Adobe Illustrator 14.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/564:
+  name: Adobe Illustrator 15.0
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+fmt/573:
+  name: WebM video
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+fmt/583:
+  name: Vector Markup Language
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+fmt/584:
+  name: Windows Media Metafile
+  action: convert
+  convert:
+    - converter: text
+      converter_type: master
+      outputs:
+        - tif
+fmt/589:
+  name: Windows Media Playlist
+  action: ignore
+  ignore:
+    reasoning: A structured, XML-like file containing a sequence of music files that
+      makes up a given playlist. Not preservation-worthy
+fmt/595:
+  name: Microsoft Excel Non-XML Binary Workbook 2007 onwards
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/597:
+  name: Microsoft Word Template 2007 onwards
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/598:
+  name: Microsoft Excel Template 2007 onwards
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/599:
+  name: Microsoft Word Macro-Enabled Document Template 2007 onwards
+  action: ignore
+  ignore:
+    reasoning: A template document file. Not preservation-worthy
+fmt/609:
+  name: Microsoft Word (Generic) 6.0-2003
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/613:
+  name: RAR Archive version 5
+  action: extract
+  extract:
+    tool: patool
+    extension: .rar
+    dir_suffix: .archive_extraction
+fmt/627:
+  name: Microsoft Excel Macro-Enabled Template 2007
+  action: ignore
+  ignore:
+    reasoning: A Microsoft Excel template file with macros enabled. Not preservation-worthy
+fmt/629:
+  name: Microsoft PowerPoint Show 2007
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odp
+        - pdf
+fmt/631:
+  name: Microsoft PowerPoint Template 2007
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odp
+        - pdf
+fmt/634:
+  name: Microsoft Compiled HTML Help
+  action: ignore
+  ignore:
+    reasoning: A Microsoft Compiled HTML Help file. Not preservation-worthy
+fmt/637:
+  name: Microsoft Onenote
+  action: ignore
+  ignore:
+    reasoning: An Onenote note file. Not preservation-worthy / not convertable
+fmt/645:
+  name: Exchangeable Image File Format (Compressed) 2.2.1
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+fmt/657:
+  name: Open XML Paper Specification
+  action: convert
+  convert:
+    - converter: xps
+      converter_type: master
+      outputs:
+        - pdf
+fmt/670:
+  name: 'PKCS #7 Crytographic Message File'
+  action: ignore
+  ignore:
+    reasoning: Cryptographic message file which follows email files. Not preservation-worthy
+fmt/682:
+  name: Thumbs DB File XP
+  action: ignore
+  ignore:
+    reasoning: Windows OS file, contains folder metadata. Not preservation-worthy
+fmt/724:
+  name: Keyhole Markup Language (Container)
+  action: extract
+  extract:
+    tool: kmz
+    extension: .kmz
+    dir_suffix: .kmz_extraction
+fmt/725:
+  name: Microsoft Project 2010
+  action: ignore
+  ignore:
+    reasoning: Project files. Not preservation-worthy
+fmt/744:
+  name: ClarisWorks/AppleWorks Word Processor 5
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/749:
+  name: AppleWorks Word Processor 6
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+fmt/754:
+  name: Microsoft Word Document (Password Protected) 97-2003
+  action: ignore
+  ignore:
+    reasoning: A password protected word document. Password protected
+fmt/761:
+  name: Adobe Flash 15
+  action: ignore
+  ignore:
+    reasoning: Flash is no longer supported, and it is in a very messy format - The
+      file can be a image, video or interactive game. It might not be preservation-worthy,
+      but either way we don't know how to handle it
+fmt/817:
+  name: JSON Data Interchange Format
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/870:
+  name: Perl Script
+  action: ignore
+  ignore:
+    reasoning: A script in Perl. Not preservation-worthy
+fmt/881:
+  name: Microsoft Document Imaging File Format
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+fmt/886:
+  name: HTML Components
+  action: ignore
+  ignore:
+    reasoning: A web script file, usually Javascript, meant to be integrated with
+      other HTML files. Not preservation-worthy
+fmt/899:
+  name: Windows Portable Executable 32 bit
+  action: ignore
+  ignore:
+    reasoning: A Windows executable file. Not preservation-worthy
+fmt/900:
+  name: Windows Portable Executable 64 bit
+  action: ignore
+  ignore:
+    reasoning: A Windows executable file. Not preservation-worthy
+fmt/901:
+  name: Microsoft Works Spreadsheet 6-9
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/938:
+  name: Python Script File
+  action: ignore
+  ignore:
+    reasoning: A script in Python. Not preservation-worthy
+fmt/941:
+  name: Back Up File
+  action: ignore
+  ignore:
+    reasoning: Back Up File. As the name suggests then bak files are produced by various
+      programs. Not preservation-worthy
+fmt/950:
+  name: MIME Email 1.0
+  action: convert
+  convert:
+    - converter: text
+      converter_type: master
+      outputs:
+        - tif
+fmt/997:
+  name: SPSS Portable File
+  action: ignore
+  ignore:
+    reasoning: ASCII text data file created by SPSS, a statistics processing application;
+      stores exported data from the software in a plain text format, which is easily
+      readable by other applications; used for sharing data between programs and computer
+      systems.. Not preservation-worthy
+fmt/1045:
+  name: Q&A Word Processor Document
+  action: ignore
+  ignore:
+    reasoning: Q&A was a database and word processing software program for IBM PC-compatible
+      computers published by Symantec and partners from 1985 to 1998. Due to their
+      age, Q&A files may lack an extension.. It might not be preservation-worthy,
+      but either way we don't know how to handle it
+fmt/1047:
+  name: Geography Markup Language
+  action: convert
+  convert:
+    - converter: gis
+      converter_type: master
+      outputs:
+        - GML3
+fmt/1079:
+  name: Microsoft Program Database 7.00
+  action: ignore
+  ignore:
+    reasoning: A Program Database File stores debugging information about a compiled
+      executable, usually created at compile-time.. Not preservation-worthy
+fmt/1082:
+  name: ASP WebService Directive File
+  action: ignore
+  ignore:
+    reasoning: Defines XML Web service attributes for Active Server Pages. Not preservation-worthy
+fmt/1089:
+  name: VBScript (VBS) File
+  action: ignore
+  ignore:
+    reasoning: A VBScript file contains code. Not preservation-worthy
+fmt/1103:
+  name: AutoCAD Hatch Pattern
+  action: ignore
+  ignore:
+    reasoning: Add texture to object. A hatch pattern consists of a repeating pattern
+      of lines, dashes, and dots, and is used within AutoCAD to represent materials
+      to be used within the manufacture of the object defined in the CAD drawing.
+      Not preservation-worthy
+fmt/1129:
+  name: PDF 2.0 - Portable Document Format
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/1132:
+  name: Netscape Bookmark File Format
+  action: ignore
+  ignore:
+    reasoning: A bookmark in the Netscape web browser. Not preservation-worthy
+fmt/1216:
+  name: ''
+  action: convert
+  convert:
+    - converter: symphovert
+      converter_type: master
+      outputs:
+        - odp
+fmt/1256:
+  name: MapInfo Workspace File
+  action: ignore
+  ignore:
+    reasoning: MapInfo Workspace files, produced by MapInfo GIS software, are text
+      files containing the MapInfo commands required to re-create a MapInfo session.
+      Not preservation-worthy
+fmt/1258:
+  name: Microsoft Access Workgroup Information File
+  action: ignore
+  ignore:
+    reasoning: A file containing usernames and passwords for users and groups that
+      require access to a specific Microsoft Access database. Not preservation-worthy
+fmt/1303:
+  name: Microsoft Shell Scrap Object File
+  action: ignore
+  ignore:
+    reasoning: Documents created by dragging objects from an Office document to a
+      file folder, unsupported as of 2007. Not preservation-worthy
+fmt/1369:
+  name: Error File
+  action: ignore
+  ignore:
+    reasoning: An error log file.. Not preservation-worthy
+fmt/1389:
+  name: Drawing Interchange Format (ASCII) 2018/2019/2020
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/1390:
+  name: Drawing Interchange Format (Binary) 2007-2009
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/1391:
+  name: Drawing Interchange Format (Binary) 2010-2012
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/1392:
+  name: Drawing Interchange Format (Binary) 2013-2017
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/1393:
+  name: Drawing Interchange Format (Binary) 2018-2021
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+fmt/1439:
+  name: Apple iWork Pages 09
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+fmt/1451:
+  name: PDF Portfolio 1.7
+  action: convert
+  convert:
+    - converter: pdf
+      converter_type: master
+      outputs:
+        - pdf
+    - converter: gs
+      converter_type: statutory
+      outputs:
+        - tif
+fmt/1452:
+  name: Lotus 1-2-3 Worksheet (97)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/1453:
+  name: Lotus 1-2-3 Worksheet (9.8 Millennium)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+fmt/1482:
+  name: Access Report Snapshot
+  action: ignore
+  ignore:
+    reasoning: An export of a microsoft access database as a report, was supporten
+      until 2010. Can be viewed using an proprietary viewer. Not preservation-worthy
+fmt/1507:
+  name: Exchangeable Image File Format (Compressed) 2.3.x
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+fmt/1511:
+  name: Microsoft Publisher 1
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/1512:
+  name: Microsoft Publisher 2003
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/1513:
+  name: Microsoft Publisher 2007
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/1514:
+  name: Microsoft Publisher 2010
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/1515:
+  name: Microsoft Publisher 2013
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/1516:
+  name: Microsoft Publisher 2016-2019
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+fmt/1600:
+  name: ''
+  action: reidentify
+  reidentify:
+    reasoning: Identifies .dat-files as mapinfo-files by extension only. They are
+      sometimes winmail.dat
+fmt/1729:
+  name: Esri Shapefile Geospatial Metadata File
+  action: convert
+  convert:
+    - converter: gis
+      converter_type: master
+      outputs:
+        - GML3
+fmt/1730:
+  name: ''
+  action: reidentify
+  reidentify:
+    reasoning: Identifies .dat-files as mapinfo-files by extension only. They are
+      sometimes winmail.dat
+fmt/1756:
+  name: Opendocument Text 1.3
+  action: reidentify
+  reidentify:
+    reasoning: Identified by ext only. Prone to error
+fmt/1768:
+  name: C Source Code file
+  action: ignore
+  ignore:
+    reasoning: Source code written in C. Not preservation-worthy
+fmt/1934:
+  name: Drawing Interchange Format (Binary)
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+x-fmt/9:
+  name: dBASE Database III
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+x-fmt/10:
+  name: dBASE Database IV
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+x-fmt/13:
+  name: Tab-separated values
+  action: reidentify
+  convert:
+    - converter: copy
+      converter_type: master
+      outputs:
+        - tab
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+  reidentify:
+    reasoning: .TAB-files related to GIS is sometimes identified as plaintext
+    onfail: convert
+x-fmt/17:
+  name: Microsoft Excel Template 97-2003
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+x-fmt/18:
+  name: Comma Separated Values
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+x-fmt/37:
+  name: AutoCAD Colour-Dependant Plot Style Table
+  action: ignore
+  ignore:
+    reasoning: Contains plotting settings. Not preservation-worthy
+x-fmt/44:
+  name: WordPerfect for MS-DOS/Windows Document 6.0
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/45:
+  name: Microsoft Word Document Template 97-2003
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/49:
+  name: AutoCAD Design Web Format 6.0
+  action: convert
+  convert:
+    - converter: cad
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/54:
+  name: AutoCAD Font Mapping Table
+  action: ignore
+  ignore:
+    reasoning: Contains info for fonts used while desingning. Not preservation-worthy
+x-fmt/58:
+  name: Microsoft Excel Web Query
+  action: ignore
+  ignore:
+    reasoning: An Excel web server query, which can be used in an Excel file to retrieve
+      data from a web server. Not preservation-worthy
+x-fmt/62:
+  name: Log File
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+x-fmt/64:
+  name: Microsoft Word for Macintosh Document
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/78:
+  name: AutoCAD Plot Configuration File (2000)
+  action: ignore
+  ignore:
+    reasoning: An configuration file for AutoCAD. Not preservation-worthy
+x-fmt/90:
+  name: Microsoft Print File
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+x-fmt/92:
+  name: Adobe Photoshop
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - svg
+        - pdf
+x-fmt/103:
+  name: AutoCAD Compiled Shape/Font File
+  action: ignore
+  ignore:
+    reasoning: An SHX file contains a shape or font compiled by Autodesk AutoCAD from
+      an .SHP shape file or .PFB font file. It stores shape definitions, as well as
+      font definitions for displaying custom text. Compiled shapes enable users to
+      save smaller building blocks and fonts that are frequently inserted in drawings.
+      This allows users to save time and not have to re-create often-used shapes and
+      fonts.. Not preservation-worthy
+x-fmt/107:
+  name: AutoCAD name plot style table
+  action: ignore
+  ignore:
+    reasoning: An configuration file for AutoCAD used while designing. Not preservation-worthy
+x-fmt/111:
+  name: Plain Text File
+  action: reidentify
+  convert:
+    - converter: copy
+      converter_type: master
+      outputs:
+        - tab
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+  reidentify:
+    reasoning: .TAB-files related to GIS is sometimes identified as plaintext
+    onfail: convert
+x-fmt/114:
+  name: Lotus 1-2-3 Worksheet (2.0)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+x-fmt/115:
+  name: ' Lotus 1-2-3 Worksheet (3.0)'
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+x-fmt/116:
+  name: Lotus 1-2-3 Worksheet (4-5)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+x-fmt/117:
+  name: Lotus 1-2-3 Worksheet (1.0)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - ods
+        - pdf
+x-fmt/119:
+  name: Windows Metafile Image
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+x-fmt/128:
+  name: Microsoft Excel Workspace
+  action: ignore
+  ignore:
+    reasoning: Contains context information for workbook projects, such as which ones
+      are part of the project, the position of the window, etc.. Not preservation-worthy
+x-fmt/138:
+  name: Active Server Page
+  action: ignore
+  ignore:
+    reasoning: A website / server code file. Not preservation-worthy
+x-fmt/148:
+  name: IBM DisplayWrite DCA Text File
+  action: ignore
+  ignore:
+    reasoning: Text document created by DisplayWrite, an old word processor for IBM
+      PCs that has been discontinued; saves document text and basic formatting; can
+      be converted to more recent word processing formats using WordPort.. It might
+      not be preservation-worthy, but either way we don't know how to handle it
+x-fmt/169:
+  name: PHP Script Page
+  action: ignore
+  ignore:
+    reasoning: A script in PHP. Not preservation-worthy
+x-fmt/181:
+  name: PageMaker PC document (6.5-7.0)
+  action: manual
+  manual:
+    reasoning: The format is no longer supported by adobe and there exists no proper
+      third party tools to handle it
+    process: Open the file on the test machine and open it in PageMaker 7.0. From
+      there, you can export it as an HTML document. Note that it might take several
+      tries to open the file.
+x-fmt/191:
+  name: AMI Professional Document
+  action: ignore
+  ignore:
+    reasoning: A file from the AMI wordprocessor. Not preservation-worthy / not convertable
+x-fmt/224:
+  name: Cascading Style Sheet
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+x-fmt/225:
+  name: ESRI MapInfo Data File
+  action: ignore
+  ignore:
+    reasoning: A helper file for .mid GIS files. Will be picked up by the gis-processor
+x-fmt/227:
+  name: Geography Markup Language
+  action: convert
+  convert:
+    - converter: gis
+      converter_type: master
+      outputs:
+        - GML3
+x-fmt/231:
+  name: ESRI MapInfo Export File
+  action: convert
+  convert:
+    - converter: gis
+      converter_type: master
+      outputs:
+        - GML3
+x-fmt/235:
+  name: ESRI Arc/View ShapeFile
+  action: convert
+  convert:
+    - converter: gis
+      converter_type: master
+      outputs:
+        - GML3
+x-fmt/240:
+  name: Microstoft Acces Database File (2000)
+  action: ignore
+  ignore:
+    reasoning: A microsoft access database. Not preservable, we are unable to convert
+      it to a format we can handle as of now
+x-fmt/245:
+  name: Microsoft Project 98
+  action: ignore
+  ignore:
+    reasoning: Project files. Not preservation-worthy
+x-fmt/247:
+  name: Microsoft Project 2000-2003
+  action: ignore
+  ignore:
+    reasoning: Project files. Not preservation-worthy
+x-fmt/252:
+  name: Microsoft Publisher 2.0
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/253:
+  name: Microsoft Publisher 95
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/254:
+  name: Microsoft Publisher 97
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/255:
+  name: Microsoft Publisher 98
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/256:
+  name: Microsoft Publisher 2000
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/257:
+  name: Microsoft Publisher 2002
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/258:
+  name: Microsoft Visio Drawing 2000
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - svg
+        - pdf
+x-fmt/263:
+  name: ZIP Format
+  action: extract
+  extract:
+    tool: patool
+    extension: .zip
+    dir_suffix: .archive_extraction
+x-fmt/264:
+  name: RAR Archive version
+  action: extract
+  extract:
+    tool: patool
+    extension: .rar
+    dir_suffix: .archive_extraction
+x-fmt/265:
+  name: Tape Archive Format
+  action: extract
+  extract:
+    tool: patool
+    extension: .tar
+    dir_suffix: .archive_extraction
+x-fmt/266:
+  name: GZIP Format
+  action: extract
+  extract:
+    tool: patool
+    extension: .gz
+    dir_suffix: .archive_extraction
+x-fmt/280:
+  name: XML Schema Definition
+  action: ignore
+  ignore:
+    reasoning: A prescriptive XML template, for validating XML files with. Not preservation-worthy
+x-fmt/315:
+  name: Document Type Definition
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+x-fmt/328:
+  name: InterBase Database file
+  action: ignore
+  ignore:
+    reasoning: A Databse fil in the interbase format. Not preservable, we are unable
+      to convert it to a format we can handle as of now
+x-fmt/332:
+  name: Lotus 1-2-3 Spreadsheet Formatting File 3.0
+  action: ignore
+  ignore:
+    reasoning: It's a file containing formatting information for Lotus spreadsheets.
+      Not preservation-worthy
+x-fmt/340:
+  name: ''
+  action: convert
+  convert:
+    - converter: symphovert
+      converter_type: master
+      outputs:
+        - odt
+x-fmt/345:
+  name: Microsoft Works Document
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+x-fmt/375:
+  name: CorelDraw Drawing
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - svg
+        - pdf
+x-fmt/382:
+  name: Macromedia FLV 1
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+x-fmt/384:
+  name: Quicktime
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+x-fmt/385:
+  name: MPEG-1 Program Stream
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+x-fmt/386:
+  name: MPEG-2 Program Stream
+  action: convert
+  convert:
+    - converter: video
+      converter_type: master
+      outputs:
+        - mp4
+x-fmt/387:
+  name: Exchangeable Image File Format (Uncompressed) 2.2
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+x-fmt/388:
+  name: Exchangeable Image File Format (Uncompressed) 2.1
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+x-fmt/390:
+  name: Exchangeable Image File Format (Compressed) 2.1
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+x-fmt/391:
+  name: Exchangeable Image File Format (Compressed) 2.2
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: ''
+    ignore_if:
+      - pixel_total: 20000
+x-fmt/392:
+  name: JP2 (JPEG 2000 part 1)
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+x-fmt/393:
+  name: WordPerfect for MS-DOS Document 5.0
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+x-fmt/394:
+  name: WordPerfect for MS-DOS/Windows Document 5.1
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
+        - pdf
+x-fmt/398:
+  name: Exchangeable Image File Format (Compressed) 2.0
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+x-fmt/411:
+  name: Windows Portable Executable
+  action: ignore
+  ignore:
+    reasoning: A Windows executable file. Not preservation-worthy
+x-fmt/412:
+  name: Java Archive Format
+  action: ignore
+  ignore:
+    reasoning: A Java archive file containing a Java project. Not preservation-worthy
+x-fmt/413:
+  name: Batch file (executable)
+  action: ignore
+  ignore:
+    reasoning: An executable non-binary .bat-file. Not preservation-worthy
+x-fmt/415:
+  name: Java Compiled Object Code
+  action: ignore
+  ignore:
+    reasoning: Java byte code - not human readable. Not preservation-worthy
+x-fmt/416:
+  name: BinHex Binary Text
+  action: ignore
+  ignore:
+    reasoning: BinHex, originally short for 'binary-to-hexadecimal', is a binary-to-text
+      encoding system that was used on the classic Mac OS for sending binary files
+      through e-mail.. It might not be preservation-worthy, but either way we don't
+      know how to handle it
+x-fmt/418:
+  name: Icon file format
+  action: ignore
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
+  ignore:
+    reasoning: An ICO file contains an icon, which is typically used to represent
+      a Windows program, file, or folder. Not preservation-worthy
+x-fmt/420:
+  name: Windows Setup File
+  action: ignore
+  ignore:
+    reasoning: Windows Setup File or  Installer Script. Not preservation-worthy
+x-fmt/421:
+  name: Text Configuration file
+  action: ignore
+  ignore:
+    reasoning: A text config file. Not preservation-worthy
+x-fmt/426:
+  name: License file
+  action: convert
+  convert:
+    - converter: text
+      converter_type: statutory
+      outputs:
+        - tif
+x-fmt/428:
+  name: Microsoft Windows Shortcut
+  action: ignore
+  ignore:
+    reasoning: A pointer to a different file. Not preservation-worthy
+x-fmt/429:
+  name: MHTML
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+x-fmt/430:
+  name: MSG file
+  action: extract
+  extract:
+    tool: msg
+    extension: .msg
+    dir_suffix: .mail_extraction
+x-fmt/441:
+  name: AutoCAD Database File Locking Information
+  action: ignore
+  ignore:
+    reasoning: A temporary file created by AutoCAD when a file is opened for editing,
+      detailing when and by who the file was edited. Not preservation-worthy
+x-fmt/453:
+  name: TrueType Font
+  action: ignore
+  ignore:
+    reasoning: A font file. Not preservation-worthy
+x-fmt/454:
+  name: Microsoft Internet Shortcut
+  action: ignore
+  ignore:
+    reasoning: A link to a website. Not preservation-worthy
+x-fmt/455:
+  name: AutoCAD Drawing 2007-2008
+  action: convert
+  convert:
+    - converter: cad2d
+      converter_type: master
+      outputs:
+        - dwg
+        - pdf
+        - svg
+xfmt/157:
+  name: Microsoft Windows Enhanced Metafile 1.0
+  action: convert
+  convert:
+    - converter: image
+      converter_type: master
+      outputs:
+        - tif
