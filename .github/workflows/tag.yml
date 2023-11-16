@@ -34,6 +34,7 @@ jobs:
           if [[ "$tag" = "$VERSION" ]]; then echo "tag_exists=true" >> "$GITHUB_OUTPUT"
           else echo "tag_exists=false" >> "$GITHUB_OUTPUT"
           fi
+          echo "tag=$tag"
       - name: Add Tag
         if: ${{ steps.tag_exists.outputs.tag_exists }} == "false"
         uses: actions/github-script@v4
