@@ -12,7 +12,7 @@ include = ["pyproject.toml"]
 
 [tool.poetry.dependencies]
 python = "^3.9"
-acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v1.0.1"}
+acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v1.0.2"}
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.0"
