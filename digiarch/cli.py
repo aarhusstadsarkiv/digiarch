@@ -1,3 +1,4 @@
+from json import loads
 from logging import Logger
 from os import environ
 from pathlib import Path
@@ -5,13 +6,22 @@ from sys import stdout
 from traceback import format_tb
 from typing import Optional
 from typing import Union
+from uuid import UUID
 
 import yaml
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
+from acacore.models.reference_files import ActionData
+from acacore.models.reference_files import ConvertAction
 from acacore.models.reference_files import CustomSignature
+from acacore.models.reference_files import ExtractAction
+from acacore.models.reference_files import IgnoreAction
+from acacore.models.reference_files import ManualAction
+from acacore.models.reference_files import ReIdentifyAction
 from acacore.models.reference_files import RenameAction
+from acacore.models.reference_files import ReplaceAction
+from acacore.models.reference_files import TActionType
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
 from acacore.siegfried import Siegfried
@@ -45,6 +55,35 @@ def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], 
         return None, None
     old_path.rename(new_path)
     return old_path, new_path
+
+
+def handle_start(ctx: Context, database: FileDB, *loggers: Logger):
+    program_start: HistoryEntry = HistoryEntry.command_history(ctx, "start")
+
+    database.history.insert(program_start)
+
+    for logger in loggers:
+        logger.info(program_start.operation)
+
+
+def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *loggers: Logger, commit: bool = True):
+    program_end: HistoryEntry = HistoryEntry.command_history(
+        ctx,
+        "end",
+        data=1 if exception.exception else 0,
+        reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
+    )
+
+    for logger in loggers:
+        if exception.exception:
+            logger.error(f"{program_end.operation} {exception.exception!r}")
+        else:
+            logger.info(program_end.operation)
+
+    if database.is_open:
+        database.history.insert(program_end)
+        if commit:
+            database.commit()
 
 
 @group("digiarch", no_args_is_help=True)
@@ -136,9 +175,7 @@ def app_process(
 
     with FileDB(database_path) as database:
         database.init()
-        program_start: HistoryEntry = HistoryEntry.command_history(ctx, "start")
-        database.history.insert(program_start)
-        logger.info(program_start.operation)
+        handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
             for path in find_files(root, exclude=[database_path.parent]):
@@ -172,17 +209,130 @@ def app_process(
                     logger.info(f"{entry.operation} {entry.uuid}")
                     database.history.insert(entry)
 
-        program_end: HistoryEntry = HistoryEntry.command_history(
-            ctx,
-            "end",
-            data=1 if exception.exception else 0,
-            reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
-        )
-        if exception.exception:
-            logger.error(f"{program_end.operation} {exception.exception!r}")
-        else:
-            logger.info(program_end.operation)
+        handle_end(ctx, database, exception, logger)
 
-        if database.is_open:
-            database.history.insert(program_end)
-            database.commit()
+
+@app.group("edit", no_args_is_help=True)
+def app_edit():
+    """Edit a files' database."""
+
+
+@app_edit.command("action", no_args_is_help=True)
+@argument(
+    "root",
+    nargs=1,
+    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
+)
+@argument(
+    "uuids",
+    metavar="UUID...",
+    nargs=-1,
+    type=UUID,
+    required=True,
+    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+)
+@argument(
+    "action",
+    metavar="ACTION",
+    nargs=1,
+    type=Choice(("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify")),
+    required=True,
+)
+@argument("reason", nargs=1, type=str, required=True)
+@option(
+    "--data",
+    metavar="<FIELD VALUE>",
+    type=(str, str),
+    multiple=True,
+    help="Data to be used to replace existing action data for the specified action.",
+)
+@option(
+    "--data-json",
+    metavar="JSON",
+    type=str,
+    default=None,
+    help="Data to be used to replace existing action data for the specified action, in JSON format.",
+)
+@pass_context
+def app_edit_action(
+    ctx: Context,
+    root: Path,
+    uuids: tuple[UUID],
+    action: TActionType,
+    reason: str,
+    data: tuple[tuple[str, str]],
+    data_json: Optional[str],
+):
+    """
+    Change the action of one or more files in the files' database for the ROOT folder to ACTION.
+
+    Files are updated even if their action value is already set to ACTION.
+
+    The action data for the given files is not touched unless the --data or --data-json options are used.
+    The --data option takes precedence.
+
+    \b
+    Available ACTION values are:
+        * convert
+        * extract
+        * replace
+        * manual
+        * rename
+        * ignore
+        * reidentify
+    """  # noqa: D301
+    data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
+    assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"  # noqa: UP038
+    database_path: Path = root / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            for uuid in uuids:
+                file: Optional[File] = database.files.select(
+                    where="uuid = ?",
+                    limit=1,
+                    parameters=[str(uuid)],
+                ).fetchone()
+
+                if not file:
+                    logger.error(f"{HistoryEntry.command_history(ctx, 'file:select')} {uuid} not found")
+                    continue
+
+                file.action = action
+
+                if data_parsed:
+                    file.action_data = file.action_data or ActionData()
+                    if action == "convert":
+                        file.action_data.convert = (
+                            [ConvertAction.model_validate(data_parsed)]
+                            if isinstance(data_parsed, dict)
+                            else ActionData(convert=data_parsed).convert
+                        )
+                    elif action == "extract":
+                        file.action_data.extract = ExtractAction.model_validate(data_parsed)
+                    elif action == "replace":
+                        file.action_data.replace = ReplaceAction.model_validate(data_parsed)
+                    elif action == "manual":
+                        file.action_data.manual = ManualAction.model_validate(data_parsed)
+                    elif action == "rename":
+                        file.action_data.rename = RenameAction.model_validate(data_parsed)
+                    elif action == "ignore":
+                        file.action_data.ignore = IgnoreAction.model_validate(data_parsed)
+                    elif action == "reidentify":
+                        file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
+
+                database.files.insert(file, replace=True)
+
+                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action", uuid, action, reason)
+                logger.info(f"{history.operation} {history.uuid} {history.data} {history.reason}")
+                database.history.insert(history)
+
+        handle_end(ctx, database, exception, logger)
