@@ -56,6 +56,8 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         "--custom-signatures",
         str(tests_folder / "custom_signatures.json"),
         "--no-update-siegfried-signature",
+        "--siegfried-home",
+        str(tests_folder),
     ]
 
     app.main(args, standalone_mode=False)
