@@ -204,7 +204,7 @@ def app_identify(
                     file.action = "manual"
                     file.action_data = ActionData(
                         manual=ManualAction(
-                            reason=repr(image_exception.exception),
+                            reason=image_exception.exception.__class__.__name__,
                             process="Indentify and fix error.",
                         ),
                     )
