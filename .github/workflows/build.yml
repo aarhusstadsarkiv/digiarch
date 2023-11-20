@@ -16,8 +16,19 @@ jobs:
       - uses: actions/setup-python@v4
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - name: Build Wheels
+      - uses: abatilo/actions-poetry@v2
+        with:
+          poetry-version: ${{ env.POETRY_VERSION }}
+      - name: Build Dependencies Wheels
         run: python -m pip wheel -w dist .
+      - name: Build Package Wheel
+        run: |
+          acacore="$(grep 'acacore =' pyproject.toml | grep -oE 'tag[ ]*=[ ]*"[^"]+"')"
+          acacore="${acacore#*\"}"
+          acacore="${acacore#v}"
+          acacore="${acacore%\"}"
+          sed -ie "s/acacore *=.*/acacore = \"$acacore\"/g" pyproject.toml
+          poetry build
       - name: Save Wheels
         uses: actions/upload-artifact@v3
         with:
