@@ -104,6 +104,12 @@ def app():
     help="The path to the Siegfried executable.",
 )
 @option(
+    "--siegfried-home",
+    type=ClickPath(dir_okay=False, resolve_path=True, path_type=Path),
+    default=None,
+    help="The path to the Siegfried home folder.",
+)
+@option(
     "--siegfried-signature",
     type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
     default="pronom",
@@ -136,6 +142,7 @@ def app_process(
     ctx: Context,
     root: Path,
     siegfried_path: Optional[Path],
+    siegfried_home: Optional[Path],
     siegfried_signature: TSignature,
     update_siegfried_signature: bool,
     actions_file: Optional[Path],
@@ -149,7 +156,11 @@ def app_process(
 
     Files that are already in the database are not processed.
     """
-    siegfried = Siegfried(siegfried_path or Path(environ["GOPATH"], "bin", "sf"), f"{siegfried_signature}.sig")
+    siegfried = Siegfried(
+        siegfried_path or Path(environ["GOPATH"], "bin", "sf"),
+        f"{siegfried_signature}.sig",
+        siegfried_home,
+    )
     if update_siegfried_signature:
         siegfried.update(siegfried_signature)
 
