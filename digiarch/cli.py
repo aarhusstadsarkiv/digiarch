@@ -9,6 +9,7 @@ from typing import Union
 from uuid import UUID
 
 import yaml
+from PIL import UnidentifiedImageError
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -194,7 +195,17 @@ def app_identify(
                     continue
 
                 file_history: list[HistoryEntry] = []
-                file = File.from_file(path, root, siegfried, actions, custom_signatures)
+
+                with ExceptionManager(UnidentifiedImageError) as image_exception:
+                    file = File.from_file(path, root, siegfried, actions, custom_signatures)
+
+                if image_exception.exception:
+                    file = File.from_file(path, root, siegfried)
+                    file.action = "manual"
+                    file.action_data = ManualAction(
+                        reason=repr(image_exception.exception),
+                        process="Indentify and fix error.",
+                    )
 
                 if file.action_data and file.action_data.rename:
                     old_path, new_path = handle_rename(file, file.action_data.rename)
