@@ -1,13 +1,40 @@
+"!empty":
+  name: Empty files
+  action: replace
+  replace:
+    template: empty
+"!binary":
+  name: Binary files
+  action: manual
+  manual:
+    reason: "Unknown binary file"
+    process: "Identify file and assign it an action."
+  ignore:
+    reason: ""
+    ignore_if:
+      - binary_size: 1024
+        reason: "Binary file is too small"
+"!image (raster)":
+  name: Image files
+  action: manual
+  manual:
+    reason: "Unknown image file"
+    process: "Identify file and assign it an action."
+  ignore:
+    reason: ""
+    ignore_if:
+      - pixel_total: 20000
+        reason: "Image is too small"
 aca-error/1:
   name: Empty File
   action: ignore
   ignore:
-    reasoning: It's an empty file! Not preservation-worthy
+    reason: It's an empty file! Not preservation-worthy
 aca-error/2:
   name: Corrupt file
   action: ignore
   ignore:
-    reasoning: It's a corrupt file! Not preservation-worthy
+    reason: It's a corrupt file! Not preservation-worthy
 aca-fmt/1:
   name: Lotus 1-2-3 Worksheet
   action: convert
@@ -43,22 +70,22 @@ aca-fmt/4:
   name: MindManager Mind Map
   action: ignore
   ignore:
-    reasoning: Proprietary mind map file. Not preservation-worthy
+    reason: Proprietary mind map file. Not preservation-worthy
 aca-fmt/5:
   name: Lotus Notes Template
   action: ignore
   ignore:
-    reasoning: A database template. Not preservation-worthy
+    reason: A database template. Not preservation-worthy
 aca-fmt/6:
   name: Lotus Approach Index File
   action: ignore
   ignore:
-    reasoning: A file exclusively containing database indexing. Not preservation-worthy
+    reason: A file exclusively containing database indexing. Not preservation-worthy
 aca-fmt/7:
   name: ID File
   action: ignore
   ignore:
-    reasoning: User ID files. Not preservation-worthy
+    reason: User ID files. Not preservation-worthy
 aca-fmt/9:
   name: Transport Neutral Encapsulation Format (TNEF)/Microsoft email attachments
     archive (winmail)
@@ -84,9 +111,10 @@ fmt/3:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/4:
   name: Graphics Interchange Format 89a
   action: convert
@@ -96,9 +124,10 @@ fmt/4:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/5:
   name: Audio/Video Interleaved Format
   action: convert
@@ -116,9 +145,10 @@ fmt/11:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/12:
   name: Portable Network Graphics 1.1
   action: convert
@@ -136,9 +166,10 @@ fmt/13:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/14:
   name: Acrobat PDF 1.0 - Portable Document Format
   action: convert
@@ -424,9 +455,10 @@ fmt/41:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/42:
   name: JPEG File Interchange Format 1.00
   action: convert
@@ -436,9 +468,10 @@ fmt/42:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/43:
   name: JPEG File Interchange Format 1.01
   action: convert
@@ -448,9 +481,10 @@ fmt/43:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/44:
   name: JPEG File Interchange Format 1.02
   action: convert
@@ -460,9 +494,10 @@ fmt/44:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/45:
   name: Rich Text Format 1.0-1.4
   action: convert
@@ -851,14 +886,14 @@ fmt/109:
   name: Macromedia Flash 6
   action: ignore
   ignore:
-    reasoning: Flash is no longer supported, and it is in a very messy format - The
+    reason: Flash is no longer supported, and it is in a very messy format - The
       file can be a image, video or interactive game. It might not be preservation-worthy,
       but either way we don't know how to handle it
 fmt/110:
   name: Macromedia Flash 7
   action: ignore
   ignore:
-    reasoning: Flash is no longer supported, and it is in a very messy format - The
+    reason: Flash is no longer supported, and it is in a very messy format - The
       file can be a image, video or interactive game. It might not be preservation-worthy,
       but either way we don't know how to handle it
 fmt/111:
@@ -871,7 +906,7 @@ fmt/111:
         - ods
         - pdf
   reidentify:
-    reasoning: why do we re-run these?
+    reason: why do we re-run these?
 fmt/115:
   name: Windows Bitmap 2.0
   action: convert
@@ -881,9 +916,10 @@ fmt/115:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/116:
   name: Windows Bitmap 3.0
   action: convert
@@ -893,9 +929,10 @@ fmt/116:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/117:
   name: Windows Bitmap 3.0 NT
   action: convert
@@ -929,9 +966,10 @@ fmt/124:
       outputs:
         - pdf
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/125:
   name: Microsoft Powerpoint Presentation 95
   action: convert
@@ -1083,12 +1121,12 @@ fmt/208:
   name: Binary File
   action: ignore
   ignore:
-    reasoning: Binary File. Not preservation-worthy
+    reason: Binary File. Not preservation-worthy
 fmt/212:
   name: Information or Setup File
   action: ignore
   ignore:
-    reasoning: unknown. Not preservation-worthy
+    reason: unknown. Not preservation-worthy
 fmt/214:
   name: Microsoft Excel for Windows 2007 onwards
   action: convert
@@ -1111,7 +1149,7 @@ fmt/217:
   name: PaintShop Pro Browser Cache File
   action: ignore
   ignore:
-    reasoning: PaintShop Pro Browser Cache is a thumbnail image format associated
+    reason: PaintShop Pro Browser Cache is a thumbnail image format associated
       with PaintShop Pro. Not preservation-worthy
 fmt/233:
   name: Microsoft Works Word Processor 3-4 for Windows
@@ -1153,7 +1191,7 @@ fmt/277:
   name: ESRI Arc/View Shapefile Index
   action: ignore
   ignore:
-    reasoning: Index file for gis project. Picked up and used by the GIS-procesor
+    reason: Index file for gis project. Picked up and used by the GIS-procesor
 fmt/279:
   name: FLAC (Free Lossless Audio Codec)
   action: convert
@@ -1232,25 +1270,25 @@ fmt/319:
   name: ESRI Spatial Index File
   action: ignore
   ignore:
-    reasoning: A 2 part indexing file for spatial data. Picked up and used by the
+    reason: A 2 part indexing file for spatial data. Picked up and used by the
       GIS-procesor
 fmt/320:
   name: ESRI Shapefile Projection (Well-Known Text) Format
   action: ignore
   ignore:
-    reasoning: Projections Definition file; stores coordinate system information..
+    reason: Projections Definition file; stores coordinate system information..
       Picked up and used by the GIS-procesor
 fmt/331:
   name: Autorun Configuration File
   action: ignore
   ignore:
-    reasoning: A Windows file usually found on CDs or DVDs or Blurays, telling the
+    reason: A Windows file usually found on CDs or DVDs or Blurays, telling the
       OS what executable to run when the disc is played. Not preservation-worthy
 fmt/332:
   name: ESRI Arc/View Project (3.x)
   action: ignore
   ignore:
-    reasoning: An ESRI GIS project file. Not preservation-worthy
+    reason: An ESRI GIS project file. Not preservation-worthy
 fmt/340:
   name: ''
   action: convert
@@ -1280,9 +1318,10 @@ fmt/353:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/354:
   name: Acrobat PDF/A - Portable Document Format 1b
   action: convert
@@ -1331,13 +1370,13 @@ fmt/394:
   name: DS_store file (MAC)
   action: ignore
   ignore:
-    reasoning: A macOS file used by the operating system to store folder metadata,
+    reason: A macOS file used by the operating system to store folder metadata,
       like icon position and bg image. Not preservation-worthy
 fmt/395:
   name: vCard
   action: ignore
   ignore:
-    reasoning: Windows native contact files. Not preservation-worthy
+    reason: Windows native contact files. Not preservation-worthy
 fmt/411:
   name: RAR Archive version 2.9
   action: extract
@@ -1412,7 +1451,7 @@ fmt/440:
   name: Microsoft Project 2007
   action: ignore
   ignore:
-    reasoning: Project files. Not preservation-worthy
+    reason: Project files. Not preservation-worthy
 fmt/442:
   name: Microsoft Visio (generic)
   action: convert
@@ -1452,19 +1491,19 @@ fmt/473:
   name: Microsoft Office Owner File
   action: ignore
   ignore:
-    reasoning: A temporary file created by Windows Office when a document is open,
+    reason: A temporary file created by Windows Office when a document is open,
       containing account logon info. Not preservation-worthy
 fmt/474:
   name: Windows Help File
   action: ignore
   ignore:
-    reasoning: Microsoft WinHelp is a proprietary format for online help files that
+    reason: Microsoft WinHelp is a proprietary format for online help files that
       can be displayed by the Microsoft Help browse. Not preservation-worthy
 fmt/475:
   name: Microsoft Management Console Snap-in Control file
   action: ignore
   ignore:
-    reasoning: Related to Microsoft administrative file control. Not preservation-worthy
+    reason: Related to Microsoft administrative file control. Not preservation-worthy
 fmt/476:
   name: Acrobat PDF/A - Portable Document Format (2a)
   action: convert
@@ -1569,17 +1608,17 @@ fmt/494:
   name: Microsoft Office Encrypted Document (2007 Onwards)
   action: ignore
   ignore:
-    reasoning: A password protected office document. Password protected
+    reason: A password protected office document. Password protected
 fmt/500:
   name: Internet Explorer for Mac cache file
   action: ignore
   ignore:
-    reasoning: An Internet Explorer cache file. Not preservation-worthy
+    reason: An Internet Explorer cache file. Not preservation-worthy
 fmt/503:
   name: AppleDouble Resource Fork 2
   action: ignore
   ignore:
-    reasoning: 'The resource fork is a construct of the Mac OS operating system used
+    reason: 'The resource fork is a construct of the Mac OS operating system used
       to store structured data in a file, alongside unstructured data stored within
       the data fork. The format specification is available here: https://support.apple.com/kb/TA32537?viewlocale=en_US
       The format lacks an extension, and is instead represented by a file name consisting
@@ -1589,21 +1628,21 @@ fmt/505:
   name: Adobe Flash 8
   action: ignore
   ignore:
-    reasoning: Flash is no longer supported, and it is in a very messy format - The
+    reason: Flash is no longer supported, and it is in a very messy format - The
       file can be a image, video or interactive game. It might not be preservation-worthy,
       but either way we don't know how to handle it
 fmt/507:
   name: Adobe Flash 10
   action: ignore
   ignore:
-    reasoning: Flash is no longer supported, and it is in a very messy format - The
+    reason: Flash is no longer supported, and it is in a very messy format - The
       file can be a image, video or interactive game. It might not be preservation-worthy,
       but either way we don't know how to handle it
 fmt/509:
   name: Adobe PostScript Font Metrics file
   action: ignore
   ignore:
-    reasoning: Part of the PostScript Type 1 font format family. On Windows, Type
+    reason: Part of the PostScript Type 1 font format family. On Windows, Type
       1 fonts consist of a PostScript Font Binary (.PFB) file, plus a corresponding
       PostScript Font Metrics (.PFM) file. (Some very old Type 1 fonts may ship with
       a .PFB, .AFM, and .INF file. Installing such fonts will create a .PFM file from
@@ -1612,7 +1651,7 @@ fmt/520:
   name: OpenType Font File
   action: ignore
   ignore:
-    reasoning: A font file. Not preservation-worthy
+    reason: A font file. Not preservation-worthy
 fmt/523:
   name: Macro enabled Microsoft Word Document OOXML 2007 Onwards
   action: convert
@@ -1625,13 +1664,13 @@ fmt/524:
   name: Microsoft Office Theme
   action: ignore
   ignore:
-    reasoning: Exclusively contains font, color, layout, etc. template settings for
+    reason: Exclusively contains font, color, layout, etc. template settings for
       a Microsoft Office document. Not preservation-worthy
 fmt/525:
   name: Adobe Printer Font Binary
   action: ignore
   ignore:
-    reasoning: Part of the PostScript Type 1 font format family. On Windows, Type
+    reason: Part of the PostScript Type 1 font format family. On Windows, Type
       1 fonts consist of a PostScript Font Binary (.PFB) file, plus a corresponding
       PostScript Font Metrics (.PFM) file. (Some very old Type 1 fonts may ship with
       a .PFB, .AFM, and .INF file. Installing such fonts will create a .PFM file from
@@ -1640,7 +1679,7 @@ fmt/526:
   name: Adobe Font List
   action: ignore
   ignore:
-    reasoning: A cache of font files installed for Adobe products, createed by the
+    reason: A cache of font files installed for Adobe products, createed by the
       programs themselves. Not preservation-worthy
 fmt/531:
   name: AutoCAD Drawing 2013/2014
@@ -1666,14 +1705,14 @@ fmt/550:
   name: Adobe InDesign Document CS4
   action: ignore
   ignore:
-    reasoning: File used by adobe software for image editing and manipulation. Not
+    reason: File used by adobe software for image editing and manipulation. Not
       preservable, we are unable to open and convert this format without and photoshop
       license. The files also rarely if ever contains presevable info.
 fmt/551:
   name: Adobe InDesign Document CS5
   action: ignore
   ignore:
-    reasoning: File used by adobe software for image editing and manipulation. Not
+    reason: File used by adobe software for image editing and manipulation. Not
       preservable, we are unable to open and convert this format without and photoshop
       license. The files also rarely if ever contains presevable info.
 fmt/557:
@@ -1768,7 +1807,7 @@ fmt/589:
   name: Windows Media Playlist
   action: ignore
   ignore:
-    reasoning: A structured, XML-like file containing a sequence of music files that
+    reason: A structured, XML-like file containing a sequence of music files that
       makes up a given playlist. Not preservation-worthy
 fmt/595:
   name: Microsoft Excel Non-XML Binary Workbook 2007 onwards
@@ -1800,7 +1839,7 @@ fmt/599:
   name: Microsoft Word Macro-Enabled Document Template 2007 onwards
   action: ignore
   ignore:
-    reasoning: A template document file. Not preservation-worthy
+    reason: A template document file. Not preservation-worthy
 fmt/609:
   name: Microsoft Word (Generic) 6.0-2003
   action: convert
@@ -1820,7 +1859,7 @@ fmt/627:
   name: Microsoft Excel Macro-Enabled Template 2007
   action: ignore
   ignore:
-    reasoning: A Microsoft Excel template file with macros enabled. Not preservation-worthy
+    reason: A Microsoft Excel template file with macros enabled. Not preservation-worthy
 fmt/629:
   name: Microsoft PowerPoint Show 2007
   action: convert
@@ -1843,12 +1882,12 @@ fmt/634:
   name: Microsoft Compiled HTML Help
   action: ignore
   ignore:
-    reasoning: A Microsoft Compiled HTML Help file. Not preservation-worthy
+    reason: A Microsoft Compiled HTML Help file. Not preservation-worthy
 fmt/637:
   name: Microsoft Onenote
   action: ignore
   ignore:
-    reasoning: An Onenote note file. Not preservation-worthy / not convertable
+    reason: An Onenote note file. Not preservation-worthy / not convertable
 fmt/645:
   name: Exchangeable Image File Format (Compressed) 2.2.1
   action: convert
@@ -1858,9 +1897,10 @@ fmt/645:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 fmt/657:
   name: Open XML Paper Specification
   action: convert
@@ -1870,15 +1910,15 @@ fmt/657:
       outputs:
         - pdf
 fmt/670:
-  name: 'PKCS #7 Crytographic Message File'
+  name: 'PKCS #7 Cryptographic Message File'
   action: ignore
   ignore:
-    reasoning: Cryptographic message file which follows email files. Not preservation-worthy
+    reason: Cryptographic message file which follows email files. Not preservation-worthy
 fmt/682:
   name: Thumbs DB File XP
   action: ignore
   ignore:
-    reasoning: Windows OS file, contains folder metadata. Not preservation-worthy
+    reason: Windows OS file, contains folder metadata. Not preservation-worthy
 fmt/724:
   name: Keyhole Markup Language (Container)
   action: extract
@@ -1890,7 +1930,7 @@ fmt/725:
   name: Microsoft Project 2010
   action: ignore
   ignore:
-    reasoning: Project files. Not preservation-worthy
+    reason: Project files. Not preservation-worthy
 fmt/744:
   name: ClarisWorks/AppleWorks Word Processor 5
   action: convert
@@ -1912,12 +1952,12 @@ fmt/754:
   name: Microsoft Word Document (Password Protected) 97-2003
   action: ignore
   ignore:
-    reasoning: A password protected word document. Password protected
+    reason: A password protected word document. Password protected
 fmt/761:
   name: Adobe Flash 15
   action: ignore
   ignore:
-    reasoning: Flash is no longer supported, and it is in a very messy format - The
+    reason: Flash is no longer supported, and it is in a very messy format - The
       file can be a image, video or interactive game. It might not be preservation-worthy,
       but either way we don't know how to handle it
 fmt/817:
@@ -1932,7 +1972,7 @@ fmt/870:
   name: Perl Script
   action: ignore
   ignore:
-    reasoning: A script in Perl. Not preservation-worthy
+    reason: A script in Perl. Not preservation-worthy
 fmt/881:
   name: Microsoft Document Imaging File Format
   action: convert
@@ -1945,18 +1985,18 @@ fmt/886:
   name: HTML Components
   action: ignore
   ignore:
-    reasoning: A web script file, usually Javascript, meant to be integrated with
+    reason: A web script file, usually Javascript, meant to be integrated with
       other HTML files. Not preservation-worthy
 fmt/899:
   name: Windows Portable Executable 32 bit
   action: ignore
   ignore:
-    reasoning: A Windows executable file. Not preservation-worthy
+    reason: A Windows executable file. Not preservation-worthy
 fmt/900:
   name: Windows Portable Executable 64 bit
   action: ignore
   ignore:
-    reasoning: A Windows executable file. Not preservation-worthy
+    reason: A Windows executable file. Not preservation-worthy
 fmt/901:
   name: Microsoft Works Spreadsheet 6-9
   action: convert
@@ -1970,12 +2010,12 @@ fmt/938:
   name: Python Script File
   action: ignore
   ignore:
-    reasoning: A script in Python. Not preservation-worthy
+    reason: A script in Python. Not preservation-worthy
 fmt/941:
   name: Back Up File
   action: ignore
   ignore:
-    reasoning: Back Up File. As the name suggests then bak files are produced by various
+    reason: Back Up File. As the name suggests then bak files are produced by various
       programs. Not preservation-worthy
 fmt/950:
   name: MIME Email 1.0
@@ -1989,7 +2029,7 @@ fmt/997:
   name: SPSS Portable File
   action: ignore
   ignore:
-    reasoning: ASCII text data file created by SPSS, a statistics processing application;
+    reason: ASCII text data file created by SPSS, a statistics processing application;
       stores exported data from the software in a plain text format, which is easily
       readable by other applications; used for sharing data between programs and computer
       systems.. Not preservation-worthy
@@ -1997,7 +2037,7 @@ fmt/1045:
   name: Q&A Word Processor Document
   action: ignore
   ignore:
-    reasoning: Q&A was a database and word processing software program for IBM PC-compatible
+    reason: Q&A was a database and word processing software program for IBM PC-compatible
       computers published by Symantec and partners from 1985 to 1998. Due to their
       age, Q&A files may lack an extension.. It might not be preservation-worthy,
       but either way we don't know how to handle it
@@ -2013,23 +2053,23 @@ fmt/1079:
   name: Microsoft Program Database 7.00
   action: ignore
   ignore:
-    reasoning: A Program Database File stores debugging information about a compiled
+    reason: A Program Database File stores debugging information about a compiled
       executable, usually created at compile-time.. Not preservation-worthy
 fmt/1082:
   name: ASP WebService Directive File
   action: ignore
   ignore:
-    reasoning: Defines XML Web service attributes for Active Server Pages. Not preservation-worthy
+    reason: Defines XML Web service attributes for Active Server Pages. Not preservation-worthy
 fmt/1089:
   name: VBScript (VBS) File
   action: ignore
   ignore:
-    reasoning: A VBScript file contains code. Not preservation-worthy
+    reason: A VBScript file contains code. Not preservation-worthy
 fmt/1103:
   name: AutoCAD Hatch Pattern
   action: ignore
   ignore:
-    reasoning: Add texture to object. A hatch pattern consists of a repeating pattern
+    reason: Add texture to object. A hatch pattern consists of a repeating pattern
       of lines, dashes, and dots, and is used within AutoCAD to represent materials
       to be used within the manufacture of the object defined in the CAD drawing.
       Not preservation-worthy
@@ -2049,7 +2089,7 @@ fmt/1132:
   name: Netscape Bookmark File Format
   action: ignore
   ignore:
-    reasoning: A bookmark in the Netscape web browser. Not preservation-worthy
+    reason: A bookmark in the Netscape web browser. Not preservation-worthy
 fmt/1216:
   name: ''
   action: convert
@@ -2062,26 +2102,26 @@ fmt/1256:
   name: MapInfo Workspace File
   action: ignore
   ignore:
-    reasoning: MapInfo Workspace files, produced by MapInfo GIS software, are text
+    reason: MapInfo Workspace files, produced by MapInfo GIS software, are text
       files containing the MapInfo commands required to re-create a MapInfo session.
       Not preservation-worthy
 fmt/1258:
   name: Microsoft Access Workgroup Information File
   action: ignore
   ignore:
-    reasoning: A file containing usernames and passwords for users and groups that
+    reason: A file containing usernames and passwords for users and groups that
       require access to a specific Microsoft Access database. Not preservation-worthy
 fmt/1303:
   name: Microsoft Shell Scrap Object File
   action: ignore
   ignore:
-    reasoning: Documents created by dragging objects from an Office document to a
+    reason: Documents created by dragging objects from an Office document to a
       file folder, unsupported as of 2007. Not preservation-worthy
 fmt/1369:
   name: Error File
   action: ignore
   ignore:
-    reasoning: An error log file.. Not preservation-worthy
+    reason: An error log file.. Not preservation-worthy
 fmt/1389:
   name: Drawing Interchange Format (ASCII) 2018/2019/2020
   action: convert
@@ -2175,7 +2215,7 @@ fmt/1482:
   name: Access Report Snapshot
   action: ignore
   ignore:
-    reasoning: An export of a microsoft access database as a report, was supporten
+    reason: An export of a microsoft access database as a report, was supporten
       until 2010. Can be viewed using an proprietary viewer. Not preservation-worthy
 fmt/1507:
   name: Exchangeable Image File Format (Compressed) 2.3.x
@@ -2237,7 +2277,7 @@ fmt/1600:
   name: ''
   action: reidentify
   reidentify:
-    reasoning: Identifies .dat-files as mapinfo-files by extension only. They are
+    reason: Identifies .dat-files as mapinfo-files by extension only. They are
       sometimes winmail.dat
 fmt/1729:
   name: Esri Shapefile Geospatial Metadata File
@@ -2251,18 +2291,18 @@ fmt/1730:
   name: ''
   action: reidentify
   reidentify:
-    reasoning: Identifies .dat-files as mapinfo-files by extension only. They are
+    reason: Identifies .dat-files as mapinfo-files by extension only. They are
       sometimes winmail.dat
 fmt/1756:
   name: Opendocument Text 1.3
   action: reidentify
   reidentify:
-    reasoning: Identified by ext only. Prone to error
+    reason: Identified by ext only. Prone to error
 fmt/1768:
   name: C Source Code file
   action: ignore
   ignore:
-    reasoning: Source code written in C. Not preservation-worthy
+    reason: Source code written in C. Not preservation-worthy
 fmt/1934:
   name: Drawing Interchange Format (Binary)
   action: convert
@@ -2304,7 +2344,7 @@ x-fmt/13:
       outputs:
         - tif
   reidentify:
-    reasoning: .TAB-files related to GIS is sometimes identified as plaintext
+    reason: .TAB-files related to GIS is sometimes identified as plaintext
     onfail: convert
 x-fmt/17:
   name: Microsoft Excel Template 97-2003
@@ -2327,7 +2367,7 @@ x-fmt/37:
   name: AutoCAD Colour-Dependant Plot Style Table
   action: ignore
   ignore:
-    reasoning: Contains plotting settings. Not preservation-worthy
+    reason: Contains plotting settings. Not preservation-worthy
 x-fmt/44:
   name: WordPerfect for MS-DOS/Windows Document 6.0
   action: convert
@@ -2356,12 +2396,12 @@ x-fmt/54:
   name: AutoCAD Font Mapping Table
   action: ignore
   ignore:
-    reasoning: Contains info for fonts used while desingning. Not preservation-worthy
+    reason: Contains info for fonts used while desingning. Not preservation-worthy
 x-fmt/58:
   name: Microsoft Excel Web Query
   action: ignore
   ignore:
-    reasoning: An Excel web server query, which can be used in an Excel file to retrieve
+    reason: An Excel web server query, which can be used in an Excel file to retrieve
       data from a web server. Not preservation-worthy
 x-fmt/62:
   name: Log File
@@ -2383,7 +2423,7 @@ x-fmt/78:
   name: AutoCAD Plot Configuration File (2000)
   action: ignore
   ignore:
-    reasoning: An configuration file for AutoCAD. Not preservation-worthy
+    reason: An configuration file for AutoCAD. Not preservation-worthy
 x-fmt/90:
   name: Microsoft Print File
   action: convert
@@ -2405,7 +2445,7 @@ x-fmt/103:
   name: AutoCAD Compiled Shape/Font File
   action: ignore
   ignore:
-    reasoning: An SHX file contains a shape or font compiled by Autodesk AutoCAD from
+    reason: An SHX file contains a shape or font compiled by Autodesk AutoCAD from
       an .SHP shape file or .PFB font file. It stores shape definitions, as well as
       font definitions for displaying custom text. Compiled shapes enable users to
       save smaller building blocks and fonts that are frequently inserted in drawings.
@@ -2415,7 +2455,7 @@ x-fmt/107:
   name: AutoCAD name plot style table
   action: ignore
   ignore:
-    reasoning: An configuration file for AutoCAD used while designing. Not preservation-worthy
+    reason: An configuration file for AutoCAD used while designing. Not preservation-worthy
 x-fmt/111:
   name: Plain Text File
   action: reidentify
@@ -2429,7 +2469,7 @@ x-fmt/111:
       outputs:
         - tif
   reidentify:
-    reasoning: .TAB-files related to GIS is sometimes identified as plaintext
+    reason: .TAB-files related to GIS is sometimes identified as plaintext
     onfail: convert
 x-fmt/114:
   name: Lotus 1-2-3 Worksheet (2.0)
@@ -2479,18 +2519,18 @@ x-fmt/128:
   name: Microsoft Excel Workspace
   action: ignore
   ignore:
-    reasoning: Contains context information for workbook projects, such as which ones
+    reason: Contains context information for workbook projects, such as which ones
       are part of the project, the position of the window, etc.. Not preservation-worthy
 x-fmt/138:
   name: Active Server Page
   action: ignore
   ignore:
-    reasoning: A website / server code file. Not preservation-worthy
+    reason: A website / server code file. Not preservation-worthy
 x-fmt/148:
   name: IBM DisplayWrite DCA Text File
   action: ignore
   ignore:
-    reasoning: Text document created by DisplayWrite, an old word processor for IBM
+    reason: Text document created by DisplayWrite, an old word processor for IBM
       PCs that has been discontinued; saves document text and basic formatting; can
       be converted to more recent word processing formats using WordPort.. It might
       not be preservation-worthy, but either way we don't know how to handle it
@@ -2498,12 +2538,12 @@ x-fmt/169:
   name: PHP Script Page
   action: ignore
   ignore:
-    reasoning: A script in PHP. Not preservation-worthy
+    reason: A script in PHP. Not preservation-worthy
 x-fmt/181:
   name: PageMaker PC document (6.5-7.0)
   action: manual
   manual:
-    reasoning: The format is no longer supported by adobe and there exists no proper
+    reason: The format is no longer supported by adobe and there exists no proper
       third party tools to handle it
     process: Open the file on the test machine and open it in PageMaker 7.0. From
       there, you can export it as an HTML document. Note that it might take several
@@ -2512,7 +2552,7 @@ x-fmt/191:
   name: AMI Professional Document
   action: ignore
   ignore:
-    reasoning: A file from the AMI wordprocessor. Not preservation-worthy / not convertable
+    reason: A file from the AMI wordprocessor. Not preservation-worthy / not convertable
 x-fmt/224:
   name: Cascading Style Sheet
   action: convert
@@ -2525,7 +2565,7 @@ x-fmt/225:
   name: ESRI MapInfo Data File
   action: ignore
   ignore:
-    reasoning: A helper file for .mid GIS files. Will be picked up by the gis-processor
+    reason: A helper file for .mid GIS files. Will be picked up by the gis-processor
 x-fmt/227:
   name: Geography Markup Language
   action: convert
@@ -2554,18 +2594,18 @@ x-fmt/240:
   name: Microstoft Acces Database File (2000)
   action: ignore
   ignore:
-    reasoning: A microsoft access database. Not preservable, we are unable to convert
+    reason: A microsoft access database. Not preservable, we are unable to convert
       it to a format we can handle as of now
 x-fmt/245:
   name: Microsoft Project 98
   action: ignore
   ignore:
-    reasoning: Project files. Not preservation-worthy
+    reason: Project files. Not preservation-worthy
 x-fmt/247:
   name: Microsoft Project 2000-2003
   action: ignore
   ignore:
-    reasoning: Project files. Not preservation-worthy
+    reason: Project files. Not preservation-worthy
 x-fmt/252:
   name: Microsoft Publisher 2.0
   action: convert
@@ -2655,7 +2695,7 @@ x-fmt/280:
   name: XML Schema Definition
   action: ignore
   ignore:
-    reasoning: A prescriptive XML template, for validating XML files with. Not preservation-worthy
+    reason: A prescriptive XML template, for validating XML files with. Not preservation-worthy
 x-fmt/315:
   name: Document Type Definition
   action: convert
@@ -2668,13 +2708,13 @@ x-fmt/328:
   name: InterBase Database file
   action: ignore
   ignore:
-    reasoning: A Databse fil in the interbase format. Not preservable, we are unable
+    reason: A Databse fil in the interbase format. Not preservable, we are unable
       to convert it to a format we can handle as of now
 x-fmt/332:
   name: Lotus 1-2-3 Spreadsheet Formatting File 3.0
   action: ignore
   ignore:
-    reasoning: It's a file containing formatting information for Lotus spreadsheets.
+    reason: It's a file containing formatting information for Lotus spreadsheets.
       Not preservation-worthy
 x-fmt/340:
   name: ''
@@ -2759,9 +2799,10 @@ x-fmt/390:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 x-fmt/391:
   name: Exchangeable Image File Format (Compressed) 2.2
   action: convert
@@ -2771,9 +2812,10 @@ x-fmt/391:
       outputs:
         - tif
   ignore:
-    reasoning: ''
+    reason: ''
     ignore_if:
       - pixel_total: 20000
+        reason: "Image is too small"
 x-fmt/392:
   name: JP2 (JPEG 2000 part 1)
   action: convert
@@ -2812,27 +2854,27 @@ x-fmt/411:
   name: Windows Portable Executable
   action: ignore
   ignore:
-    reasoning: A Windows executable file. Not preservation-worthy
+    reason: A Windows executable file. Not preservation-worthy
 x-fmt/412:
   name: Java Archive Format
   action: ignore
   ignore:
-    reasoning: A Java archive file containing a Java project. Not preservation-worthy
+    reason: A Java archive file containing a Java project. Not preservation-worthy
 x-fmt/413:
   name: Batch file (executable)
   action: ignore
   ignore:
-    reasoning: An executable non-binary .bat-file. Not preservation-worthy
+    reason: An executable non-binary .bat-file. Not preservation-worthy
 x-fmt/415:
   name: Java Compiled Object Code
   action: ignore
   ignore:
-    reasoning: Java byte code - not human readable. Not preservation-worthy
+    reason: Java byte code - not human readable. Not preservation-worthy
 x-fmt/416:
   name: BinHex Binary Text
   action: ignore
   ignore:
-    reasoning: BinHex, originally short for 'binary-to-hexadecimal', is a binary-to-text
+    reason: BinHex, originally short for 'binary-to-hexadecimal', is a binary-to-text
       encoding system that was used on the classic Mac OS for sending binary files
       through e-mail.. It might not be preservation-worthy, but either way we don't
       know how to handle it
@@ -2845,18 +2887,18 @@ x-fmt/418:
       outputs:
         - tif
   ignore:
-    reasoning: An ICO file contains an icon, which is typically used to represent
+    reason: An ICO file contains an icon, which is typically used to represent
       a Windows program, file, or folder. Not preservation-worthy
 x-fmt/420:
   name: Windows Setup File
   action: ignore
   ignore:
-    reasoning: Windows Setup File or  Installer Script. Not preservation-worthy
+    reason: Windows Setup File or  Installer Script. Not preservation-worthy
 x-fmt/421:
   name: Text Configuration file
   action: ignore
   ignore:
-    reasoning: A text config file. Not preservation-worthy
+    reason: A text config file. Not preservation-worthy
 x-fmt/426:
   name: License file
   action: convert
@@ -2869,7 +2911,7 @@ x-fmt/428:
   name: Microsoft Windows Shortcut
   action: ignore
   ignore:
-    reasoning: A pointer to a different file. Not preservation-worthy
+    reason: A pointer to a different file. Not preservation-worthy
 x-fmt/429:
   name: MHTML
   action: convert
@@ -2889,18 +2931,18 @@ x-fmt/441:
   name: AutoCAD Database File Locking Information
   action: ignore
   ignore:
-    reasoning: A temporary file created by AutoCAD when a file is opened for editing,
+    reason: A temporary file created by AutoCAD when a file is opened for editing,
       detailing when and by who the file was edited. Not preservation-worthy
 x-fmt/453:
   name: TrueType Font
   action: ignore
   ignore:
-    reasoning: A font file. Not preservation-worthy
+    reason: A font file. Not preservation-worthy
 x-fmt/454:
   name: Microsoft Internet Shortcut
   action: ignore
   ignore:
-    reasoning: A link to a website. Not preservation-worthy
+    reason: A link to a website. Not preservation-worthy
 x-fmt/455:
   name: AutoCAD Drawing 2007-2008
   action: convert

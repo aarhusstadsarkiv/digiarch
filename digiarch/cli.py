@@ -37,6 +37,7 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
+from PIL import UnidentifiedImageError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
@@ -104,6 +105,12 @@ def app():
     help="The path to the Siegfried executable.",
 )
 @option(
+    "--siegfried-home",
+    type=ClickPath(file_okay=False, resolve_path=True, path_type=Path),
+    default=None,
+    help="The path to the Siegfried home folder.",
+)
+@option(
     "--siegfried-signature",
     type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
     default="pronom",
@@ -132,10 +139,11 @@ def app():
     help="Path to a JSON file containing custom signature specifications.",
 )
 @pass_context
-def app_process(
+def app_identify(
     ctx: Context,
     root: Path,
     siegfried_path: Optional[Path],
+    siegfried_home: Optional[Path],
     siegfried_signature: TSignature,
     update_siegfried_signature: bool,
     actions_file: Optional[Path],
@@ -149,7 +157,11 @@ def app_process(
 
     Files that are already in the database are not processed.
     """
-    siegfried = Siegfried(siegfried_path or Path(environ["GOPATH"], "bin", "sf"), f"{siegfried_signature}.sig")
+    siegfried = Siegfried(
+        siegfried_path or Path(environ["GOPATH"], "bin", "sf"),
+        f"{siegfried_signature}.sig",
+        siegfried_home,
+    )
     if update_siegfried_signature:
         siegfried.update(siegfried_signature)
 
@@ -183,7 +195,17 @@ def app_process(
                     continue
 
                 file_history: list[HistoryEntry] = []
-                file = File.from_file(path, root, siegfried, actions, custom_signatures)
+
+                with ExceptionManager(UnidentifiedImageError) as image_exception:
+                    file = File.from_file(path, root, siegfried, actions, custom_signatures)
+
+                if image_exception.exception:
+                    file = File.from_file(path, root, siegfried)
+                    file.action = "manual"
+                    file.action_data = ManualAction(
+                        reason=repr(image_exception.exception),
+                        process="Indentify and fix error.",
+                    )
 
                 if file.action_data and file.action_data.rename:
                     old_path, new_path = handle_rename(file, file.action_data.rename)

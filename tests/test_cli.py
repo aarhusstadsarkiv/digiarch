@@ -18,7 +18,7 @@ from acacore.utils.functions import rm_tree
 from digiarch.cli import app
 from digiarch.cli import app_edit
 from digiarch.cli import app_edit_action
-from digiarch.cli import app_process
+from digiarch.cli import app_identify
 from digiarch.database import FileDB
 
 
@@ -49,13 +49,15 @@ def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
 
 def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
     args: list[str] = [
-        app_process.name,
+        app_identify.name,
         str(files_folder_copy),
         "--actions",
         str(tests_folder / "fileformats.yml"),
         "--custom-signatures",
         str(tests_folder / "custom_signatures.json"),
         "--no-update-siegfried-signature",
+        "--siegfried-home",
+        str(tests_folder),
     ]
 
     app.main(args, standalone_mode=False)
@@ -124,13 +126,13 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
         elif action == "replace":
             file.action_data.replace = ReplaceAction(template="empty")
         elif action == "manual":
-            file.action_data.manual = ManualAction(reasoning="reason", process="process")
+            file.action_data.manual = ManualAction(reason="reason", process="process")
         elif action == "rename":
             file.action_data.rename = RenameAction(extension="ext")
         elif action == "ignore":
-            file.action_data.ignore = IgnoreAction(reasoning="reason")
+            file.action_data.ignore = IgnoreAction(reason="reason")
         elif action == "reidentify":
-            file.action_data.reidentify = ReIdentifyAction(reasoning="reason")
+            file.action_data.reidentify = ReIdentifyAction(reason="reason")
 
         args: list[str] = [
             app_edit.name,
