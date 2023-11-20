@@ -9,7 +9,6 @@ from typing import Union
 from uuid import UUID
 
 import yaml
-from PIL import UnidentifiedImageError
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -38,6 +37,7 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
+from PIL import UnidentifiedImageError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
