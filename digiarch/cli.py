@@ -215,7 +215,7 @@ def app_identify(
                             file.uuid,
                             repr(image_exception.exception),
                             "".join(format_tb(exception.traceback)) if exception.traceback else None,
-                        )
+                        ),
                     )
 
                 if file.action_data and file.action_data.rename:
