@@ -124,13 +124,13 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
         elif action == "replace":
             file.action_data.replace = ReplaceAction(template="empty")
         elif action == "manual":
-            file.action_data.manual = ManualAction(reasoning="reason", process="process")
+            file.action_data.manual = ManualAction(reason="reason", process="process")
         elif action == "rename":
             file.action_data.rename = RenameAction(extension="ext")
         elif action == "ignore":
-            file.action_data.ignore = IgnoreAction(reasoning="reason")
+            file.action_data.ignore = IgnoreAction(reason="reason")
         elif action == "reidentify":
-            file.action_data.reidentify = ReIdentifyAction(reasoning="reason")
+            file.action_data.reidentify = ReIdentifyAction(reason="reason")
 
         args: list[str] = [
             app_edit.name,
