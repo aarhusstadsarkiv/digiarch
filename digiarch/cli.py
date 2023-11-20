@@ -105,7 +105,7 @@ def app():
 )
 @option(
     "--siegfried-home",
-    type=ClickPath(dir_okay=False, resolve_path=True, path_type=Path),
+    type=ClickPath(file_okay=False, resolve_path=True, path_type=Path),
     default=None,
     help="The path to the Siegfried home folder.",
 )
