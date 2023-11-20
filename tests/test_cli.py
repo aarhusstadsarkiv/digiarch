@@ -148,7 +148,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
             assert file2.action_data.model_dump()[action] == file.action_data.model_dump()[action]
 
             history: HistoryEntry = database.history.select(
-                where="UUID = ?",
+                where="UUID = ? and OPERATION like '%:file:edit:action'",
                 order_by=[("TIME", "desc")],
                 limit=1,
                 parameters=[str(file.uuid)],
