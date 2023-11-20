@@ -138,7 +138,7 @@ def app():
     help="Path to a JSON file containing custom signature specifications.",
 )
 @pass_context
-def app_process(
+def app_identify(
     ctx: Context,
     root: Path,
     siegfried_path: Optional[Path],

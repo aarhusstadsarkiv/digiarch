@@ -18,7 +18,7 @@ from acacore.utils.functions import rm_tree
 from digiarch.cli import app
 from digiarch.cli import app_edit
 from digiarch.cli import app_edit_action
-from digiarch.cli import app_process
+from digiarch.cli import app_identify
 from digiarch.database import FileDB
 
 
@@ -49,7 +49,7 @@ def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
 
 def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
     args: list[str] = [
-        app_process.name,
+        app_identify.name,
         str(files_folder_copy),
         "--actions",
         str(tests_folder / "fileformats.yml"),
