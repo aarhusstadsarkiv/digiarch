@@ -41,6 +41,6 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.tag.outputs.tag }}
-          name: ${{ steps.release.outputs.title }}
+          name: ${{ steps.tag.outputs.tag }}
           files: |
             dist/*
