@@ -13,6 +13,8 @@ jobs:
   wheel:
     name: Build Wheels
     runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v4
@@ -31,8 +33,14 @@ jobs:
           acacore="${acacore%\"}"
           sed -ie "s/acacore *=.*/acacore = \"$acacore\"/g" pyproject.toml
           poetry build
-      - name: Save Wheels
-        uses: actions/upload-artifact@v3
+      - name: Get Tag
+        id: tag
+        run: echo "tag=$(git tag -l --sort=-version:refname | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          name: dist
-          path: dist
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag_name: ${{ steps.tag.outputs.tag }}
+          name: ${{ steps.release.outputs.title }}
+          files: |
+            dist/*
