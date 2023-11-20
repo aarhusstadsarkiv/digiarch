@@ -208,6 +208,15 @@ def app_identify(
                             process="Indentify and fix error.",
                         ),
                     )
+                    file_history.append(
+                        HistoryEntry.command_history(
+                            ctx,
+                            "file:identify:error",
+                            file.uuid,
+                            repr(image_exception.exception),
+                            "".join(format_tb(exception.traceback)) if exception.traceback else None,
+                        )
+                    )
 
                 if file.action_data and file.action_data.rename:
                     old_path, new_path = handle_rename(file, file.action_data.rename)
