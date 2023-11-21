@@ -202,9 +202,20 @@ def app_identify(
                 if image_exception.exception:
                     file = File.from_file(path, root, siegfried)
                     file.action = "manual"
-                    file.action_data = ManualAction(
-                        reason=repr(image_exception.exception),
-                        process="Indentify and fix error.",
+                    file.action_data = ActionData(
+                        manual=ManualAction(
+                            reason=image_exception.exception.__class__.__name__,
+                            process="Identify and fix error.",
+                        ),
+                    )
+                    file_history.append(
+                        HistoryEntry.command_history(
+                            ctx,
+                            "file:identify:error",
+                            file.uuid,
+                            repr(image_exception.exception),
+                            "".join(format_tb(exception.traceback)) if exception.traceback else None,
+                        ),
                     )
 
                 if file.action_data and file.action_data.rename:

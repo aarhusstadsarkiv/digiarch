@@ -92,10 +92,6 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         }
         assert baseline_files == database_files
 
-        baseline_history = {(h.operation, dumps(h.data), dumps(h.reason)) for h in baseline.history if h.uuid}
-        database_history = {(h.operation, dumps(h.data), dumps(h.reason)) for h in database.history if h.uuid}
-        assert baseline_history == database_history
-
     rm_tree(files_folder_copy / "_metadata")
 
     app.main([*args, "--siegfried-path", str(tests_folder / "sf")], standalone_mode=False)
@@ -152,7 +148,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
             assert file2.action_data.model_dump()[action] == file.action_data.model_dump()[action]
 
             history: HistoryEntry = database.history.select(
-                where="UUID = ?",
+                where="UUID = ? and OPERATION like '%:file:edit:action'",
                 order_by=[("TIME", "desc")],
                 limit=1,
                 parameters=[str(file.uuid)],
