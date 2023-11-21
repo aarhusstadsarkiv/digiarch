@@ -37,11 +37,15 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
+from PIL import Image
 from PIL import UnidentifiedImageError
+from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
 from .database import FileDB
+
+Image.MAX_IMAGE_PIXELS = int(50e3**2)
 
 
 def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], tuple[None, None]]:
@@ -71,7 +75,7 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
     program_end: HistoryEntry = HistoryEntry.command_history(
         ctx,
         "end",
-        data=1 if exception.exception else 0,
+        data=repr(exception.exception) if exception.exception else None,
         reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
     )
 
@@ -196,15 +200,20 @@ def app_identify(
 
                 file_history: list[HistoryEntry] = []
 
-                with ExceptionManager(UnidentifiedImageError) as image_exception:
+                with ExceptionManager(
+                    Exception,
+                    UnidentifiedImageError,
+                    DecompressionBombError,
+                    allow=[OSError, IOError],
+                ) as identify_error:
                     file = File.from_file(path, root, siegfried, actions, custom_signatures)
 
-                if image_exception.exception:
+                if identify_error.exception:
                     file = File.from_file(path, root, siegfried)
                     file.action = "manual"
                     file.action_data = ActionData(
                         manual=ManualAction(
-                            reason=image_exception.exception.__class__.__name__,
+                            reason=identify_error.exception.__class__.__name__,
                             process="Identify and fix error.",
                         ),
                     )
@@ -213,7 +222,7 @@ def app_identify(
                             ctx,
                             "file:identify:error",
                             file.uuid,
-                            repr(image_exception.exception),
+                            repr(identify_error.exception),
                             "".join(format_tb(exception.traceback)) if exception.traceback else None,
                         ),
                     )

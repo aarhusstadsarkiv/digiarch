@@ -98,7 +98,8 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
 
     with FileDB(files_folder_copy / "_metadata" / "files.db") as database:
         last_history: HistoryEntry = sorted(database.history, key=lambda h: h.time).pop()
-        assert last_history.data == 1
+        assert isinstance(last_history.data, str)
+        assert last_history.data.startswith("FileNotFoundError")
         assert last_history.reason is not None
 
 
