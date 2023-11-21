@@ -72,7 +72,11 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
         ctx,
         "end",
         data=1 if exception.exception else 0,
-        reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
+        reason=("".join(format_tb(exception.traceback)) + f"\n\n{exception.exception!r}")
+        if exception.traceback
+        else repr(exception.exception)
+        if exception.exception
+        else None,
     )
 
     for logger in loggers:
