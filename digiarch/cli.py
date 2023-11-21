@@ -205,7 +205,7 @@ def app_identify(
                     file.action_data = ActionData(
                         manual=ManualAction(
                             reason=image_exception.exception.__class__.__name__,
-                            process="Indentify and fix error.",
+                            process="Identify and fix error.",
                         ),
                     )
                     file_history.append(
