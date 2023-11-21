@@ -36,6 +36,8 @@ jobs:
       - name: Get Tag
         id: tag
         run: echo "tag=$(git tag -l --sort=-version:refname | head -1)" >> "$GITHUB_OUTPUT"
+      - name: Create Wheels ZIP
+        run: zip -j wheels.zip dist/*.whl
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -44,3 +46,4 @@ jobs:
           name: ${{ steps.tag.outputs.tag }}
           files: |
             dist/*
+            wheels.zip
