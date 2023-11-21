@@ -13,6 +13,7 @@ jobs:
   wheel:
     name: Build Wheels
     runs-on: ubuntu-latest
+    if: ${{ github.ref_name == "master" }}
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
