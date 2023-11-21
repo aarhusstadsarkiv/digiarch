@@ -9,6 +9,7 @@ from typing import Union
 from uuid import UUID
 
 import yaml
+from PIL import UnidentifiedImageError
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -200,7 +201,12 @@ def app_identify(
 
                 file_history: list[HistoryEntry] = []
 
-                with ExceptionManager(Exception, DecompressionBombError, allow=[OSError]) as identify_error:
+                with ExceptionManager(
+                    Exception,
+                    UnidentifiedImageError,
+                    DecompressionBombError,
+                    allow=[OSError],
+                ) as identify_error:
                     file = File.from_file(path, root, siegfried, actions, custom_signatures)
 
                 if identify_error.exception:
