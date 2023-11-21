@@ -75,7 +75,7 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
     program_end: HistoryEntry = HistoryEntry.command_history(
         ctx,
         "end",
-        data=repr(exception.exception),
+        data=repr(exception.exception) if exception.exception else None,
         reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
     )
 
