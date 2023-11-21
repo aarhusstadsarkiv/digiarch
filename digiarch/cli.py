@@ -9,7 +9,6 @@ from typing import Union
 from uuid import UUID
 
 import yaml
-from PIL import UnidentifiedImageError
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -38,6 +37,7 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
+from PIL import UnidentifiedImageError
 from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
@@ -205,7 +205,7 @@ def app_identify(
                     Exception,
                     UnidentifiedImageError,
                     DecompressionBombError,
-                    allow=[OSError],
+                    allow=[OSError, IOError],
                 ) as identify_error:
                     file = File.from_file(path, root, siegfried, actions, custom_signatures)
 
