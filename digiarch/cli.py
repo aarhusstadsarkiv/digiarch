@@ -37,12 +37,15 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
+from PIL import Image
 from PIL import UnidentifiedImageError
 from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
 from .database import FileDB
+
+Image.MAX_IMAGE_PIXELS = int(50e3**2)
 
 
 def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], tuple[None, None]]:
