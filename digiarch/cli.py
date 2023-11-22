@@ -348,6 +348,7 @@ def app_edit_action(
                     logger.error(f"{HistoryEntry.command_history(ctx, 'file:select')} {uuid} not found")
                     continue
 
+                previous_action = file.action
                 file.action = action
 
                 if data_parsed:
@@ -373,7 +374,13 @@ def app_edit_action(
 
                 database.files.insert(file, replace=True)
 
-                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action", uuid, action, reason)
+                history: HistoryEntry = HistoryEntry.command_history(
+                    ctx,
+                    "file:edit:action",
+                    uuid,
+                    [previous_action, action],
+                    reason,
+                )
                 logger.info(f"{history.operation} {history.uuid} {history.data} {history.reason}")
                 database.history.insert(history)
 
