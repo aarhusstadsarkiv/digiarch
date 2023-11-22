@@ -116,6 +116,9 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
     file.action_data = ActionData()
 
     for action in ("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify"):
+        previous_action = file.action
+        file.action = action
+
         if action == "convert":
             file.action_data.convert = [ConvertAction(converter="test", converter_type="master", outputs=["ext"])]
         elif action == "extract":
@@ -155,5 +158,5 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
                 parameters=[str(file.uuid)],
             ).fetchone()
 
-            assert history.data == action
+            assert history.data == [previous_action, action]
             assert history.reason == f"edit action {action}"
