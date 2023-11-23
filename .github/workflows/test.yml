@@ -29,6 +29,24 @@ jobs:
           test "$version_project" = "$version_package"
           echo $?
 
+  version-acacore:
+    name: Test acacore Version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - name: Fetch Acacore Version
+        run: |
+          acacore_remote="$(python -c 'import urllib.request,json;print(json.loads(urllib.request.urlopen("https://api.github.com/repos/aarhusstadsarkiv/acacore/tags").read())[0]["name"])')"
+          acacore_remote="${acacore_remote#v}"
+          acacore_package="$(grep 'acacore =' pyproject.toml | grep -oE 'tag[ ]*=[ ]*"[^"]+"')"
+          acacore_package="${acacore_package#*\"}"
+          acacore_package="${acacore_package#v}"
+          acacore_package="${acacore_package%\"}"
+          test "$acacore_remote" = "$acacore_package"
+
   pytest:
     name: pytest
     runs-on: ubuntu-latest
