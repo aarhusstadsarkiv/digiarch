@@ -6,7 +6,6 @@ from sys import stdout
 from traceback import format_tb
 from typing import Optional
 from typing import Union
-from uuid import UUID
 
 import yaml
 from acacore.models.file import File
@@ -266,10 +265,10 @@ def app_edit():
     type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
 )
 @argument(
-    "uuids",
-    metavar="UUID...",
+    "ids",
+    metavar="ID...",
     nargs=-1,
-    type=UUID,
+    type=str,
     required=True,
     callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
 )
@@ -281,6 +280,11 @@ def app_edit():
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
+@option("--uuid", "id_type", flag_value="uuid", default=True, show_default=True, help="Use UUID's as identifiers.")
+@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
+@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
+@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
+@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
 @option(
     "--data",
     metavar="<FIELD VALUE>",
@@ -299,9 +303,10 @@ def app_edit():
 def app_edit_action(
     ctx: Context,
     root: Path,
-    uuids: tuple[UUID],
+    ids: tuple[str],
     action: TActionType,
     reason: str,
+    id_type: str,
     data: tuple[tuple[str, str]],
     data_json: Optional[str],
 ):
@@ -326,6 +331,7 @@ def app_edit_action(
     data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
     assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"  # noqa: UP038
     database_path: Path = root / "_metadata" / "files.db"
+    is_substring_id: bool = id_type in ("warnings",)
 
     if not database_path.is_file():
         raise FileNotFoundError(database_path)
@@ -337,15 +343,15 @@ def app_edit_action(
         handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
-            for uuid in uuids:
+            for file_id in ids:
                 file: Optional[File] = database.files.select(
-                    where="uuid = ?",
+                    where=f"{id_type} like '%\"' || ? || '%\"'" if is_substring_id else f"{id_type} = ?",
                     limit=1,
-                    parameters=[str(uuid)],
+                    parameters=[str(file_id)],
                 ).fetchone()
 
                 if not file:
-                    logger.error(f"{HistoryEntry.command_history(ctx, 'file:select')} {uuid} not found")
+                    logger.error(f"{HistoryEntry.command_history(ctx, 'file:select')} {id_type} {file_id} not found")
                     continue
 
                 previous_action = file.action
@@ -377,7 +383,7 @@ def app_edit_action(
                 history: HistoryEntry = HistoryEntry.command_history(
                     ctx,
                     "file:edit:action",
-                    uuid,
+                    file.uuid,
                     [previous_action, action],
                     reason,
                 )
