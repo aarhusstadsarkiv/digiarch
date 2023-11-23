@@ -110,12 +110,15 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
     copy(database_path, database_path_copy)
 
     with FileDB(database_path_copy) as database:
-        file: File = database.files.select(limit=1, order_by=[("random()", "asc")]).fetchone()
+        file: File = database.files.select(where="puid is not null", limit=1, order_by=[("random()", "asc")]).fetchone()
         assert isinstance(file, File)
 
     file.action_data = ActionData()
 
     for action in ("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify"):
+        previous_action = file.action
+        file.action = action
+
         if action == "convert":
             file.action_data.convert = [ConvertAction(converter="test", converter_type="master", outputs=["ext"])]
         elif action == "extract":
@@ -155,5 +158,39 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
                 parameters=[str(file.uuid)],
             ).fetchone()
 
-            assert history.data == action
+            assert history.data == [previous_action, action]
             assert history.reason == f"edit action {action}"
+
+        args: list[str] = [
+            app_edit.name,
+            app_edit_action.name,
+            str(files_folder_copy),
+            str(file.puid),
+            "replace",
+            "edit action with puid",
+            "--data",
+            "template",
+            "empty",
+            "--puid",
+        ]
+
+        app.main(args, standalone_mode=False)
+
+        with FileDB(database_path_copy) as database:
+            files: list[File] = list(database.files.select(where="PUID = ?", limit=1, parameters=[file.puid]))
+
+            assert all(f.action == "replace" for f in files)
+            assert all(f.action_data and f.action_data.replace for f in files)
+            assert all(f.action_data.replace.template == "empty" for f in files)
+
+            for file in files:
+                history: HistoryEntry = database.history.select(
+                    where="UUID = ? and OPERATION like '%:file:edit:action'",
+                    order_by=[("TIME", "desc")],
+                    limit=1,
+                    parameters=[str(file.uuid)],
+                ).fetchone()
+
+                assert isinstance(history.data, list)
+                assert history.data[-1] == "replace"
+                assert history.reason == "edit action with puid"
