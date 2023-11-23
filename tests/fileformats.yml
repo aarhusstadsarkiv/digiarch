@@ -1,19 +1,18 @@
-"!empty":
-  name: Empty files
-  action: replace
-  replace:
-    template: empty
-"!binary":
-  name: Binary files
-  action: manual
-  manual:
-    reason: "Unknown binary file"
-    process: "Identify file and assign it an action."
+"*":
+  name: Ground rules
+  action: ignore
   ignore:
     reason: ""
     ignore_if:
       - binary_size: 1024
         reason: "Binary file is too small"
+      - size: 32
+        reason: "File is too small"
+"!empty":
+  name: Empty files
+  action: replace
+  replace:
+    template: empty
 "!image (raster)":
   name: Image files
   action: manual
@@ -25,16 +24,6 @@
     ignore_if:
       - pixel_total: 20000
         reason: "Image is too small"
-aca-error/1:
-  name: Empty File
-  action: ignore
-  ignore:
-    reason: It's an empty file! Not preservation-worthy
-aca-error/2:
-  name: Corrupt file
-  action: ignore
-  ignore:
-    reason: It's a corrupt file! Not preservation-worthy
 aca-fmt/1:
   name: Lotus 1-2-3 Worksheet
   action: convert
