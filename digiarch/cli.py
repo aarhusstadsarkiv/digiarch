@@ -280,7 +280,7 @@ def app_edit():
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, show_default=True, help="Use UUID's as identifiers.")
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
 @option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
@@ -314,6 +314,9 @@ def app_edit_action(
     Change the action of one or more files in the files' database for the ROOT folder to ACTION.
 
     Files are updated even if their action value is already set to ACTION.
+
+    The ID arguments are interpreted as a list of UUID's by default. he behaviour can be changed with the
+    --puid, --path, --checksum, and --warning options.
 
     The action data for the given files is not touched unless the --data or --data-json options are used.
     The --data option takes precedence.
