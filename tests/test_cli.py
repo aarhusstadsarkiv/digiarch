@@ -191,5 +191,6 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
                     parameters=[str(file.uuid)],
                 ).fetchone()
 
-                assert isinstance(history.data, list) and history.data[-1] == "replace"
+                assert isinstance(history.data, list)
+                assert history.data[-1] == "replace"
                 assert history.reason == "edit action with puid"
