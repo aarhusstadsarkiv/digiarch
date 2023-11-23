@@ -27,7 +27,6 @@ jobs:
           version_package="${version_package%\"}"
           version_package="${version_package#*\"}"
           test "$version_project" = "$version_package"
-          echo $?
 
   version-acacore:
     name: Test acacore Version
