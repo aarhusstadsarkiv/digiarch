@@ -222,7 +222,7 @@ def app_identify(
                             "file:identify:error",
                             file.uuid,
                             repr(identify_error.exception),
-                            "".join(format_tb(exception.traceback)) if exception.traceback else None,
+                            "".join(format_tb(identify_error.traceback)) if identify_error.traceback else None,
                         ),
                     )
 
