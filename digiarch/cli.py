@@ -263,6 +263,61 @@ def app_edit():
     """Edit a files' database."""
 
 
+@app_edit.command("remove")
+@argument(
+    "root",
+    nargs=1,
+    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
+)
+@argument(
+    "ids",
+    metavar="ID...",
+    nargs=-1,
+    type=str,
+    required=True,
+    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+)
+@argument("reason", nargs=1, type=str, required=True)
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
+@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
+@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
+@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
+@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
+@pass_context
+def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_type: str):
+    database_path: Path = root / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    is_substring_id: bool = id_type in ("warnings",)
+    where: str = f"{id_type} like '%\"' || ? || '\"%'" if is_substring_id else f"{id_type} = ?"
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            for file_id in ids:
+                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:remove")
+                file: Optional[File] = database.files.select(where=where, limit=1, parameters=[file_id]).fetchone()
+
+                if not file:
+                    logger.error(f"{history.operation} {id_type} {file_id} not found")
+                    continue
+
+                history.uuid = file.uuid
+                history.data = file.model_dump(mode="json")
+                history.reason = reason
+                database.execute(f"delete from {database.files.name} where {where}", [file_id])
+                database.history.insert(history)
+                logger.info(f"{history.operation} {file.relative_path} {file.puid} {file.action}")
+
+        handle_end(ctx, database, exception, logger)
+
+
 @app_edit.command("action", no_args_is_help=True)
 @argument(
     "root",
