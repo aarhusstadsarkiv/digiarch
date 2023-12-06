@@ -263,6 +263,7 @@ def app_edit():
     """Edit a files' database."""
 
 
+# noinspection DuplicatedCode
 @app_edit.command("remove")
 @argument(
     "root",
@@ -318,6 +319,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
         handle_end(ctx, database, exception, logger)
 
 
+# noinspection DuplicatedCode
 @app_edit.command("action", no_args_is_help=True)
 @argument(
     "root",
