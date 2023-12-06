@@ -8,6 +8,7 @@ from typing import Optional
 from typing import Union
 
 import yaml
+from acacore.__version__ import __version__ as __acacore_version__
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -62,7 +63,11 @@ def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], 
 
 
 def handle_start(ctx: Context, database: FileDB, *loggers: Logger):
-    program_start: HistoryEntry = HistoryEntry.command_history(ctx, "start")
+    program_start: HistoryEntry = HistoryEntry.command_history(
+        ctx,
+        "start",
+        data=ctx.params | {"version": __version__, "acacore": __acacore_version__},
+    )
 
     database.history.insert(program_start)
 
