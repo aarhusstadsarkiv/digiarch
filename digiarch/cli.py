@@ -313,7 +313,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
                 history.reason = reason
                 database.execute(f"delete from {database.files.name} where {where}", [file_id])
                 database.history.insert(history)
-                logger.info(f"{history.operation} {file.relative_path} {file.puid} {file.action}")
+                logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.reason}")
 
         handle_end(ctx, database, exception, logger)
 
@@ -394,7 +394,6 @@ def app_edit_action(
     data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
     assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"  # noqa: UP038
     database_path: Path = root / "_metadata" / "files.db"
-    is_substring_id: bool = id_type in ("warnings",)
 
     if not database_path.is_file():
         raise FileNotFoundError(database_path)
@@ -402,19 +401,19 @@ def app_edit_action(
     program_name: str = ctx.find_root().command.name
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
 
+    is_substring_id: bool = id_type in ("warnings",)
+    where: str = f"{id_type} like '%\"' || ? || '\"%'" if is_substring_id else f"{id_type} = ?"
+
     with FileDB(database_path) as database:
         handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
-                file: Optional[File] = database.files.select(
-                    where=f"{id_type} like '%\"' || ? || '%\"'" if is_substring_id else f"{id_type} = ?",
-                    limit=1,
-                    parameters=[str(file_id)],
-                ).fetchone()
+                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action")
+                file: Optional[File] = database.files.select(where=where, limit=1, parameters=[str(file_id)]).fetchone()
 
                 if not file:
-                    logger.error(f"{HistoryEntry.command_history(ctx, 'file:select')} {id_type} {file_id} not found")
+                    logger.error(f"{history.operation} {id_type} {file_id} not found")
                     continue
 
                 previous_action = file.action
@@ -441,16 +440,11 @@ def app_edit_action(
                     elif action == "reidentify":
                         file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
 
+                history.uuid = file.uuid
+                history.data = [previous_action, action]
+                history.reason = reason
                 database.files.insert(file, replace=True)
-
-                history: HistoryEntry = HistoryEntry.command_history(
-                    ctx,
-                    "file:edit:action",
-                    file.uuid,
-                    [previous_action, action],
-                    reason,
-                )
-                logger.info(f"{history.operation} {history.uuid} {history.data} {history.reason}")
+                logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
                 database.history.insert(history)
 
         handle_end(ctx, database, exception, logger)
