@@ -127,7 +127,7 @@ def test_edit_remove(files_folder: Path, files_folder_copy: Path):
     app.main(args, standalone_mode=False)
 
     with FileDB(database_path_copy) as database:
-        file: Optional[File] = database.files.select(where=f"uuid = ?", limit=1, parameters=[str(file.uuid)]).fetchone()
+        file: Optional[File] = database.files.select(where="uuid = ?", limit=1, parameters=[str(file.uuid)]).fetchone()
         assert file is None
 
 
