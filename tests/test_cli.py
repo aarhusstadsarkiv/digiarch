@@ -1,6 +1,7 @@
 from json import dumps
 from pathlib import Path
 from shutil import copy
+from typing import Optional
 
 import pytest
 from acacore.models.file import File
@@ -18,6 +19,7 @@ from acacore.utils.functions import rm_tree
 from digiarch.cli import app
 from digiarch.cli import app_edit
 from digiarch.cli import app_edit_action
+from digiarch.cli import app_edit_remove
 from digiarch.cli import app_identify
 from digiarch.database import FileDB
 
@@ -101,6 +103,32 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         assert isinstance(last_history.data, str)
         assert last_history.data.startswith("FileNotFoundError")
         assert last_history.reason is not None
+
+
+def test_edit_remove(files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        file: File = database.files.select(limit=1, order_by=[("random()", "asc")]).fetchone()
+        assert isinstance(file, File)
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_remove.name,
+        "--uuid",
+        str(files_folder_copy),
+        str(file.uuid),
+        "Remove file with uuid",
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        file: Optional[File] = database.files.select(where="uuid = ?", limit=1, parameters=[str(file.uuid)]).fetchone()
+        assert file is None
 
 
 def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
