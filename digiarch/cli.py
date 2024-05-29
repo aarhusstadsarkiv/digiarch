@@ -9,6 +9,7 @@ from typing import Union
 
 import yaml
 from acacore.__version__ import __version__ as __acacore_version__
+from acacore.database.base import ModelCursor
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -315,14 +316,20 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
             for file_id in ids:
                 history: HistoryEntry = HistoryEntry.command_history(ctx, "file:remove")
 
+                cursor: ModelCursor[File] = database.files.select(where=where, parameters=[file_id])
                 file: Optional[File] = None
-                for file in database.files.select(where=where, parameters=[file_id]):
-                    history.uuid = file.uuid
-                    history.data = file.model_dump(mode="json")
-                    history.reason = reason
-                    database.execute(f"delete from {database.files.name} where {where}", [file_id])
-                    database.history.insert(history)
-                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.reason}")
+
+                while True:
+                    files: list[File] = list(cursor.fetchmany(10_000))
+                    if not files:
+                        break
+                    for file in files:
+                        history.uuid = file.uuid
+                        history.data = file.model_dump(mode="json")
+                        history.reason = reason
+                        database.execute(f"delete from {database.files.name} where {where}", [file_id])
+                        database.history.insert(history)
+                        logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.reason}")
 
                 if file is None:
                     logger.error(f"{history.operation} {id_type} {file_id} not found")
@@ -434,39 +441,48 @@ def app_edit_action(
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
                 history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action")
+
+                cursor: ModelCursor[File] = database.files.select(where=where, parameters=[file_id])
                 file: Optional[File] = None
 
-                for file in database.files.select(where=where, parameters=[str(file_id)]):
-                    previous_action = file.action
-                    file.action = action
+                while True:
+                    files: list[File] = list(cursor.fetchmany(10_000))
+                    if not files:
+                        break
 
-                    if data_parsed:
-                        file.action_data = file.action_data or ActionData()
-                        if action == "convert":
-                            file.action_data.convert = (
-                                [ConvertAction.model_validate(data_parsed)]
-                                if isinstance(data_parsed, dict)
-                                else ActionData(convert=data_parsed).convert
-                            )
-                        elif action == "extract":
-                            file.action_data.extract = ExtractAction.model_validate(data_parsed)
-                        elif action == "replace":
-                            file.action_data.replace = ReplaceAction.model_validate(data_parsed)
-                        elif action == "manual":
-                            file.action_data.manual = ManualAction.model_validate(data_parsed)
-                        elif action == "rename":
-                            file.action_data.rename = RenameAction.model_validate(data_parsed)
-                        elif action == "ignore":
-                            file.action_data.ignore = IgnoreAction.model_validate(data_parsed)
-                        elif action == "reidentify":
-                            file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
+                    for file in files:
+                        previous_action = file.action
+                        file.action = action
 
-                    history.uuid = file.uuid
-                    history.data = [previous_action, action]
-                    history.reason = reason
-                    database.files.insert(file, replace=True)
-                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
-                    database.history.insert(history)
+                        if data_parsed:
+                            file.action_data = file.action_data or ActionData()
+                            if action == "convert":
+                                file.action_data.convert = (
+                                    [ConvertAction.model_validate(data_parsed)]
+                                    if isinstance(data_parsed, dict)
+                                    else ActionData(convert=data_parsed).convert
+                                )
+                            elif action == "extract":
+                                file.action_data.extract = ExtractAction.model_validate(data_parsed)
+                            elif action == "replace":
+                                file.action_data.replace = ReplaceAction.model_validate(data_parsed)
+                            elif action == "manual":
+                                file.action_data.manual = ManualAction.model_validate(data_parsed)
+                            elif action == "rename":
+                                file.action_data.rename = RenameAction.model_validate(data_parsed)
+                            elif action == "ignore":
+                                file.action_data.ignore = IgnoreAction.model_validate(data_parsed)
+                            elif action == "reidentify":
+                                file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
+
+                        history.uuid = file.uuid
+                        history.data = [previous_action, action]
+                        history.reason = reason
+                        database.files.insert(file, replace=True)
+                        logger.info(
+                            f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}"
+                        )
+                        database.history.insert(history)
 
                 if file is None:
                     logger.error(f"{history.operation} {id_type} {file_id} not found")
