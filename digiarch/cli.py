@@ -282,6 +282,12 @@ def app_edit():
 @option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
+@option(
+    "--path-like",
+    "id_type",
+    flag_value="relative_path-like",
+    help="Use relative paths as identifiers, match with LIKE.",
+)
 @option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
 @option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
 @pass_context
@@ -294,8 +300,13 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
     program_name: str = ctx.find_root().command.name
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
 
-    is_substring_id: bool = id_type in ("warnings",)
-    where: str = f"{id_type} like '%\"' || ? || '\"%'" if is_substring_id else f"{id_type} = ?"
+    if id_type in ("warnings",):
+        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+    elif id_type.endswith("-like"):
+        id_type = id_type.removesuffix("-like")
+        where: str = f"{id_type} like ?"
+    else:
+        where: str = f"{id_type} = ?"
 
     with FileDB(database_path) as database:
         handle_start(ctx, database, logger)
@@ -303,18 +314,18 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
                 history: HistoryEntry = HistoryEntry.command_history(ctx, "file:remove")
-                file: Optional[File] = database.files.select(where=where, limit=1, parameters=[file_id]).fetchone()
 
-                if not file:
+                file: Optional[File] = None
+                for file in database.files.select(where=where, parameters=[file_id]):
+                    history.uuid = file.uuid
+                    history.data = file.model_dump(mode="json")
+                    history.reason = reason
+                    database.execute(f"delete from {database.files.name} where {where}", [file_id])
+                    database.history.insert(history)
+                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.reason}")
+
+                if file is None:
                     logger.error(f"{history.operation} {id_type} {file_id} not found")
-                    continue
-
-                history.uuid = file.uuid
-                history.data = file.model_dump(mode="json")
-                history.reason = reason
-                database.execute(f"delete from {database.files.name} where {where}", [file_id])
-                database.history.insert(history)
-                logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.reason}")
 
         handle_end(ctx, database, exception, logger)
 
@@ -345,6 +356,12 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
 @option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
+@option(
+    "--path-like",
+    "id_type",
+    flag_value="relative_path-like",
+    help="Use relative paths as identifiers, match with LIKE.",
+)
 @option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
 @option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
 @option(
@@ -403,8 +420,13 @@ def app_edit_action(
     program_name: str = ctx.find_root().command.name
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
 
-    is_substring_id: bool = id_type in ("warnings",)
-    where: str = f"{id_type} like '%\"' || ? || '\"%'" if is_substring_id else f"{id_type} = ?"
+    if id_type in ("warnings",):
+        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+    elif id_type.endswith("-like"):
+        id_type = id_type.removesuffix("-like")
+        where: str = f"{id_type} like ?"
+    else:
+        where: str = f"{id_type} = ?"
 
     with FileDB(database_path) as database:
         handle_start(ctx, database, logger)
@@ -412,41 +434,41 @@ def app_edit_action(
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
                 history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action")
-                file: Optional[File] = database.files.select(where=where, limit=1, parameters=[str(file_id)]).fetchone()
+                file: Optional[File] = None
 
-                if not file:
+                for file in database.files.select(where=where, parameters=[str(file_id)]):
+                    previous_action = file.action
+                    file.action = action
+
+                    if data_parsed:
+                        file.action_data = file.action_data or ActionData()
+                        if action == "convert":
+                            file.action_data.convert = (
+                                [ConvertAction.model_validate(data_parsed)]
+                                if isinstance(data_parsed, dict)
+                                else ActionData(convert=data_parsed).convert
+                            )
+                        elif action == "extract":
+                            file.action_data.extract = ExtractAction.model_validate(data_parsed)
+                        elif action == "replace":
+                            file.action_data.replace = ReplaceAction.model_validate(data_parsed)
+                        elif action == "manual":
+                            file.action_data.manual = ManualAction.model_validate(data_parsed)
+                        elif action == "rename":
+                            file.action_data.rename = RenameAction.model_validate(data_parsed)
+                        elif action == "ignore":
+                            file.action_data.ignore = IgnoreAction.model_validate(data_parsed)
+                        elif action == "reidentify":
+                            file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
+
+                    history.uuid = file.uuid
+                    history.data = [previous_action, action]
+                    history.reason = reason
+                    database.files.insert(file, replace=True)
+                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
+                    database.history.insert(history)
+
+                if file is None:
                     logger.error(f"{history.operation} {id_type} {file_id} not found")
-                    continue
-
-                previous_action = file.action
-                file.action = action
-
-                if data_parsed:
-                    file.action_data = file.action_data or ActionData()
-                    if action == "convert":
-                        file.action_data.convert = (
-                            [ConvertAction.model_validate(data_parsed)]
-                            if isinstance(data_parsed, dict)
-                            else ActionData(convert=data_parsed).convert
-                        )
-                    elif action == "extract":
-                        file.action_data.extract = ExtractAction.model_validate(data_parsed)
-                    elif action == "replace":
-                        file.action_data.replace = ReplaceAction.model_validate(data_parsed)
-                    elif action == "manual":
-                        file.action_data.manual = ManualAction.model_validate(data_parsed)
-                    elif action == "rename":
-                        file.action_data.rename = RenameAction.model_validate(data_parsed)
-                    elif action == "ignore":
-                        file.action_data.ignore = IgnoreAction.model_validate(data_parsed)
-                    elif action == "reidentify":
-                        file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
-
-                history.uuid = file.uuid
-                history.data = [previous_action, action]
-                history.reason = reason
-                database.files.insert(file, replace=True)
-                logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
-                database.history.insert(history)
 
         handle_end(ctx, database, exception, logger)
