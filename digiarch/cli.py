@@ -320,7 +320,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
                     history.uuid = file.uuid
                     history.data = file.model_dump(mode="json")
                     history.reason = reason
-                    database.execute(f"delete from {database.files.name} where {where}", [file_id])
+                    database.execute(f"delete from {database.files.name} where uuid = ?", [file.uuid])
                     database.history.insert(history)
                     logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.reason}")
 
