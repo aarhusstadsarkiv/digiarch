@@ -464,7 +464,7 @@ def app_edit_action(
                     history.uuid = file.uuid
                     history.data = [previous_action, action]
                     history.reason = reason
-                    database.files.insert(file, replace=True)
+                    database.files.update(file)
                     logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
                     database.history.insert(history)
 
