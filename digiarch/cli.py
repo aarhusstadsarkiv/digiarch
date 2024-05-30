@@ -128,7 +128,7 @@ def app():
 @option(
     "--update-siegfried-signature/--no-update-siegfried-signature",
     is_flag=True,
-    default=True,
+    default=False,
     show_default=True,
     help="Control whether Siegfried should update its signature.",
 )
