@@ -411,7 +411,7 @@ def app_edit_action(
         * reidentify
     """  # noqa: D301
     data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
-    assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"  # noqa: UP038
+    assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"
     database_path: Path = root / "_metadata" / "files.db"
 
     if not database_path.is_file():
