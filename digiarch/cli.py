@@ -290,12 +290,16 @@ def app_edit():
 )
 @option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
 @option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
+@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @pass_context
-def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_type: str):
+def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_type: str, id_files: bool):
     database_path: Path = root / "_metadata" / "files.db"
 
     if not database_path.is_file():
         raise FileNotFoundError(database_path)
+
+    if id_files:
+        ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
     program_name: str = ctx.find_root().command.name
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
@@ -364,6 +368,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
 )
 @option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
 @option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
+@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @option(
     "--data",
     metavar="<FIELD VALUE>",
@@ -386,6 +391,7 @@ def app_edit_action(
     action: TActionType,
     reason: str,
     id_type: str,
+    id_files: bool,
     data: tuple[tuple[str, str]],
     data_json: Optional[str],
 ):
@@ -416,6 +422,9 @@ def app_edit_action(
 
     if not database_path.is_file():
         raise FileNotFoundError(database_path)
+
+    if id_files:
+        ids = tuple(i for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
     program_name: str = ctx.find_root().command.name
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
