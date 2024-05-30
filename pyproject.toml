@@ -15,10 +15,10 @@ python = "^3.9"
 acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v1.1.6"}
 
 [tool.poetry.group.dev.dependencies]
-pytest = "^7.0"
-black = "^22.1"
-ruff = "^0.0.272"
-coverage = "^7.2.7"
+pytest = "^8.2.1"
+black = "^24.4.2"
+ruff = "^0.4.6"
+coverage = "^7.5.3"
 
 [tool.poetry.scripts]
 digiarch = "digiarch.cli:app"
