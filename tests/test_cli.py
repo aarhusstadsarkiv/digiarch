@@ -209,7 +209,7 @@ def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_fold
 
     ids_file: Path = files_folder_copy.joinpath("ids.txt")
     ids_file.write_text("\n".join(str(f.uuid) for f in files))
-    test_action: str = "reason"
+    test_action: str = "ignore"
     test_reason: str = "edit action with ids file"
 
     args: list[str] = [
