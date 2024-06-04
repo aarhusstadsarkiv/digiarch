@@ -20,6 +20,7 @@ from digiarch.cli import app
 from digiarch.cli import app_edit
 from digiarch.cli import app_edit_action
 from digiarch.cli import app_edit_remove
+from digiarch.cli import app_edit_rename
 from digiarch.cli import app_identify
 from digiarch.database import FileDB
 
@@ -310,3 +311,80 @@ def test_edit_remove_ids_file(tests_folder: Path, files_folder: Path, files_fold
             ).fetchone()
             assert history_edit is not None
             assert history_edit.reason == test_reason
+
+
+def test_edit_rename(files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        file_old: File = database.files.select(limit=1, order_by=[("random()", "asc")]).fetchone()
+        assert isinstance(file_old, File)
+        file_old.root = files_folder_copy
+
+    test_extension: str = "{suffixes}.test"
+    test_reason: str = "edit extension"
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_remove.name,
+        "--uuid",
+        str(files_folder_copy),
+        str(file_old.uuid),
+        test_extension,
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file_old.uuid)]).fetchone()
+        assert isinstance(file_old, File)
+        file_new.root = files_folder_copy
+        assert file_new.name == file_old.name + test_extension
+        assert file_new.get_absolute_path().is_file()
+        assert not file_old.get_absolute_path().is_file()
+
+        history_edit: Optional[HistoryEntry] = database.history.select(
+            where="uuid = ? and operation like ? || '%'",
+            parameters=[str(file_old.uuid), "digiarch.edit.rename:"],
+        ).fetchone()
+        assert history_edit is not None
+        assert history_edit.reason == test_reason
+
+
+def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        file_old: File = database.files.select(limit=1, order_by=[("random()", "asc")]).fetchone()
+        assert isinstance(file_old, File)
+        file_old.root = files_folder_copy
+
+    test_extension: str = "{suffixes}"
+    test_reason: str = "edit extension same"
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_rename.name,
+        "--uuid",
+        str(files_folder_copy),
+        str(file_old.uuid),
+        test_extension,
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file_old.uuid)]).fetchone()
+        assert isinstance(file_old, File)
+        file_new.root = files_folder_copy
+        assert file_new.name == file_old.name
+        assert file_new.get_absolute_path().is_file()
+        assert file_old.get_absolute_path().is_file()
