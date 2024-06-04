@@ -383,7 +383,7 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
 
     with FileDB(database_path_copy) as database:
         file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file_old.uuid)]).fetchone()
-        assert isinstance(file_old, File)
+        assert isinstance(file_new, File)
         file_new.root = files_folder_copy
         assert file_new.name == file_old.name
         assert file_new.get_absolute_path().is_file()
