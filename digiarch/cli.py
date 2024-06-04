@@ -10,9 +10,6 @@ from typing import Optional
 from typing import Union
 
 import yaml
-from PIL import Image
-from PIL import UnidentifiedImageError
-from PIL.Image import DecompressionBombError
 from acacore.__version__ import __version__ as __acacore_version__
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
@@ -34,14 +31,17 @@ from acacore.siegfried.siegfried import TSignature
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
+from click import argument
 from click import Choice
 from click import Context
-from click import Path as ClickPath
-from click import argument
 from click import group
 from click import option
 from click import pass_context
+from click import Path as ClickPath
 from click import version_option
+from PIL import Image
+from PIL import UnidentifiedImageError
+from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
@@ -560,9 +560,8 @@ def app_edit_rename(
 
                     if new_ext and not match(r'(\.[^/<>:"\\|?*\x7F\x00-\x20]+)+', new_ext):
                         raise ValueError(f"Invalid suffix {new_ext!r}")
-                    elif new_ext.lower() == old_ext.lower():
-                        continue
-                    elif new_ext.lower() == old_ext.lower() + old_ext.lower():
+
+                    if new_ext.lower() == old_ext.lower() or new_ext.lower() == old_ext.lower() + old_ext.lower():
                         continue
 
                     old_name: str = file.relative_path.name
