@@ -2,12 +2,17 @@ from json import loads
 from logging import Logger
 from os import environ
 from pathlib import Path
+from re import match
+from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
 from typing import Optional
 from typing import Union
 
 import yaml
+from PIL import Image
+from PIL import UnidentifiedImageError
+from PIL.Image import DecompressionBombError
 from acacore.__version__ import __version__ as __acacore_version__
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
@@ -29,17 +34,14 @@ from acacore.siegfried.siegfried import TSignature
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
-from click import argument
 from click import Choice
 from click import Context
+from click import Path as ClickPath
+from click import argument
 from click import group
 from click import option
 from click import pass_context
-from click import Path as ClickPath
 from click import version_option
-from PIL import Image
-from PIL import UnidentifiedImageError
-from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
@@ -481,3 +483,109 @@ def app_edit_action(
                     logger.error(f"{history.operation} {id_type} {file_id} not found")
 
         handle_end(ctx, database, exception, logger)
+
+
+# noinspection DuplicatedCode
+@app_edit.command("rename", no_args_is_help=True)
+@argument(
+    "root",
+    nargs=1,
+    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
+)
+@argument(
+    "ids",
+    metavar="ID...",
+    nargs=-1,
+    type=str,
+    required=True,
+    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+)
+@argument("extension", nargs=1, type=str, required=True)
+@argument("reason", nargs=1, type=str, required=True)
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
+@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
+@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
+@option(
+    "--path-like",
+    "id_type",
+    flag_value="relative_path-like",
+    help="Use relative paths as identifiers, match with LIKE.",
+)
+@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
+@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
+@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@pass_context
+def app_edit_rename(
+    ctx: Context,
+    root: Path,
+    ids: tuple[str],
+    extension: str,
+    reason: str,
+    id_type: str,
+    id_files: bool,
+):
+    database_path: Path = root / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    if id_files:
+        ids = tuple(i for f in ids for i in Path(f).read_text().splitlines() if i.strip())
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    if id_type in ("warnings",):
+        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+    elif id_type.endswith("-like"):
+        id_type = id_type.removesuffix("-like")
+        where: str = f"{id_type} like ?"
+    else:
+        where: str = f"{id_type} = ?"
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            for file_id in ids:
+                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:rename")
+                file: Optional[File] = None
+
+                for file in database.files.select(where=where, parameters=[str(file_id)]):
+                    old_ext: str = "".join(file.relative_path.suffixes)
+                    new_ext: str = extension.format(
+                        suffix=file.relative_path.suffix,
+                        suffixes="".join(file.relative_path.suffixes),
+                    ).strip()
+
+                    if new_ext and not match(r'(\.[^/<>:"\\|?*\x7F\x00-\x20]+)+', new_ext):
+                        raise ValueError(f"Invalid suffix {new_ext!r}")
+                    elif new_ext.lower() == old_ext.lower():
+                        continue
+                    elif new_ext.lower() == old_ext.lower() + old_ext.lower():
+                        continue
+
+                    old_name: str = file.relative_path.name
+                    new_name: str = file.relative_path.name.removesuffix(old_ext) + new_ext
+
+                    file.root = root
+                    file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
+                    file.relative_path = file.relative_path.with_name(new_name)
+
+                    history.uuid = file.uuid
+                    history.data = [str(old_name), str(new_name)]
+                    history.reason = reason
+
+                    try:
+                        database.files.update(file)
+                    except SQLiteError:
+                        file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
+                        file.relative_path = file.relative_path.with_name(old_name)
+
+                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
+                    database.history.insert(history)
+
+                if file is None:
+                    logger.error(f"{history.operation} {id_type} {file_id} not found")
+
+        handle_end(ctx, database, exception, logger, commit=False)
