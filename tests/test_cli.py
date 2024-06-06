@@ -44,7 +44,7 @@ def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
 
     new_files_folder.mkdir(parents=True, exist_ok=True)
 
-    for file in find_files(files_folder):
+    for file in find_files(files_folder, exclude=[files_folder / "_metadata"]):
         copy(file, new_files_folder / file.relative_to(files_folder))
 
     return new_files_folder
