@@ -587,4 +587,4 @@ def app_edit_rename(
                 if file is None:
                     logger.error(f"{history.operation} {id_type} {file_id} not found")
 
-        handle_end(ctx, database, exception, logger, commit=False)
+        handle_end(ctx, database, exception, logger)
