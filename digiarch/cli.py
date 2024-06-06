@@ -266,7 +266,7 @@ def app_edit():
 
 
 # noinspection DuplicatedCode
-@app_edit.command("remove")
+@app_edit.command("remove", no_args_is_help=True, short_help="Remove one or more files.")
 @argument(
     "root",
     nargs=1,
@@ -344,7 +344,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
 
 
 # noinspection DuplicatedCode
-@app_edit.command("action", no_args_is_help=True)
+@app_edit.command("action", no_args_is_help=True, short_help="Change the action of one or more files.")
 @argument(
     "root",
     nargs=1,
@@ -494,7 +494,7 @@ def app_edit_action(
 
 
 # noinspection DuplicatedCode
-@app_edit.command("rename", no_args_is_help=True)
+@app_edit.command("rename", no_args_is_help=True, short_help="Change the extension of one or more files.")
 @argument(
     "root",
     nargs=1,
