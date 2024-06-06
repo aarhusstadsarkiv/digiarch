@@ -51,6 +51,9 @@ def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
 
 
 def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+
     args: list[str] = [
         app_identify.name,
         str(files_folder_copy),
@@ -66,8 +69,8 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
     app.main(args, standalone_mode=False)
 
     with (
-        FileDB(files_folder / "_metadata" / "files.db") as baseline,
-        FileDB(files_folder_copy / "_metadata" / "files.db") as database,
+        FileDB(database_path) as baseline,
+        FileDB(database_path_copy) as database,
     ):
         baseline_files = {
             (
@@ -99,7 +102,7 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
 
     app.main([*args, "--siegfried-path", str(tests_folder / "sf")], standalone_mode=False)
 
-    with FileDB(files_folder_copy / "_metadata" / "files.db") as database:
+    with FileDB(database_path_copy) as database:
         last_history: HistoryEntry = sorted(database.history, key=lambda h: h.time).pop()
         assert isinstance(last_history.data, str)
         assert last_history.data.startswith("FileNotFoundError")
