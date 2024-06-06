@@ -2,6 +2,8 @@ from json import loads
 from logging import Logger
 from os import environ
 from pathlib import Path
+from re import match
+from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
 from typing import Optional
@@ -109,13 +111,17 @@ def app():
 @option(
     "--siegfried-path",
     type=ClickPath(dir_okay=False, resolve_path=True, path_type=Path),
+    envvar="SIEGFRIED_PATH",
     default=None,
+    show_envvar=True,
     help="The path to the Siegfried executable.",
 )
 @option(
     "--siegfried-home",
     type=ClickPath(file_okay=False, resolve_path=True, path_type=Path),
+    envvar="SIEGFRIED_HOME",
     default=None,
+    show_envvar=True,
     help="The path to the Siegfried home folder.",
 )
 @option(
@@ -264,7 +270,7 @@ def app_edit():
 
 
 # noinspection DuplicatedCode
-@app_edit.command("remove")
+@app_edit.command("remove", no_args_is_help=True, short_help="Remove one or more files.")
 @argument(
     "root",
     nargs=1,
@@ -279,7 +285,7 @@ def app_edit():
     callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
 @option(
@@ -293,6 +299,13 @@ def app_edit():
 @option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @pass_context
 def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_type: str, id_files: bool):
+    """
+    Remove one or more files in the files' database for the ROOT folder to EXTENSION.
+
+    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
+    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
+    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+    """
     database_path: Path = root / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -335,7 +348,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
 
 
 # noinspection DuplicatedCode
-@app_edit.command("action", no_args_is_help=True)
+@app_edit.command("action", no_args_is_help=True, short_help="Change the action of one or more files.")
 @argument(
     "root",
     nargs=1,
@@ -357,7 +370,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
 @option(
@@ -400,8 +413,9 @@ def app_edit_action(
 
     Files are updated even if their action value is already set to ACTION.
 
-    The ID arguments are interpreted as a list of UUID's by default. he behaviour can be changed with the
-    --puid, --path, --checksum, and --warning options.
+    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
+    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
+    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
 
     The action data for the given files is not touched unless the --data or --data-json options are used.
     The --data option takes precedence.
@@ -474,6 +488,123 @@ def app_edit_action(
                     history.data = [previous_action, action]
                     history.reason = reason
                     database.files.update(file)
+                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
+                    database.history.insert(history)
+
+                if file is None:
+                    logger.error(f"{history.operation} {id_type} {file_id} not found")
+
+        handle_end(ctx, database, exception, logger)
+
+
+# noinspection DuplicatedCode
+@app_edit.command("rename", no_args_is_help=True, short_help="Change the extension of one or more files.")
+@argument(
+    "root",
+    nargs=1,
+    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
+)
+@argument(
+    "ids",
+    metavar="ID...",
+    nargs=-1,
+    type=str,
+    required=True,
+    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+)
+@argument("extension", nargs=1, type=str, required=True)
+@argument("reason", nargs=1, type=str, required=True)
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
+@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
+@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
+@option(
+    "--path-like",
+    "id_type",
+    flag_value="relative_path-like",
+    help="Use relative paths as identifiers, match with LIKE.",
+)
+@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
+@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
+@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@pass_context
+def app_edit_rename(
+    ctx: Context,
+    root: Path,
+    ids: tuple[str],
+    extension: str,
+    reason: str,
+    id_type: str,
+    id_files: bool,
+):
+    """
+    Change the extension of one or more files in the files' database for the ROOT folder to EXTENSION.
+
+    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
+    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
+    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+
+    \b
+    The EXTENSION argument supports formatting using f-string syntax:
+        * suffix - the last suffix of the file, including leading period (file.ext1.ext2 -> .ext2)
+        * suffixes - all the suffixes of the file, including leading periods (file.ext1.ext2 -> .ext1.ext2)
+    """  # noqa: D301
+    database_path: Path = root / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    if id_files:
+        ids = tuple(i for f in ids for i in Path(f).read_text().splitlines() if i.strip())
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    if id_type in ("warnings",):
+        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+    elif id_type.endswith("-like"):
+        id_type = id_type.removesuffix("-like")
+        where: str = f"{id_type} like ?"
+    else:
+        where: str = f"{id_type} = ?"
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            for file_id in ids:
+                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:rename")
+                file: Optional[File] = None
+
+                for file in database.files.select(where=where, parameters=[str(file_id)]):
+                    old_ext: str = "".join(file.relative_path.suffixes)
+                    new_ext: str = extension.format(
+                        suffix=file.relative_path.suffix,
+                        suffixes="".join(file.relative_path.suffixes),
+                    ).strip()
+
+                    if new_ext and not match(r'(\.[^/<>:"\\|?*\x7F\x00-\x20]+)+', new_ext):
+                        raise ValueError(f"Invalid suffix {new_ext!r}")
+
+                    if new_ext.lower() == old_ext.lower() or new_ext.lower() == old_ext.lower() + old_ext.lower():
+                        continue
+
+                    old_name: str = file.relative_path.name
+                    new_name: str = file.relative_path.name.removesuffix(old_ext) + new_ext
+
+                    file.root = root
+                    file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
+                    file.relative_path = file.relative_path.with_name(new_name)
+
+                    history.uuid = file.uuid
+                    history.data = [str(old_name), str(new_name)]
+                    history.reason = reason
+
+                    try:
+                        database.files.update(file, {"relative_path": file.relative_path.with_name(old_name)})
+                    except SQLiteError:
+                        file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
+                        file.relative_path = file.relative_path.with_name(old_name)
+
                     logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
                     database.history.insert(history)
 

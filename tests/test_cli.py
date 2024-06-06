@@ -14,12 +14,14 @@ from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import ReIdentifyAction
 from acacore.models.reference_files import RenameAction
 from acacore.models.reference_files import ReplaceAction
+from acacore.utils.functions import find_files
 from acacore.utils.functions import rm_tree
 
 from digiarch.cli import app
 from digiarch.cli import app_edit
 from digiarch.cli import app_edit_action
 from digiarch.cli import app_edit_remove
+from digiarch.cli import app_edit_rename
 from digiarch.cli import app_identify
 from digiarch.database import FileDB
 
@@ -42,14 +44,16 @@ def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
 
     new_files_folder.mkdir(parents=True, exist_ok=True)
 
-    for file in files_folder.iterdir():
-        if file.is_file():
-            copy(file, new_files_folder / file.name)
+    for file in find_files(files_folder, exclude=[files_folder / "_metadata"]):
+        copy(file, new_files_folder / file.relative_to(files_folder))
 
     return new_files_folder
 
 
 def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+
     args: list[str] = [
         app_identify.name,
         str(files_folder_copy),
@@ -65,8 +69,8 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
     app.main(args, standalone_mode=False)
 
     with (
-        FileDB(files_folder / "_metadata" / "files.db") as baseline,
-        FileDB(files_folder_copy / "_metadata" / "files.db") as database,
+        FileDB(database_path) as baseline,
+        FileDB(database_path_copy) as database,
     ):
         baseline_files = {
             (
@@ -98,7 +102,7 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
 
     app.main([*args, "--siegfried-path", str(tests_folder / "sf")], standalone_mode=False)
 
-    with FileDB(files_folder_copy / "_metadata" / "files.db") as database:
+    with FileDB(database_path_copy) as database:
         last_history: HistoryEntry = sorted(database.history, key=lambda h: h.time).pop()
         assert isinstance(last_history.data, str)
         assert last_history.data.startswith("FileNotFoundError")
@@ -246,6 +250,93 @@ def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_fold
             ).fetchone()
             assert history_edit is not None
             assert history_edit.reason == test_reason
+
+
+def test_edit_rename(files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    # Ensure the selected file exists and is not one that is renamed by identify
+    with FileDB(database_path_copy) as database:
+        file_old: File = next(
+            f
+            for f in database.files.select(order_by=[("random()", "asc")])
+            if files_folder.joinpath(f.relative_path).is_file()
+        )
+        assert isinstance(file_old, File)
+        file_old.root = files_folder_copy
+
+    test_extension: str = ".test"
+    test_reason: str = "edit extension"
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_rename.name,
+        "--uuid",
+        str(files_folder_copy),
+        str(file_old.uuid),
+        "{suffixes}" + test_extension,
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file_old.uuid)]).fetchone()
+        assert isinstance(file_old, File)
+        file_new.root = files_folder_copy
+        assert file_new.name == file_old.name + test_extension
+        assert file_new.get_absolute_path().is_file()
+        assert not file_old.get_absolute_path().is_file()
+
+        history_edit: Optional[HistoryEntry] = database.history.select(
+            where="uuid = ? and operation like ? || '%'",
+            parameters=[str(file_old.uuid), "digiarch.edit.rename:"],
+        ).fetchone()
+        assert history_edit is not None
+        assert history_edit.reason == test_reason
+
+
+def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    # Ensure the selected file exists and is not one that is renamed by identify
+    with FileDB(database_path_copy) as database:
+        file_old: File = next(
+            f
+            for f in database.files.select(order_by=[("random()", "asc")])
+            if files_folder.joinpath(f.relative_path).is_file()
+        )
+        assert isinstance(file_old, File)
+        file_old.root = files_folder_copy
+
+    test_extension: str = "{suffixes}"
+    test_reason: str = "edit extension same"
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_rename.name,
+        "--uuid",
+        str(files_folder_copy),
+        str(file_old.uuid),
+        test_extension,
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file_old.uuid)]).fetchone()
+        assert isinstance(file_new, File)
+        file_new.root = files_folder_copy
+        assert file_new.name == file_old.name
+        assert file_new.get_absolute_path().is_file()
+        assert file_old.get_absolute_path().is_file()
 
 
 def test_edit_remove(files_folder: Path, files_folder_copy: Path):
