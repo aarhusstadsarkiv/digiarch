@@ -258,8 +258,13 @@ def test_edit_rename(files_folder: Path, files_folder_copy: Path):
     database_path_copy.parent.mkdir(parents=True, exist_ok=True)
     copy(database_path, database_path_copy)
 
+    # Ensure the selected file exists and is not one that is renamed by identify
     with FileDB(database_path_copy) as database:
-        file_old: File = database.files.select(limit=1, order_by=[("random()", "asc")]).fetchone()
+        file_old: File = next(
+            f
+            for f in database.files.select(order_by=[("random()", "asc")])
+            if files_folder.joinpath(f.relative_path).is_file()
+        )
         assert isinstance(file_old, File)
         file_old.root = files_folder_copy
 
@@ -300,8 +305,13 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
     database_path_copy.parent.mkdir(parents=True, exist_ok=True)
     copy(database_path, database_path_copy)
 
+    # Ensure the selected file exists and is not one that is renamed by identify
     with FileDB(database_path_copy) as database:
-        file_old: File = database.files.select(limit=1, order_by=[("random()", "asc")]).fetchone()
+        file_old: File = next(
+            f
+            for f in database.files.select(order_by=[("random()", "asc")])
+            if files_folder.joinpath(f.relative_path).is_file()
+        )
         assert isinstance(file_old, File)
         file_old.root = files_folder_copy
 
