@@ -540,7 +540,7 @@ def app_edit_rename(
     is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
 
     \b
-    The extension argument supports formatting using f-string syntax:
+    The EXTENSION argument supports formatting using f-string syntax:
         * suffix - the last suffix of the file, including leading period (file.ext1.ext2 -> .ext2)
         * suffixes - all the suffixes of the file, including leading periods (file.ext1.ext2 -> .ext1.ext2)
     """  # noqa: D301
