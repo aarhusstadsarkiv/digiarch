@@ -111,13 +111,17 @@ def app():
 @option(
     "--siegfried-path",
     type=ClickPath(dir_okay=False, resolve_path=True, path_type=Path),
+    envvar="SIEGFRIED_PATH",
     default=None,
+    show_envvar=True,
     help="The path to the Siegfried executable.",
 )
 @option(
     "--siegfried-home",
     type=ClickPath(file_okay=False, resolve_path=True, path_type=Path),
+    envvar="SIEGFRIED_HOME",
     default=None,
+    show_envvar=True,
     help="The path to the Siegfried home folder.",
 )
 @option(
