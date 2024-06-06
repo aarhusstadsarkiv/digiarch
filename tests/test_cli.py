@@ -39,7 +39,7 @@ def files_folder(tests_folder: Path) -> Path:
 def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
     new_files_folder: Path = tests_folder / f"_{files_folder.name}"
 
-    rm_tree(new_files_folder)
+    # rm_tree(new_files_folder)
 
     new_files_folder.mkdir(parents=True, exist_ok=True)
 
@@ -324,16 +324,16 @@ def test_edit_rename(files_folder: Path, files_folder_copy: Path):
         assert isinstance(file_old, File)
         file_old.root = files_folder_copy
 
-    test_extension: str = "{suffixes}.test"
+    test_extension: str = ".test"
     test_reason: str = "edit extension"
 
     args: list[str] = [
         app_edit.name,
-        app_edit_remove.name,
+        app_edit_rename.name,
         "--uuid",
         str(files_folder_copy),
         str(file_old.uuid),
-        test_extension,
+        "{suffixes}" + test_extension,
         test_reason,
     ]
 
