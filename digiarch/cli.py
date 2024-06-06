@@ -281,7 +281,7 @@ def app_edit():
     callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
 @option(
@@ -366,7 +366,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
 @option(
@@ -510,7 +510,7 @@ def app_edit_action(
 )
 @argument("extension", nargs=1, type=str, required=True)
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers. Default.")
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
 @option(
