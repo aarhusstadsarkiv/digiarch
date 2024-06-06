@@ -295,6 +295,13 @@ def app_edit():
 @option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @pass_context
 def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_type: str, id_files: bool):
+    """
+    Remove one or more files in the files' database for the ROOT folder to EXTENSION.
+
+    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
+    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
+    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+    """
     database_path: Path = root / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -524,6 +531,18 @@ def app_edit_rename(
     id_type: str,
     id_files: bool,
 ):
+    """
+    Change the extension of one or more files in the files' database for the ROOT folder to EXTENSION.
+
+    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
+    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
+    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+
+    \b
+    The extension argument supports formatting using f-string syntax:
+        * suffix - the last suffix of the file, including leading period (file.ext1.ext2 -> .ext2)
+        * suffixes - all the suffixes of the file, including leading periods (file.ext1.ext2 -> .ext1.ext2)
+    """  # noqa: D301
     database_path: Path = root / "_metadata" / "files.db"
 
     if not database_path.is_file():
