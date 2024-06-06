@@ -38,6 +38,9 @@ def files_folder(tests_folder: Path) -> Path:
 @pytest.fixture()
 def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
     new_files_folder: Path = tests_folder / f"_{files_folder.name}"
+
+    # rm_tree(new_files_folder)
+
     new_files_folder.mkdir(parents=True, exist_ok=True)
 
     for file in files_folder.iterdir():
@@ -48,9 +51,6 @@ def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
 
 
 def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
-    database_path: Path = files_folder / "_metadata" / "files.db"
-    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
-
     args: list[str] = [
         app_identify.name,
         str(files_folder_copy),
@@ -66,8 +66,8 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
     app.main(args, standalone_mode=False)
 
     with (
-        FileDB(database_path) as baseline,
-        FileDB(database_path_copy) as database,
+        FileDB(files_folder / "_metadata" / "files.db") as baseline,
+        FileDB(files_folder_copy / "_metadata" / "files.db") as database,
     ):
         baseline_files = {
             (
@@ -95,11 +95,11 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         }
         assert baseline_files == database_files
 
-    database_path_copy.unlink(missing_ok=True)
+    rm_tree(files_folder_copy / "_metadata")
 
     app.main([*args, "--siegfried-path", str(tests_folder / "sf")], standalone_mode=False)
 
-    with FileDB(database_path_copy) as database:
+    with FileDB(files_folder_copy / "_metadata" / "files.db") as database:
         last_history: HistoryEntry = sorted(database.history, key=lambda h: h.time).pop()
         assert isinstance(last_history.data, str)
         assert last_history.data.startswith("FileNotFoundError")
