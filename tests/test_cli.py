@@ -249,70 +249,6 @@ def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_fold
             assert history_edit.reason == test_reason
 
 
-def test_edit_remove(files_folder: Path, files_folder_copy: Path):
-    database_path: Path = files_folder / "_metadata" / "files.db"
-    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
-    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
-    copy(database_path, database_path_copy)
-
-    with FileDB(database_path_copy) as database:
-        file: File = database.files.select(limit=1, order_by=[("random()", "asc")]).fetchone()
-        assert isinstance(file, File)
-
-    args: list[str] = [
-        app_edit.name,
-        app_edit_remove.name,
-        "--uuid",
-        str(files_folder_copy),
-        str(file.uuid),
-        "Remove file with uuid",
-    ]
-
-    app.main(args, standalone_mode=False)
-
-    with FileDB(database_path_copy) as database:
-        file: Optional[File] = database.files.select(where="uuid = ?", limit=1, parameters=[str(file.uuid)]).fetchone()
-        assert file is None
-
-
-def test_edit_remove_ids_file(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
-    database_path: Path = files_folder / "_metadata" / "files.db"
-    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
-    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
-    copy(database_path, database_path_copy)
-
-    with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=3))
-
-    ids_file: Path = files_folder_copy.joinpath("ids.txt")
-    ids_file.write_text("\n".join(str(f.uuid) for f in files))
-    test_reason: str = "edit action with ids file"
-
-    args: list[str] = [
-        app_edit.name,
-        app_edit_remove.name,
-        "--uuid",
-        "--id-files",
-        str(files_folder_copy),
-        str(ids_file),
-        test_reason,
-    ]
-
-    app.main(args, standalone_mode=False)
-
-    with FileDB(database_path_copy) as database:
-        for file in files:
-            file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
-            assert file_new is None
-
-            history_edit: Optional[HistoryEntry] = database.history.select(
-                where="uuid = ? and operation like ? || '%'",
-                parameters=[str(file.uuid), "digiarch.edit.remove:"],
-            ).fetchone()
-            assert history_edit is not None
-            assert history_edit.reason == test_reason
-
-
 def test_edit_rename(files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
@@ -388,3 +324,67 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
         assert file_new.name == file_old.name
         assert file_new.get_absolute_path().is_file()
         assert file_old.get_absolute_path().is_file()
+
+
+def test_edit_remove(files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        file: File = database.files.select(limit=1, order_by=[("random()", "asc")]).fetchone()
+        assert isinstance(file, File)
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_remove.name,
+        "--uuid",
+        str(files_folder_copy),
+        str(file.uuid),
+        "Remove file with uuid",
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        file: Optional[File] = database.files.select(where="uuid = ?", limit=1, parameters=[str(file.uuid)]).fetchone()
+        assert file is None
+
+
+def test_edit_remove_ids_file(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=3))
+
+    ids_file: Path = files_folder_copy.joinpath("ids.txt")
+    ids_file.write_text("\n".join(str(f.uuid) for f in files))
+    test_reason: str = "edit action with ids file"
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_remove.name,
+        "--uuid",
+        "--id-files",
+        str(files_folder_copy),
+        str(ids_file),
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file_new is None
+
+            history_edit: Optional[HistoryEntry] = database.history.select(
+                where="uuid = ? and operation like ? || '%'",
+                parameters=[str(file.uuid), "digiarch.edit.remove:"],
+            ).fetchone()
+            assert history_edit is not None
+            assert history_edit.reason == test_reason
