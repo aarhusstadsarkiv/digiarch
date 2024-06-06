@@ -576,7 +576,7 @@ def app_edit_rename(
                     history.reason = reason
 
                     try:
-                        database.files.update(file)
+                        database.files.update(file, {"relative_path": file.relative_path.with_name(old_name)})
                     except SQLiteError:
                         file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
                         file.relative_path = file.relative_path.with_name(old_name)
