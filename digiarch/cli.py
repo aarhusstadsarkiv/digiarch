@@ -410,7 +410,8 @@ def app_edit_action(
     Files are updated even if their action value is already set to ACTION.
 
     The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
-    --puid, --path, --checksum, and --warning options.
+    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
+    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
 
     The action data for the given files is not touched unless the --data or --data-json options are used.
     The --data option takes precedence.
