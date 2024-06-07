@@ -579,7 +579,7 @@ def app_edit_rename(
                     old_name: str = file.relative_path.name
                     new_name: str = file.relative_path.name.removesuffix(old_ext) + new_ext
 
-                    file.root = root
+                    file.root = Path(root)
                     file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
                     file.relative_path = file.relative_path.with_name(new_name)
 
