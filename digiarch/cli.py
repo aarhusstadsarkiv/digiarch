@@ -1,3 +1,4 @@
+from datetime import datetime
 from json import loads
 from logging import Logger
 from os import environ
@@ -34,6 +35,7 @@ from acacore.utils.log import setup_logger
 from click import argument
 from click import Choice
 from click import Context
+from click import DateTime
 from click import group
 from click import option
 from click import pass_context
@@ -600,5 +602,91 @@ def app_edit_rename(
 
                 if file is None:
                     logger.error(f"{history.operation} {id_type} {file_id} not found")
+
+        handle_end(ctx, database, exception, logger)
+
+
+@app_edit.command("rollback", no_args_is_help=True, short_help="Rollback edit.")
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@argument(
+    "timestamp",
+    nargs=1,
+    type=DateTime(
+        [
+            "%Y-%m-%d",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S.%f",
+            "%Y-%m-%d %H:%M:%S.%s",
+        ]
+    ),
+    required=True,
+)
+@argument(
+    "max_time",
+    nargs=1,
+    type=DateTime(
+        [
+            "%Y-%m-%d",
+            "%Y-%m-%dT%H:%M:%S",
+            "%Y-%m-%d %H:%M:%S",
+            "%Y-%m-%dT%H:%M:%S.%f",
+            "%Y-%m-%d %H:%M:%S.%s",
+        ]
+    ),
+    required=True,
+)
+@argument("reason", nargs=1, type=str, required=True)
+@pass_context
+def app_edit_rollback(ctx: Context, root: str, timestamp: datetime, max_time: datetime, reason: str):
+    database_path: Path = Path(root) / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            command: HistoryEntry = HistoryEntry.command_history(ctx, "file", reason=reason)
+            where: str = "uuid is not null and time >= ?"
+            parameters: list[str] = [timestamp.isoformat()]
+
+            if max_time:
+                where += " and time <= ?"
+                parameters.append(max_time.isoformat())
+
+            for event in database.history.select(where=where, parameters=parameters, order_by=[("time", "desc")]):
+                event_command, _, event_operation = event.operation.partition(":")
+                file: Optional[File] = None
+
+                if event_command == f"{program_name}.{app_edit.name}.{app_edit_action.name}":
+                    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+                    if file:
+                        old_action, _ = event.data
+                        database.files.update({"action": old_action}, {"uuid": file.uuid})
+                elif event_command == f"{program_name}.{app_edit.name}.{app_edit_remove.name}":
+                    file = File.model_validate(event.data)
+                    database.files.insert(file)
+                elif event_command == f"{program_name}.{app_edit.name}.{app_edit_rename.name}":
+                    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+                    if file:
+                        old_name, new_name = event.data
+                        file.root = Path(root)
+                        file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
+                        file.relative_path = file.relative_path.with_name(old_name)
+                        database.files.update({"relative_path": file.relative_path}, {"uuid": file.uuid})
+
+                if file:
+                    command.uuid = file.uuid
+                    command.data = [event.uuid, event.time, event.operation]
+                    database.history.insert(command)
+
+                logger.info(
+                    f"{command.operation}{'' if file else ':error'} {event.uuid} {event.time} {event.operation}"
+                )
 
         handle_end(ctx, database, exception, logger)
