@@ -518,8 +518,13 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
     database_path_copy.parent.mkdir(parents=True, exist_ok=True)
     copy(database_path, database_path_copy)
 
+    # Ensure the selected file exists and is not one that is renamed by identify
     with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=3))
+        files: list[File] = [
+            f
+            for f in database.files.select(order_by=[("random()", "asc")], limit=3)
+            if f.get_absolute_path(files_folder_copy).is_file()
+        ]
 
     test_reason_edit: str = "rename"
     test_reason_rollback: str = "rollback rename"
