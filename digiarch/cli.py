@@ -607,41 +607,30 @@ def app_edit_rename(
         handle_end(ctx, database, exception, logger)
 
 
-@app_edit.command("rollback", no_args_is_help=True, short_help="Rollback edit.")
+@app_edit.command("rollback", no_args_is_help=True, short_help="Roll back edits.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument(
     "time_from",
     metavar="FROM",
     nargs=1,
-    type=DateTime(
-        [
-            "%Y-%m-%d",
-            "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%d %H:%M:%S",
-            "%Y-%m-%dT%H:%M:%S.%f",
-            "%Y-%m-%d %H:%M:%S.%s",
-        ],
-    ),
+    type=DateTime(["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]),
     required=True,
 )
 @argument(
     "time_to",
     metavar="TO",
     nargs=1,
-    type=DateTime(
-        [
-            "%Y-%m-%d",
-            "%Y-%m-%dT%H:%M:%S",
-            "%Y-%m-%d %H:%M:%S",
-            "%Y-%m-%dT%H:%M:%S.%f",
-            "%Y-%m-%d %H:%M:%S.%s",
-        ],
-    ),
+    type=DateTime(["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]),
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
 @pass_context
 def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: datetime, reason: str):
+    """
+    Roll back edits between two times.
+
+    FROM and TO timestamps must be in the format '%Y-%m-%dT%H:%M:%S' or '%Y-%m-%dT%H:%M:%S.%f'.
+    """
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
