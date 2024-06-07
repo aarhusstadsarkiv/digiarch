@@ -4,10 +4,12 @@ from logging import Logger
 from os import environ
 from pathlib import Path
 from re import match
+from re import RegexFlag
 from sqlite3 import DatabaseError
 from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
+from typing import Callable
 from typing import Optional
 from typing import Union
 
@@ -34,11 +36,13 @@ from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
 from click import argument
+from click import BadParameter
 from click import Choice
 from click import Context
 from click import DateTime
 from click import group
 from click import option
+from click import Parameter
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
@@ -98,6 +102,15 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
         database.history.insert(program_end)
         if commit:
             database.commit()
+
+
+def regex_callback(pattern: str, flags: int | RegexFlag = 0) -> Callable[[Context, Parameter, str], str]:
+    def _callback(ctx: Context, param: Parameter, value: str):
+        if not match(pattern, value, flags):
+            raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
+        return value
+
+    return _callback
 
 
 @group("digiarch", no_args_is_help=True)
@@ -503,7 +516,13 @@ def app_edit_action(
     required=True,
     callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
 )
-@argument("extension", nargs=1, type=str, required=True)
+@argument(
+    "extension",
+    nargs=1,
+    type=str,
+    required=True,
+    callback=regex_callback(r'^(\.[^/<>:"\\|?*.\x7F\x00-\x20]+)+$'),
+)
 @argument("reason", nargs=1, type=str, required=True)
 @option("--replace", "replace_mode", flag_value="last", default=True, help="Replace the last extension.  [default]")
 @option("--replace-all", "replace_mode", flag_value="all", default=True, help="Replace all extensions.")
@@ -547,9 +566,6 @@ def app_edit_rename(
 
     The --append option will not add the new extension if it is already present.
     """
-    if not match(r'(\.[^/<>:"\\|?*\x7F\x00-\x20]+)+', extension):
-        raise ValueError(f"Invalid suffix {extension!r}")
-
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -582,7 +598,7 @@ def app_edit_rename(
                     new_name: str = old_name
 
                     if replace_mode == "last" and not match(
-                        r'^\.[^/<>:"\\|?*\x7F\x00-\x20]+$',
+                        r'^\.[^/<>:"\\|?*.\x7F\x00-\x20]+$',
                         file.relative_path.suffix,
                     ):
                         new_name = file.relative_path.name + extension
@@ -595,7 +611,7 @@ def app_edit_rename(
                     elif replace_mode == "all":
                         suffixes: str = ""
                         for suffix in file.relative_path.suffixes[::-1]:
-                            if match(r'^\.[^/<>:"\\|?*\x7F\x00-\x20]+$', suffix):
+                            if match(r'^\.[^/<>:"\\|?*.\x7F\x00-\x20]+$', suffix):
                                 suffixes = suffix + suffixes
                             else:
                                 break
