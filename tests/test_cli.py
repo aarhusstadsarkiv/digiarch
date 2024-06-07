@@ -283,7 +283,8 @@ def test_edit_rename(files_folder: Path, files_folder_copy: Path):
         "--uuid",
         str(files_folder_copy),
         str(file_old.uuid),
-        "{suffixes}" + test_extension,
+        "--append",
+        test_extension,
         test_reason,
     ]
 
@@ -317,12 +318,12 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
         file_old: File = next(
             f
             for f in database.files.select(order_by=[("random()", "asc")])
-            if files_folder.joinpath(f.relative_path).is_file()
+            if files_folder.joinpath(f.relative_path).is_file() and f.relative_path.suffix
         )
         assert isinstance(file_old, File)
         file_old.root = files_folder_copy
 
-    test_extension: str = "{suffixes}"
+    test_extension: str = file_old.relative_path.suffix
     test_reason: str = "edit extension same"
 
     args: list[str] = [
@@ -331,6 +332,7 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
         "--uuid",
         str(files_folder_copy),
         str(file_old.uuid),
+        "--replace",
         test_extension,
         test_reason,
     ]
@@ -537,7 +539,8 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
             "--uuid",
             str(files_folder_copy),
             *(str(f.uuid) for f in files),
-            "{suffixes}.test-ext",
+            "--append",
+            ".test",
             test_reason_edit,
         ],
         standalone_mode=False,

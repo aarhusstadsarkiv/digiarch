@@ -492,7 +492,7 @@ def app_edit_action(
         handle_end(ctx, database, exception, logger)
 
 
-# noinspection DuplicatedCode
+# noinspection DuplicatedCode,GrazieInspection
 @app_edit.command("rename", no_args_is_help=True, short_help="Change the extension of one or more files.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument(
@@ -505,6 +505,9 @@ def app_edit_action(
 )
 @argument("extension", nargs=1, type=str, required=True)
 @argument("reason", nargs=1, type=str, required=True)
+@option("--replace", "replace_mode", flag_value="last", default=True, help="Replace the last extension.  [default]")
+@option("--replace-all", "replace_mode", flag_value="all", default=True, help="Replace all extensions.")
+@option("--append", "replace_mode", flag_value="append", default=True, help="Append the new extension.")
 @option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
@@ -525,11 +528,12 @@ def app_edit_rename(
     ids: tuple[str],
     extension: str,
     reason: str,
+    replace_mode: str,
     id_type: str,
     id_files: bool,
     dry_run: bool,
 ):
-    """
+    r"""
     Change the extension of one or more files in the files' database for the ROOT folder to EXTENSION.
 
     The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
@@ -538,12 +542,14 @@ def app_edit_rename(
 
     To see the changes without committing them, use the --dry-run option.
 
-    \b
-    The EXTENSION argument supports formatting using f-string syntax:
-        * suffix - the last suffix of the file, including leading period (file.ext1.ext2 -> .ext2)
-        * prefixes - all the suffixes of the file except for the last one, including leading periods (file.ext1.ext2 -> .ext1)
-        * suffixes - all the suffixes of the file, including leading periods (file.ext1.ext2 -> .ext1.ext2)
-    """  # noqa: D301
+    The --replace and --replace-all options will only replace valid suffixes (i.e., matching the expression
+    \.[^/<>:"\\|?*\x7F\x00-\x20]+).
+
+    The --append option will not add the new extension if it is already present.
+    """
+    if not match(r'(\.[^/<>:"\\|?*\x7F\x00-\x20]+)+', extension):
+        raise ValueError(f"Invalid suffix {extension!r}")
+
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -572,21 +578,31 @@ def app_edit_rename(
                 file: Optional[File] = None
 
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
-                    old_ext: str = "".join(file.relative_path.suffixes)
-                    new_ext: str = extension.format(
-                        suffix=file.relative_path.suffix,
-                        prefixes="".join(file.relative_path.suffixes[:-1]),
-                        suffixes="".join(file.relative_path.suffixes),
-                    ).strip()
-
-                    if new_ext and not match(r'(\.[^/<>:"\\|?*\x7F\x00-\x20]+)+', new_ext):
-                        raise ValueError(f"Invalid suffix {new_ext!r}")
-
-                    if new_ext.lower() == old_ext.lower() or new_ext.lower() == old_ext.lower() + old_ext.lower():
-                        continue
-
                     old_name: str = file.relative_path.name
-                    new_name: str = file.relative_path.name.removesuffix(old_ext) + new_ext
+                    new_name: str = old_name
+
+                    if replace_mode == "last" and not match(
+                        r'^\.[^/<>:"\\|?*\x7F\x00-\x20]+$',
+                        file.relative_path.suffix,
+                    ):
+                        new_name = file.relative_path.name + extension
+                    elif replace_mode == "last":
+                        new_name = file.relative_path.with_suffix(extension)
+                    elif replace_mode == "append" and old_name.lower().endswith(extension.lower()):
+                        continue
+                    elif replace_mode == "append":
+                        new_name = file.relative_path.name + extension
+                    elif replace_mode == "all":
+                        suffixes: str = ""
+                        for suffix in file.relative_path.suffixes[::-1]:
+                            if match(r'^\.[^/<>:"\\|?*\x7F\x00-\x20]+$', suffix):
+                                suffixes = suffix + suffixes
+                            else:
+                                break
+                        new_name = file.relative_path.name.removesuffix(suffixes) + extension
+
+                    if new_name.lower() == old_name.lower():
+                        continue
 
                     if dry_run:
                         logger.info(f"{history.operation} {file.uuid} {file.relative_path} {old_name!r} {new_name!r}")
