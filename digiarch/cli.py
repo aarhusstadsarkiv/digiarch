@@ -517,6 +517,7 @@ def app_edit_action(
 @option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
 @option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
 @option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@option("--dry-run", is_flag=True, default=False, help="Show changes without committing them.")
 @pass_context
 def app_edit_rename(
     ctx: Context,
@@ -526,6 +527,7 @@ def app_edit_rename(
     reason: str,
     id_type: str,
     id_files: bool,
+    dry_run: bool,
 ):
     """
     Change the extension of one or more files in the files' database for the ROOT folder to EXTENSION.
@@ -533,6 +535,8 @@ def app_edit_rename(
     The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
     --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
     is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+
+    To see the changes without committing them, use the --dry-run option.
 
     \b
     The EXTENSION argument supports formatting using f-string syntax:
@@ -583,6 +587,10 @@ def app_edit_rename(
 
                     old_name: str = file.relative_path.name
                     new_name: str = file.relative_path.name.removesuffix(old_ext) + new_ext
+
+                    if dry_run:
+                        logger.info(f"{history.operation} {file.uuid} {file.relative_path} {old_name!r} {new_name!r}")
+                        continue
 
                     file.root = Path(root)
                     file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
