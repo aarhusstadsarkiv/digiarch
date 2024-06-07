@@ -678,7 +678,11 @@ def app_edit_rollback(ctx: Context, root: str, timestamp: datetime, max_time: da
                         file.root = Path(root)
                         file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
                         file.relative_path = file.relative_path.with_name(old_name)
-                        database.files.update({"relative_path": file.relative_path}, {"uuid": file.uuid})
+                        try:
+                            database.files.update({"relative_path": file.relative_path}, {"uuid": file.uuid})
+                        except DatabaseError:
+                            file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
+                            file.relative_path = file.relative_path.with_name(new_name)
 
                 if file:
                     command.uuid = file.uuid
