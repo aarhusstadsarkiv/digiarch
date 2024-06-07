@@ -4,11 +4,14 @@ from logging import Logger
 from os import environ
 from pathlib import Path
 from re import match
+from sqlite3 import DatabaseError
 from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
 from typing import Optional
 from typing import Union
+from uuid import UUID
+from uuid import uuid4
 
 import yaml
 from acacore.__version__ import __version__ as __acacore_version__
@@ -97,6 +100,81 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
         database.history.insert(program_end)
         if commit:
             database.commit()
+
+
+def identify_file(
+    path: Path,
+    ctx: Context,
+    root: Path,
+    database: FileDB,
+    siegfried: Siegfried,
+    actions: dict[str, Action],
+    custom_signatures: list[CustomSignature],
+    *,
+    update: bool = False,
+) -> tuple[File | None, list[HistoryEntry]]:
+    uuid: UUID = uuid4()
+    existing_file: Optional[File] = database.files.select(
+        where="relative_path = ?",
+        limit=1,
+        parameters=[str(path.relative_to(root))],
+    ).fetchone()
+
+    if existing_file and update:
+        uuid = existing_file.uuid
+    elif existing_file:
+        return None, []
+    else:
+        update = False
+
+    file_history: list[HistoryEntry] = []
+
+    with ExceptionManager(
+        Exception,
+        UnidentifiedImageError,
+        DecompressionBombError,
+        allow=[OSError, IOError],
+    ) as identify_error:
+        file = File.from_file(path, root, siegfried, actions, custom_signatures, uuid=uuid)
+
+    if identify_error.exception:
+        file = File.from_file(path, root, siegfried)
+        file.action = "manual"
+        file.action_data = ActionData(
+            manual=ManualAction(
+                reason=identify_error.exception.__class__.__name__,
+                process="Identify and fix error.",
+            ),
+        )
+        file_history.append(
+            HistoryEntry.command_history(
+                ctx,
+                "file:identify:error",
+                file.uuid,
+                repr(identify_error.exception),
+                "".join(format_tb(identify_error.traceback)) if identify_error.traceback else None,
+            ),
+        )
+
+    if file.action_data and file.action_data.rename:
+        old_path, new_path = handle_rename(file, file.action_data.rename)
+        if new_path:
+            file = File.from_file(new_path, root, siegfried, actions, custom_signatures, uuid=file.uuid)
+            file_history.append(
+                HistoryEntry.command_history(
+                    ctx,
+                    "file:action:rename",
+                    file.uuid,
+                    [old_path.relative_to(root), new_path.relative_to(root)],
+                ),
+            )
+
+    if update:
+        database.files.update(file, {"uuid": file.uuid})
+    else:
+        database.files.insert(file, exist_ok=True)
+
+    return file, file_history
 
 
 @group("digiarch", no_args_is_help=True)
@@ -678,7 +756,11 @@ def app_edit_rollback(ctx: Context, root: str, timestamp: datetime, max_time: da
                         file.root = Path(root)
                         file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
                         file.relative_path = file.relative_path.with_name(old_name)
-                        database.files.update({"relative_path": file.relative_path}, {"uuid": file.uuid})
+                        try:
+                            database.files.update({"relative_path": file.relative_path}, {"uuid": file.uuid})
+                        except DatabaseError:
+                            file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
+                            file.relative_path = file.relative_path.with_name(new_name)
 
                 if file:
                     command.uuid = file.uuid
