@@ -618,7 +618,7 @@ def app_edit_rename(
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%dT%H:%M:%S.%f",
             "%Y-%m-%d %H:%M:%S.%s",
-        ]
+        ],
     ),
     required=True,
 )
@@ -632,7 +632,7 @@ def app_edit_rename(
             "%Y-%m-%d %H:%M:%S",
             "%Y-%m-%dT%H:%M:%S.%f",
             "%Y-%m-%d %H:%M:%S.%s",
-        ]
+        ],
     ),
     required=True,
 )
@@ -686,7 +686,7 @@ def app_edit_rollback(ctx: Context, root: str, timestamp: datetime, max_time: da
                     database.history.insert(command)
 
                 logger.info(
-                    f"{command.operation}{'' if file else ':error'} {event.uuid} {event.time} {event.operation}"
+                    f"{command.operation}{'' if file else ':error'} {event.uuid} {event.time} {event.operation}",
                 )
 
         handle_end(ctx, database, exception, logger)
