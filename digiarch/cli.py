@@ -104,7 +104,7 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
             database.commit()
 
 
-def regex_callback(pattern: str, flags: int | RegexFlag = 0) -> Callable[[Context, Parameter, str], str]:
+def regex_callback(pattern: str, flags: Union[int, RegexFlag] = 0) -> Callable[[Context, Parameter, str], str]:
     def _callback(ctx: Context, param: Parameter, value: str):
         if not match(pattern, value, flags):
             raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
