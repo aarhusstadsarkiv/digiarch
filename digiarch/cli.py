@@ -610,7 +610,8 @@ def app_edit_rename(
 @app_edit.command("rollback", no_args_is_help=True, short_help="Rollback edit.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument(
-    "timestamp",
+    "time_from",
+    metavar="FROM",
     nargs=1,
     type=DateTime(
         [
@@ -624,7 +625,8 @@ def app_edit_rename(
     required=True,
 )
 @argument(
-    "max_time",
+    "time_to",
+    metavar="TO",
     nargs=1,
     type=DateTime(
         [
@@ -639,7 +641,7 @@ def app_edit_rename(
 )
 @argument("reason", nargs=1, type=str, required=True)
 @pass_context
-def app_edit_rollback(ctx: Context, root: str, timestamp: datetime, max_time: datetime, reason: str):
+def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: datetime, reason: str):
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -654,11 +656,11 @@ def app_edit_rollback(ctx: Context, root: str, timestamp: datetime, max_time: da
         with ExceptionManager(BaseException) as exception:
             command: HistoryEntry = HistoryEntry.command_history(ctx, "file", reason=reason)
             where: str = "uuid is not null and time >= ?"
-            parameters: list[str] = [timestamp.isoformat()]
+            parameters: list[str] = [time_from.isoformat()]
 
-            if max_time:
+            if time_to:
                 where += " and time <= ?"
-                parameters.append(max_time.isoformat())
+                parameters.append(time_to.isoformat())
 
             for event in database.history.select(where=where, parameters=parameters, order_by=[("time", "desc")]):
                 event_command, _, event_operation = event.operation.partition(":")
