@@ -534,6 +534,7 @@ def app_edit_rename(
     \b
     The EXTENSION argument supports formatting using f-string syntax:
         * suffix - the last suffix of the file, including leading period (file.ext1.ext2 -> .ext2)
+        * prefixes - all the suffixes of the file except for the last one, including leading periods (file.ext1.ext2 -> .ext1)
         * suffixes - all the suffixes of the file, including leading periods (file.ext1.ext2 -> .ext1.ext2)
     """  # noqa: D301
     database_path: Path = Path(root) / "_metadata" / "files.db"
@@ -567,6 +568,7 @@ def app_edit_rename(
                     old_ext: str = "".join(file.relative_path.suffixes)
                     new_ext: str = extension.format(
                         suffix=file.relative_path.suffix,
+                        prefixes="".join(file.relative_path.suffixes[:-1]),
                         suffixes="".join(file.relative_path.suffixes),
                     ).strip()
 
