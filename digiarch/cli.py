@@ -147,7 +147,7 @@ def app():
     "custom_signatures_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
     default=None,
-    help="Path to a JSON file containing custom signature specifications.",
+    help="Path to a YAML file containing custom signature specifications.",
 )
 @pass_context
 def app_identify(
@@ -187,7 +187,8 @@ def app_identify(
         actions = get_actions()
 
     if custom_signatures_file:
-        custom_signatures = TypeAdapter(list[CustomSignature]).validate_json(Path(custom_signatures_file).read_text())
+        with Path(custom_signatures_file).open() as fh:
+            custom_signatures = TypeAdapter(list[CustomSignature]).validate_python(yaml.load(fh, yaml.Loader))
     else:
         custom_signatures = get_custom_signatures()
 
