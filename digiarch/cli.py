@@ -4,6 +4,7 @@ from logging import Logger
 from os import environ
 from pathlib import Path
 from re import match
+from sqlite3 import DatabaseError
 from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
