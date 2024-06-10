@@ -1,11 +1,15 @@
+from datetime import datetime
 from json import loads
 from logging import Logger
 from os import environ
 from pathlib import Path
 from re import match
+from re import RegexFlag
+from sqlite3 import DatabaseError
 from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
+from typing import Callable
 from typing import Optional
 from typing import Union
 
@@ -32,10 +36,13 @@ from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
 from click import argument
+from click import BadParameter
 from click import Choice
 from click import Context
+from click import DateTime
 from click import group
 from click import option
+from click import Parameter
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
@@ -97,6 +104,15 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
             database.commit()
 
 
+def regex_callback(pattern: str, flags: Union[int, RegexFlag] = 0) -> Callable[[Context, Parameter, str], str]:
+    def _callback(ctx: Context, param: Parameter, value: str):
+        if not match(pattern, value, flags):
+            raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
+        return value
+
+    return _callback
+
+
 @group("digiarch", no_args_is_help=True)
 @version_option(__version__)
 def app():
@@ -104,13 +120,10 @@ def app():
 
 
 @app.command("identify", no_args_is_help=True, short_help="Generate a files' database for a folder.")
-@argument(
-    "root",
-    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
-)
+@argument("root", type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @option(
     "--siegfried-path",
-    type=ClickPath(dir_okay=False, resolve_path=True, path_type=Path),
+    type=ClickPath(dir_okay=False, resolve_path=True),
     envvar="SIEGFRIED_PATH",
     default=None,
     show_envvar=True,
@@ -118,7 +131,7 @@ def app():
 )
 @option(
     "--siegfried-home",
-    type=ClickPath(file_okay=False, resolve_path=True, path_type=Path),
+    type=ClickPath(file_okay=False, resolve_path=True),
     envvar="SIEGFRIED_HOME",
     default=None,
     show_envvar=True,
@@ -141,27 +154,27 @@ def app():
 @option(
     "--actions",
     "actions_file",
-    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True, path_type=Path),
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
     default=None,
     help="Path to a YAML file containing file format actions.",
 )
 @option(
     "--custom-signatures",
     "custom_signatures_file",
-    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True, path_type=Path),
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
     default=None,
-    help="Path to a JSON file containing custom signature specifications.",
+    help="Path to a YAML file containing custom signature specifications.",
 )
 @pass_context
 def app_identify(
     ctx: Context,
-    root: Path,
-    siegfried_path: Optional[Path],
-    siegfried_home: Optional[Path],
+    root: Union[str, Path],
+    siegfried_path: Optional[str],
+    siegfried_home: Optional[str],
     siegfried_signature: TSignature,
     update_siegfried_signature: bool,
-    actions_file: Optional[Path],
-    custom_signatures_file: Optional[Path],
+    actions_file: Optional[str],
+    custom_signatures_file: Optional[str],
 ):
     """
     Process a folder (ROOT) recursively and populate a files' database.
@@ -171,6 +184,7 @@ def app_identify(
 
     Files that are already in the database are not processed.
     """
+    root = Path(root)
     siegfried = Siegfried(
         siegfried_path or Path(environ["GOPATH"], "bin", "sf"),
         f"{siegfried_signature}.sig",
@@ -183,16 +197,18 @@ def app_identify(
     custom_signatures: list[CustomSignature]
 
     if actions_file:
-        actions = TypeAdapter(dict[str, Action]).validate_python(yaml.load(actions_file.open(), yaml.Loader))
+        with Path(actions_file).open() as fh:
+            actions = TypeAdapter(dict[str, Action]).validate_python(yaml.load(fh, yaml.Loader))
     else:
         actions = get_actions()
 
     if custom_signatures_file:
-        custom_signatures = TypeAdapter(list[CustomSignature]).validate_json(custom_signatures_file.read_text())
+        with Path(custom_signatures_file).open() as fh:
+            custom_signatures = TypeAdapter(list[CustomSignature]).validate_python(yaml.load(fh, yaml.Loader))
     else:
         custom_signatures = get_custom_signatures()
 
-    database_path: Path = root / "_metadata" / "files.db"
+    database_path: Path = Path(root) / "_metadata" / "files.db"
     database_path.parent.mkdir(exist_ok=True)
 
     program_name: str = ctx.find_root().command.name
@@ -271,11 +287,7 @@ def app_edit():
 
 # noinspection DuplicatedCode
 @app_edit.command("remove", no_args_is_help=True, short_help="Remove one or more files.")
-@argument(
-    "root",
-    nargs=1,
-    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
-)
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument(
     "ids",
     metavar="ID...",
@@ -298,7 +310,7 @@ def app_edit():
 @option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
 @option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @pass_context
-def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_type: str, id_files: bool):
+def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_type: str, id_files: bool):
     """
     Remove one or more files in the files' database for the ROOT folder to EXTENSION.
 
@@ -306,7 +318,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
     --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
     is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
     """
-    database_path: Path = root / "_metadata" / "files.db"
+    database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
         raise FileNotFoundError(database_path)
@@ -349,11 +361,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
 
 # noinspection DuplicatedCode
 @app_edit.command("action", no_args_is_help=True, short_help="Change the action of one or more files.")
-@argument(
-    "root",
-    nargs=1,
-    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
-)
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument(
     "ids",
     metavar="ID...",
@@ -399,7 +407,7 @@ def app_edit_remove(ctx: Context, root: Path, ids: tuple[str], reason: str, id_t
 @pass_context
 def app_edit_action(
     ctx: Context,
-    root: Path,
+    root: str,
     ids: tuple[str],
     action: TActionType,
     reason: str,
@@ -432,7 +440,7 @@ def app_edit_action(
     """  # noqa: D301
     data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
     assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"
-    database_path: Path = root / "_metadata" / "files.db"
+    database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
         raise FileNotFoundError(database_path)
@@ -497,13 +505,9 @@ def app_edit_action(
         handle_end(ctx, database, exception, logger)
 
 
-# noinspection DuplicatedCode
+# noinspection DuplicatedCode,GrazieInspection
 @app_edit.command("rename", no_args_is_help=True, short_help="Change the extension of one or more files.")
-@argument(
-    "root",
-    nargs=1,
-    type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True, path_type=Path),
-)
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument(
     "ids",
     metavar="ID...",
@@ -512,8 +516,17 @@ def app_edit_action(
     required=True,
     callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
 )
-@argument("extension", nargs=1, type=str, required=True)
+@argument(
+    "extension",
+    nargs=1,
+    type=str,
+    required=True,
+    callback=regex_callback(r'^(\.[^/<>:"\\|?*.\x7F\x00-\x20]+)+$'),
+)
 @argument("reason", nargs=1, type=str, required=True)
+@option("--replace", "replace_mode", flag_value="last", default=True, help="Replace the last extension.  [default]")
+@option("--replace-all", "replace_mode", flag_value="all", default=True, help="Replace all extensions.")
+@option("--append", "replace_mode", flag_value="append", default=True, help="Append the new extension.")
 @option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
 @option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
 @option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
@@ -526,29 +539,34 @@ def app_edit_action(
 @option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
 @option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
 @option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@option("--dry-run", is_flag=True, default=False, help="Show changes without committing them.")
 @pass_context
 def app_edit_rename(
     ctx: Context,
-    root: Path,
+    root: str,
     ids: tuple[str],
     extension: str,
     reason: str,
+    replace_mode: str,
     id_type: str,
     id_files: bool,
+    dry_run: bool,
 ):
-    """
+    r"""
     Change the extension of one or more files in the files' database for the ROOT folder to EXTENSION.
 
     The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
     --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
     is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
 
-    \b
-    The EXTENSION argument supports formatting using f-string syntax:
-        * suffix - the last suffix of the file, including leading period (file.ext1.ext2 -> .ext2)
-        * suffixes - all the suffixes of the file, including leading periods (file.ext1.ext2 -> .ext1.ext2)
-    """  # noqa: D301
-    database_path: Path = root / "_metadata" / "files.db"
+    To see the changes without committing them, use the --dry-run option.
+
+    The --replace and --replace-all options will only replace valid suffixes (i.e., matching the expression
+    \.[^/<>:"\\|?*\x7F\x00-\x20]+).
+
+    The --append option will not add the new extension if it is already present.
+    """
+    database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
         raise FileNotFoundError(database_path)
@@ -576,22 +594,37 @@ def app_edit_rename(
                 file: Optional[File] = None
 
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
-                    old_ext: str = "".join(file.relative_path.suffixes)
-                    new_ext: str = extension.format(
-                        suffix=file.relative_path.suffix,
-                        suffixes="".join(file.relative_path.suffixes),
-                    ).strip()
+                    old_name: str = file.relative_path.name
+                    new_name: str = old_name
 
-                    if new_ext and not match(r'(\.[^/<>:"\\|?*\x7F\x00-\x20]+)+', new_ext):
-                        raise ValueError(f"Invalid suffix {new_ext!r}")
+                    if replace_mode == "last" and not match(
+                        r'^\.[^/<>:"\\|?*.\x7F\x00-\x20]+$',
+                        file.relative_path.suffix,
+                    ):
+                        new_name = file.relative_path.name + extension
+                    elif replace_mode == "last":
+                        new_name = file.relative_path.with_suffix(extension)
+                    elif replace_mode == "append" and old_name.lower().endswith(extension.lower()):
+                        continue
+                    elif replace_mode == "append":
+                        new_name = file.relative_path.name + extension
+                    elif replace_mode == "all":
+                        suffixes: str = ""
+                        for suffix in file.relative_path.suffixes[::-1]:
+                            if match(r'^\.[^/<>:"\\|?*.\x7F\x00-\x20]+$', suffix):
+                                suffixes = suffix + suffixes
+                            else:
+                                break
+                        new_name = file.relative_path.name.removesuffix(suffixes) + extension
 
-                    if new_ext.lower() == old_ext.lower() or new_ext.lower() == old_ext.lower() + old_ext.lower():
+                    if new_name.lower() == old_name.lower():
                         continue
 
-                    old_name: str = file.relative_path.name
-                    new_name: str = file.relative_path.name.removesuffix(old_ext) + new_ext
+                    if dry_run:
+                        logger.info(f"{history.operation} {file.uuid} {file.relative_path} {old_name!r} {new_name!r}")
+                        continue
 
-                    file.root = root
+                    file.root = Path(root)
                     file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
                     file.relative_path = file.relative_path.with_name(new_name)
 
@@ -610,5 +643,86 @@ def app_edit_rename(
 
                 if file is None:
                     logger.error(f"{history.operation} {id_type} {file_id} not found")
+
+        handle_end(ctx, database, exception, logger)
+
+
+@app_edit.command("rollback", no_args_is_help=True, short_help="Roll back edits.")
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@argument(
+    "time_from",
+    metavar="FROM",
+    nargs=1,
+    type=DateTime(["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]),
+    required=True,
+)
+@argument(
+    "time_to",
+    metavar="TO",
+    nargs=1,
+    type=DateTime(["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]),
+    required=True,
+)
+@argument("reason", nargs=1, type=str, required=True)
+@pass_context
+def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: datetime, reason: str):
+    """
+    Roll back edits between two times.
+
+    FROM and TO timestamps must be in the format '%Y-%m-%dT%H:%M:%S' or '%Y-%m-%dT%H:%M:%S.%f'.
+    """
+    database_path: Path = Path(root) / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            command: HistoryEntry = HistoryEntry.command_history(ctx, "file", reason=reason)
+            where: str = "uuid is not null and time >= ?"
+            parameters: list[str] = [time_from.isoformat()]
+
+            if time_to:
+                where += " and time <= ?"
+                parameters.append(time_to.isoformat())
+
+            for event in database.history.select(where=where, parameters=parameters, order_by=[("time", "desc")]):
+                event_command, _, event_operation = event.operation.partition(":")
+                file: Optional[File] = None
+
+                if event_command == f"{program_name}.{app_edit.name}.{app_edit_action.name}":
+                    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+                    if file:
+                        old_action, _ = event.data
+                        database.files.update({"action": old_action}, {"uuid": file.uuid})
+                elif event_command == f"{program_name}.{app_edit.name}.{app_edit_remove.name}":
+                    file = File.model_validate(event.data)
+                    database.files.insert(file)
+                elif event_command == f"{program_name}.{app_edit.name}.{app_edit_rename.name}":
+                    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+                    if file:
+                        old_name, new_name = event.data
+                        file.root = Path(root)
+                        file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
+                        file.relative_path = file.relative_path.with_name(old_name)
+                        try:
+                            database.files.update({"relative_path": file.relative_path}, {"uuid": file.uuid})
+                        except DatabaseError:
+                            file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
+                            file.relative_path = file.relative_path.with_name(new_name)
+
+                if file:
+                    command.uuid = file.uuid
+                    command.data = [event.uuid, event.time, event.operation]
+                    database.history.insert(command)
+
+                logger.info(
+                    f"{command.operation}{'' if file else ':error'} {event.uuid} {event.time} {event.operation}",
+                )
 
         handle_end(ctx, database, exception, logger)

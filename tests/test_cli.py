@@ -1,3 +1,4 @@
+from datetime import datetime
 from json import dumps
 from pathlib import Path
 from shutil import copy
@@ -22,6 +23,7 @@ from digiarch.cli import app_edit
 from digiarch.cli import app_edit_action
 from digiarch.cli import app_edit_remove
 from digiarch.cli import app_edit_rename
+from digiarch.cli import app_edit_rollback
 from digiarch.cli import app_identify
 from digiarch.database import FileDB
 
@@ -50,6 +52,7 @@ def files_folder_copy(files_folder: Path, tests_folder: Path) -> Path:
     return new_files_folder
 
 
+# noinspection DuplicatedCode
 def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
@@ -109,6 +112,7 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         assert last_history.reason is not None
 
 
+# noinspection DuplicatedCode
 def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
@@ -202,6 +206,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
                 assert history.reason == "edit action with puid"
 
 
+# noinspection DuplicatedCode
 def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
@@ -252,6 +257,7 @@ def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_fold
             assert history_edit.reason == test_reason
 
 
+# noinspection DuplicatedCode
 def test_edit_rename(files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
@@ -277,7 +283,8 @@ def test_edit_rename(files_folder: Path, files_folder_copy: Path):
         "--uuid",
         str(files_folder_copy),
         str(file_old.uuid),
-        "{suffixes}" + test_extension,
+        "--append",
+        test_extension,
         test_reason,
     ]
 
@@ -299,6 +306,7 @@ def test_edit_rename(files_folder: Path, files_folder_copy: Path):
         assert history_edit.reason == test_reason
 
 
+# noinspection DuplicatedCode
 def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
@@ -310,12 +318,12 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
         file_old: File = next(
             f
             for f in database.files.select(order_by=[("random()", "asc")])
-            if files_folder.joinpath(f.relative_path).is_file()
+            if files_folder.joinpath(f.relative_path).is_file() and f.relative_path.suffix
         )
         assert isinstance(file_old, File)
         file_old.root = files_folder_copy
 
-    test_extension: str = "{suffixes}"
+    test_extension: str = file_old.relative_path.suffix
     test_reason: str = "edit extension same"
 
     args: list[str] = [
@@ -324,6 +332,7 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
         "--uuid",
         str(files_folder_copy),
         str(file_old.uuid),
+        "--replace",
         test_extension,
         test_reason,
     ]
@@ -339,6 +348,7 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
         assert file_old.get_absolute_path().is_file()
 
 
+# noinspection DuplicatedCode
 def test_edit_remove(files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
@@ -365,6 +375,7 @@ def test_edit_remove(files_folder: Path, files_folder_copy: Path):
         assert file is None
 
 
+# noinspection DuplicatedCode
 def test_edit_remove_ids_file(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
@@ -401,3 +412,160 @@ def test_edit_remove_ids_file(tests_folder: Path, files_folder: Path, files_fold
             ).fetchone()
             assert history_edit is not None
             assert history_edit.reason == test_reason
+
+
+# noinspection DuplicatedCode
+def test_edit_rollback_action(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=3))
+
+    test_reason_edit: str = "action"
+    test_reason_rollback: str = "rollback action"
+    start_time: datetime = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    app.main(
+        [
+            app_edit.name,
+            app_edit_action.name,
+            str(files_folder_copy),
+            *(str(f.uuid) for f in files),
+            "ignore",
+            test_reason_edit,
+            "--data-json",
+            IgnoreAction(reason=test_reason_edit).model_dump_json(),
+        ],
+        standalone_mode=False,
+    )
+
+    app.main(
+        [
+            app_edit.name,
+            app_edit_rollback.name,
+            str(files_folder_copy),
+            start_time.isoformat(),
+            datetime.now().isoformat(),
+            test_reason_rollback,
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            assert database.files.select(
+                where="uuid = ? and action = ?",
+                parameters=[str(file.uuid), file.action],
+            ).fetchone()
+            assert database.history.select(
+                where="uuid = ? and operation = 'digiarch.edit.rollback:file'",
+                parameters=[str(file.uuid)],
+            ).fetchone()
+
+
+# noinspection DuplicatedCode
+def test_edit_rollback_remove(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = list(database.files.select(order_by=[("random()", "asc")]))
+
+    test_reason_edit: str = "remove"
+    test_reason_rollback: str = "rollback remove"
+    start_time: datetime = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    app.main(
+        [
+            app_edit.name,
+            app_edit_remove.name,
+            "--uuid",
+            str(files_folder_copy),
+            *(str(f.uuid) for f in files),
+            test_reason_edit,
+        ],
+        standalone_mode=False,
+    )
+
+    app.main(
+        [
+            app_edit.name,
+            app_edit_rollback.name,
+            str(files_folder_copy),
+            start_time.isoformat(),
+            datetime.now().isoformat(),
+            test_reason_rollback,
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            assert database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert database.history.select(
+                where="uuid = ? and operation = 'digiarch.edit.rollback:file'",
+                parameters=[str(file.uuid)],
+            ).fetchone()
+
+
+# noinspection DuplicatedCode
+def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    # Ensure the selected file exists and is not one that is renamed by identify
+    with FileDB(database_path_copy) as database:
+        files: list[File] = [
+            f
+            for f in database.files.select(order_by=[("random()", "asc")], limit=3)
+            if f.get_absolute_path(files_folder_copy).is_file()
+        ]
+
+    test_reason_edit: str = "rename"
+    test_reason_rollback: str = "rollback rename"
+    start_time: datetime = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+
+    app.main(
+        [
+            app_edit.name,
+            app_edit_rename.name,
+            "--uuid",
+            str(files_folder_copy),
+            *(str(f.uuid) for f in files),
+            "--append",
+            ".test",
+            test_reason_edit,
+        ],
+        standalone_mode=False,
+    )
+
+    app.main(
+        [
+            app_edit.name,
+            app_edit_rollback.name,
+            str(files_folder_copy),
+            start_time.isoformat(),
+            datetime.now().isoformat(),
+            test_reason_rollback,
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            assert database.files.select(
+                where="uuid = ? and relative_path = ?",
+                parameters=[str(file.uuid), str(file.relative_path)],
+            ).fetchone()
+            file.get_absolute_path(files_folder_copy).is_file()
+            assert database.history.select(
+                where="uuid = ? and operation = 'digiarch.edit.rollback:file'",
+                parameters=[str(file.uuid)],
+            ).fetchone()
