@@ -113,6 +113,7 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         assert last_history.reason is not None
 
 
+# noinspection DuplicatedCode
 def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
