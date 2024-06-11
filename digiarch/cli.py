@@ -10,7 +10,9 @@ from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
 from typing import Callable
+from typing import Generator
 from typing import Optional
+from typing import Sequence
 from typing import Union
 from uuid import UUID
 from uuid import uuid4
@@ -253,6 +255,9 @@ def app_identify(
     update_siegfried_signature: bool,
     actions_file: Optional[str],
     custom_signatures_file: Optional[str],
+    *,
+    update_where: Optional[str] = None,
+    update_where_ids: Optional[Sequence[str]] = None,
 ):
     """
     Process a folder (ROOT) recursively and populate a files' database.
@@ -298,11 +303,31 @@ def app_identify(
         handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
-            for path in find_files(root, exclude=[database_path.parent]):
-                file, file_history = identify_file(ctx, root, path, database, siegfried, actions, custom_signatures)
+            files: Generator[Path, None, None]
+
+            if update_where:
+                files = (
+                    f.get_absolute_path(root)
+                    for i in update_where_ids
+                    for f in database.files.select(where=update_where, parameters=[i])
+                )
+            else:
+                files = find_files(root, exclude=[database_path.parent])
+
+            for path in files:
+                file, file_history = identify_file(
+                    ctx,
+                    root,
+                    path,
+                    database,
+                    siegfried,
+                    actions,
+                    custom_signatures,
+                    update=update_where is not None,
+                )
 
                 logger_stdout.info(
-                    f"{HistoryEntry.command_history(ctx, ':file:new').operation} "
+                    f"{HistoryEntry.command_history(ctx, ':file:' + ('update' if update_where else 'new')).operation} "
                     f"{file.relative_path} {file.puid} {file.action}",
                 )
 
@@ -311,6 +336,110 @@ def app_identify(
                     database.history.insert(entry)
 
         handle_end(ctx, database, exception, logger)
+
+
+@app.command("reidentify", no_args_is_help=True, short_help="Reidentify files.")
+@argument("root", type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@argument(
+    "ids",
+    metavar="ID...",
+    nargs=-1,
+    type=str,
+    required=True,
+    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+)
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
+@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
+@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
+@option(
+    "--path-like",
+    "id_type",
+    flag_value="relative_path-like",
+    help="Use relative paths as identifiers, match with LIKE.",
+)
+@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
+@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
+@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@option(
+    "--siegfried-path",
+    type=ClickPath(dir_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_PATH",
+    default=None,
+    show_envvar=True,
+    help="The path to the Siegfried executable.",
+)
+@option(
+    "--siegfried-home",
+    type=ClickPath(file_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_HOME",
+    default=None,
+    show_envvar=True,
+    help="The path to the Siegfried home folder.",
+)
+@option(
+    "--siegfried-signature",
+    type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
+    default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
+)
+@option(
+    "--update-siegfried-signature/--no-update-siegfried-signature",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Control whether Siegfried should update its signature.",
+)
+@option(
+    "--actions",
+    "actions_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    default=None,
+    help="Path to a YAML file containing file format actions.",
+)
+@option(
+    "--custom-signatures",
+    "custom_signatures_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    default=None,
+    help="Path to a YAML file containing custom signature specifications.",
+)
+@pass_context
+def app_reidentify(
+    ctx: Context,
+    root: Union[str, Path],
+    ids: tuple[str],
+    id_type: str,
+    id_files: bool,
+    siegfried_path: Optional[str],
+    siegfried_home: Optional[str],
+    siegfried_signature: TSignature,
+    update_siegfried_signature: bool,
+    actions_file: Optional[str],
+    custom_signatures_file: Optional[str],
+):
+    if id_files:
+        ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
+
+    if id_type in ("warnings",):
+        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+    elif id_type.endswith("-like"):
+        id_type = id_type.removesuffix("-like")
+        where: str = f"{id_type} like ?"
+    else:
+        where: str = f"{id_type} = ?"
+
+    app_identify.callback(
+        root,
+        siegfried_path,
+        siegfried_home,
+        siegfried_signature,
+        update_siegfried_signature,
+        actions_file,
+        custom_signatures_file,
+        update_where=where,
+        update_where_ids=ids,
+    )
 
 
 @app.group("edit", no_args_is_help=True)
