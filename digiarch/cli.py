@@ -683,7 +683,7 @@ def app_edit_action(
     nargs=1,
     type=str,
     required=True,
-    callback=regex_callback(r'^(\.[^/<>:"\\|?*.\x7F\x00-\x20]+)+$'),
+    callback=regex_callback(r"^((\.[a-zA-Z0-9]+)+| +)$"),
 )
 @argument("reason", nargs=1, type=str, required=True)
 @option("--replace", "replace_mode", flag_value="last", default=True, help="Replace the last extension.  [default]")
@@ -728,6 +728,7 @@ def app_edit_rename(
 
     The --append option will not add the new extension if it is already present.
     """
+    extension = extension.strip()
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -759,10 +760,7 @@ def app_edit_rename(
                     old_name: str = file.relative_path.name
                     new_name: str = old_name
 
-                    if replace_mode == "last" and not match(
-                        r'^\.[^/<>:"\\|?*.\x7F\x00-\x20]+$',
-                        file.relative_path.suffix,
-                    ):
+                    if replace_mode == "last" and not match(r"^\.[a-zA-Z0-9]+$", file.relative_path.suffix):
                         new_name = file.relative_path.name + extension
                     elif replace_mode == "last":
                         new_name = file.relative_path.with_suffix(extension)
@@ -773,7 +771,7 @@ def app_edit_rename(
                     elif replace_mode == "all":
                         suffixes: str = ""
                         for suffix in file.relative_path.suffixes[::-1]:
-                            if match(r'^\.[^/<>:"\\|?*.\x7F\x00-\x20]+$', suffix):
+                            if match(r"^\.[a-zA-Z0-9]+$", suffix):
                                 suffixes = suffix + suffixes
                             else:
                                 break
