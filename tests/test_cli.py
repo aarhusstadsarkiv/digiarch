@@ -25,6 +25,7 @@ from digiarch.cli import app_edit_remove
 from digiarch.cli import app_edit_rename
 from digiarch.cli import app_edit_rollback
 from digiarch.cli import app_identify
+from digiarch.cli import app_reidentify
 from digiarch.database import FileDB
 
 
@@ -110,6 +111,52 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         assert isinstance(last_history.data, str)
         assert last_history.data.startswith("FileNotFoundError")
         assert last_history.reason is not None
+
+
+def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        file: File = database.files.select(
+            where="puid = ? and warning like '%' || ? || '%'",
+            parameters=["fmt/11", '"extension mismatch"'],
+            limit=1,
+        ).fetchone()
+        assert isinstance(file, File)
+        file.root = files_folder_copy
+        file.get_absolute_path().rename(file.get_absolute_path().with_suffix(".png"))
+        file.relative_path = file.relative_path.with_suffix(".png")
+        database.files.update(file, {"uuid": file.uuid})
+        database.commit()
+
+    app.main(
+        [
+            app_reidentify.name,
+            str(files_folder_copy),
+            "--uuid",
+            str(file.uuid),
+            "--actions",
+            str(tests_folder / "fileformats.yml"),
+            "--custom-signatures",
+            str(tests_folder / "custom_signatures.yml"),
+            "--no-update-siegfried-signature",
+            "--siegfried-home",
+            str(tests_folder),
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        file_new: File = database.files.select(
+            where="uuid = ? and relative_path = ?",
+            parameters=[str(file.uuid), str(file.relative_path)],
+            limit=1,
+        ).fetchone()
+        assert isinstance(file, File)
+        assert "extension mismatch" not in (file_new.warning or [])
 
 
 # noinspection DuplicatedCode
