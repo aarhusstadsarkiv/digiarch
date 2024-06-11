@@ -724,7 +724,7 @@ def app_edit_rename(
     To see the changes without committing them, use the --dry-run option.
 
     The --replace and --replace-all options will only replace valid suffixes (i.e., matching the expression
-    \.[^/<>:"\\|?*\x7F\x00-\x20]+).
+    \.[a-zA-Z0-9]+).
 
     The --append option will not add the new extension if it is already present.
     """
