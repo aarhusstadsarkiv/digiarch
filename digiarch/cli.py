@@ -118,7 +118,7 @@ def identify_file(
     custom_signatures: list[CustomSignature],
     *,
     update: bool = False,
-) -> tuple[File | None, list[HistoryEntry]]:
+) -> tuple[Optional[File], list[HistoryEntry]]:
     uuid: UUID
     existing_file: Optional[File] = database.files.select(
         where="relative_path = ?",
