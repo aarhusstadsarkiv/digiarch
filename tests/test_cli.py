@@ -397,6 +397,47 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
 
 
 # noinspection DuplicatedCode
+def test_edit_rename_empty(files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    # Ensure the selected file exists and is not one that is renamed by identify
+    with FileDB(database_path_copy) as database:
+        file_old: File = next(
+            f
+            for f in database.files.select(order_by=[("random()", "asc")])
+            if files_folder.joinpath(f.relative_path).is_file() and f.relative_path.suffix
+        )
+        assert isinstance(file_old, File)
+
+    test_reason: str = "edit extension empty"
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_rename.name,
+        "--uuid",
+        str(files_folder_copy),
+        str(file_old.uuid),
+        "--replace",
+        " ",
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file_old.uuid)]).fetchone()
+        assert isinstance(file_new, File)
+        file_old.root = files_folder_copy
+        file_new.root = files_folder_copy
+        assert file_new.relative_path == file_old.relative_path.with_suffix("")
+        assert file_new.get_absolute_path().is_file()
+        assert not file_old.get_absolute_path().is_file()
+
+
+# noinspection DuplicatedCode
 def test_edit_remove(files_folder: Path, files_folder_copy: Path):
     database_path: Path = files_folder / "_metadata" / "files.db"
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
