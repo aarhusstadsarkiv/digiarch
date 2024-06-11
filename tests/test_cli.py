@@ -63,7 +63,7 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         "--actions",
         str(tests_folder / "fileformats.yml"),
         "--custom-signatures",
-        str(tests_folder / "custom_signatures.json"),
+        str(tests_folder / "custom_signatures.yml"),
         "--no-update-siegfried-signature",
         "--siegfried-home",
         str(tests_folder),
