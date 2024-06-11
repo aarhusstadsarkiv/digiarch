@@ -763,7 +763,7 @@ def app_edit_rename(
                     if replace_mode == "last" and not match(r"^\.[a-zA-Z0-9]+$", file.relative_path.suffix):
                         new_name = file.relative_path.name + extension
                     elif replace_mode == "last":
-                        new_name = file.relative_path.with_suffix(extension)
+                        new_name = file.relative_path.with_suffix(extension).name
                     elif replace_mode == "append" and old_name.lower().endswith(extension.lower()):
                         continue
                     elif replace_mode == "append":
