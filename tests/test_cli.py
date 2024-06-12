@@ -3,6 +3,7 @@ from json import dumps
 from pathlib import Path
 from shutil import copy
 from typing import Optional
+from uuid import uuid4
 
 import pytest
 from acacore.models.file import File
@@ -17,6 +18,7 @@ from acacore.models.reference_files import RenameAction
 from acacore.models.reference_files import ReplaceAction
 from acacore.utils.functions import find_files
 from acacore.utils.functions import rm_tree
+from click import BadParameter
 
 from digiarch.cli import app
 from digiarch.cli import app_edit
@@ -24,6 +26,7 @@ from digiarch.cli import app_edit_action
 from digiarch.cli import app_edit_remove
 from digiarch.cli import app_edit_rename
 from digiarch.cli import app_edit_rollback
+from digiarch.cli import app_history
 from digiarch.cli import app_identify
 from digiarch.cli import app_reidentify
 from digiarch.database import FileDB
@@ -158,6 +161,57 @@ def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: P
         ).fetchone()
         assert isinstance(file, File)
         assert "extension mismatch" not in (file_new.warning or [])
+
+
+# noinspection DuplicatedCode
+def test_history(tests_folder: Path, files_folder: Path):
+    app.main(
+        [
+            app_history.name,
+            str(files_folder),
+        ],
+        standalone_mode=False,
+    )
+
+    with pytest.raises(BadParameter):
+        app.main(
+            [app_history.name, str(files_folder), "--from", "test"],
+            standalone_mode=False,
+        )
+
+    with pytest.raises(BadParameter):
+        app.main(
+            [app_history.name, str(files_folder), "--to", "test"],
+            standalone_mode=False,
+        )
+
+    with pytest.raises(BadParameter):
+        app.main(
+            [app_history.name, str(files_folder), "--uuid", "test"],
+            standalone_mode=False,
+        )
+
+    with pytest.raises(BadParameter):
+        app.main(
+            [app_history.name, str(files_folder), "--operation", "&test"],
+            standalone_mode=False,
+        )
+
+    app.main(
+        [
+            app_history.name,
+            str(files_folder),
+            "--from",
+            datetime.fromtimestamp(0).isoformat(),
+            "--to",
+            datetime.now().isoformat(),
+            "--operation",
+            f"{app.name}%",
+            "--uuid",
+            str(uuid4()),
+        ],
+        standalone_mode=False,
+    )
 
 
 # noinspection DuplicatedCode
