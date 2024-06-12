@@ -20,6 +20,7 @@ from uuid import uuid4
 
 import yaml
 from acacore.__version__ import __version__ as __acacore_version__
+from acacore.database import FileDB
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -57,7 +58,6 @@ from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
-from .database import FileDB
 
 Image.MAX_IMAGE_PIXELS = int(50e3**2)
 

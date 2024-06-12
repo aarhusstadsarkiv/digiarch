@@ -6,6 +6,7 @@ from typing import Optional
 from uuid import uuid4
 
 import pytest
+from acacore.database import FileDB
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import ActionData
@@ -29,7 +30,6 @@ from digiarch.cli import app_edit_rollback
 from digiarch.cli import app_history
 from digiarch.cli import app_identify
 from digiarch.cli import app_reidentify
-from digiarch.database import FileDB
 
 
 @pytest.fixture()
