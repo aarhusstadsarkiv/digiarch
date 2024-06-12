@@ -185,8 +185,11 @@ def identify_file(
 
 
 def regex_callback(pattern: str, flags: Union[int, RegexFlag] = 0) -> Callable[[Context, Parameter, str], str]:
-    def _callback(ctx: Context, param: Parameter, value: str):
-        if not match(pattern, value, flags):
+    def _callback(ctx: Context, param: Parameter, value: Union[str, Sequence[str]]):
+        if isinstance(value, (list, tuple)):
+            if any(not match(pattern, v, flags) for v in value):
+                raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
+        elif not match(pattern, value, flags):
             raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
         return value
 
