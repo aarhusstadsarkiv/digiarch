@@ -3,8 +3,10 @@ from json import dumps
 from pathlib import Path
 from shutil import copy
 from typing import Optional
+from uuid import uuid4
 
 import pytest
+from acacore.database import FileDB
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import ActionData
@@ -17,6 +19,7 @@ from acacore.models.reference_files import RenameAction
 from acacore.models.reference_files import ReplaceAction
 from acacore.utils.functions import find_files
 from acacore.utils.functions import rm_tree
+from click import BadParameter
 
 from digiarch.cli import app
 from digiarch.cli import app_edit
@@ -24,8 +27,9 @@ from digiarch.cli import app_edit_action
 from digiarch.cli import app_edit_remove
 from digiarch.cli import app_edit_rename
 from digiarch.cli import app_edit_rollback
+from digiarch.cli import app_history
 from digiarch.cli import app_identify
-from digiarch.database import FileDB
+from digiarch.cli import app_reidentify
 
 
 @pytest.fixture()
@@ -63,7 +67,7 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         "--actions",
         str(tests_folder / "fileformats.yml"),
         "--custom-signatures",
-        str(tests_folder / "custom_signatures.json"),
+        str(tests_folder / "custom_signatures.yml"),
         "--no-update-siegfried-signature",
         "--siegfried-home",
         str(tests_folder),
@@ -110,6 +114,106 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         assert isinstance(last_history.data, str)
         assert last_history.data.startswith("FileNotFoundError")
         assert last_history.reason is not None
+
+
+# noinspection DuplicatedCode
+def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        file: File = database.files.select(
+            where="puid = ? and warning like '%' || ? || '%'",
+            parameters=["fmt/11", '"extension mismatch"'],
+            limit=1,
+        ).fetchone()
+        assert isinstance(file, File)
+        file.root = files_folder_copy
+        file.get_absolute_path().rename(file.get_absolute_path().with_suffix(".png"))
+        file.relative_path = file.relative_path.with_suffix(".png")
+        database.files.update(file, {"uuid": file.uuid})
+        database.commit()
+
+    app.main(
+        [
+            app_reidentify.name,
+            str(files_folder_copy),
+            "--uuid",
+            str(file.uuid),
+            "--actions",
+            str(tests_folder / "fileformats.yml"),
+            "--custom-signatures",
+            str(tests_folder / "custom_signatures.yml"),
+            "--no-update-siegfried-signature",
+            "--siegfried-home",
+            str(tests_folder),
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        file_new: File = database.files.select(
+            where="uuid = ? and relative_path = ?",
+            parameters=[str(file.uuid), str(file.relative_path)],
+            limit=1,
+        ).fetchone()
+        assert isinstance(file, File)
+        assert "extension mismatch" not in (file_new.warning or [])
+
+
+# noinspection DuplicatedCode
+def test_history(tests_folder: Path, files_folder: Path):
+    app.main(
+        [
+            app_history.name,
+            str(files_folder),
+        ],
+        standalone_mode=False,
+    )
+
+    with pytest.raises(BadParameter):
+        app.main(
+            [app_history.name, str(files_folder), "--from", "test"],
+            standalone_mode=False,
+        )
+
+    with pytest.raises(BadParameter):
+        app.main(
+            [app_history.name, str(files_folder), "--to", "test"],
+            standalone_mode=False,
+        )
+
+    with pytest.raises(BadParameter):
+        app.main(
+            [app_history.name, str(files_folder), "--uuid", "test"],
+            standalone_mode=False,
+        )
+
+    with pytest.raises(BadParameter):
+        app.main(
+            [app_history.name, str(files_folder), "--operation", "&test"],
+            standalone_mode=False,
+        )
+
+    app.main(
+        [
+            app_history.name,
+            str(files_folder),
+            "--from",
+            datetime.fromtimestamp(0).isoformat(),
+            "--to",
+            datetime.now().isoformat(),
+            "--operation",
+            f"{app.name}%",
+            "--uuid",
+            str(uuid4()),
+            "--reason",
+            "_",
+        ],
+        standalone_mode=False,
+    )
 
 
 # noinspection DuplicatedCode
@@ -346,6 +450,47 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
         assert file_new.name == file_old.name
         assert file_new.get_absolute_path().is_file()
         assert file_old.get_absolute_path().is_file()
+
+
+# noinspection DuplicatedCode
+def test_edit_rename_empty(files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    # Ensure the selected file exists and is not one that is renamed by identify
+    with FileDB(database_path_copy) as database:
+        file_old: File = next(
+            f
+            for f in database.files.select(order_by=[("random()", "asc")])
+            if files_folder.joinpath(f.relative_path).is_file() and f.relative_path.suffix
+        )
+        assert isinstance(file_old, File)
+
+    test_reason: str = "edit extension empty"
+
+    args: list[str] = [
+        app_edit.name,
+        app_edit_rename.name,
+        "--uuid",
+        str(files_folder_copy),
+        str(file_old.uuid),
+        "--replace",
+        " ",
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file_old.uuid)]).fetchone()
+        assert isinstance(file_new, File)
+        file_old.root = files_folder_copy
+        file_new.root = files_folder_copy
+        assert file_new.relative_path == file_old.relative_path.with_suffix("")
+        assert file_new.get_absolute_path().is_file()
+        assert not file_old.get_absolute_path().is_file()
 
 
 # noinspection DuplicatedCode

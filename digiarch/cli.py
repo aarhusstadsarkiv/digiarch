@@ -3,6 +3,7 @@ from json import loads
 from logging import Logger
 from os import environ
 from pathlib import Path
+from re import IGNORECASE
 from re import match
 from re import RegexFlag
 from sqlite3 import DatabaseError
@@ -10,11 +11,16 @@ from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
 from typing import Callable
+from typing import Generator
 from typing import Optional
+from typing import Sequence
 from typing import Union
+from uuid import UUID
+from uuid import uuid4
 
 import yaml
 from acacore.__version__ import __version__ as __acacore_version__
+from acacore.database import FileDB
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -52,7 +58,6 @@ from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
-from .database import FileDB
 
 Image.MAX_IMAGE_PIXELS = int(50e3**2)
 
@@ -104,9 +109,88 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
             database.commit()
 
 
+def identify_file(
+    ctx: Context,
+    root: Path,
+    path: Path,
+    database: FileDB,
+    siegfried: Siegfried,
+    actions: dict[str, Action],
+    custom_signatures: list[CustomSignature],
+    *,
+    update: bool = False,
+) -> tuple[Optional[File], list[HistoryEntry]]:
+    uuid: UUID
+    existing_file: Optional[File] = database.files.select(
+        where="relative_path = ?",
+        limit=1,
+        parameters=[str(path.relative_to(root))],
+    ).fetchone()
+
+    if existing_file and update:
+        uuid = existing_file.uuid
+    elif existing_file:
+        return None, []
+    else:
+        uuid = uuid4()
+        update = False
+
+    file_history: list[HistoryEntry] = []
+
+    with ExceptionManager(
+        Exception,
+        UnidentifiedImageError,
+        DecompressionBombError,
+        allow=[OSError, IOError],
+    ) as identify_error:
+        file = File.from_file(path, root, siegfried, actions, custom_signatures, uuid=uuid)
+
+    if identify_error.exception:
+        file = File.from_file(path, root, siegfried)
+        file.action = "manual"
+        file.action_data = ActionData(
+            manual=ManualAction(
+                reason=identify_error.exception.__class__.__name__,
+                process="Identify and fix error.",
+            ),
+        )
+        file_history.append(
+            HistoryEntry.command_history(
+                ctx,
+                "file:identify:error",
+                file.uuid,
+                repr(identify_error.exception),
+                "".join(format_tb(identify_error.traceback)) if identify_error.traceback else None,
+            ),
+        )
+
+    if file.action_data and file.action_data.rename:
+        old_path, new_path = handle_rename(file, file.action_data.rename)
+        if new_path:
+            file = File.from_file(new_path, root, siegfried, actions, custom_signatures, uuid=file.uuid)
+            file_history.append(
+                HistoryEntry.command_history(
+                    ctx,
+                    "file:action:rename",
+                    file.uuid,
+                    [old_path.relative_to(root), new_path.relative_to(root)],
+                ),
+            )
+
+    if update:
+        database.files.update(file, {"uuid": file.uuid})
+    else:
+        database.files.insert(file, exist_ok=True)
+
+    return file, file_history
+
+
 def regex_callback(pattern: str, flags: Union[int, RegexFlag] = 0) -> Callable[[Context, Parameter, str], str]:
-    def _callback(ctx: Context, param: Parameter, value: str):
-        if not match(pattern, value, flags):
+    def _callback(ctx: Context, param: Parameter, value: Union[str, Sequence[str]]):
+        if isinstance(value, (list, tuple)):
+            if any(not match(pattern, v, flags) for v in value):
+                raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
+        elif not match(pattern, value, flags):
             raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
         return value
 
@@ -175,6 +259,9 @@ def app_identify(
     update_siegfried_signature: bool,
     actions_file: Optional[str],
     custom_signatures_file: Optional[str],
+    *,
+    update_where: Optional[str] = None,
+    update_where_ids: Optional[Sequence[str]] = None,
 ):
     """
     Process a folder (ROOT) recursively and populate a files' database.
@@ -220,56 +307,31 @@ def app_identify(
         handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
-            for path in find_files(root, exclude=[database_path.parent]):
-                if database.file_exists(path, root):
-                    continue
+            files: Generator[Path, None, None]
 
-                file_history: list[HistoryEntry] = []
+            if update_where:
+                files = (
+                    f.get_absolute_path(root)
+                    for i in update_where_ids
+                    for f in database.files.select(where=update_where, parameters=[i])
+                )
+            else:
+                files = find_files(root, exclude=[database_path.parent])
 
-                with ExceptionManager(
-                    Exception,
-                    UnidentifiedImageError,
-                    DecompressionBombError,
-                    allow=[OSError, IOError],
-                ) as identify_error:
-                    file = File.from_file(path, root, siegfried, actions, custom_signatures)
-
-                if identify_error.exception:
-                    file = File.from_file(path, root, siegfried)
-                    file.action = "manual"
-                    file.action_data = ActionData(
-                        manual=ManualAction(
-                            reason=identify_error.exception.__class__.__name__,
-                            process="Identify and fix error.",
-                        ),
-                    )
-                    file_history.append(
-                        HistoryEntry.command_history(
-                            ctx,
-                            "file:identify:error",
-                            file.uuid,
-                            repr(identify_error.exception),
-                            "".join(format_tb(identify_error.traceback)) if identify_error.traceback else None,
-                        ),
-                    )
-
-                if file.action_data and file.action_data.rename:
-                    old_path, new_path = handle_rename(file, file.action_data.rename)
-                    if new_path:
-                        file = File.from_file(new_path, root, siegfried, actions, custom_signatures)
-                        file_history.append(
-                            HistoryEntry.command_history(
-                                ctx,
-                                "file:action:rename",
-                                file.uuid,
-                                [old_path.relative_to(root), new_path.relative_to(root)],
-                            ),
-                        )
-
-                database.files.insert(file, exist_ok=True)
+            for path in files:
+                file, file_history = identify_file(
+                    ctx,
+                    root,
+                    path,
+                    database,
+                    siegfried,
+                    actions,
+                    custom_signatures,
+                    update=update_where is not None,
+                )
 
                 logger_stdout.info(
-                    f"{HistoryEntry.command_history(ctx, ':file:new').operation} "
+                    f"{HistoryEntry.command_history(ctx, ':file:' + ('update' if update_where else 'new')).operation} "
                     f"{file.relative_path} {file.puid} {file.action}",
                 )
 
@@ -278,6 +340,238 @@ def app_identify(
                     database.history.insert(entry)
 
         handle_end(ctx, database, exception, logger)
+
+
+@app.command("reidentify", no_args_is_help=True, short_help="Reidentify files.")
+@argument("root", type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@argument(
+    "ids",
+    metavar="ID...",
+    nargs=-1,
+    type=str,
+    required=True,
+    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+)
+@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
+@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
+@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
+@option(
+    "--path-like",
+    "id_type",
+    flag_value="relative_path-like",
+    help="Use relative paths as identifiers, match with LIKE.",
+)
+@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
+@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
+@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@option(
+    "--siegfried-path",
+    type=ClickPath(dir_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_PATH",
+    default=None,
+    show_envvar=True,
+    help="The path to the Siegfried executable.",
+)
+@option(
+    "--siegfried-home",
+    type=ClickPath(file_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_HOME",
+    default=None,
+    show_envvar=True,
+    help="The path to the Siegfried home folder.",
+)
+@option(
+    "--siegfried-signature",
+    type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
+    default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
+)
+@option(
+    "--update-siegfried-signature/--no-update-siegfried-signature",
+    is_flag=True,
+    default=False,
+    show_default=True,
+    help="Control whether Siegfried should update its signature.",
+)
+@option(
+    "--actions",
+    "actions_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    default=None,
+    help="Path to a YAML file containing file format actions.",
+)
+@option(
+    "--custom-signatures",
+    "custom_signatures_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    default=None,
+    help="Path to a YAML file containing custom signature specifications.",
+)
+@pass_context
+def app_reidentify(
+    _ctx: Context,
+    root: Union[str, Path],
+    ids: tuple[str],
+    id_type: str,
+    id_files: bool,
+    siegfried_path: Optional[str],
+    siegfried_home: Optional[str],
+    siegfried_signature: TSignature,
+    update_siegfried_signature: bool,
+    actions_file: Optional[str],
+    custom_signatures_file: Optional[str],
+):
+    """
+    Re-indentify specific files.
+
+    Each file is re-identified with Siegfried and an action is assigned to it.
+    Files that need re-identification with custom signatures, renaming, or ignoring are processed accordingly.
+
+    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
+    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
+    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+    """
+    if id_files:
+        ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
+
+    if id_type in ("warnings",):
+        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+    elif id_type.endswith("-like"):
+        id_type = id_type.removesuffix("-like")
+        where: str = f"{id_type} like ?"
+    else:
+        where: str = f"{id_type} = ?"
+
+    app_identify.callback(
+        root,
+        siegfried_path,
+        siegfried_home,
+        siegfried_signature,
+        update_siegfried_signature,
+        actions_file,
+        custom_signatures_file,
+        update_where=where,
+        update_where_ids=ids,
+    )
+
+
+@app.command("history", short_help="View and search events log.")
+@argument("root", type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@option(
+    "--from",
+    "time_from",
+    type=DateTime(["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]),
+    default=None,
+    help="Minimum date of events.",
+)
+@option(
+    "--to",
+    "time_to",
+    type=DateTime(["%Y-%m-%d", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]),
+    default=None,
+    help="Maximum date of events.",
+)
+@option(
+    "--operation",
+    type=str,
+    default=None,
+    multiple=True,
+    callback=regex_callback(r"[a-z%-]+(\.[a-z%-]+)*(:[a-z%-]+([.:][a-z%-]+)*)?", IGNORECASE),
+    help="Operation and sub-operation.",
+)
+@option(
+    "--uuid",
+    type=str,
+    default=None,
+    multiple=True,
+    callback=regex_callback(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", IGNORECASE),
+    help="File UUID.",
+)
+@option("--reason", type=str, default=None, multiple=True, help="Event reason.")
+@option(
+    "--ascending/--descending",
+    "ascending",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Sort by ascending or descending order.",
+)
+@pass_context
+def app_history(
+    ctx: Context,
+    root: str,
+    time_from: Optional[datetime],
+    time_to: Optional[datetime],
+    operation: Optional[tuple[str, ...]],
+    uuid: Optional[tuple[str, ...]],
+    reason: Optional[tuple[str, ...]],
+    ascending: bool,
+):
+    """
+    View and search events log.
+
+    The --operation and --reason options supports LIKE syntax with the % operator.
+
+    If multiple --uuid, --operation, or --reason options are used, the query will match any of them.
+
+    If no query option is given, only the first 100 results will be shown.
+    """
+    operation = tuple(o.strip() for o in operation if o.strip(" %:.")) if operation else None
+    reason = tuple(r.strip(" %") for r in reason if r.strip(" %")) if reason else None
+    database_path: Path = Path(root) / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger_stdout: Logger = setup_logger(program_name + "_std_out", streams=[stdout])
+
+    where: list[str] = []
+    parameters: list[str | int] = []
+
+    if time_from:
+        where.append("time <= ?")
+        parameters.append(time_from.isoformat())
+
+    if time_to:
+        where.append("time <= ?")
+        parameters.append(time_to.isoformat())
+
+    if uuid:
+        where.append("(" + " or ".join("uuid = ?" for _ in uuid) + ")")
+        parameters.extend(uuid)
+
+    if operation:
+        where.append("(" + " or ".join("operation like ?" for _ in operation) + ")")
+        parameters.extend(operation)
+
+    if reason:
+        where.append("(" + " or ".join("reason like '%' || ? || '%'" for _ in reason) + ")")
+        parameters.extend(reason)
+
+    if not where:
+        logger_stdout.warning(f"No selectors given. Showing {'first' if ascending else 'last'} 10000 events.")
+
+    with FileDB(database_path) as database:
+        yaml.add_representer(UUID, lambda dumper, data: dumper.represent_str(str(data)))
+        yaml.add_representer(
+            str,
+            lambda dumper, data: (
+                dumper.represent_str(str(data))
+                if len(data) < 200
+                else dumper.represent_scalar("tag:yaml.org,2002:str", str(data), style="|")
+            ),
+        )
+
+        for event in database.history.select(
+            where=" and ".join(where) or None,
+            parameters=parameters or None,
+            order_by=[("time", "asc" if ascending else "desc")],
+            limit=None if where else 100,
+        ):
+            yaml.dump(event.model_dump(), stdout, yaml.Dumper, sort_keys=False)
+            print()
 
 
 @app.group("edit", no_args_is_help=True)
@@ -521,7 +815,7 @@ def app_edit_action(
     nargs=1,
     type=str,
     required=True,
-    callback=regex_callback(r'^(\.[^/<>:"\\|?*.\x7F\x00-\x20]+)+$'),
+    callback=regex_callback(r"^((\.[a-zA-Z0-9]+)+| +)$"),
 )
 @argument("reason", nargs=1, type=str, required=True)
 @option("--replace", "replace_mode", flag_value="last", default=True, help="Replace the last extension.  [default]")
@@ -562,10 +856,11 @@ def app_edit_rename(
     To see the changes without committing them, use the --dry-run option.
 
     The --replace and --replace-all options will only replace valid suffixes (i.e., matching the expression
-    \.[^/<>:"\\|?*\x7F\x00-\x20]+).
+    \.[a-zA-Z0-9]+).
 
     The --append option will not add the new extension if it is already present.
     """
+    extension = extension.strip()
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -597,13 +892,10 @@ def app_edit_rename(
                     old_name: str = file.relative_path.name
                     new_name: str = old_name
 
-                    if replace_mode == "last" and not match(
-                        r'^\.[^/<>:"\\|?*.\x7F\x00-\x20]+$',
-                        file.relative_path.suffix,
-                    ):
+                    if replace_mode == "last" and not match(r"^\.[a-zA-Z0-9]+$", file.relative_path.suffix):
                         new_name = file.relative_path.name + extension
                     elif replace_mode == "last":
-                        new_name = file.relative_path.with_suffix(extension)
+                        new_name = file.relative_path.with_suffix(extension).name
                     elif replace_mode == "append" and old_name.lower().endswith(extension.lower()):
                         continue
                     elif replace_mode == "append":
@@ -611,7 +903,7 @@ def app_edit_rename(
                     elif replace_mode == "all":
                         suffixes: str = ""
                         for suffix in file.relative_path.suffixes[::-1]:
-                            if match(r'^\.[^/<>:"\\|?*.\x7F\x00-\x20]+$', suffix):
+                            if match(r"^\.[a-zA-Z0-9]+$", suffix):
                                 suffixes = suffix + suffixes
                             else:
                                 break

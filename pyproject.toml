@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "1.4.0"
+version = "1.5.0"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Aryan Muhammadi Landi <arml@aarhus.dk>", "Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -92,6 +92,7 @@ lint.ignore = [
     "D213",    # multi-line docstring summary should start at the second line,
     "D300",    # use triple docstring
     "DTZ005",  # datetime.datetime.now() called without a tz argument
+    "DTZ006",  # datetime.datetime.fromtimestamp() called without a tz argument
     "E712",    # comparison to True/False, we ignore because we use sqlalchemy
     "FBT001",  # boolean arguement in function definition
     "N802",    # name of function should be lower case
