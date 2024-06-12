@@ -488,6 +488,7 @@ def app_reidentify(
     callback=regex_callback(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", IGNORECASE),
     help="File UUID.",
 )
+@option("--reason", type=str, default=None, multiple=True, help="Event reason.")
 @option(
     "--ascending/--descending",
     "ascending",
@@ -504,18 +505,20 @@ def app_history(
     time_to: Optional[datetime],
     operation: Optional[tuple[str, ...]],
     uuid: Optional[tuple[str, ...]],
+    reason: Optional[tuple[str, ...]],
     ascending: bool,
 ):
     """
     View and search events log.
 
-    The --operation option supports LIKE syntax with the % operator.
+    The --operation and --reason options supports LIKE syntax with the % operator.
 
     If multiple --uuid or --operation options are used, the query will match any of them.
 
     If no query option is given, only the first 100 results will be shown.
     """
     operation = tuple(o.strip() for o in operation if o.strip(" %:.")) if operation else None
+    reason = tuple(r.strip(" %") for r in reason if r.strip(" %")) if reason else None
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -542,6 +545,10 @@ def app_history(
     if operation:
         where.append("(" + " or ".join("operation like ?" for _ in operation) + ")")
         parameters.extend(operation)
+
+    if reason:
+        where.append("(" + " or ".join("reason like '%' || ? || '%'" for _ in reason) + ")")
+        parameters.extend(reason)
 
     if not where:
         logger_stdout.warning(f"No selectors given. Showing {'first' if ascending else 'last'} 10000 events.")
