@@ -513,7 +513,7 @@ def app_history(
 
     The --operation and --reason options supports LIKE syntax with the % operator.
 
-    If multiple --uuid or --operation options are used, the query will match any of them.
+    If multiple --uuid, --operation, or --reason options are used, the query will match any of them.
 
     If no query option is given, only the first 100 results will be shown.
     """
