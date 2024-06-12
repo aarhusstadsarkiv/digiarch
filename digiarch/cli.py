@@ -406,7 +406,7 @@ def app_identify(
 )
 @pass_context
 def app_reidentify(
-    ctx: Context,
+    _ctx: Context,
     root: Union[str, Path],
     ids: tuple[str],
     id_type: str,
@@ -418,6 +418,16 @@ def app_reidentify(
     actions_file: Optional[str],
     custom_signatures_file: Optional[str],
 ):
+    """
+    Re-indentify specific files.
+
+    Each file is re-identified with Siegfried and an action is assigned to it.
+    Files that need re-identification with custom signatures, renaming, or ignoring are processed accordingly.
+
+    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
+    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
+    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+    """
     if id_files:
         ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
