@@ -209,6 +209,8 @@ def test_history(tests_folder: Path, files_folder: Path):
             f"{app.name}%",
             "--uuid",
             str(uuid4()),
+            "--reason",
+            "_",
         ],
         standalone_mode=False,
     )
