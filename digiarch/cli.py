@@ -1,4 +1,5 @@
 from datetime import datetime
+from functools import reduce
 from json import loads
 from logging import Logger
 from os import environ
@@ -572,6 +573,53 @@ def app_history(
         ):
             yaml.dump(event.model_dump(), stdout, yaml.Dumper, sort_keys=False)
             print()
+
+
+# noinspection DuplicatedCode
+@app.command("doctor", no_args_is_help=True, short_help="Inspect the database for common issues")
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@option("--dry-run", is_flag=True, default=False, help="Show issues without fixing them.")
+@pass_context
+def app_doctor(ctx: Context, root: str, dry_run: bool):
+    database_path: Path = Path(root) / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            invalid_characters: str = '\\?%*|"<>,:;=+[]!@' + bytes(range(20)).decode("ascii") + "\x7F"
+            for file in database.files.select(
+                where=" or ".join("instr(relative_path, ?) != 0" for _ in invalid_characters),
+                parameters=list(invalid_characters),
+            ):
+                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:sanitize")
+                file.root = Path(root)
+                old_path: Path = file.relative_path
+                new_path: Path = Path(
+                    *[reduce(lambda acc, cur: acc.replace(cur, "_"), invalid_characters, p) for p in old_path.parts]
+                )
+                while file.root.joinpath(new_path).exists():
+                    new_path = new_path.with_name("_" + new_path.name)
+                if not dry_run:
+                    file.root.joinpath(new_path).parent.mkdir(parents=True, exist_ok=True)
+                    file.get_absolute_path().rename(file.root / new_path)
+                    file.relative_path = new_path
+                    try:
+                        database.files.update(file, {"uuid": file.uuid})
+                    except BaseException:
+                        file.get_absolute_path().rename(file.root / old_path)
+                        raise
+                history.data = [str(file.relative_path), str(new_path)]
+                database.history.insert(history)
+                logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data}")
+
+        handle_end(ctx, database, exception, logger, commit=not dry_run)
 
 
 @app.group("edit", no_args_is_help=True)
