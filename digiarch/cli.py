@@ -36,7 +36,7 @@ from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import ReIdentifyAction
 from acacore.models.reference_files import RenameAction
-from acacore.models.reference_files import ReplaceAction
+from acacore.models.reference_files import TemplateAction
 from acacore.models.reference_files import TActionType
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
@@ -839,7 +839,7 @@ def app_edit_action(
                         elif action == "extract":
                             file.action_data.extract = ExtractAction.model_validate(data_parsed)
                         elif action == "replace":
-                            file.action_data.replace = ReplaceAction.model_validate(data_parsed)
+                            file.action_data.replace = TemplateAction.model_validate(data_parsed)
                         elif action == "manual":
                             file.action_data.manual = ManualAction.model_validate(data_parsed)
                         elif action == "rename":
