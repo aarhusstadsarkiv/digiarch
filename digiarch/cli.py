@@ -1,5 +1,6 @@
 from datetime import datetime
 from functools import reduce
+from itertools import islice
 from json import loads
 from logging import ERROR
 from logging import INFO
@@ -242,6 +243,7 @@ def app():
     default=None,
     help="Path to a YAML file containing custom signature specifications.",
 )
+@option("--batch-size", type=int, default=1)
 @pass_context
 def app_identify(
     ctx: Context,
@@ -252,6 +254,7 @@ def app_identify(
     update_siegfried_signature: bool,
     actions_file: Optional[str],
     custom_signatures_file: Optional[str],
+    batch_size: int,
     *,
     update_where: Optional[str] = None,
     update_where_ids: Optional[Sequence[str]] = None,
@@ -311,35 +314,36 @@ def app_identify(
             else:
                 files = find_files(root, exclude=[database_path.parent])
 
-            for path in files:
-                file, file_history = identify_file(
-                    ctx,
-                    root,
-                    path,
-                    database,
-                    siegfried,
-                    None,
-                    actions,
-                    custom_signatures,
-                    update=update_where is not None,
-                )
-
-                if file:
-                    HistoryEntry.command_history(
+            while batch := list(islice(files, batch_size)):
+                for path, result in siegfried.identify(*batch).files_dict.items():
+                    file, file_history = identify_file(
                         ctx,
-                        ":file:" + ("update" if update_where else "new"),
-                        file.uuid,
-                    ).log(
-                        INFO,
-                        logger_stdout,
-                        path=file.relative_path,
-                        puid=file.puid,
-                        action=file.action,
+                        root,
+                        path,
+                        database,
+                        siegfried,
+                        result,
+                        actions,
+                        custom_signatures,
+                        update=update_where is not None,
                     )
 
-                for event in file_history:
-                    event.log(INFO, logger)
-                    database.history.insert(event)
+                    if file:
+                        HistoryEntry.command_history(
+                            ctx,
+                            ":file:" + ("update" if update_where else "new"),
+                            file.uuid,
+                        ).log(
+                            INFO,
+                            logger_stdout,
+                            path=file.relative_path,
+                            puid=file.puid,
+                            action=file.action,
+                        )
+
+                    for event in file_history:
+                        event.log(INFO, logger)
+                        database.history.insert(event)
 
         handle_end(ctx, database, exception, logger)
 
@@ -410,6 +414,7 @@ def app_identify(
     default=None,
     help="Path to a YAML file containing custom signature specifications.",
 )
+@option("--batch-size", type=int, default=1)
 @pass_context
 def app_reidentify(
     _ctx: Context,
@@ -423,6 +428,7 @@ def app_reidentify(
     update_siegfried_signature: bool,
     actions_file: Optional[str],
     custom_signatures_file: Optional[str],
+    batch_size: int,
 ):
     """
     Re-indentify specific files.
@@ -453,6 +459,7 @@ def app_reidentify(
         update_siegfried_signature,
         actions_file,
         custom_signatures_file,
+        batch_size,
         update_where=where,
         update_where_ids=ids,
     )
