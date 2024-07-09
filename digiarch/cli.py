@@ -52,6 +52,7 @@ from click import Choice
 from click import Context
 from click import DateTime
 from click import group
+from click import IntRange
 from click import option
 from click import Parameter
 from click import pass_context
@@ -243,7 +244,7 @@ def app():
     default=None,
     help="Path to a YAML file containing custom signature specifications.",
 )
-@option("--batch-size", type=int, default=1)
+@option("--batch-size", type=IntRange(1), default=100)
 @pass_context
 def app_identify(
     ctx: Context,
@@ -413,7 +414,7 @@ def app_identify(
     default=None,
     help="Path to a YAML file containing custom signature specifications.",
 )
-@option("--batch-size", type=int, default=1)
+@option("--batch-size", type=IntRange(1), default=100)
 @pass_context
 def app_reidentify(
     _ctx: Context,
