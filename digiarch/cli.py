@@ -256,8 +256,7 @@ def app_identify(
     custom_signatures_file: Optional[str],
     batch_size: int,
     *,
-    update_where: Optional[str] = None,
-    update_where_ids: Optional[Sequence[str]] = None,
+    update_where: Optional[list[tuple[str, Sequence[str]]]] = None,
 ):
     """
     Process a folder (ROOT) recursively and populate a files' database.
@@ -308,8 +307,8 @@ def app_identify(
             if update_where:
                 files = (
                     f.get_absolute_path(root)
-                    for i in update_where_ids
-                    for f in database.files.select(where=update_where, parameters=[i])
+                    for w, p in update_where
+                    for f in database.files.select(where=w, parameters=p)
                 )
             else:
                 files = find_files(root, exclude=[database_path.parent])
@@ -439,17 +438,23 @@ def app_reidentify(
     The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
     --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
     is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+
+    If no IDs are give, then all non-locked files with identification warnings or missing PUID will be re-identified.
     """
     if id_files:
         ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
-    if id_type in ("warnings",):
-        where: str = f"{id_type} like '%\"' || ? || '\"%' and not lock"
+    if not ids:
+        where: list[tuple[str, Sequence[str]]] = [("(warning is null or puid is null) and not lock", [])]
+    elif id_type in ("warnings",):
+        where: list[tuple[str, Sequence[str]]] = [
+            (f"{id_type} like '%\"' || ? || '\"%' and not lock", [i]) for i in ids
+        ]
     elif id_type.endswith("-like"):
         id_type = id_type.removesuffix("-like")
-        where: str = f"{id_type} like ? and not lock"
+        where: list[tuple[str, Sequence[str]]] = [(f"{id_type} like ? and not lock", [i]) for i in ids]
     else:
-        where: str = f"{id_type} = ? and not lock"
+        where: list[tuple[str, Sequence[str]]] = [(f"{id_type} = ? and not lock", [i]) for i in ids]
 
     app_identify.callback(
         root,
@@ -461,7 +466,6 @@ def app_reidentify(
         custom_signatures_file,
         batch_size,
         update_where=where,
-        update_where_ids=ids,
     )
 
 
