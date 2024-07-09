@@ -445,7 +445,7 @@ def app_reidentify(
         ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
     if not ids:
-        where: list[tuple[str, Sequence[str]]] = [("(warning is null or puid is null) and not lock", [])]
+        where: list[tuple[str, Sequence[str]]] = [("(warning is not null or puid is null) and not lock", [])]
     elif id_type in ("warnings",):
         where: list[tuple[str, Sequence[str]]] = [
             (f"{id_type} like '%\"' || ? || '\"%' and not lock", [i]) for i in ids
