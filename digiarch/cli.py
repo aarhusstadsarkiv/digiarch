@@ -1,6 +1,8 @@
 from datetime import datetime
 from functools import reduce
 from json import loads
+from logging import ERROR
+from logging import INFO
 from logging import Logger
 from os import environ
 from pathlib import Path
@@ -13,6 +15,7 @@ from sys import stdout
 from traceback import format_tb
 from typing import Callable
 from typing import Generator
+from typing import get_args as get_type_args
 from typing import Optional
 from typing import Sequence
 from typing import Union
@@ -20,7 +23,6 @@ from uuid import UUID
 from uuid import uuid4
 
 import yaml
-from acacore.__version__ import __version__ as __acacore_version__
 from acacore.database import FileDB
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
@@ -38,7 +40,8 @@ from acacore.models.reference_files import TActionType
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
 from acacore.siegfried import Siegfried
-from acacore.siegfried.siegfried import TSignature
+from acacore.siegfried.siegfried import SiegfriedFile
+from acacore.siegfried.siegfried import TSignaturesProvider
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
@@ -53,14 +56,9 @@ from click import Parameter
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
-from PIL import Image
-from PIL import UnidentifiedImageError
-from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
-
-Image.MAX_IMAGE_PIXELS = int(50e3**2)
 
 
 def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], tuple[None, None]]:
@@ -81,13 +79,12 @@ def handle_start(ctx: Context, database: FileDB, *loggers: Logger):
     program_start: HistoryEntry = HistoryEntry.command_history(
         ctx,
         "start",
-        data=ctx.params | {"version": __version__, "acacore": __acacore_version__},
+        data={"version": __version__},
+        add_params_to_data=True,
     )
 
     database.history.insert(program_start)
-
-    for logger in loggers:
-        logger.info(program_start.operation)
+    program_start.log(INFO, *loggers, show_args=False)
 
 
 def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *loggers: Logger, commit: bool = True):
@@ -98,11 +95,7 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
         reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
     )
 
-    for logger in loggers:
-        if exception.exception:
-            logger.error(f"{program_end.operation} {exception.exception!r}")
-        else:
-            logger.info(program_end.operation)
+    program_end.log(ERROR if exception.exception else INFO, *loggers)
 
     if database.is_open:
         database.history.insert(program_end)
@@ -116,6 +109,7 @@ def identify_file(
     path: Path,
     database: FileDB,
     siegfried: Siegfried,
+    siegfried_result: SiegfriedFile | None,
     actions: dict[str, Action],
     custom_signatures: list[CustomSignature],
     *,
@@ -140,14 +134,12 @@ def identify_file(
 
     with ExceptionManager(
         Exception,
-        UnidentifiedImageError,
-        DecompressionBombError,
         allow=[OSError, IOError],
     ) as identify_error:
-        file = File.from_file(path, root, siegfried, actions, custom_signatures, uuid=uuid)
+        file = File.from_file(path, root, siegfried_result or siegfried, actions, custom_signatures, uuid=uuid)
 
     if identify_error.exception:
-        file = File.from_file(path, root, siegfried)
+        file = File.from_file(path, root, siegfried_result or siegfried)
         file.action = "manual"
         file.action_data = ActionData(
             manual=ManualAction(
@@ -224,7 +216,7 @@ def app():
 )
 @option(
     "--siegfried-signature",
-    type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
+    type=Choice(get_type_args(TSignaturesProvider)),
     default="pronom",
     show_default=True,
     help="The signature file to use with Siegfried.",
@@ -256,7 +248,7 @@ def app_identify(
     root: Union[str, Path],
     siegfried_path: Optional[str],
     siegfried_home: Optional[str],
-    siegfried_signature: TSignature,
+    siegfried_signature: TSignaturesProvider,
     update_siegfried_signature: bool,
     actions_file: Optional[str],
     custom_signatures_file: Optional[str],
@@ -326,19 +318,28 @@ def app_identify(
                     path,
                     database,
                     siegfried,
+                    None,
                     actions,
                     custom_signatures,
                     update=update_where is not None,
                 )
 
-                logger_stdout.info(
-                    f"{HistoryEntry.command_history(ctx, ':file:' + ('update' if update_where else 'new')).operation} "
-                    f"{file.relative_path} {file.puid} {file.action}",
-                )
+                if file:
+                    HistoryEntry.command_history(
+                        ctx,
+                        ":file:" + ("update" if update_where else "new"),
+                        file.uuid,
+                    ).log(
+                        INFO,
+                        logger_stdout,
+                        path=file.relative_path,
+                        puid=file.puid,
+                        action=file.action,
+                    )
 
-                for entry in file_history:
-                    logger.info(f"{entry.operation} {entry.uuid}")
-                    database.history.insert(entry)
+                for event in file_history:
+                    event.log(INFO, logger)
+                    database.history.insert(event)
 
         handle_end(ctx, database, exception, logger)
 
@@ -350,7 +351,7 @@ def app_identify(
     metavar="ID...",
     nargs=-1,
     type=str,
-    required=True,
+    required=False,
     callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
 )
 @option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
@@ -383,7 +384,7 @@ def app_identify(
 )
 @option(
     "--siegfried-signature",
-    type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
+    type=Choice(get_type_args(TSignaturesProvider)),
     default="pronom",
     show_default=True,
     help="The signature file to use with Siegfried.",
@@ -418,7 +419,7 @@ def app_reidentify(
     id_files: bool,
     siegfried_path: Optional[str],
     siegfried_home: Optional[str],
-    siegfried_signature: TSignature,
+    siegfried_signature: TSignaturesProvider,
     update_siegfried_signature: bool,
     actions_file: Optional[str],
     custom_signatures_file: Optional[str],
@@ -437,12 +438,12 @@ def app_reidentify(
         ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
     if id_type in ("warnings",):
-        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+        where: str = f"{id_type} like '%\"' || ? || '\"%' and not lock"
     elif id_type.endswith("-like"):
         id_type = id_type.removesuffix("-like")
-        where: str = f"{id_type} like ?"
+        where: str = f"{id_type} like ? and not lock"
     else:
-        where: str = f"{id_type} = ?"
+        where: str = f"{id_type} = ? and not lock"
 
     app_identify.callback(
         root,
@@ -587,7 +588,11 @@ def app_doctor(ctx: Context, root: str, dry_run: bool):
         raise FileNotFoundError(database_path)
 
     program_name: str = ctx.find_root().command.name
-    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+    logger: Logger = setup_logger(
+        program_name,
+        files=None if dry_run else [database_path.parent / f"{program_name}.log"],
+        streams=[stdout],
+    )
 
     with FileDB(database_path) as database:
         handle_start(ctx, database, logger)
@@ -598,7 +603,6 @@ def app_doctor(ctx: Context, root: str, dry_run: bool):
                 where=" or ".join("instr(relative_path, ?) != 0" for _ in invalid_characters),
                 parameters=list(invalid_characters),
             ):
-                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:sanitize")
                 file.root = Path(root)
                 old_path: Path = file.relative_path
                 new_path: Path = Path(
@@ -615,9 +619,14 @@ def app_doctor(ctx: Context, root: str, dry_run: bool):
                     except BaseException:
                         file.get_absolute_path().rename(file.root / old_path)
                         raise
-                history.data = [str(file.relative_path), str(new_path)]
+                history: HistoryEntry = HistoryEntry.command_history(
+                    ctx,
+                    "file:sanitize",
+                    file.uuid,
+                    [str(file.relative_path), str(new_path)],
+                )
                 database.history.insert(history)
-                logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data}")
+                history.log(INFO, logger)
 
         handle_end(ctx, database, exception, logger, commit=not dry_run)
 
@@ -684,19 +693,17 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
 
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
-                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:remove")
-
-                file: Optional[File] = None
                 for file in database.files.select(where=where, parameters=[file_id]):
-                    history.uuid = file.uuid
-                    history.data = file.model_dump(mode="json")
-                    history.reason = reason
+                    history: HistoryEntry = HistoryEntry.command_history(
+                        ctx,
+                        "file:remove",
+                        file.uuid,
+                        file.model_dump(mode="json"),
+                        reason,
+                    )
                     database.execute(f"delete from {database.files.name} where uuid = ?", [str(file.uuid)])
                     database.history.insert(history)
-                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.reason}")
-
-                if file is None:
-                    logger.error(f"{history.operation} {id_type} {file_id} not found")
+                    history.log(INFO, logger)
 
         handle_end(ctx, database, exception, logger)
 
@@ -806,9 +813,6 @@ def app_edit_action(
 
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
-                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action")
-                file: Optional[File] = None
-
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
                     previous_action = file.action
                     file.action = action
@@ -834,15 +838,16 @@ def app_edit_action(
                         elif action == "reidentify":
                             file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
 
-                    history.uuid = file.uuid
-                    history.data = [previous_action, action]
-                    history.reason = reason
+                    history: HistoryEntry = HistoryEntry.command_history(
+                        ctx,
+                        "file:edit:action",
+                        file.uuid,
+                        [previous_action, action],
+                        reason,
+                    )
                     database.files.update(file)
-                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
                     database.history.insert(history)
-
-                if file is None:
-                    logger.error(f"{history.operation} {id_type} {file_id} not found")
+                    history.log(INFO, logger)
 
         handle_end(ctx, database, exception, logger)
 
@@ -918,7 +923,11 @@ def app_edit_rename(
         ids = tuple(i for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
     program_name: str = ctx.find_root().command.name
-    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+    logger: Logger = setup_logger(
+        program_name,
+        files=None if dry_run else [database_path.parent / f"{program_name}.log"],
+        streams=[stdout],
+    )
 
     if id_type in ("warnings",):
         where: str = f"{id_type} like '%\"' || ? || '\"%'"
@@ -933,10 +942,8 @@ def app_edit_rename(
 
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
-                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:rename")
-                file: Optional[File] = None
-
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
+                    history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:rename", file.uuid, [], reason)
                     old_name: str = file.relative_path.name
                     new_name: str = old_name
 
@@ -960,17 +967,15 @@ def app_edit_rename(
                     if new_name.lower() == old_name.lower():
                         continue
 
+                    history.data = [str(old_name), str(new_name)]
+
                     if dry_run:
-                        logger.info(f"{history.operation} {file.uuid} {file.relative_path} {old_name!r} {new_name!r}")
+                        history.log(INFO, logger)
                         continue
 
                     file.root = Path(root)
                     file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
                     file.relative_path = file.relative_path.with_name(new_name)
-
-                    history.uuid = file.uuid
-                    history.data = [str(old_name), str(new_name)]
-                    history.reason = reason
 
                     try:
                         database.files.update(file, {"relative_path": file.relative_path.with_name(old_name)})
@@ -978,11 +983,8 @@ def app_edit_rename(
                         file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
                         file.relative_path = file.relative_path.with_name(old_name)
 
-                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
+                    history.log(INFO, logger)
                     database.history.insert(history)
-
-                if file is None:
-                    logger.error(f"{history.operation} {id_type} {file_id} not found")
 
         handle_end(ctx, database, exception, logger)
 
@@ -1023,7 +1025,6 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
         handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
-            command: HistoryEntry = HistoryEntry.command_history(ctx, "file", reason=reason)
             where: str = "uuid is not null and time >= ?"
             parameters: list[str] = [time_from.isoformat()]
 
@@ -1032,6 +1033,7 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
                 parameters.append(time_to.isoformat())
 
             for event in database.history.select(where=where, parameters=parameters, order_by=[("time", "desc")]):
+                command: HistoryEntry = HistoryEntry.command_history(ctx, "file", reason=reason)
                 event_command, _, event_operation = event.operation.partition(":")
                 file: Optional[File] = None
 
@@ -1061,8 +1063,6 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
                     command.data = [event.uuid, event.time, event.operation]
                     database.history.insert(command)
 
-                logger.info(
-                    f"{command.operation}{'' if file else ':error'} {event.uuid} {event.time} {event.operation}",
-                )
+                command.log(INFO, logger)
 
         handle_end(ctx, database, exception, logger)
