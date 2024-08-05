@@ -20,7 +20,7 @@ pyyaml = "^6.0.1"
 type = "git"
 url = "https://github.com/aarhusstadsarkiv/acacore.git"
 reference = "dev-matca"
-resolved_reference = "6167aded27391675f7a2fb19e8223fe19f1dd26c"
+resolved_reference = "1d3850fd022b9d026773891cf220432c3c9b776f"
 
 [[package]]
 name = "annotated-types"
