@@ -229,7 +229,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
 
     file.action_data = ActionData()
 
-    for action in ("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify"):
+    for action in ("convert", "extract", "template", "manual", "rename", "ignore", "reidentify"):
         previous_action = file.action
         file.action = action
 
@@ -280,7 +280,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
             app_edit_action.name,
             str(files_folder_copy),
             str(file.puid),
-            "replace",
+            "template",
             "edit action with puid",
             "--data",
             "template",
@@ -293,9 +293,9 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
         with FileDB(database_path_copy) as database:
             files: list[File] = list(database.files.select(where="PUID = ?", limit=1, parameters=[file.puid]))
 
-            assert all(f.action == "replace" for f in files)
-            assert all(f.action_data and f.action_data.replace for f in files)
-            assert all(f.action_data.replace.template == "empty" for f in files)
+            assert all(f.action == "template" for f in files)
+            assert all(f.action_data and f.action_data.template for f in files)
+            assert all(f.action_data.template.template == "empty" for f in files)
 
             for file in files:
                 history: HistoryEntry = database.history.select(
@@ -306,7 +306,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
                 ).fetchone()
 
                 assert isinstance(history.data, list)
-                assert history.data[-1] == "replace"
+                assert history.data[-1] == "template"
                 assert history.reason == "edit action with puid"
 
 
