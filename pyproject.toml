@@ -24,13 +24,14 @@ types-click = "^7.1.8"
 [tool.poetry.scripts]
 digiarch = "digiarch.cli:app"
 
-[tool.black]
-line-length = 120
-exclude = ".venv"
-
 [tool.ruff]
 line-length = 120
-lint.select = [
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.ruff.lint]
+select = [
     "C",
     "E",
     "F",
@@ -47,7 +48,7 @@ lint.select = [
     "BLE",
     # "FBT", Will asks us to remove boolean flags
     "A",
-    "COM",
+    # "COM",
     "C4",
     "DTZ",
     "T10",
@@ -67,7 +68,7 @@ lint.select = [
     # "TRY", Will help with our exception handling
     "RUF",
 ]
-lint.ignore = [
+ignore = [
     "E501",    # line to long, to many false positives, gets handled by black
     "ANN002",  # missing type anottation for *args
     "ANN003",  # missing type anotation for **kwargs
@@ -91,6 +92,7 @@ lint.ignore = [
     "D212",    # multi-line docstring summary should start at the first line,
     "D213",    # multi-line docstring summary should start at the second line,
     "D300",    # use triple docstring
+    "D401",    # first line of docstring should be in imperative mood
     "DTZ005",  # datetime.datetime.now() called without a tz argument
     "DTZ006",  # datetime.datetime.fromtimestamp() called without a tz argument
     "E712",    # comparison to True/False, we ignore because we use sqlalchemy
@@ -125,27 +127,11 @@ force-single-line = true
 order-by-type = false
 
 [tool.ruff.lint.pydocstyle]
-convention = "google"
+convention = "pep257"
 ignore-decorators = ["pytest.fixture"]
 
 [tool.ruff.lint.pycodestyle]
-max-doc-length = 300 # We dont care about length of docstrings
-
-[tool.mypy]
-python_version = 3.9
-warn_return_any = true
-warn_unused_configs = true
-ignore_missing_imports = true
-# Because we disallow untyped defs in the main module,
-# check_untyped_defs only has an impact in tests/
-check_untyped_defs = true
-exclude = [
-    ".venv/"
-]
-
-[[tool.mypy.overrides]]
-module = 'digiarch'
-disallow_untyped_defs = true
+max-doc-length = 300
 
 [build-system]
 requires = ["poetry>=0.12"]
