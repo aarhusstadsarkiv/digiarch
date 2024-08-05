@@ -704,9 +704,7 @@ def app_doctor(ctx: Context, root: str, dry_run: bool):
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @pass_context
 def app_upgrade(ctx: Context, root: str):
-    """
-    Upgrade the files' database to the latest version of acacore.
-    """
+    """Upgrade the files' database to the latest version of acacore."""
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
