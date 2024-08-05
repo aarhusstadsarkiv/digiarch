@@ -16,7 +16,6 @@ acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v2.0.
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
-black = "^24.8.0"
 ruff = "^0.5.6"
 coverage = "^7.6.1"
 types-click = "^7.1.8"
