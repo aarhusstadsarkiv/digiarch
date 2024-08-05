@@ -698,6 +698,7 @@ def app_edit():
 @app_edit.command("remove", no_args_is_help=True, short_help="Remove one or more files.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument_ids(True)
+@argument("reason", nargs=1, type=str, required=True)
 @pass_context
 def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_type: str, id_files: bool):
     """
