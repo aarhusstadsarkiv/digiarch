@@ -14,11 +14,13 @@ from sqlite3 import DatabaseError
 from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
+from typing import Any
 from typing import Callable
 from typing import Generator
 from typing import get_args as get_type_args
 from typing import Optional
 from typing import Sequence
+from typing import TypeVar
 from typing import Union
 from uuid import UUID
 from uuid import uuid4
@@ -61,6 +63,70 @@ from click import version_option
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
+
+FC = TypeVar("FC", bound=Callable[..., Any])
+
+
+def argument_ids(required: bool = True) -> Callable[[FC], FC]:
+    def inner(callback: FC) -> FC:
+        decorators: list[Callable[[FC], FC]] = [
+            argument(
+                "ids",
+                metavar="ID...",
+                nargs=-1,
+                type=str,
+                required=required,
+                callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+            ),
+            option(
+                "--uuid",
+                "id_type",
+                flag_value="uuid",
+                default=True,
+                help="Use UUID's as identifiers.  [default]",
+            ),
+            option(
+                "--puid",
+                "id_type",
+                flag_value="puid",
+                help="Use PUID's as identifiers.",
+            ),
+            option(
+                "--path",
+                "id_type",
+                flag_value="relative_path",
+                help="Use relative paths as identifiers.",
+            ),
+            option(
+                "--path-like",
+                "id_type",
+                flag_value="relative_path-like",
+                help="Use relative paths as identifiers, match with LIKE.",
+            ),
+            option(
+                "--checksum",
+                "id_type",
+                flag_value="checksum",
+                help="Use checksums as identifiers.",
+            ),
+            option(
+                "--warning",
+                "id_type",
+                flag_value="warnings",
+                help="Use warnings as identifiers.",
+            ),
+            option(
+                "--id-files",
+                is_flag=True,
+                default=False,
+                help="Interpret IDs as files from which to read the IDs.",
+            ),
+        ]
+        for decorator in reversed(decorators):
+            callback = decorator(callback)
+        return callback
+
+    return inner
 
 
 def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], tuple[None, None]]:
@@ -350,26 +416,7 @@ def app_identify(
 
 @app.command("reidentify", no_args_is_help=True, short_help="Reidentify files.")
 @argument("root", type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
-@argument(
-    "ids",
-    metavar="ID...",
-    nargs=-1,
-    type=str,
-    required=False,
-    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
-)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
-@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
-@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
-@option(
-    "--path-like",
-    "id_type",
-    flag_value="relative_path-like",
-    help="Use relative paths as identifiers, match with LIKE.",
-)
-@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
-@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
-@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@argument_ids(False)
 @option(
     "--siegfried-path",
     type=ClickPath(dir_okay=False, resolve_path=True),
@@ -651,27 +698,7 @@ def app_edit():
 # noinspection DuplicatedCode
 @app_edit.command("remove", no_args_is_help=True, short_help="Remove one or more files.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
-@argument(
-    "ids",
-    metavar="ID...",
-    nargs=-1,
-    type=str,
-    required=True,
-    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
-)
-@argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
-@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
-@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
-@option(
-    "--path-like",
-    "id_type",
-    flag_value="relative_path-like",
-    help="Use relative paths as identifiers, match with LIKE.",
-)
-@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
-@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
-@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@argument_ids(True)
 @pass_context
 def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_type: str, id_files: bool):
     """
@@ -723,14 +750,7 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
 # noinspection DuplicatedCode
 @app_edit.command("action", no_args_is_help=True, short_help="Change the action of one or more files.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
-@argument(
-    "ids",
-    metavar="ID...",
-    nargs=-1,
-    type=str,
-    required=True,
-    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
-)
+@argument_ids(True)
 @argument(
     "action",
     metavar="ACTION",
@@ -739,18 +759,6 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
-@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
-@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
-@option(
-    "--path-like",
-    "id_type",
-    flag_value="relative_path-like",
-    help="Use relative paths as identifiers, match with LIKE.",
-)
-@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
-@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
-@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @option(
     "--data",
     metavar="<FIELD VALUE>",
@@ -867,14 +875,7 @@ def app_edit_action(
 # noinspection DuplicatedCode,GrazieInspection
 @app_edit.command("rename", no_args_is_help=True, short_help="Change the extension of one or more files.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
-@argument(
-    "ids",
-    metavar="ID...",
-    nargs=-1,
-    type=str,
-    required=True,
-    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
-)
+@argument_ids(True)
 @argument(
     "extension",
     nargs=1,
@@ -886,18 +887,6 @@ def app_edit_action(
 @option("--replace", "replace_mode", flag_value="last", default=True, help="Replace the last extension.  [default]")
 @option("--replace-all", "replace_mode", flag_value="all", default=True, help="Replace all extensions.")
 @option("--append", "replace_mode", flag_value="append", default=True, help="Append the new extension.")
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
-@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
-@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
-@option(
-    "--path-like",
-    "id_type",
-    flag_value="relative_path-like",
-    help="Use relative paths as identifiers, match with LIKE.",
-)
-@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
-@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
-@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @option("--dry-run", is_flag=True, default=False, help="Show changes without committing them.")
 @pass_context
 def app_edit_rename(
