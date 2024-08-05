@@ -755,7 +755,7 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
     "action",
     metavar="ACTION",
     nargs=1,
-    type=Choice(("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify")),
+    type=Choice(("convert", "extract", "template", "manual", "rename", "ignore", "reidentify")),
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
@@ -801,7 +801,7 @@ def app_edit_action(
     Available ACTION values are:
         * convert
         * extract
-        * replace
+        * template
         * manual
         * rename
         * ignore
@@ -847,8 +847,8 @@ def app_edit_action(
                             )
                         elif action == "extract":
                             file.action_data.extract = ExtractAction.model_validate(data_parsed)
-                        elif action == "replace":
-                            file.action_data.replace = TemplateAction.model_validate(data_parsed)
+                        elif action == "temoplate":
+                            file.action_data.temoplate = TemplateAction.model_validate(data_parsed)
                         elif action == "manual":
                             file.action_data.manual = ManualAction.model_validate(data_parsed)
                         elif action == "rename":

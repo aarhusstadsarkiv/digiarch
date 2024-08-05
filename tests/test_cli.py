@@ -237,8 +237,8 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
             file.action_data.convert = [ConvertAction(converter="test", converter_type="master", outputs=["ext"])]
         elif action == "extract":
             file.action_data.extract = ExtractAction(tool="tool", dir_suffix="dir_suffix")
-        elif action == "replace":
-            file.action_data.replace = TemplateAction(template="empty")
+        elif action == "template":
+            file.action_data.template = TemplateAction(template="empty")
         elif action == "manual":
             file.action_data.manual = ManualAction(reason="reason", process="process")
         elif action == "rename":
