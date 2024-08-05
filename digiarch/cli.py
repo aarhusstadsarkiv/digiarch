@@ -165,10 +165,9 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
 
     program_end.log(ERROR if exception.exception else INFO, *loggers)
 
-    if database.is_open:
-        if commit:
-            database.history.insert(program_end)
-            database.commit()
+    if database.is_open and commit:
+        database.history.insert(program_end)
+        database.commit()
 
 
 def identify_file(
