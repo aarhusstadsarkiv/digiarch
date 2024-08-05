@@ -16,7 +16,7 @@ from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import ReIdentifyAction
 from acacore.models.reference_files import RenameAction
-from acacore.models.reference_files import ReplaceAction
+from acacore.models.reference_files import TemplateAction
 from acacore.utils.functions import find_files
 from acacore.utils.functions import rm_tree
 from click import BadParameter
@@ -238,7 +238,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
         elif action == "extract":
             file.action_data.extract = ExtractAction(tool="tool", dir_suffix="dir_suffix")
         elif action == "replace":
-            file.action_data.replace = ReplaceAction(template="empty")
+            file.action_data.replace = TemplateAction(template="empty")
         elif action == "manual":
             file.action_data.manual = ManualAction(reason="reason", process="process")
         elif action == "rename":
