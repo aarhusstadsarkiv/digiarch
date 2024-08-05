@@ -26,7 +26,9 @@ from uuid import UUID
 from uuid import uuid4
 
 import yaml
+from acacore.__version__ import __version__ as __acacore_version__
 from acacore.database import FileDB
+from acacore.database.upgrade import is_latest
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -143,12 +145,13 @@ def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], 
     return old_path, new_path
 
 
-def handle_start(ctx: Context, database: FileDB, *loggers: Logger):
+def handle_start(ctx: Context, database: FileDB, *loggers: Logger, time: datetime | None = None):
     program_start: HistoryEntry = HistoryEntry.command_history(
         ctx,
         "start",
         data={"version": __version__},
         add_params_to_data=True,
+        time=time,
     )
 
     database.history.insert(program_start)
@@ -687,6 +690,36 @@ def app_doctor(ctx: Context, root: str, dry_run: bool):
                 history.log(INFO, logger)
 
         handle_end(ctx, database, exception, logger, commit=not dry_run)
+
+
+@app.command("upgrade", no_args_is_help=True, short_help="Upgrade the files' database to the latest version")
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@pass_context
+def app_upgrade(ctx: Context, root: str):
+    """
+    Upgrade the files' database to the latest version of acacore.
+    """
+    database_path: Path = Path(root) / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+    is_upgraded: bool = False
+
+    with FileDB(database_path, check_version=False) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            if not is_latest(database):
+                database.add_history(None, "update", [database.metadata.select().version, __acacore_version__]).log(
+                    INFO, logger
+                )
+                database.upgrade()
+                is_upgraded = True
+
+        handle_end(ctx, database, exception, logger, commit=is_upgraded)
 
 
 @app.group("edit", no_args_is_help=True)
