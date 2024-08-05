@@ -18,10 +18,8 @@ from typing import Any
 from typing import Callable
 from typing import Generator
 from typing import get_args as get_type_args
-from typing import Optional
 from typing import Sequence
 from typing import TypeVar
-from typing import Union
 from uuid import UUID
 from uuid import uuid4
 
@@ -131,7 +129,7 @@ def argument_ids(required: bool = True) -> Callable[[FC], FC]:
     return inner
 
 
-def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], tuple[None, None]]:
+def handle_rename(file: File, action: RenameAction) -> tuple[Path, Path] | tuple[None, None]:
     old_path: Path = file.get_absolute_path()
 
     if action.on_extension_mismatch and (not file.warning or "extension mismatch" not in file.warning):
@@ -184,9 +182,9 @@ def identify_file(
     custom_signatures: list[CustomSignature],
     *,
     update: bool = False,
-) -> tuple[Optional[File], list[HistoryEntry]]:
+) -> tuple[File | None, list[HistoryEntry]]:
     uuid: UUID
-    existing_file: Optional[File] = database.files.select(
+    existing_file: File | None = database.files.select(
         where="relative_path = ?",
         limit=1,
         parameters=[str(path.relative_to(root))],
@@ -248,8 +246,8 @@ def identify_file(
     return file, file_history
 
 
-def regex_callback(pattern: str, flags: Union[int, RegexFlag] = 0) -> Callable[[Context, Parameter, str], str]:
-    def _callback(ctx: Context, param: Parameter, value: Union[str, Sequence[str]]):
+def regex_callback(pattern: str, flags: int | RegexFlag = 0) -> Callable[[Context, Parameter, str], str]:
+    def _callback(ctx: Context, param: Parameter, value: str | Sequence[str]):
         if isinstance(value, (list, tuple)):
             if any(not match(pattern, v, flags) for v in value):
                 raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
@@ -320,16 +318,16 @@ def app():
 @pass_context
 def app_identify(
     ctx: Context,
-    root: Union[str, Path],
-    siegfried_path: Optional[str],
-    siegfried_home: Optional[str],
+    root: str | Path,
+    siegfried_path: str | None,
+    siegfried_home: str | None,
     siegfried_signature: TSignaturesProvider,
     update_siegfried_signature: bool,
-    actions_file: Optional[str],
-    custom_signatures_file: Optional[str],
+    actions_file: str | None,
+    custom_signatures_file: str | None,
     batch_size: int,
     *,
-    update_where: Optional[list[tuple[str, Sequence[str]]]] = None,
+    update_where: list[tuple[str, Sequence[str]]] | None = None,
 ):
     """
     Process a folder (ROOT) recursively and populate a files' database.
@@ -475,16 +473,16 @@ def app_identify(
 @pass_context
 def app_reidentify(
     _ctx: Context,
-    root: Union[str, Path],
+    root: str | Path,
     ids: tuple[str],
     id_type: str,
     id_files: bool,
-    siegfried_path: Optional[str],
-    siegfried_home: Optional[str],
+    siegfried_path: str | None,
+    siegfried_home: str | None,
     siegfried_signature: TSignaturesProvider,
     update_siegfried_signature: bool,
-    actions_file: Optional[str],
-    custom_signatures_file: Optional[str],
+    actions_file: str | None,
+    custom_signatures_file: str | None,
     batch_size: int,
 ):
     """
@@ -572,11 +570,11 @@ def app_reidentify(
 def app_history(
     ctx: Context,
     root: str,
-    time_from: Optional[datetime],
-    time_to: Optional[datetime],
-    operation: Optional[tuple[str, ...]],
-    uuid: Optional[tuple[str, ...]],
-    reason: Optional[tuple[str, ...]],
+    time_from: datetime | None,
+    time_to: datetime | None,
+    operation: tuple[str, ...] | None,
+    uuid: tuple[str, ...] | None,
+    reason: tuple[str, ...] | None,
     ascending: bool,
 ):
     """
@@ -823,7 +821,7 @@ def app_edit_action(
     id_type: str,
     id_files: bool,
     data: tuple[tuple[str, str]],
-    data_json: Optional[str],
+    data_json: str | None,
 ):
     """
     Change the action of one or more files in the files' database for the ROOT folder to ACTION.
@@ -847,7 +845,7 @@ def app_edit_action(
         * ignore
         * reidentify
     """  # noqa: D301
-    data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
+    data_parsed: dict | list = dict(data) if data else loads(data_json) if data_json else None
     assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
@@ -1076,7 +1074,7 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
             for event in database.history.select(where=where, parameters=parameters, order_by=[("time", "desc")]):
                 command: HistoryEntry = HistoryEntry.command_history(ctx, "file", reason=reason)
                 event_command, _, event_operation = event.operation.partition(":")
-                file: Optional[File] = None
+                file: File | None = None
 
                 if event_command == f"{program_name}.{app_edit.name}.{app_edit_action.name}":
                     file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
