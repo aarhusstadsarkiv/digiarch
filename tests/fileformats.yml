@@ -10,8 +10,8 @@
         reason: "File is too small"
 "!empty":
   name: Empty files
-  action: replace
-  replace:
+  action: template
+  template:
     template: empty
 "!image (raster)":
   name: Image files
