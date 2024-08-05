@@ -847,8 +847,8 @@ def app_edit_action(
                             )
                         elif action == "extract":
                             file.action_data.extract = ExtractAction.model_validate(data_parsed)
-                        elif action == "temoplate":
-                            file.action_data.temoplate = TemplateAction.model_validate(data_parsed)
+                        elif action == "template":
+                            file.action_data.template = TemplateAction.model_validate(data_parsed)
                         elif action == "manual":
                             file.action_data.manual = ManualAction.model_validate(data_parsed)
                         elif action == "rename":
