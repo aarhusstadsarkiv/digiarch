@@ -38,8 +38,8 @@ from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import ReIdentifyAction
 from acacore.models.reference_files import RenameAction
-from acacore.models.reference_files import TemplateAction
 from acacore.models.reference_files import TActionType
+from acacore.models.reference_files import TemplateAction
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
 from acacore.siegfried import Siegfried
@@ -657,7 +657,7 @@ def app_doctor(ctx: Context, root: str, dry_run: bool):
         handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
-            invalid_characters: str = '\\?%*|"<>,:;=+[]!@' + bytes(range(20)).decode("ascii") + "\x7F"
+            invalid_characters: str = '\\?%*|"<>,:;=+[]!@' + bytes(range(20)).decode("ascii") + "\x7f"
             for file in database.files.select(
                 where=" or ".join("instr(relative_path, ?) != 0" for _ in invalid_characters),
                 parameters=list(invalid_characters),
