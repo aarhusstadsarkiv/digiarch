@@ -723,6 +723,7 @@ def app_upgrade(ctx: Context, root: str):
                     INFO, logger
                 )
                 database.upgrade()
+                database.init()
                 is_upgraded = True
 
         handle_end(ctx, database, exception, logger, commit=is_upgraded)
