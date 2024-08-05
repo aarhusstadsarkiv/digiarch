@@ -302,6 +302,8 @@ def app():
     "--actions",
     "actions_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_ACTIONS",
+    show_envvar=True,
     default=None,
     help="Path to a YAML file containing file format actions.",
 )
@@ -309,6 +311,8 @@ def app():
     "--custom-signatures",
     "custom_signatures_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_CUSTOM_SIGNATURES",
+    show_envvar=True,
     default=None,
     help="Path to a YAML file containing custom signature specifications.",
 )
@@ -453,6 +457,8 @@ def app_identify(
     "--actions",
     "actions_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_ACTIONS",
+    show_envvar=True,
     default=None,
     help="Path to a YAML file containing file format actions.",
 )
@@ -460,6 +466,8 @@ def app_identify(
     "--custom-signatures",
     "custom_signatures_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_CUSTOM_SIGNATURES",
+    show_envvar=True,
     default=None,
     help="Path to a YAML file containing custom signature specifications.",
 )
