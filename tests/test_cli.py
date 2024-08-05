@@ -16,7 +16,7 @@ from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import ReIdentifyAction
 from acacore.models.reference_files import RenameAction
-from acacore.models.reference_files import ReplaceAction
+from acacore.models.reference_files import TemplateAction
 from acacore.utils.functions import find_files
 from acacore.utils.functions import rm_tree
 from click import BadParameter
@@ -229,7 +229,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
 
     file.action_data = ActionData()
 
-    for action in ("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify"):
+    for action in ("convert", "extract", "template", "manual", "rename", "ignore", "reidentify"):
         previous_action = file.action
         file.action = action
 
@@ -237,8 +237,8 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
             file.action_data.convert = [ConvertAction(converter="test", converter_type="master", outputs=["ext"])]
         elif action == "extract":
             file.action_data.extract = ExtractAction(tool="tool", dir_suffix="dir_suffix")
-        elif action == "replace":
-            file.action_data.replace = ReplaceAction(template="empty")
+        elif action == "template":
+            file.action_data.template = TemplateAction(template="empty")
         elif action == "manual":
             file.action_data.manual = ManualAction(reason="reason", process="process")
         elif action == "rename":
@@ -280,7 +280,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
             app_edit_action.name,
             str(files_folder_copy),
             str(file.puid),
-            "replace",
+            "template",
             "edit action with puid",
             "--data",
             "template",
@@ -293,9 +293,9 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
         with FileDB(database_path_copy) as database:
             files: list[File] = list(database.files.select(where="PUID = ?", limit=1, parameters=[file.puid]))
 
-            assert all(f.action == "replace" for f in files)
-            assert all(f.action_data and f.action_data.replace for f in files)
-            assert all(f.action_data.replace.template == "empty" for f in files)
+            assert all(f.action == "template" for f in files)
+            assert all(f.action_data and f.action_data.template for f in files)
+            assert all(f.action_data.template.template == "empty" for f in files)
 
             for file in files:
                 history: HistoryEntry = database.history.select(
@@ -306,7 +306,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
                 ).fetchone()
 
                 assert isinstance(history.data, list)
-                assert history.data[-1] == "replace"
+                assert history.data[-1] == "template"
                 assert history.reason == "edit action with puid"
 
 

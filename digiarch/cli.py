@@ -1,5 +1,9 @@
 from datetime import datetime
+from functools import reduce
+from itertools import islice
 from json import loads
+from logging import ERROR
+from logging import INFO
 from logging import Logger
 from os import environ
 from pathlib import Path
@@ -10,17 +14,19 @@ from sqlite3 import DatabaseError
 from sqlite3 import Error as SQLiteError
 from sys import stdout
 from traceback import format_tb
+from typing import Any
 from typing import Callable
 from typing import Generator
-from typing import Optional
+from typing import get_args as get_type_args
 from typing import Sequence
-from typing import Union
+from typing import TypeVar
 from uuid import UUID
 from uuid import uuid4
 
 import yaml
 from acacore.__version__ import __version__ as __acacore_version__
 from acacore.database import FileDB
+from acacore.database.upgrade import is_latest
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import Action
@@ -32,12 +38,13 @@ from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import ReIdentifyAction
 from acacore.models.reference_files import RenameAction
-from acacore.models.reference_files import ReplaceAction
 from acacore.models.reference_files import TActionType
+from acacore.models.reference_files import TemplateAction
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
 from acacore.siegfried import Siegfried
-from acacore.siegfried.siegfried import TSignature
+from acacore.siegfried.siegfried import SiegfriedFile
+from acacore.siegfried.siegfried import TSignaturesProvider
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
@@ -47,22 +54,82 @@ from click import Choice
 from click import Context
 from click import DateTime
 from click import group
+from click import IntRange
 from click import option
 from click import Parameter
 from click import pass_context
 from click import Path as ClickPath
 from click import version_option
-from PIL import Image
-from PIL import UnidentifiedImageError
-from PIL.Image import DecompressionBombError
 from pydantic import TypeAdapter
 
 from .__version__ import __version__
 
-Image.MAX_IMAGE_PIXELS = int(50e3**2)
+FC = TypeVar("FC", bound=Callable[..., Any])
 
 
-def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], tuple[None, None]]:
+def argument_ids(required: bool = True) -> Callable[[FC], FC]:
+    def inner(callback: FC) -> FC:
+        decorators: list[Callable[[FC], FC]] = [
+            argument(
+                "ids",
+                metavar="ID...",
+                nargs=-1,
+                type=str,
+                required=required,
+                callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
+            ),
+            option(
+                "--uuid",
+                "id_type",
+                flag_value="uuid",
+                default=True,
+                help="Use UUID's as identifiers.  [default]",
+            ),
+            option(
+                "--puid",
+                "id_type",
+                flag_value="puid",
+                help="Use PUID's as identifiers.",
+            ),
+            option(
+                "--path",
+                "id_type",
+                flag_value="relative_path",
+                help="Use relative paths as identifiers.",
+            ),
+            option(
+                "--path-like",
+                "id_type",
+                flag_value="relative_path-like",
+                help="Use relative paths as identifiers, match with LIKE.",
+            ),
+            option(
+                "--checksum",
+                "id_type",
+                flag_value="checksum",
+                help="Use checksums as identifiers.",
+            ),
+            option(
+                "--warning",
+                "id_type",
+                flag_value="warnings",
+                help="Use warnings as identifiers.",
+            ),
+            option(
+                "--id-files",
+                is_flag=True,
+                default=False,
+                help="Interpret IDs as files from which to read the IDs.",
+            ),
+        ]
+        for decorator in reversed(decorators):
+            callback = decorator(callback)
+        return callback
+
+    return inner
+
+
+def handle_rename(file: File, action: RenameAction) -> tuple[Path, Path] | tuple[None, None]:
     old_path: Path = file.get_absolute_path()
 
     if action.on_extension_mismatch and (not file.warning or "extension mismatch" not in file.warning):
@@ -76,17 +143,17 @@ def handle_rename(file: File, action: RenameAction) -> Union[tuple[Path, Path], 
     return old_path, new_path
 
 
-def handle_start(ctx: Context, database: FileDB, *loggers: Logger):
+def handle_start(ctx: Context, database: FileDB, *loggers: Logger, time: datetime | None = None):
     program_start: HistoryEntry = HistoryEntry.command_history(
         ctx,
         "start",
-        data=ctx.params | {"version": __version__, "acacore": __acacore_version__},
+        data={"version": __version__},
+        add_params_to_data=True,
+        time=time,
     )
 
     database.history.insert(program_start)
-
-    for logger in loggers:
-        logger.info(program_start.operation)
+    program_start.log(INFO, *loggers, show_args=False)
 
 
 def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *loggers: Logger, commit: bool = True):
@@ -97,16 +164,11 @@ def handle_end(ctx: Context, database: FileDB, exception: ExceptionManager, *log
         reason="".join(format_tb(exception.traceback)) if exception.traceback else None,
     )
 
-    for logger in loggers:
-        if exception.exception:
-            logger.error(f"{program_end.operation} {exception.exception!r}")
-        else:
-            logger.info(program_end.operation)
+    program_end.log(ERROR if exception.exception else INFO, *loggers)
 
-    if database.is_open:
+    if database.is_open and commit:
         database.history.insert(program_end)
-        if commit:
-            database.commit()
+        database.commit()
 
 
 def identify_file(
@@ -115,13 +177,14 @@ def identify_file(
     path: Path,
     database: FileDB,
     siegfried: Siegfried,
+    siegfried_result: SiegfriedFile | None,
     actions: dict[str, Action],
     custom_signatures: list[CustomSignature],
     *,
     update: bool = False,
-) -> tuple[Optional[File], list[HistoryEntry]]:
+) -> tuple[File | None, list[HistoryEntry]]:
     uuid: UUID
-    existing_file: Optional[File] = database.files.select(
+    existing_file: File | None = database.files.select(
         where="relative_path = ?",
         limit=1,
         parameters=[str(path.relative_to(root))],
@@ -139,14 +202,12 @@ def identify_file(
 
     with ExceptionManager(
         Exception,
-        UnidentifiedImageError,
-        DecompressionBombError,
         allow=[OSError, IOError],
     ) as identify_error:
-        file = File.from_file(path, root, siegfried, actions, custom_signatures, uuid=uuid)
+        file = File.from_file(path, root, siegfried_result or siegfried, actions, custom_signatures, uuid=uuid)
 
     if identify_error.exception:
-        file = File.from_file(path, root, siegfried)
+        file = File.from_file(path, root, siegfried_result or siegfried)
         file.action = "manual"
         file.action_data = ActionData(
             manual=ManualAction(
@@ -185,8 +246,8 @@ def identify_file(
     return file, file_history
 
 
-def regex_callback(pattern: str, flags: Union[int, RegexFlag] = 0) -> Callable[[Context, Parameter, str], str]:
-    def _callback(ctx: Context, param: Parameter, value: Union[str, Sequence[str]]):
+def regex_callback(pattern: str, flags: int | RegexFlag = 0) -> Callable[[Context, Parameter, str], str]:
+    def _callback(ctx: Context, param: Parameter, value: str | Sequence[str]):
         if isinstance(value, (list, tuple)):
             if any(not match(pattern, v, flags) for v in value):
                 raise BadParameter(f"{value!r} does not match pattern {pattern}", ctx, param)
@@ -223,7 +284,7 @@ def app():
 )
 @option(
     "--siegfried-signature",
-    type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
+    type=Choice(get_type_args(TSignaturesProvider)),
     default="pronom",
     show_default=True,
     help="The signature file to use with Siegfried.",
@@ -239,6 +300,8 @@ def app():
     "--actions",
     "actions_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_ACTIONS",
+    show_envvar=True,
     default=None,
     help="Path to a YAML file containing file format actions.",
 )
@@ -246,22 +309,25 @@ def app():
     "--custom-signatures",
     "custom_signatures_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_CUSTOM_SIGNATURES",
+    show_envvar=True,
     default=None,
     help="Path to a YAML file containing custom signature specifications.",
 )
+@option("--batch-size", type=IntRange(1), default=100)
 @pass_context
 def app_identify(
     ctx: Context,
-    root: Union[str, Path],
-    siegfried_path: Optional[str],
-    siegfried_home: Optional[str],
-    siegfried_signature: TSignature,
+    root: str | Path,
+    siegfried_path: str | None,
+    siegfried_home: str | None,
+    siegfried_signature: TSignaturesProvider,
     update_siegfried_signature: bool,
-    actions_file: Optional[str],
-    custom_signatures_file: Optional[str],
+    actions_file: str | None,
+    custom_signatures_file: str | None,
+    batch_size: int,
     *,
-    update_where: Optional[str] = None,
-    update_where_ids: Optional[Sequence[str]] = None,
+    update_where: list[tuple[str, Sequence[str]]] | None = None,
 ):
     """
     Process a folder (ROOT) recursively and populate a files' database.
@@ -312,58 +378,49 @@ def app_identify(
             if update_where:
                 files = (
                     f.get_absolute_path(root)
-                    for i in update_where_ids
-                    for f in database.files.select(where=update_where, parameters=[i])
+                    for w, p in update_where
+                    for f in database.files.select(where=w, parameters=p)
                 )
             else:
                 files = find_files(root, exclude=[database_path.parent])
 
-            for path in files:
-                file, file_history = identify_file(
-                    ctx,
-                    root,
-                    path,
-                    database,
-                    siegfried,
-                    actions,
-                    custom_signatures,
-                    update=update_where is not None,
-                )
+            while batch := list(islice(files, batch_size)):
+                for path, result in siegfried.identify(*batch).files_dict.items():
+                    file, file_history = identify_file(
+                        ctx,
+                        root,
+                        path,
+                        database,
+                        siegfried,
+                        result,
+                        actions,
+                        custom_signatures,
+                        update=update_where is not None,
+                    )
 
-                logger_stdout.info(
-                    f"{HistoryEntry.command_history(ctx, ':file:' + ('update' if update_where else 'new')).operation} "
-                    f"{file.relative_path} {file.puid} {file.action}",
-                )
+                    if file:
+                        HistoryEntry.command_history(
+                            ctx,
+                            ":file:" + ("update" if update_where else "new"),
+                            file.uuid,
+                        ).log(
+                            INFO,
+                            logger_stdout,
+                            path=file.relative_path,
+                            puid=file.puid,
+                            action=file.action,
+                        )
 
-                for entry in file_history:
-                    logger.info(f"{entry.operation} {entry.uuid}")
-                    database.history.insert(entry)
+                    for event in file_history:
+                        event.log(INFO, logger)
+                        database.history.insert(event)
 
         handle_end(ctx, database, exception, logger)
 
 
 @app.command("reidentify", no_args_is_help=True, short_help="Reidentify files.")
 @argument("root", type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
-@argument(
-    "ids",
-    metavar="ID...",
-    nargs=-1,
-    type=str,
-    required=True,
-    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
-)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
-@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
-@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
-@option(
-    "--path-like",
-    "id_type",
-    flag_value="relative_path-like",
-    help="Use relative paths as identifiers, match with LIKE.",
-)
-@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
-@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
-@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
+@argument_ids(False)
 @option(
     "--siegfried-path",
     type=ClickPath(dir_okay=False, resolve_path=True),
@@ -382,7 +439,7 @@ def app_identify(
 )
 @option(
     "--siegfried-signature",
-    type=Choice(("pronom", "loc", "tika", "freedesktop", "pronom-tika-loc", "deluxe", "archivematica")),
+    type=Choice(get_type_args(TSignaturesProvider)),
     default="pronom",
     show_default=True,
     help="The signature file to use with Siegfried.",
@@ -398,6 +455,8 @@ def app_identify(
     "--actions",
     "actions_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_ACTIONS",
+    show_envvar=True,
     default=None,
     help="Path to a YAML file containing file format actions.",
 )
@@ -405,22 +464,26 @@ def app_identify(
     "--custom-signatures",
     "custom_signatures_file",
     type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_CUSTOM_SIGNATURES",
+    show_envvar=True,
     default=None,
     help="Path to a YAML file containing custom signature specifications.",
 )
+@option("--batch-size", type=IntRange(1), default=100)
 @pass_context
 def app_reidentify(
     _ctx: Context,
-    root: Union[str, Path],
+    root: str | Path,
     ids: tuple[str],
     id_type: str,
     id_files: bool,
-    siegfried_path: Optional[str],
-    siegfried_home: Optional[str],
-    siegfried_signature: TSignature,
+    siegfried_path: str | None,
+    siegfried_home: str | None,
+    siegfried_signature: TSignaturesProvider,
     update_siegfried_signature: bool,
-    actions_file: Optional[str],
-    custom_signatures_file: Optional[str],
+    actions_file: str | None,
+    custom_signatures_file: str | None,
+    batch_size: int,
 ):
     """
     Re-indentify specific files.
@@ -431,17 +494,23 @@ def app_reidentify(
     The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
     --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
     is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+
+    If no IDs are give, then all non-locked files with identification warnings or missing PUID will be re-identified.
     """
     if id_files:
         ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
-    if id_type in ("warnings",):
-        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+    if not ids:
+        where: list[tuple[str, Sequence[str]]] = [("(warning is not null or puid is null) and not lock", [])]
+    elif id_type in ("warnings",):
+        where: list[tuple[str, Sequence[str]]] = [
+            (f"{id_type} like '%\"' || ? || '\"%' and not lock", [i]) for i in ids
+        ]
     elif id_type.endswith("-like"):
         id_type = id_type.removesuffix("-like")
-        where: str = f"{id_type} like ?"
+        where: list[tuple[str, Sequence[str]]] = [(f"{id_type} like ? and not lock", [i]) for i in ids]
     else:
-        where: str = f"{id_type} = ?"
+        where: list[tuple[str, Sequence[str]]] = [(f"{id_type} = ? and not lock", [i]) for i in ids]
 
     app_identify.callback(
         root,
@@ -451,8 +520,8 @@ def app_reidentify(
         update_siegfried_signature,
         actions_file,
         custom_signatures_file,
+        batch_size,
         update_where=where,
-        update_where_ids=ids,
     )
 
 
@@ -501,11 +570,11 @@ def app_reidentify(
 def app_history(
     ctx: Context,
     root: str,
-    time_from: Optional[datetime],
-    time_to: Optional[datetime],
-    operation: Optional[tuple[str, ...]],
-    uuid: Optional[tuple[str, ...]],
-    reason: Optional[tuple[str, ...]],
+    time_from: datetime | None,
+    time_to: datetime | None,
+    operation: tuple[str, ...] | None,
+    uuid: tuple[str, ...] | None,
+    reason: tuple[str, ...] | None,
     ascending: bool,
 ):
     """
@@ -574,6 +643,90 @@ def app_history(
             print()
 
 
+# noinspection DuplicatedCode
+@app.command("doctor", no_args_is_help=True, short_help="Inspect the database for common issues")
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@option("--dry-run", is_flag=True, default=False, help="Show issues without fixing them.")
+@pass_context
+def app_doctor(ctx: Context, root: str, dry_run: bool):
+    database_path: Path = Path(root) / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(
+        program_name,
+        files=None if dry_run else [database_path.parent / f"{program_name}.log"],
+        streams=[stdout],
+    )
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            invalid_characters: str = '\\?%*|"<>,:;=+[]!@' + bytes(range(20)).decode("ascii") + "\x7f"
+            for file in database.files.select(
+                where=" or ".join("instr(relative_path, ?) != 0" for _ in invalid_characters),
+                parameters=list(invalid_characters),
+            ):
+                file.root = Path(root)
+                old_path: Path = file.relative_path
+                new_path: Path = Path(
+                    *[reduce(lambda acc, cur: acc.replace(cur, "_"), invalid_characters, p) for p in old_path.parts]
+                )
+                while file.root.joinpath(new_path).exists():
+                    new_path = new_path.with_name("_" + new_path.name)
+                if not dry_run:
+                    file.root.joinpath(new_path).parent.mkdir(parents=True, exist_ok=True)
+                    file.get_absolute_path().rename(file.root / new_path)
+                    file.relative_path = new_path
+                    try:
+                        database.files.update(file, {"uuid": file.uuid})
+                    except BaseException:
+                        file.get_absolute_path().rename(file.root / old_path)
+                        raise
+                history: HistoryEntry = HistoryEntry.command_history(
+                    ctx,
+                    "file:sanitize",
+                    file.uuid,
+                    [str(file.relative_path), str(new_path)],
+                )
+                database.history.insert(history)
+                history.log(INFO, logger)
+
+        handle_end(ctx, database, exception, logger, commit=not dry_run)
+
+
+@app.command("upgrade", no_args_is_help=True, short_help="Upgrade the files' database to the latest version")
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@pass_context
+def app_upgrade(ctx: Context, root: str):
+    """Upgrade the files' database to the latest version of acacore."""
+    database_path: Path = Path(root) / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+    is_upgraded: bool = False
+
+    with FileDB(database_path, check_version=False) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            if not is_latest(database):
+                database.add_history(None, "update", [database.metadata.select().version, __acacore_version__]).log(
+                    INFO, logger
+                )
+                database.upgrade()
+                database.init()
+                is_upgraded = True
+
+        handle_end(ctx, database, exception, logger, commit=is_upgraded)
+
+
 @app.group("edit", no_args_is_help=True)
 def app_edit():
     """Edit a files' database."""
@@ -582,27 +735,8 @@ def app_edit():
 # noinspection DuplicatedCode
 @app_edit.command("remove", no_args_is_help=True, short_help="Remove one or more files.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
-@argument(
-    "ids",
-    metavar="ID...",
-    nargs=-1,
-    type=str,
-    required=True,
-    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
-)
+@argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
-@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
-@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
-@option(
-    "--path-like",
-    "id_type",
-    flag_value="relative_path-like",
-    help="Use relative paths as identifiers, match with LIKE.",
-)
-@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
-@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
-@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @pass_context
 def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_type: str, id_files: bool):
     """
@@ -636,19 +770,17 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
 
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
-                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:remove")
-
-                file: Optional[File] = None
                 for file in database.files.select(where=where, parameters=[file_id]):
-                    history.uuid = file.uuid
-                    history.data = file.model_dump(mode="json")
-                    history.reason = reason
+                    history: HistoryEntry = HistoryEntry.command_history(
+                        ctx,
+                        "file:remove",
+                        file.uuid,
+                        file.model_dump(mode="json"),
+                        reason,
+                    )
                     database.execute(f"delete from {database.files.name} where uuid = ?", [str(file.uuid)])
                     database.history.insert(history)
-                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.reason}")
-
-                if file is None:
-                    logger.error(f"{history.operation} {id_type} {file_id} not found")
+                    history.log(INFO, logger)
 
         handle_end(ctx, database, exception, logger)
 
@@ -656,34 +788,15 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
 # noinspection DuplicatedCode
 @app_edit.command("action", no_args_is_help=True, short_help="Change the action of one or more files.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
-@argument(
-    "ids",
-    metavar="ID...",
-    nargs=-1,
-    type=str,
-    required=True,
-    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
-)
+@argument_ids(True)
 @argument(
     "action",
     metavar="ACTION",
     nargs=1,
-    type=Choice(("convert", "extract", "replace", "manual", "rename", "ignore", "reidentify")),
+    type=Choice(("convert", "extract", "template", "manual", "rename", "ignore", "reidentify")),
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
-@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
-@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
-@option(
-    "--path-like",
-    "id_type",
-    flag_value="relative_path-like",
-    help="Use relative paths as identifiers, match with LIKE.",
-)
-@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
-@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
-@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @option(
     "--data",
     metavar="<FIELD VALUE>",
@@ -708,7 +821,7 @@ def app_edit_action(
     id_type: str,
     id_files: bool,
     data: tuple[tuple[str, str]],
-    data_json: Optional[str],
+    data_json: str | None,
 ):
     """
     Change the action of one or more files in the files' database for the ROOT folder to ACTION.
@@ -726,13 +839,13 @@ def app_edit_action(
     Available ACTION values are:
         * convert
         * extract
-        * replace
+        * template
         * manual
         * rename
         * ignore
         * reidentify
     """  # noqa: D301
-    data_parsed: Optional[Union[dict, list]] = dict(data) if data else loads(data_json) if data_json else None
+    data_parsed: dict | list = dict(data) if data else loads(data_json) if data_json else None
     assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
@@ -758,9 +871,6 @@ def app_edit_action(
 
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
-                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:action")
-                file: Optional[File] = None
-
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
                     previous_action = file.action
                     file.action = action
@@ -775,8 +885,8 @@ def app_edit_action(
                             )
                         elif action == "extract":
                             file.action_data.extract = ExtractAction.model_validate(data_parsed)
-                        elif action == "replace":
-                            file.action_data.replace = ReplaceAction.model_validate(data_parsed)
+                        elif action == "template":
+                            file.action_data.template = TemplateAction.model_validate(data_parsed)
                         elif action == "manual":
                             file.action_data.manual = ManualAction.model_validate(data_parsed)
                         elif action == "rename":
@@ -786,15 +896,16 @@ def app_edit_action(
                         elif action == "reidentify":
                             file.action_data.reidentify = ReIdentifyAction.model_validate(data_parsed)
 
-                    history.uuid = file.uuid
-                    history.data = [previous_action, action]
-                    history.reason = reason
+                    history: HistoryEntry = HistoryEntry.command_history(
+                        ctx,
+                        "file:edit:action",
+                        file.uuid,
+                        [previous_action, action],
+                        reason,
+                    )
                     database.files.update(file)
-                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
                     database.history.insert(history)
-
-                if file is None:
-                    logger.error(f"{history.operation} {id_type} {file_id} not found")
+                    history.log(INFO, logger)
 
         handle_end(ctx, database, exception, logger)
 
@@ -802,14 +913,7 @@ def app_edit_action(
 # noinspection DuplicatedCode,GrazieInspection
 @app_edit.command("rename", no_args_is_help=True, short_help="Change the extension of one or more files.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
-@argument(
-    "ids",
-    metavar="ID...",
-    nargs=-1,
-    type=str,
-    required=True,
-    callback=lambda _c, _p, v: tuple(sorted(set(v), key=v.index)),
-)
+@argument_ids(True)
 @argument(
     "extension",
     nargs=1,
@@ -821,18 +925,6 @@ def app_edit_action(
 @option("--replace", "replace_mode", flag_value="last", default=True, help="Replace the last extension.  [default]")
 @option("--replace-all", "replace_mode", flag_value="all", default=True, help="Replace all extensions.")
 @option("--append", "replace_mode", flag_value="append", default=True, help="Append the new extension.")
-@option("--uuid", "id_type", flag_value="uuid", default=True, help="Use UUID's as identifiers.  [default]")
-@option("--puid", "id_type", flag_value="puid", help="Use PUID's as identifiers.")
-@option("--path", "id_type", flag_value="relative_path", help="Use relative paths as identifiers.")
-@option(
-    "--path-like",
-    "id_type",
-    flag_value="relative_path-like",
-    help="Use relative paths as identifiers, match with LIKE.",
-)
-@option("--checksum", "id_type", flag_value="checksum", help="Use checksums as identifiers.")
-@option("--warning", "id_type", flag_value="warnings", help="Use warnings as identifiers.")
-@option("--id-files", is_flag=True, default=False, help="Interpret IDs as files from which to read the IDs.")
 @option("--dry-run", is_flag=True, default=False, help="Show changes without committing them.")
 @pass_context
 def app_edit_rename(
@@ -870,7 +962,11 @@ def app_edit_rename(
         ids = tuple(i for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
     program_name: str = ctx.find_root().command.name
-    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+    logger: Logger = setup_logger(
+        program_name,
+        files=None if dry_run else [database_path.parent / f"{program_name}.log"],
+        streams=[stdout],
+    )
 
     if id_type in ("warnings",):
         where: str = f"{id_type} like '%\"' || ? || '\"%'"
@@ -885,10 +981,8 @@ def app_edit_rename(
 
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
-                history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:rename")
-                file: Optional[File] = None
-
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
+                    history: HistoryEntry = HistoryEntry.command_history(ctx, "file:edit:rename", file.uuid, [], reason)
                     old_name: str = file.relative_path.name
                     new_name: str = old_name
 
@@ -912,17 +1006,15 @@ def app_edit_rename(
                     if new_name.lower() == old_name.lower():
                         continue
 
+                    history.data = [str(old_name), str(new_name)]
+
                     if dry_run:
-                        logger.info(f"{history.operation} {file.uuid} {file.relative_path} {old_name!r} {new_name!r}")
+                        history.log(INFO, logger)
                         continue
 
                     file.root = Path(root)
                     file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
                     file.relative_path = file.relative_path.with_name(new_name)
-
-                    history.uuid = file.uuid
-                    history.data = [str(old_name), str(new_name)]
-                    history.reason = reason
 
                     try:
                         database.files.update(file, {"relative_path": file.relative_path.with_name(old_name)})
@@ -930,11 +1022,8 @@ def app_edit_rename(
                         file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
                         file.relative_path = file.relative_path.with_name(old_name)
 
-                    logger.info(f"{history.operation} {file.uuid} {file.relative_path} {history.data} {history.reason}")
+                    history.log(INFO, logger)
                     database.history.insert(history)
-
-                if file is None:
-                    logger.error(f"{history.operation} {id_type} {file_id} not found")
 
         handle_end(ctx, database, exception, logger)
 
@@ -975,7 +1064,6 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
         handle_start(ctx, database, logger)
 
         with ExceptionManager(BaseException) as exception:
-            command: HistoryEntry = HistoryEntry.command_history(ctx, "file", reason=reason)
             where: str = "uuid is not null and time >= ?"
             parameters: list[str] = [time_from.isoformat()]
 
@@ -984,8 +1072,9 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
                 parameters.append(time_to.isoformat())
 
             for event in database.history.select(where=where, parameters=parameters, order_by=[("time", "desc")]):
+                command: HistoryEntry = HistoryEntry.command_history(ctx, "file", reason=reason)
                 event_command, _, event_operation = event.operation.partition(":")
-                file: Optional[File] = None
+                file: File | None = None
 
                 if event_command == f"{program_name}.{app_edit.name}.{app_edit_action.name}":
                     file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
@@ -1013,8 +1102,6 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
                     command.data = [event.uuid, event.time, event.operation]
                     database.history.insert(command)
 
-                logger.info(
-                    f"{command.operation}{'' if file else ':error'} {event.uuid} {event.time} {event.operation}",
-                )
+                command.log(INFO, logger)
 
         handle_end(ctx, database, exception, logger)
