@@ -4,7 +4,7 @@
   ignore:
     reason: ""
     ignore_if:
-      - binary_size: 1024
+      - binary_size: 512
         reason: "Binary file is too small"
       - size: 32
         reason: "File is too small"
@@ -83,6 +83,14 @@ aca-fmt/9:
     tool: tnefparse
     extension: .dat
     dir_suffix: .mail_extraction
+aca-fmt/18:
+  name: OpenDocument Text (unspecified version)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
 aca-fmt/20:
   name: MapInfo TAB file
   action: convert
@@ -91,6 +99,31 @@ aca-fmt/20:
       converter_type: master
       outputs:
         - tab
+aca-fmt/21:
+  name: OpenDocument Spreadsheet (unspecified version)
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - pdf
+aca-fmt/22:
+  name: Windows Compressed Enhanced Metafile
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - jpg
+aca-fmt/23:
+  name: Microsoft Word XML Document
+  description: A Microsoft Word document saved as a standalone XML file
+  action: convert
+  convert:
+    - converter: libre
+      converter_type: master
+      outputs:
+        - odt
 fmt/3:
   name: Graphics Interchange Format 87a
   action: convert
@@ -250,7 +283,6 @@ fmt/21:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/22:
@@ -260,7 +292,6 @@ fmt/22:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/23:
@@ -270,7 +301,6 @@ fmt/23:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/24:
@@ -280,7 +310,6 @@ fmt/24:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/25:
@@ -290,7 +319,6 @@ fmt/25:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/26:
@@ -300,7 +328,6 @@ fmt/26:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/27:
@@ -310,7 +337,6 @@ fmt/27:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/28:
@@ -320,7 +346,6 @@ fmt/28:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/29:
@@ -330,7 +355,6 @@ fmt/29:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/30:
@@ -340,7 +364,6 @@ fmt/30:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/31:
@@ -350,7 +373,6 @@ fmt/31:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/32:
@@ -360,7 +382,6 @@ fmt/32:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/33:
@@ -370,7 +391,6 @@ fmt/33:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/34:
@@ -380,7 +400,6 @@ fmt/34:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/35:
@@ -390,7 +409,6 @@ fmt/35:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/36:
@@ -400,7 +418,6 @@ fmt/36:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/37:
@@ -580,7 +597,6 @@ fmt/63:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/64:
@@ -590,7 +606,6 @@ fmt/64:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/65:
@@ -600,7 +615,6 @@ fmt/65:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/66:
@@ -610,7 +624,6 @@ fmt/66:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/67:
@@ -620,7 +633,6 @@ fmt/67:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/68:
@@ -630,7 +642,6 @@ fmt/68:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/69:
@@ -640,7 +651,6 @@ fmt/69:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/70:
@@ -650,7 +660,6 @@ fmt/70:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/71:
@@ -660,7 +669,6 @@ fmt/71:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/72:
@@ -670,7 +678,6 @@ fmt/72:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dxf
         - pdf
         - svg
 fmt/73:
@@ -680,7 +687,6 @@ fmt/73:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/74:
@@ -690,7 +696,6 @@ fmt/74:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/75:
@@ -700,7 +705,6 @@ fmt/75:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/76:
@@ -710,7 +714,6 @@ fmt/76:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/77:
@@ -720,7 +723,6 @@ fmt/77:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/78:
@@ -730,7 +732,6 @@ fmt/78:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/79:
@@ -740,7 +741,6 @@ fmt/79:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/80:
@@ -750,7 +750,6 @@ fmt/80:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/81:
@@ -760,7 +759,6 @@ fmt/81:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/82:
@@ -770,7 +768,6 @@ fmt/82:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/83:
@@ -780,7 +777,6 @@ fmt/83:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/84:
@@ -790,7 +786,6 @@ fmt/84:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/85:
@@ -800,7 +795,6 @@ fmt/85:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/90:
@@ -811,6 +805,22 @@ fmt/90:
       converter_type: master
       outputs:
         - tif
+fmt/91:
+  name: Scalable Vector Graphics 1.0
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
+fmt/92:
+  name: Scalable Vector Graphics 1.1
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
 fmt/95:
   name: Acrobat PDF/A - Portable Document Format 1a
   action: convert
@@ -857,12 +867,19 @@ fmt/100:
         - pdf
 fmt/101:
   name: Extensible Markup Language 1.0
-  action: convert
+  action: reidentify
   convert:
     - converter: text
       converter_type: statutory
       outputs:
         - tif
+    - converter: copy
+      converter_type: master
+      outputs:
+        - _
+  reidentify:
+    reason: Some applications allow saving documents as XML and can re-open them
+    onfail: convert
 fmt/102:
   name: Extensible Hypertext Markup Language 1.0
   action: convert
@@ -1155,7 +1172,7 @@ fmt/244:
     - converter: gis
       converter_type: master
       outputs:
-        - GML3
+        - gml3
 fmt/258:
   name: Microsoft Works Word Processor 5-6
   action: convert
@@ -1180,7 +1197,7 @@ fmt/277:
   name: ESRI Arc/View Shapefile Index
   action: ignore
   ignore:
-    reason: Index file for gis project. Picked up and used by the GIS-procesor
+    reason: Index file for gis project. Picked up and used by the GIS-processor
 fmt/279:
   name: FLAC (Free Lossless Audio Codec)
   action: convert
@@ -1260,18 +1277,18 @@ fmt/319:
   action: ignore
   ignore:
     reason: A 2 part indexing file for spatial data. Picked up and used by the
-      GIS-procesor
+      GIS-processor
 fmt/320:
   name: ESRI Shapefile Projection (Well-Known Text) Format
   action: ignore
   ignore:
     reason: Projections Definition file; stores coordinate system information..
-      Picked up and used by the GIS-procesor
+      Picked up and used by the GIS-processor
 fmt/331:
   name: Autorun Configuration File
   action: ignore
   ignore:
-    reason: A Windows file usually found on CDs or DVDs or Blurays, telling the
+    reason: A Windows file usually found on CDs or DVDs or Blu-rays, telling the
       OS what executable to run when the disc is played. Not preservation-worthy
 fmt/332:
   name: ESRI Arc/View Project (3.x)
@@ -1381,6 +1398,14 @@ fmt/412:
       converter_type: master
       outputs:
         - pdf
+fmt/413:
+  name: Scalable Vector Graphics Tiny 1.2
+  action: convert
+  convert:
+    - converter: browser
+      converter_type: master
+      outputs:
+        - pdf
 fmt/414:
   name: Audio Interchange File Format
   action: convert
@@ -1413,7 +1438,6 @@ fmt/433:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/434:
@@ -1423,7 +1447,6 @@ fmt/434:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/435:
@@ -1433,7 +1456,6 @@ fmt/435:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/440:
@@ -1668,7 +1690,7 @@ fmt/526:
   name: Adobe Font List
   action: ignore
   ignore:
-    reason: A cache of font files installed for Adobe products, createed by the
+    reason: A cache of font files installed for Adobe products, created by the
       programs themselves. Not preservation-worthy
 fmt/531:
   name: AutoCAD Drawing 2013/2014
@@ -1677,7 +1699,6 @@ fmt/531:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/532:
@@ -1687,7 +1708,6 @@ fmt/532:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/550:
@@ -1696,14 +1716,14 @@ fmt/550:
   ignore:
     reason: File used by adobe software for image editing and manipulation. Not
       preservable, we are unable to open and convert this format without and photoshop
-      license. The files also rarely if ever contains presevable info.
+      license. The files also rarely if ever contains preservable info.
 fmt/551:
   name: Adobe InDesign Document CS5
   action: ignore
   ignore:
     reason: File used by adobe software for image editing and manipulation. Not
       preservable, we are unable to open and convert this format without and photoshop
-      license. The files also rarely if ever contains presevable info.
+      license. The files also rarely if ever contains preservable info.
 fmt/557:
   name: Adobe Illustrator 8.0
   action: convert
@@ -2037,7 +2057,7 @@ fmt/1047:
     - converter: gis
       converter_type: master
       outputs:
-        - GML3
+        - gml3
 fmt/1079:
   name: Microsoft Program Database 7.00
   action: ignore
@@ -2118,7 +2138,6 @@ fmt/1389:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/1390:
@@ -2128,7 +2147,6 @@ fmt/1390:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/1391:
@@ -2138,7 +2156,6 @@ fmt/1391:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/1392:
@@ -2148,7 +2165,6 @@ fmt/1392:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/1393:
@@ -2158,7 +2174,6 @@ fmt/1393:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 fmt/1439:
@@ -2275,7 +2290,7 @@ fmt/1729:
     - converter: gis
       converter_type: master
       outputs:
-        - GML3
+        - gml3
 fmt/1730:
   name: ''
   action: reidentify
@@ -2292,6 +2307,13 @@ fmt/1768:
   action: ignore
   ignore:
     reason: Source code written in C. Not preservation-worthy
+fmt/1879:
+  name: vCard
+  description: Contact information file. vCards are often attached to e-mail messages, but can be exchanged in other
+    ways, such as on the internet or instant messaging.
+  action: ignore
+  ignore:
+    reason: Not preservation-worthy
 fmt/1934:
   name: Drawing Interchange Format (Binary)
   action: convert
@@ -2299,7 +2321,6 @@ fmt/1934:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 x-fmt/9:
@@ -2348,6 +2369,10 @@ x-fmt/18:
   name: Comma Separated Values
   action: convert
   convert:
+    - converter: copy
+      converter_type: master
+      outputs:
+        - _
     - converter: text
       converter_type: statutory
       outputs:
@@ -2385,7 +2410,7 @@ x-fmt/54:
   name: AutoCAD Font Mapping Table
   action: ignore
   ignore:
-    reason: Contains info for fonts used while desingning. Not preservation-worthy
+    reason: Contains info for fonts used while designing. Not preservation-worthy
 x-fmt/58:
   name: Microsoft Excel Web Query
   action: ignore
@@ -2452,7 +2477,7 @@ x-fmt/111:
     - converter: copy
       converter_type: master
       outputs:
-        - tab
+        - _
     - converter: text
       converter_type: statutory
       outputs:
@@ -2562,7 +2587,7 @@ x-fmt/227:
     - converter: gis
       converter_type: master
       outputs:
-        - GML3
+        - gml3
 x-fmt/231:
   name: ESRI MapInfo Export File
   action: convert
@@ -2570,7 +2595,7 @@ x-fmt/231:
     - converter: gis
       converter_type: master
       outputs:
-        - GML3
+        - gml3
 x-fmt/235:
   name: ESRI Arc/View ShapeFile
   action: convert
@@ -2578,9 +2603,9 @@ x-fmt/235:
     - converter: gis
       converter_type: master
       outputs:
-        - GML3
+        - gml3
 x-fmt/240:
-  name: Microstoft Acces Database File (2000)
+  name: Microsoft Acces Database File (2000)
   action: ignore
   ignore:
     reason: A microsoft access database. Not preservable, we are unable to convert
@@ -2697,7 +2722,7 @@ x-fmt/328:
   name: InterBase Database file
   action: ignore
   ignore:
-    reason: A Databse fil in the interbase format. Not preservable, we are unable
+    reason: A database file in the interbase format. Not preservable, we are unable
       to convert it to a format we can handle as of now
 x-fmt/332:
   name: Lotus 1-2-3 Spreadsheet Formatting File 3.0
@@ -2939,7 +2964,6 @@ x-fmt/455:
     - converter: cad2d
       converter_type: master
       outputs:
-        - dwg
         - pdf
         - svg
 xfmt/157:
