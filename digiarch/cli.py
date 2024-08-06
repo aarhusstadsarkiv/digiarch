@@ -726,10 +726,10 @@ def app_upgrade(ctx: Context, root: str, backup: bool):
         with ExceptionManager(BaseException) as exception:
             if not is_latest(database):
                 if backup:
-                    copy2(
-                        database.path,
-                        database.path.with_stem(database.path.stem + f"-{database.metadata.select().version}"),
-                    )
+                    backup_path = database.path.with_stem(database.path.stem + f"-{database.metadata.select().version}")
+                    if backup_path.exists():
+                        raise FileExistsError(f"Backup file {backup_path.name} already exists.")
+                    copy2(database.path, backup_path)
                 database.add_history(None, "update", [database.metadata.select().version, __acacore_version__]).log(
                     INFO, logger
                 )
