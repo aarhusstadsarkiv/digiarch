@@ -10,6 +10,7 @@ from pathlib import Path
 from re import IGNORECASE
 from re import match
 from re import RegexFlag
+from shutil import copy2
 from sqlite3 import DatabaseError
 from sqlite3 import Error as SQLiteError
 from sys import stdout
@@ -700,8 +701,15 @@ def app_doctor(ctx: Context, root: str, dry_run: bool):
 
 @app.command("upgrade", no_args_is_help=True, short_help="Upgrade the files' database to the latest version")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@option(
+    "--backup/--no-backup",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Backup the database file before upgrading.",
+)
 @pass_context
-def app_upgrade(ctx: Context, root: str):
+def app_upgrade(ctx: Context, root: str, backup: bool):
     """Upgrade the files' database to the latest version of acacore."""
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
@@ -717,6 +725,11 @@ def app_upgrade(ctx: Context, root: str):
 
         with ExceptionManager(BaseException) as exception:
             if not is_latest(database):
+                if backup:
+                    backup_path = database.path.with_stem(database.path.stem + f"-{database.metadata.select().version}")
+                    if backup_path.exists():
+                        raise FileExistsError(f"Backup file {backup_path.name} already exists.")
+                    copy2(database.path, backup_path)
                 database.add_history(None, "update", [database.metadata.select().version, __acacore_version__]).log(
                     INFO, logger
                 )
@@ -737,8 +750,9 @@ def app_edit():
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
+@option("--delete", is_flag=True, default=False, help="Remove selected files from the disk.")
 @pass_context
-def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_type: str, id_files: bool):
+def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_type: str, id_files: bool, delete: bool):
     """
     Remove one or more files in the files' database for the ROOT folder to EXTENSION.
 
@@ -779,6 +793,8 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
                         reason,
                     )
                     database.execute(f"delete from {database.files.name} where uuid = ?", [str(file.uuid)])
+                    if delete:
+                        file.get_absolute_path(Path(root)).unlink(missing_ok=True)
                     database.history.insert(history)
                     history.log(INFO, logger)
 
