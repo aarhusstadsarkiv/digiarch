@@ -10,6 +10,7 @@ from pathlib import Path
 from re import IGNORECASE
 from re import match
 from re import RegexFlag
+from shutil import copy2
 from sqlite3 import DatabaseError
 from sqlite3 import Error as SQLiteError
 from sys import stdout
@@ -700,8 +701,15 @@ def app_doctor(ctx: Context, root: str, dry_run: bool):
 
 @app.command("upgrade", no_args_is_help=True, short_help="Upgrade the files' database to the latest version")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@option(
+    "--backup/--no-backup",
+    is_flag=True,
+    default=True,
+    show_default=True,
+    help="Backup the database file before upgrading.",
+)
 @pass_context
-def app_upgrade(ctx: Context, root: str):
+def app_upgrade(ctx: Context, root: str, backup: bool):
     """Upgrade the files' database to the latest version of acacore."""
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
@@ -717,6 +725,11 @@ def app_upgrade(ctx: Context, root: str):
 
         with ExceptionManager(BaseException) as exception:
             if not is_latest(database):
+                if backup:
+                    copy2(
+                        database.path,
+                        database.path.with_stem(database.path.stem + f"-{database.metadata.select().version}"),
+                    )
                 database.add_history(None, "update", [database.metadata.select().version, __acacore_version__]).log(
                     INFO, logger
                 )
