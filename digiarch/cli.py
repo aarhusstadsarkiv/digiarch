@@ -750,8 +750,9 @@ def app_edit():
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
+@option("--delete", is_flag=True, default=False, help="Remove selected files from the disk.")
 @pass_context
-def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_type: str, id_files: bool):
+def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_type: str, id_files: bool, delete: bool):
     """
     Remove one or more files in the files' database for the ROOT folder to EXTENSION.
 
@@ -792,6 +793,8 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
                         reason,
                     )
                     database.execute(f"delete from {database.files.name} where uuid = ?", [str(file.uuid)])
+                    if delete:
+                        file.get_absolute_path(Path(root)).unlink(missing_ok=True)
                     database.history.insert(history)
                     history.log(INFO, logger)
 
