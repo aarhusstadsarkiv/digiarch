@@ -1048,7 +1048,7 @@ def app_edit_rename(
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
-@option("--lock/--unlock", is_flag=True, default=True, help="Lock or unlock files.")
+@option("--lock/--unlock", is_flag=True, default=True, show_default=True, help="Lock or unlock files.")
 @pass_context
 def app_edit_lock(
     ctx: Context,
@@ -1083,7 +1083,9 @@ def app_edit_lock(
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
                     file.lock = lock
                     database.files.update(file)
-                    database.add_history(file.uuid, "file.lock", None, reason).log(INFO)
+                    event = HistoryEntry.command_history(ctx, "file.lock", file.uuid, None, reason)
+                    database.history.insert(event)
+                    event.log(INFO)
 
         handle_end(ctx, database, exception, logger)
 
