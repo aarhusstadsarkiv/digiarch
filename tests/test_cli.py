@@ -571,22 +571,22 @@ def test_edit_lock(tests_folder: Path, files_folder: Path, files_folder_copy: Pa
 
     test_reason: str = "lock"
 
-    app.main(
-        [
-            app_edit.name,
-            app_edit_lock.name,
-            str(files_folder_copy),
-            "--uuid",
-            *(str(f.uuid) for f in files),
-            test_reason,
-        ]
-    )
+    args: list[str] = [
+        app_edit.name,
+        app_edit_lock.name,
+        str(files_folder_copy),
+        "--uuid",
+        *(str(f.uuid) for f in files),
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
 
     with FileDB(database_path_copy) as database:
         for file in files:
             file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
-            assert file_new is None
-            assert file.lock is True
+            assert file_new is not None
+            assert file_new.lock is True
 
             history_edit: Optional[HistoryEntry] = database.history.select(
                 where="uuid = ? and operation like ? || '%'",
