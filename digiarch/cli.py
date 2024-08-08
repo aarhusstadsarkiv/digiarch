@@ -1044,6 +1044,57 @@ def app_edit_rename(
         handle_end(ctx, database, exception, logger)
 
 
+@app_edit.command("lock", no_args_is_help=True, short_help="Lock files.")
+@argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
+@argument_ids(True)
+@argument("reason", nargs=1, type=str, required=True)
+@option("--lock/--unlock", is_flag=True, default=True, show_default=True, help="Lock or unlock files.")
+@pass_context
+def app_edit_lock(
+    ctx: Context,
+    root: str,
+    ids: tuple[str],
+    id_type: str,
+    id_files: bool,
+    reason: str,
+    lock: bool,
+) -> None:
+    """
+    Lock files from being edited by reidentify.
+
+    To unlock files, use the --unlock option.
+    """
+    database_path: Path = Path(root) / "_metadata" / "files.db"
+
+    if not database_path.is_file():
+        raise FileNotFoundError(database_path)
+
+    program_name: str = ctx.find_root().command.name
+    logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    if id_type in ("warnings",):
+        where: str = f"{id_type} like '%\"' || ? || '\"%'"
+    elif id_type.endswith("-like"):
+        id_type = id_type.removesuffix("-like")
+        where: str = f"{id_type} like ?"
+    else:
+        where: str = f"{id_type} = ?"
+
+    with FileDB(database_path) as database:
+        handle_start(ctx, database, logger)
+
+        with ExceptionManager(BaseException) as exception:
+            for file_id in ids:
+                for file in database.files.select(where=where, parameters=[str(file_id)]):
+                    event = HistoryEntry.command_history(ctx, "file.lock", file.uuid, [file.lock, lock], reason)
+                    file.lock = lock
+                    database.files.update(file)
+                    database.history.insert(event)
+                    event.log(INFO)
+
+        handle_end(ctx, database, exception, logger)
+
+
 @app_edit.command("rollback", no_args_is_help=True, short_help="Roll back edits.")
 @argument("root", nargs=1, type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True))
 @argument(
@@ -1112,6 +1163,11 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
                         except DatabaseError:
                             file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
                             file.relative_path = file.relative_path.with_name(new_name)
+                elif event_command == f"{program_name}.{app_edit.name}.{app_edit_lock.name}":
+                    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+                    if file:
+                        file.lock = event.data[0]
+                        database.files.update(file)
 
                 if file:
                     command.uuid = file.uuid
