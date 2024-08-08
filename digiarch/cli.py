@@ -1083,7 +1083,7 @@ def app_edit_lock(
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
                     file.lock = lock
                     database.files.update(file)
-                    database.add_history(file.uuid, "file.lock", reason=reason).log(INFO)
+                    database.add_history(file.uuid, "file.lock", None, reason).log(INFO)
 
         handle_end(ctx, database, exception, logger)
 
