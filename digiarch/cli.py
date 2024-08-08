@@ -1059,6 +1059,11 @@ def app_edit_lock(
     reason: str,
     lock: bool,
 ) -> None:
+    """
+    Lock files from being edited by reidentify.
+
+    To unlock files, use the --unlock option.
+    """
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
