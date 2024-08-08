@@ -1081,9 +1081,9 @@ def app_edit_lock(
         with ExceptionManager(BaseException) as exception:
             for file_id in ids:
                 for file in database.files.select(where=where, parameters=[str(file_id)]):
+                    event = HistoryEntry.command_history(ctx, "file.lock", file.uuid, [file.lock, lock], reason)
                     file.lock = lock
                     database.files.update(file)
-                    event = HistoryEntry.command_history(ctx, "file.lock", file.uuid, None, reason)
                     database.history.insert(event)
                     event.log(INFO)
 
@@ -1158,6 +1158,11 @@ def app_edit_rollback(ctx: Context, root: str, time_from: datetime, time_to: dat
                         except DatabaseError:
                             file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
                             file.relative_path = file.relative_path.with_name(new_name)
+                elif event_command == f"{program_name}.{app_edit.name}.{app_edit_lock.name}":
+                    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+                    if file:
+                        file.lock = event.data[0]
+                        database.files.update(file)
 
                 if file:
                     command.uuid = file.uuid
