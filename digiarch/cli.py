@@ -1072,6 +1072,9 @@ def app_edit_lock(
     program_name: str = ctx.find_root().command.name
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
 
+    if id_files:
+        ids = tuple(i for f in ids for i in Path(f).read_text().splitlines() if i.strip())
+
     if id_type in ("warnings",):
         where: str = f"{id_type} like '%\"' || ? || '\"%'"
     elif id_type.endswith("-like"):
