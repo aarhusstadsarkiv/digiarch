@@ -827,6 +827,16 @@ def app_edit_remove(ctx: Context, root: str, ids: tuple[str], reason: str, id_ty
     default=None,
     help="Data to be used to replace existing action data for the specified action, in JSON format.",
 )
+@option("--data-puid", metavar="PUID", type=str, default=None, help="Copy action data from an existing PUID.")
+@option(
+    "--actions",
+    "actions_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_ACTIONS",
+    show_envvar=True,
+    default=None,
+    help="Path to a YAML file containing file format actions.",
+)
 @pass_context
 def app_edit_action(
     ctx: Context,
@@ -838,6 +848,8 @@ def app_edit_action(
     id_files: bool,
     data: tuple[tuple[str, str]],
     data_json: str | None,
+    data_puid: str | None,
+    actions_file: str | None,
 ):
     """
     Change the action of one or more files in the files' database for the ROOT folder to ACTION.
@@ -849,7 +861,9 @@ def app_edit_action(
     is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
 
     The action data for the given files is not touched unless the --data or --data-json options are used.
-    The --data option takes precedence.
+    To copy data from the an existing action in the reference files, use the --data-puid option followed by a PUID,
+    the reference actions file will be downloaded if --actions is not used.
+    The --data option takes precedence over --data-json, and --data-puid supersedes both.
 
     \b
     Available ACTION values are:
@@ -861,8 +875,20 @@ def app_edit_action(
         * ignore
         * reidentify
     """  # noqa: D301
-    data_parsed: dict | list = dict(data) if data else loads(data_json) if data_json else None
+    data_parsed: dict | list
+
+    if data_puid:
+        if actions_file:
+            with Path(actions_file).open() as fh:
+                actions = TypeAdapter(dict[str, Action]).validate_python(yaml.load(fh, yaml.Loader))
+        else:
+            actions = get_actions()
+        data_parsed = actions[data_puid].model_dump()[action]
+    else:
+        data_parsed = dict(data) if data else loads(data_json) if data_json else None
+
     assert isinstance(data_parsed, (dict, list)), "Data is not of type dict or list"
+
     database_path: Path = Path(root) / "_metadata" / "files.db"
 
     if not database_path.is_file():
@@ -1071,6 +1097,9 @@ def app_edit_lock(
 
     program_name: str = ctx.find_root().command.name
     logger: Logger = setup_logger(program_name, files=[database_path.parent / f"{program_name}.log"], streams=[stdout])
+
+    if id_files:
+        ids = tuple(i for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
     if id_type in ("warnings",):
         where: str = f"{id_type} like '%\"' || ? || '\"%'"
