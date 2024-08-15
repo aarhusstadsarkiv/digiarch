@@ -1,5 +1,4 @@
 from datetime import datetime
-from json import dumps
 from pathlib import Path
 from shutil import copy
 from typing import Optional
@@ -9,28 +8,25 @@ import pytest
 from acacore.database import FileDB
 from acacore.models.file import File
 from acacore.models.history import HistoryEntry
-from acacore.models.reference_files import ActionData
 from acacore.models.reference_files import ConvertAction
 from acacore.models.reference_files import ExtractAction
 from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
-from acacore.models.reference_files import ReIdentifyAction
-from acacore.models.reference_files import RenameAction
-from acacore.models.reference_files import TemplateAction
 from acacore.utils.functions import find_files
 from acacore.utils.functions import rm_tree
 from click import BadParameter
+from pydantic import BaseModel
 
 from digiarch.cli import app
-from digiarch.cli import app_edit
-from digiarch.cli import app_edit_action
-from digiarch.cli import app_edit_lock
-from digiarch.cli import app_edit_remove
-from digiarch.cli import app_edit_rename
-from digiarch.cli import app_edit_rollback
-from digiarch.cli import app_history
-from digiarch.cli import app_identify
-from digiarch.cli import app_reidentify
+from digiarch.edit.action import group_action
+from digiarch.edit.edit import group_edit
+from digiarch.edit.lock import command_lock
+from digiarch.edit.remove import command_remove
+from digiarch.edit.rename import command_rename
+from digiarch.edit.rollback import command_rollback
+from digiarch.history import command_history
+from digiarch.identify.identify import command_identify
+from digiarch.identify.identify import command_reidentify
 
 
 @pytest.fixture()
@@ -63,13 +59,12 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
     database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
 
     args: list[str] = [
-        app_identify.name,
+        command_identify.name,
         str(files_folder_copy),
         "--actions",
         str(tests_folder / "fileformats.yml"),
         "--custom-signatures",
         str(tests_folder / "custom_signatures.yml"),
-        "--no-update-siegfried-signature",
         "--siegfried-home",
         str(tests_folder),
     ]
@@ -106,16 +101,6 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         }
         assert baseline_files == database_files
 
-    rm_tree(files_folder_copy / "_metadata")
-
-    app.main([*args, "--siegfried-path", str(tests_folder / "sf")], standalone_mode=False)
-
-    with FileDB(database_path_copy) as database:
-        last_history: HistoryEntry = sorted(database.history, key=lambda h: h.time).pop()
-        assert isinstance(last_history.data, str)
-        assert last_history.data.startswith("FileNotFoundError")
-        assert last_history.reason is not None
-
 
 # noinspection DuplicatedCode
 def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
@@ -139,7 +124,7 @@ def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: P
 
     app.main(
         [
-            app_reidentify.name,
+            command_reidentify.name,
             str(files_folder_copy),
             "--uuid",
             str(file.uuid),
@@ -147,7 +132,6 @@ def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: P
             str(tests_folder / "fileformats.yml"),
             "--custom-signatures",
             str(tests_folder / "custom_signatures.yml"),
-            "--no-update-siegfried-signature",
             "--siegfried-home",
             str(tests_folder),
         ],
@@ -168,7 +152,7 @@ def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: P
 def test_history(tests_folder: Path, files_folder: Path):
     app.main(
         [
-            app_history.name,
+            command_history.name,
             str(files_folder),
         ],
         standalone_mode=False,
@@ -176,31 +160,31 @@ def test_history(tests_folder: Path, files_folder: Path):
 
     with pytest.raises(BadParameter):
         app.main(
-            [app_history.name, str(files_folder), "--from", "test"],
+            [command_history.name, str(files_folder), "--from", "test"],
             standalone_mode=False,
         )
 
     with pytest.raises(BadParameter):
         app.main(
-            [app_history.name, str(files_folder), "--to", "test"],
+            [command_history.name, str(files_folder), "--to", "test"],
             standalone_mode=False,
         )
 
     with pytest.raises(BadParameter):
         app.main(
-            [app_history.name, str(files_folder), "--uuid", "test"],
+            [command_history.name, str(files_folder), "--uuid", "test"],
             standalone_mode=False,
         )
 
     with pytest.raises(BadParameter):
         app.main(
-            [app_history.name, str(files_folder), "--operation", "&test"],
+            [command_history.name, str(files_folder), "--operation", "&test"],
             standalone_mode=False,
         )
 
     app.main(
         [
-            app_history.name,
+            command_history.name,
             str(files_folder),
             "--from",
             datetime.fromtimestamp(0).isoformat(),
@@ -228,87 +212,65 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
         file: File = database.files.select(where="puid is not null", limit=1, order_by=[("random()", "asc")]).fetchone()
         assert isinstance(file, File)
 
-    file.action_data = ActionData()
-
-    for action in ("convert", "extract", "template", "manual", "rename", "ignore", "reidentify"):
+    for action in ("convert", "extract", "manual", "ignore"):
         previous_action = file.action
         file.action = action
+        action_data: BaseModel
+        previous_action_data: BaseModel | None
 
         if action == "convert":
-            file.action_data.convert = [ConvertAction(converter="test", converter_type="master", outputs=["ext"])]
+            previous_action_data = file.action_data.convert if file.action_data.convert else None
+            file.action_data.convert = action_data = ConvertAction(tool="test", outputs=["ext"])
         elif action == "extract":
-            file.action_data.extract = ExtractAction(tool="tool", dir_suffix="dir_suffix")
-        elif action == "template":
-            file.action_data.template = TemplateAction(template="empty")
+            previous_action_data = file.action_data.extract if file.action_data.extract else None
+            file.action_data.extract = action_data = ExtractAction(tool="tool", extension="zip")
         elif action == "manual":
-            file.action_data.manual = ManualAction(reason="reason", process="process")
-        elif action == "rename":
-            file.action_data.rename = RenameAction(extension="ext")
+            previous_action_data = file.action_data.manual if file.action_data.manual else None
+            file.action_data.manual = action_data = ManualAction(reason="reason", process="process")
         elif action == "ignore":
-            file.action_data.ignore = IgnoreAction(reason="reason")
-        elif action == "reidentify":
-            file.action_data.reidentify = ReIdentifyAction(reason="reason")
+            previous_action_data = file.action_data.ignore if file.action_data.ignore else None
+            file.action_data.ignore = action_data = IgnoreAction(template="not-preservable", reason="reason")
+        else:
+            continue
 
         args: list[str] = [
-            app_edit.name,
-            app_edit_action.name,
+            group_edit.name,
+            group_action.name,
+            action,
             str(files_folder_copy),
             str(file.uuid),
             action,
             f"edit action {action}",
-            "--data-json",
-            dumps(file.action_data.model_dump(mode="json")[action]),
         ]
+
+        for key, value in action_data.model_dump().items():
+            args.append(f"--{key}")
+            if isinstance(value, list):
+                args.extend(map(str, value))
+            else:
+                args.append(str(value))
 
         app.main(args, standalone_mode=False)
 
         with FileDB(database_path_copy) as database:
             file2: File = database.files.select(where="UUID = ?", limit=1, parameters=[str(file.uuid)]).fetchone()
-            assert file2.action_data.model_dump()[action] == file.action_data.model_dump()[action]
+            assert file2.action_data.model_dump().get(action) == action_data.model_dump()
 
             history: HistoryEntry = database.history.select(
-                where="UUID = ? and OPERATION like '%:file:edit:action'",
+                where=f"UUID = ? and OPERATION = ?",
                 order_by=[("TIME", "desc")],
                 limit=1,
-                parameters=[str(file.uuid)],
+                parameters=[str(file.uuid), f"{app.name}.{group_edit.name}.{group_action.name}.{action}:edit"],
             ).fetchone()
 
-            assert history.data == [previous_action, action]
+            assert history is not None
+            assert history.data == [
+                previous_action,
+                action,
+                {action: previous_action_data.model_dump() if previous_action_data else None},
+                {action: action_data.model_dump()},
+            ]
             assert history.reason == f"edit action {action}"
-
-        args: list[str] = [
-            app_edit.name,
-            app_edit_action.name,
-            str(files_folder_copy),
-            str(file.puid),
-            "template",
-            "edit action with puid",
-            "--data",
-            "template",
-            "empty",
-            "--puid",
-        ]
-
-        app.main(args, standalone_mode=False)
-
-        with FileDB(database_path_copy) as database:
-            files: list[File] = list(database.files.select(where="PUID = ?", limit=1, parameters=[file.puid]))
-
-            assert all(f.action == "template" for f in files)
-            assert all(f.action_data and f.action_data.template for f in files)
-            assert all(f.action_data.template.template == "empty" for f in files)
-
-            for file in files:
-                history: HistoryEntry = database.history.select(
-                    where="UUID = ? and OPERATION like '%:file:edit:action'",
-                    order_by=[("TIME", "desc")],
-                    limit=1,
-                    parameters=[str(file.uuid)],
-                ).fetchone()
-
-                assert isinstance(history.data, list)
-                assert history.data[-1] == "template"
-                assert history.reason == "edit action with puid"
 
 
 # noinspection DuplicatedCode
@@ -323,20 +285,18 @@ def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_fold
 
     ids_file: Path = files_folder_copy.joinpath("ids.txt")
     ids_file.write_text("\n".join(str(f.uuid) for f in files))
-    test_action: str = "ignore"
     test_reason: str = "edit action with ids file"
 
     args: list[str] = [
-        app_edit.name,
-        app_edit_action.name,
+        group_edit.name,
+        group_action.name,
+        "ignore",
+        str(files_folder_copy),
         "--uuid",
         "--id-files",
-        str(files_folder_copy),
         str(ids_file),
-        test_action,
-        test_reason,
-        "--data",
-        "reason",
+        "--template",
+        "not-preservable",
         test_reason,
     ]
 
@@ -352,11 +312,11 @@ def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_fold
             assert file_new is not None
             assert file_new.action == "ignore"
             assert file_new.action_data.ignore
-            assert file_new.action_data.ignore.reason == test_reason
+            assert file_new.action_data.ignore.template == "not-preservable"
 
             history_edit: Optional[HistoryEntry] = database.history.select(
                 where="uuid = ? and operation like ? || '%'",
-                parameters=[str(file.uuid), "digiarch.edit.action:"],
+                parameters=[str(file.uuid), f"{app.name}.{group_edit.name}.{group_action.name}.ignore:"],
             ).fetchone()
             assert history_edit is not None
             assert history_edit.reason == test_reason
@@ -383,12 +343,12 @@ def test_edit_rename(files_folder: Path, files_folder_copy: Path):
     test_reason: str = "edit extension"
 
     args: list[str] = [
-        app_edit.name,
-        app_edit_rename.name,
-        "--uuid",
-        str(files_folder_copy),
-        str(file_old.uuid),
+        group_edit.name,
+        command_rename.name,
         "--append",
+        str(files_folder_copy),
+        "--uuid",
+        str(file_old.uuid),
         test_extension,
         test_reason,
     ]
@@ -432,12 +392,12 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
     test_reason: str = "edit extension same"
 
     args: list[str] = [
-        app_edit.name,
-        app_edit_rename.name,
-        "--uuid",
-        str(files_folder_copy),
-        str(file_old.uuid),
+        group_edit.name,
+        command_rename.name,
         "--replace",
+        str(files_folder_copy),
+        "--uuid",
+        str(file_old.uuid),
         test_extension,
         test_reason,
     ]
@@ -472,8 +432,8 @@ def test_edit_rename_empty(files_folder: Path, files_folder_copy: Path):
     test_reason: str = "edit extension empty"
 
     args: list[str] = [
-        app_edit.name,
-        app_edit_rename.name,
+        group_edit.name,
+        command_rename.name,
         "--uuid",
         str(files_folder_copy),
         str(file_old.uuid),
@@ -506,8 +466,8 @@ def test_edit_remove(files_folder: Path, files_folder_copy: Path):
         assert isinstance(file, File)
 
     args: list[str] = [
-        app_edit.name,
-        app_edit_remove.name,
+        group_edit.name,
+        command_remove.name,
         "--uuid",
         str(files_folder_copy),
         str(file.uuid),
@@ -536,8 +496,8 @@ def test_edit_remove_ids_file(tests_folder: Path, files_folder: Path, files_fold
     test_reason: str = "edit action with ids file"
 
     args: list[str] = [
-        app_edit.name,
-        app_edit_remove.name,
+        group_edit.name,
+        command_remove.name,
         "--uuid",
         "--id-files",
         str(files_folder_copy),
@@ -572,8 +532,8 @@ def test_edit_lock(tests_folder: Path, files_folder: Path, files_folder_copy: Pa
     test_reason: str = "lock"
 
     args: list[str] = [
-        app_edit.name,
-        app_edit_lock.name,
+        group_edit.name,
+        command_lock.name,
         str(files_folder_copy),
         "--uuid",
         *(str(f.uuid) for f in files),
@@ -604,7 +564,13 @@ def test_edit_rollback_action(tests_folder: Path, files_folder: Path, files_fold
     copy(database_path, database_path_copy)
 
     with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=3))
+        files: list[File] = list(
+            database.files.select(
+                where="action!= 'ignore'",
+                order_by=[("random()", "asc")],
+                limit=3,
+            )
+        )
 
     test_reason_edit: str = "action"
     test_reason_rollback: str = "rollback action"
@@ -612,22 +578,23 @@ def test_edit_rollback_action(tests_folder: Path, files_folder: Path, files_fold
 
     app.main(
         [
-            app_edit.name,
-            app_edit_action.name,
+            group_edit.name,
+            group_action.name,
+            "ignore",
             str(files_folder_copy),
             *(str(f.uuid) for f in files),
             "ignore",
             test_reason_edit,
-            "--data-json",
-            IgnoreAction(reason=test_reason_edit).model_dump_json(),
+            "--template",
+            "not-preservable",
         ],
         standalone_mode=False,
     )
 
     app.main(
         [
-            app_edit.name,
-            app_edit_rollback.name,
+            group_edit.name,
+            command_rollback.name,
             str(files_folder_copy),
             start_time.isoformat(),
             datetime.now().isoformat(),
@@ -643,7 +610,7 @@ def test_edit_rollback_action(tests_folder: Path, files_folder: Path, files_fold
                 parameters=[str(file.uuid), file.action],
             ).fetchone()
             assert database.history.select(
-                where="uuid = ? and operation = 'digiarch.edit.rollback:file'",
+                where="uuid = ? and operation = 'digiarch.edit.rollback:rollback'",
                 parameters=[str(file.uuid)],
             ).fetchone()
 
@@ -656,7 +623,7 @@ def test_edit_rollback_remove(tests_folder: Path, files_folder: Path, files_fold
     copy(database_path, database_path_copy)
 
     with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(order_by=[("random()", "asc")]))
+        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=2))
 
     test_reason_edit: str = "remove"
     test_reason_rollback: str = "rollback remove"
@@ -664,10 +631,10 @@ def test_edit_rollback_remove(tests_folder: Path, files_folder: Path, files_fold
 
     app.main(
         [
-            app_edit.name,
-            app_edit_remove.name,
-            "--uuid",
+            group_edit.name,
+            command_remove.name,
             str(files_folder_copy),
+            "--uuid",
             *(str(f.uuid) for f in files),
             test_reason_edit,
         ],
@@ -676,8 +643,8 @@ def test_edit_rollback_remove(tests_folder: Path, files_folder: Path, files_fold
 
     app.main(
         [
-            app_edit.name,
-            app_edit_rollback.name,
+            group_edit.name,
+            command_rollback.name,
             str(files_folder_copy),
             start_time.isoformat(),
             datetime.now().isoformat(),
@@ -690,7 +657,7 @@ def test_edit_rollback_remove(tests_folder: Path, files_folder: Path, files_fold
         for file in files:
             assert database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
             assert database.history.select(
-                where="uuid = ? and operation = 'digiarch.edit.rollback:file'",
+                where="uuid = ? and operation = 'digiarch.edit.rollback:rollback'",
                 parameters=[str(file.uuid)],
             ).fetchone()
 
@@ -712,12 +679,11 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
 
     test_reason_edit: str = "rename"
     test_reason_rollback: str = "rollback rename"
-    start_time: datetime = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
 
     app.main(
         [
-            app_edit.name,
-            app_edit_rename.name,
+            group_edit.name,
+            command_rename.name,
             "--uuid",
             str(files_folder_copy),
             *(str(f.uuid) for f in files),
@@ -728,10 +694,15 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
         standalone_mode=False,
     )
 
+    with FileDB(database_path_copy) as database:
+        start_time: datetime = (
+            database.history.select(where="operation like '%:start'", order_by=[("time", "desc")]).fetchone().time
+        )
+
     app.main(
         [
-            app_edit.name,
-            app_edit_rollback.name,
+            group_edit.name,
+            command_rollback.name,
             str(files_folder_copy),
             start_time.isoformat(),
             datetime.now().isoformat(),
@@ -742,12 +713,11 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
 
     with FileDB(database_path_copy) as database:
         for file in files:
-            assert database.files.select(
-                where="uuid = ? and relative_path = ?",
-                parameters=[str(file.uuid), str(file.relative_path)],
-            ).fetchone()
-            file.get_absolute_path(files_folder_copy).is_file()
+            file2: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file2
+            assert file2.get_absolute_path(files_folder_copy).is_file()
+            assert file.relative_path == file2.relative_path
             assert database.history.select(
-                where="uuid = ? and operation = 'digiarch.edit.rollback:file'",
-                parameters=[str(file.uuid)],
+                where="uuid = ? and operation = 'digiarch.edit.rollback:rollback'",
+                parameters=[str(file2.uuid)],
             ).fetchone()
