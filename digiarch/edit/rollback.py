@@ -48,18 +48,21 @@ def rollback_edit_lock(database: FileDB, event: HistoryEntry, dry_run: bool) -> 
     return file
 
 
-def rollback_edit_rename(database: FileDB, event: HistoryEntry, dry_run: bool) -> File | None:
+def rollback_edit_rename(database: FileDB, root: Path, event: HistoryEntry, dry_run: bool) -> File | None:
     file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
     if file and not dry_run:
-        file.root = database.path.parent.parent
+        file.root = root
         # noinspection PyUnresolvedReferences
-        file.get_absolute_path().rename(file.get_absolute_path().with_name(event.data[0]))
+        old_name: str = event.data[0]
+        file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
+        file.name = old_name
+        database.files.update(file, {"uuid": file.uuid})
     return file
 
 
-def rollback_edit_remove(database: FileDB, event: HistoryEntry, dry_run: bool) -> File | None:
+def rollback_edit_remove(database: FileDB, root: Path, event: HistoryEntry, dry_run: bool) -> File | None:
     file = File.model_validate(event.data)
-    if not file.get_absolute_path(database.path.parent.parent).is_file():
+    if not file.get_absolute_path(root).is_file():
         return None
     elif file and not dry_run:
         database.files.insert(file)
@@ -132,11 +135,11 @@ def command_rollback(
                 elif name == f"{program_name}.{group_edit.name}.{command_rename.name}":
                     if operation != "edit":
                         continue
-                    file = rollback_edit_rename(database, event, dry_run)
+                    file = rollback_edit_rename(database, root, event, dry_run)
                 elif name == f"{program_name}.{group_edit.name}.{command_remove.name}":
                     if operation != "remove":
                         continue
-                    file = rollback_edit_remove(database, event, dry_run)
+                    file = rollback_edit_remove(database, root, event, dry_run)
                 else:
                     HistoryEntry.command_history(ctx, "warning", None, event.operation, "Unknown event").log(
                         WARNING, log_stdout
