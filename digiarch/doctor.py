@@ -69,7 +69,7 @@ def deduplicate_extensions(ctx: Context, database: FileDB, root: Path, dry_run: 
         # Deduplicate suffixes
         new_suffixes = sorted(set(new_suffixes), key=new_suffixes.index)
         # Restore original letter case
-        new_suffixes = [next((s2 for s2 in old_suffixes if s2.lower() == s)) for s in new_suffixes]
+        new_suffixes = [next(s2 for s2 in old_suffixes if s2.lower() == s) for s in new_suffixes]
         old_name: str = file.name
         new_name: str = old_name.removesuffix("." + ".".join(old_suffixes)) + "." + ".".join(new_suffixes)
 
