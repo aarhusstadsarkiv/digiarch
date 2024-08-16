@@ -62,12 +62,18 @@ def group_action():
     """Change the action of one or more files."""
 
 
-@group_action.command("convert", no_args_is_help=True)
+@group_action.command("convert", no_args_is_help=True, short_help="Set convert action.")
 @argument_root(True)
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
-@option("--tool", type=str, required=True)
-@option("--outputs", type=str, multiple=True, callback=param_regex("^(.[a-zA-Z0-9]+)+$"))
+@option("--tool", type=str, required=True, help="The tool to use for conversion.")
+@option(
+    "--outputs",
+    type=str,
+    multiple=True,
+    callback=param_regex("^(.[a-zA-Z0-9]+)+$"),
+    help='The file extensions to generate.  [multiple; required for tools other than "copy"]',
+)
 @option_dry_run()
 @pass_context
 def action_convert(
@@ -81,6 +87,11 @@ def action_convert(
     outputs: tuple[str, ...],
     dry_run: bool,
 ):
+    """
+    Set files' action to "convert".
+
+    The --outputs option may be omitted when using the "copy" tool.
+    """
     if tool not in ("copy",) and not outputs:
         raise MissingParameter(f"Required for tool {tool!r}.", ctx, ctx_params(ctx)["outputs"])
 
@@ -98,12 +109,17 @@ def action_convert(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@group_action.command("extract", no_args_is_help=True)
+@group_action.command("extract", no_args_is_help=True, short_help="Set extract action.")
 @argument_root(True)
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
-@option("--tool", type=str, required=True)
-@option("--extension", type=str, callback=param_regex(r"^(.[a-zA-Z0-9]+)+$"))
+@option("--tool", type=str, required=True, help="The tool to use for extraction.")
+@option(
+    "--extension",
+    type=str,
+    callback=param_regex(r"^(.[a-zA-Z0-9]+)+$"),
+    help="The extension the file must have for extraction to succeed.",
+)
 @option_dry_run()
 @pass_context
 def action_extract(
@@ -117,6 +133,7 @@ def action_extract(
     extension: str | None,
     dry_run: bool,
 ):
+    """Set files' action to "extract"."""
     data = ExtractAction(tool=tool, extension=extension)
 
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
@@ -131,12 +148,25 @@ def action_extract(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@group_action.command("manual", no_args_is_help=True)
+@group_action.command("manual", no_args_is_help=True, short_help="Set manual action.")
 @argument_root(True)
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
-@option("--reason", "data_reason", type=str, callback=param_regex(r"^.*\S.*$"))
-@option("--process", type=str, callback=param_regex(r"^.*\S.*$"))
+@option(
+    "--reason",
+    "data_reason",
+    type=str,
+    required=True,
+    callback=param_regex(r"^.*\S.*$"),
+    help="The reason why the file must be processed manually.",
+)
+@option(
+    "--process",
+    type=str,
+    required=True,
+    callback=param_regex(r"^.*\S.*$"),
+    help="The steps to take to process the file.",
+)
 @option_dry_run()
 @pass_context
 def action_manual(
@@ -150,6 +180,7 @@ def action_manual(
     process: str,
     dry_run: bool,
 ):
+    """Set files' action to "manual"."""
     data = ManualAction(reason=data_reason, process=process)
 
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
@@ -164,12 +195,24 @@ def action_manual(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@group_action.command("ignore", no_args_is_help=True)
+@group_action.command("ignore", no_args_is_help=True, short_help="Set ignore action.")
 @argument_root(True)
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
-@option("--template", type=Choice(TemplateTypeEnum, False), required=True)
-@option("--reason", "data_reason", type=str, callback=param_regex(r"^.*\S.*$"))
+@option(
+    "--template",
+    metavar="TEMPLATE",
+    type=Choice(TemplateTypeEnum, False),
+    required=True,
+    help="The template type to use.",
+)
+@option(
+    "--reason",
+    "data_reason",
+    type=str,
+    callback=param_regex(r"^.*\S.*$"),
+    help='The reason why the file is ignored.  [required for "text" template]',
+)
 @option_dry_run()
 @pass_context
 def action_ignore(
@@ -183,6 +226,21 @@ def action_ignore(
     data_reason: str | None,
     dry_run: bool,
 ):
+    """
+    Set files' action to "ignore".
+
+    \b
+    Template must be one of:
+    * text
+    * empty
+    * password-protected
+    * corrupted
+    * duplicate
+    * not-preservable
+    * not-convertable
+
+    The --reason option may be omitted when using a template other than "text".
+    """
     if template in ("text",) and not data_reason:
         raise MissingParameter(f"Required for template {template!r}.", ctx, ctx_params(ctx)["data_reason"])
 
