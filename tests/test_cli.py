@@ -574,7 +574,7 @@ def test_edit_rollback_action(tests_folder: Path, files_folder: Path, files_fold
 
     test_reason_edit: str = "action"
     test_reason_rollback: str = "rollback action"
-    start_time: datetime = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_time: datetime = datetime.now()
 
     app.main(
         [
@@ -627,7 +627,7 @@ def test_edit_rollback_remove(tests_folder: Path, files_folder: Path, files_fold
 
     test_reason_edit: str = "remove"
     test_reason_rollback: str = "rollback remove"
-    start_time: datetime = datetime.now().replace(hour=0, minute=0, second=0, microsecond=0)
+    start_time: datetime = datetime.now()
 
     app.main(
         [
@@ -679,6 +679,7 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
 
     test_reason_edit: str = "rename"
     test_reason_rollback: str = "rollback rename"
+    start_time: datetime = datetime.now()
 
     app.main(
         [
@@ -693,11 +694,6 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
         ],
         standalone_mode=False,
     )
-
-    with FileDB(database_path_copy) as database:
-        start_time: datetime = (
-            database.history.select(where="operation like '%:start'", order_by=[("time", "desc")]).fetchone().time
-        )
 
     app.main(
         [
