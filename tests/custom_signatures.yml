@@ -101,6 +101,7 @@
   extension: .tab
   puid: aca-fmt/20
   signature: MapInfo TAB file
+  description: https://www.loc.gov/preservation/digital/formats/fdd/fdd000300.shtml
 - bof: (?i)^6d696d65747970656170706c69636174696f6e2f766e642e6f617369732e6f70656e646f63756d656e742e7370726561647368656574
   extension: .ods
   plain_bof: mimetypeapplication/vnd.oasis.opendocument.spreadsheet
@@ -119,3 +120,29 @@
   puid: aca-fmt/23
   signature: Microsoft Word XML Document
   description: Microsoft Word allows exporting document as standalone XML files, which PRONOM incorrectly identifies as plain XML (fmt/101)
+- bof: (?i)424547494E3A5643415244.*454E443A5643415244
+  plain_bof: |
+    BEGIN:VCARD
+    *
+    END:VCARD
+  extension: .vcf
+  puid: aca-fmt/24
+  signature: vCard (Unspecified version)
+  description: Only looks for BEGIN:VCARD and END:VCARD, as Pronom assumes VERSION declaration must come directly after BEGIN:VCARD, which is not always the case in the wild.
+- bof: (?i)5B496E7465726E657453686F72746375745D0D0A55524C3D
+  plain_bof: |
+    [InternetShortcut]
+    URL=
+  extension: .url
+  puid: aca-fmt/25
+  signature: URL file
+  description: Internet shortcut file. Looks for the tag "[InternetShortcut]\nURL="
+- bof: (?i)3c4e444c3e.*3c2f4e444c3e
+  plain_bof: |
+    <NDL>
+    *
+    </NDL>
+  extension: .ndl
+  puid: aca-fmt/26
+  signature: Lotus Notes Doclink File
+  description: Link file used by Lotus Notes, a business productivity and collaboration application suite; saved in an XML format and contains a reference to a Lotus Notes document; used for sharing links to documents over email and in Web pages.
