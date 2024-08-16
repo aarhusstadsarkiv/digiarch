@@ -32,7 +32,8 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
     """
     Upgrade the files' database to the latest version of acacore.
 
-    Use --backup to create a copy of the current database version.
+    When using --backup, a copy of the current database version will be created in the same folder with the name
+    "files-{version}.db". The copy will not be created if the database is already at the latest version.
     """
     with FileDB(root / "_metadata" / "files.db", check_version=False) as database:
         log_file, log_stdout = start_program(ctx, database, None, True, True)
