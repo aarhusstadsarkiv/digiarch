@@ -109,6 +109,7 @@ def command_extract(
     siegfried_signature: TSignaturesProvider,
     actions_file: Path | None,
     custom_signatures_file: Path | None,
+    dry_run: bool,
 ):
     # noinspection DuplicatedCode
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
@@ -129,7 +130,7 @@ def command_extract(
     custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, False)
+        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             while archive_file := database.files.select(
@@ -138,24 +139,32 @@ def command_extract(
                 limit=1,
             ).fetchone():
                 if not (extractor_cls := find_extractor(archive_file)):
-                    HistoryEntry.command_history(
+                    event = HistoryEntry.command_history(
                         ctx,
                         "skip",
                         archive_file.uuid,
                         archive_file.action_data.convert.tool,
                         "Tool not found",
-                    ).log(WARNING, log_stdout)
-                    archive_file.action = "manual"
-                    archive_file.action_data.manual = ManualAction(
-                        reason="Extract tool not found",
-                        process="Extract manually or implement tool.",
                     )
-                    database.files.update(archive_file)
+                    if not dry_run:
+                        archive_file.action = "manual"
+                        archive_file.action_data.manual = ManualAction(
+                            reason="Extract tool not found",
+                            process=f"Extract manually or implement {archive_file.action_data.convert.tool} tool.",
+                        )
+                        database.history.insert(event)
+                        database.files.update(archive_file)
+                    event.log(WARNING, log_stdout)
+                    continue
+
+                if dry_run:
+                    HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid).log(INFO, log_stdout)
                     continue
 
                 try:
                     extractor = extractor_cls(database, archive_file, root)
                     extracted_files_paths = list(extractor.extract())
+                    HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid).log(INFO, log_stdout)
                 except PasswordProtectedError as err:
                     event = HistoryEntry.command_history(
                         ctx,
@@ -200,14 +209,14 @@ def command_extract(
                     extracted_file.parent = archive_file.puid
                     HistoryEntry.command_history(
                         ctx,
-                        "extracted",
+                        "new",
                         archive_file.uuid,
                     ).log(
                         INFO,
                         log_stdout,
-                        puid=archive_file.puid,
-                        action=archive_file.action,
-                        path=archive_file.relative_path,
+                        puid=extracted_file.puid,
+                        action=extracted_file.action,
+                        path=extracted_file.relative_path,
                     )
                     for event in file_history:
                         event.log(INFO, log_stdout)
@@ -218,4 +227,4 @@ def command_extract(
                 archive_file.processed = True
                 database.files.update(archive_file)
 
-        end_program(ctx, database, exception, False, log_file, log_stdout)
+        end_program(ctx, database, exception, dry_run, log_file, log_stdout)
