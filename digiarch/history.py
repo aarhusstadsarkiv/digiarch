@@ -18,7 +18,7 @@ from digiarch.common import ctx_params
 from digiarch.common import param_regex
 
 
-@command("history", short_help="View and search events log.")
+@command("history", no_args_is_help=True, short_help="View and search events log.")
 @argument_root(True)
 @option(
     "--from",
