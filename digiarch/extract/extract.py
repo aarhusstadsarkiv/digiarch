@@ -22,6 +22,7 @@ from click import Context
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+from fontTools.ttx import process
 
 from digiarch.common import argument_root
 from digiarch.common import check_database_version
@@ -31,6 +32,7 @@ from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
 from digiarch.common import start_program
 
+from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
 from .extractors.base import PasswordProtectedError
 from .extractors.extract_patool import PatoolExtractor
@@ -157,12 +159,25 @@ def command_extract(
                         ctx,
                         "error",
                         archive_file.uuid,
-                        repr(err),
-                        "password protected",
+                        err.__class__.__name__,
+                        err.msg,
                     )
                     archive_file.action = "ignore"
                     archive_file.action_data.ignore = IgnoreAction(template="password-protected")
                     archive_file.processed = True
+                    database.files.update(archive_file)
+                    database.history.insert(event)
+                    event.log(ERROR, log_file, log_stdout)
+                except ExtractError as err:
+                    event = HistoryEntry.command_history(
+                        ctx,
+                        "error",
+                        archive_file.uuid,
+                        err.__class__.__name__,
+                        err.msg,
+                    )
+                    archive_file.action = "manual"
+                    archive_file.action_data.ignore = ManualAction(reason=err.msg, process="")
                     database.files.update(archive_file)
                     database.history.insert(event)
                     event.log(ERROR, log_file, log_stdout)
