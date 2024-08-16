@@ -25,8 +25,8 @@ from digiarch.edit.remove import command_remove
 from digiarch.edit.rename import command_rename
 from digiarch.edit.rollback import command_rollback
 from digiarch.history import command_history
-from digiarch.identify.identify import command_identify
-from digiarch.identify.identify import command_reidentify
+from digiarch.identify import command_identify
+from digiarch.identify import command_reidentify
 
 
 @pytest.fixture()

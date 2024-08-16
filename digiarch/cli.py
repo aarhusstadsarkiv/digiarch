@@ -7,8 +7,8 @@ from .doctor import command_doctor
 from .edit.edit import group_edit
 from .extract.extract import command_extract
 from .history import command_history
-from .identify.identify import command_identify
-from .identify.identify import command_reidentify
+from .identify import command_identify
+from .identify import command_reidentify
 from .upgrade import command_upgrade
 
 
