@@ -86,7 +86,14 @@ def rollback_edit_remove(database: FileDB, root: Path, event: HistoryEntry, dry_
     required=True,
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--command", "command_name", type=str, default=None, callback=param_regex(r"^\w+(.\w+)*$"))
+@option(
+    "--command",
+    "commands",
+    type=str,
+    multiple=True,
+    callback=param_regex(r"^[a-z-]+(.[a-z-]+)*$"),
+    help="Specify commands to roll back.",
+)
 @option_dry_run()
 @pass_context
 def command_rollback(
@@ -95,9 +102,17 @@ def command_rollback(
     reason: str,
     time_from: datetime,
     time_to: datetime,
-    command_name: str | None,
+    commands: tuple[str, ...],
     dry_run: bool,
 ):
+    """
+    Roll back edits between two timestamps.
+
+    FROM and TO timestamps must be in the format '%Y-%m-%dT%H:%M:%S' or '%Y-%m-%dT%H:%M:%S.%f'.
+
+    Using the --command option allows to restrict rollbacks to specific events with the given commands if the
+    timestamps are not precise enough.
+    """
     from .edit import command_lock
     from .edit import command_remove
     from .edit import command_rename
@@ -114,9 +129,9 @@ def command_rollback(
         with ExceptionManager(BaseException) as exception:
             where = "uuid is not null and time >= ? and time <= ?"
             parameters = [time_from.isoformat(), time_to.isoformat()]
-            if command_name:
-                where += " and operation like ? || ':%'"
-                parameters.append(command_name)
+            if commands := tuple(c.strip() for c in commands if c.strip()):
+                where += " and operation like ? || ':%'" * len(commands)
+                parameters.extend(commands)
             events: list[HistoryEntry] = list(
                 database.history.select(where=where, parameters=parameters, order_by=[("time", "desc")])
             )
