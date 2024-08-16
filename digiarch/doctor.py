@@ -129,7 +129,8 @@ def command_doctor(ctx: Context, root: Path, fix: tuple[str, ...], dry_run: bool
     The current fixes will be applied:
     * Path sanitizing (paths): paths containing any invalid characters (\\?%*|"<>,:;=+[]!@) will be renamed with those
         characters removed
-    * Duplicated extensions (extensions): paths ending with duplicated extensions will be
+    * Duplicated extensions (extensions): paths ending with duplicated extensions will be rewritten to remove
+        duplicated extensions and leave only one
     """  # noqa: D301
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
