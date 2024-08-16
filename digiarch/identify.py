@@ -152,7 +152,7 @@ def identify_file(
     return file, file_history
 
 
-@command("identify", no_args_is_help=True, short_help="Generate a files' database for a folder.")
+@command("identify", no_args_is_help=True, short_help="Identify files.")
 @argument_root(False)
 @option(
     "--siegfried-path",
