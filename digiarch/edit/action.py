@@ -31,6 +31,7 @@ from digiarch.common import option_dry_run
 from digiarch.common import param_regex
 from digiarch.common import start_program
 
+from ..common import docstring_format
 from .common import argument_ids
 from .common import find_files
 
@@ -215,6 +216,7 @@ def action_manual(
 )
 @option_dry_run()
 @pass_context
+@docstring_format(templates="\n".join(f"    * {t}" for t in TemplateTypeEnum).strip())
 def action_ignore(
     ctx: Context,
     root: Path,
@@ -231,13 +233,7 @@ def action_ignore(
 
     \b
     Template must be one of:
-    * text
-    * empty
-    * password-protected
-    * corrupted
-    * duplicate
-    * not-preservable
-    * not-convertable
+    {templates}
 
     The --reason option may be omitted when using a template other than "text".
     """  # noqa: D301
