@@ -26,12 +26,12 @@ from pydantic import BaseModel
 from digiarch.common import argument_root
 from digiarch.common import check_database_version
 from digiarch.common import ctx_params
+from digiarch.common import docstring_format
 from digiarch.common import end_program
 from digiarch.common import option_dry_run
 from digiarch.common import param_regex
 from digiarch.common import start_program
 
-from ..common import docstring_format
 from .common import argument_ids
 from .common import find_files
 
