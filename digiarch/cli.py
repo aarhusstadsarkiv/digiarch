@@ -5,6 +5,7 @@ from click import version_option
 from .__version__ import __version__
 from .doctor import command_doctor
 from .edit.edit import group_edit
+from .extract.extract import command_extract
 from .history import command_history
 from .identify.identify import command_identify
 from .identify.identify import command_reidentify
@@ -20,6 +21,7 @@ def app():
 # noinspection DuplicatedCode
 app.add_command(command_identify, command_identify.name)
 app.add_command(command_reidentify, command_reidentify.name)
+app.add_command(command_extract, command_extract.name)
 app.add_command(group_edit, group_edit.name)
 app.add_command(command_history, command_history.name)
 app.add_command(command_doctor, command_doctor.name)
