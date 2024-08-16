@@ -8,6 +8,7 @@ from re import Pattern
 from sqlite3 import DatabaseError
 from sys import stdout
 from traceback import format_tb
+from typing import Any
 from typing import Callable
 
 from acacore.database import FileDB
@@ -78,6 +79,14 @@ def argument_root(exists: bool):
 
 def option_dry_run():
     return option("--dry-run", is_flag=True, default=False, help="Show changes without committing them.")
+
+
+def docstring_format(**kwargs: Any) -> Callable[[Callable], Callable]:
+    def decorator(func: Callable) -> Callable:
+        func.__doc__ = (func.__doc__ or "").format(**kwargs)
+        return func
+
+    return decorator
 
 
 def check_database_version(ctx: Context, param: Parameter, path: Path):
