@@ -54,7 +54,9 @@ def command_remove(
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
-                event = HistoryEntry.command_history(ctx, "remove", file.uuid, file.model_dump(mode="json"), reason)
+                event = HistoryEntry.command_history(
+                    ctx, "delete" if delete else "remove", file.uuid, file.model_dump(mode="json"), reason
+                )
                 if not dry_run:
                     database.execute(f"delete from {database.files.name} where uuid = ?", [str(file.uuid)])
                     database.history.insert(event)
