@@ -11,9 +11,14 @@ from traceback import format_tb
 from typing import Any
 from typing import Callable
 
+import yaml
 from acacore.database import FileDB
 from acacore.database.upgrade import is_latest
 from acacore.models.history import HistoryEntry
+from acacore.models.reference_files import Action
+from acacore.models.reference_files import CustomSignature
+from acacore.reference_files import get_actions
+from acacore.reference_files import get_custom_signatures
 from acacore.utils.helpers import ExceptionManager
 from acacore.utils.log import setup_logger
 from click import argument
@@ -23,6 +28,7 @@ from click import Context
 from click import option
 from click import Parameter
 from click import Path as ClickPath
+from pydantic import TypeAdapter
 
 from .__version__ import __version__
 
@@ -97,6 +103,38 @@ def check_database_version(ctx: Context, param: Parameter, path: Path):
             is_latest(db, raise_on_difference=True)
         except DatabaseError as err:
             raise BadParameter(err.args[0], ctx, param)
+
+
+def fetch_actions(ctx: Context, parameter_name: str, file: Path | None) -> dict[str, Action]:
+    if file:
+        try:
+            with file.open() as fh:
+                return TypeAdapter(dict[str, Action]).validate_python(yaml.load(fh, yaml.Loader))
+        except BaseException:
+            raise BadParameter("Invalid actions file.", ctx, ctx_params(ctx)[parameter_name])
+
+    try:
+        return get_actions()
+    except BaseException as err:
+        raise BadParameter(
+            f"Cannot download actions. {err.args[0] if err.args else ''}", ctx, ctx_params(ctx)[parameter_name]
+        )
+
+
+def fetch_custom_signatures(ctx: Context, parameter_name: str, file: Path | None) -> list[CustomSignature]:
+    if file:
+        try:
+            with file.open() as fh:
+                return TypeAdapter(list[CustomSignature]).validate_python(yaml.load(fh, yaml.Loader))
+        except BaseException:
+            raise BadParameter("Invalid custom signatures file.", ctx, ctx_params(ctx)[parameter_name])
+
+    try:
+        return get_custom_signatures()
+    except BaseException as err:
+        raise BadParameter(
+            f"Cannot download actions. {err.args[0] if err.args else ''}", ctx, ctx_params(ctx)[parameter_name]
+        )
 
 
 def start_program(

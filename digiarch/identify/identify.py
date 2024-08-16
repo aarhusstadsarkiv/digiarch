@@ -9,7 +9,6 @@ from typing import Sequence
 from uuid import UUID
 from uuid import uuid4
 
-import yaml
 from acacore.database import FileDB
 from acacore.exceptions.files import IdentificationError
 from acacore.models.file import File
@@ -19,8 +18,6 @@ from acacore.models.reference_files import ActionData
 from acacore.models.reference_files import CustomSignature
 from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import RenameAction
-from acacore.reference_files import get_actions
-from acacore.reference_files import get_custom_signatures
 from acacore.siegfried import Siegfried
 from acacore.siegfried.siegfried import SiegfriedFile
 from acacore.siegfried.siegfried import TSignaturesProvider
@@ -35,12 +32,13 @@ from click import IntRange
 from click import option
 from click import pass_context
 from click import Path as ClickPath
-from pydantic import TypeAdapter
 
 from digiarch.common import argument_root
 from digiarch.common import check_database_version
 from digiarch.common import ctx_params
 from digiarch.common import end_program
+from digiarch.common import fetch_actions
+from digiarch.common import fetch_custom_signatures
 from digiarch.common import start_program
 from digiarch.edit.common import argument_ids
 
@@ -238,23 +236,8 @@ def command_identify(
         print(err)
         raise BadParameter("Invalid binary or signature file.", ctx, ctx_params(ctx)["siegfried_path"])
 
-    if actions_file:
-        with actions_file.open() as fh:
-            try:
-                actions = TypeAdapter(dict[str, Action]).validate_python(yaml.load(fh, yaml.Loader))
-            except BaseException:
-                raise BadParameter("Invalid actions file.", ctx, ctx_params(ctx)["actions_file"])
-    else:
-        actions = get_actions()
-
-    if custom_signatures_file:
-        with Path(custom_signatures_file).open() as fh:
-            try:
-                custom_signatures = TypeAdapter(list[CustomSignature]).validate_python(yaml.load(fh, yaml.Loader))
-            except BaseException:
-                raise BadParameter("Invalid custom signatures file.", ctx, ctx_params(ctx)["custom_signatures_file"])
-    else:
-        custom_signatures = get_custom_signatures()
+    actions = fetch_actions(ctx, "actions_file", actions_file)
+    custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
