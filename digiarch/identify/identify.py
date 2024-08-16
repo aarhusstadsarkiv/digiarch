@@ -222,6 +222,7 @@ def command_identify(
 
     Files that are already in the database are not processed.
     """
+    # noinspection DuplicatedCode
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     siegfried = Siegfried(
