@@ -240,7 +240,7 @@ def action_ignore(
     * not-convertable
 
     The --reason option may be omitted when using a template other than "text".
-    """
+    """  # noqa: D301
     if template in ("text",) and not data_reason:
         raise MissingParameter(f"Required for template {template!r}.", ctx, ctx_params(ctx)["data_reason"])
 
