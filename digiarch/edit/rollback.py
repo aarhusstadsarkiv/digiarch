@@ -57,7 +57,7 @@ def rollback_edit_rename(
         # noinspection PyUnresolvedReferences
         old_name: str = event.data[0]
         if (old_path := file.get_absolute_path().with_name(old_name)).is_file():
-            return None, "File already exists."
+            return None, "file already exists"
         file.get_absolute_path().rename(old_path)
         file.name = old_name
         database.files.update(file, {"uuid": file.uuid})
@@ -69,7 +69,7 @@ def rollback_edit_remove(
 ) -> tuple[File | None, str | None]:
     file = File.model_validate(event.data)
     if not file.get_absolute_path(root).is_file():
-        return None, "File does not exist."
+        return None, "file does not exist"
     elif file and not dry_run:
         database.files.insert(file)
     return file, None
@@ -171,7 +171,7 @@ def command_rollback(
 
                 if not file:
                     error_reason = "File cannot be restored"
-                    error_reason += f". {error}" if error else ""
+                    error_reason += f": {error}" if error else ""
                     HistoryEntry.command_history(
                         ctx, "error", event.uuid, [event.time.isoformat(), event.operation], error_reason
                     ).log(ERROR, log_file, log_stdout)
