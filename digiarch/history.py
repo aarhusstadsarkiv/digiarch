@@ -18,7 +18,7 @@ from digiarch.common import ctx_params
 from digiarch.common import param_regex
 
 
-@command("history", short_help="View and search events log.")
+@command("history", no_args_is_help=True, short_help="View and search events log.")
 @argument_root(True)
 @option(
     "--from",
@@ -40,7 +40,7 @@ from digiarch.common import param_regex
     default=None,
     multiple=True,
     callback=param_regex(r"[a-z%-]+(\.[a-z%-]+)*(:[a-z%-]+([.:][a-z%-]+)*)?", IGNORECASE),
-    help="Operation and sub-operation.",
+    help="Operation and sub-operation.  [multiple]",
 )
 @option(
     "--uuid",
@@ -48,7 +48,7 @@ from digiarch.common import param_regex
     default=None,
     multiple=True,
     callback=param_regex(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", IGNORECASE),
-    help="File UUID.",
+    help="File UUID.  [multiple]",
 )
 @option("--reason", type=str, default=None, multiple=True, help="Event reason.")
 @option(

@@ -111,7 +111,7 @@ def deduplicate_extensions(ctx: Context, database: FileDB, root: Path, dry_run: 
         event.log(INFO, *(log for log in loggers if log))
 
 
-@command("doctor", no_args_is_help=True, short_help="Inspect the database for common issues.")
+@command("doctor", no_args_is_help=True, short_help="Inspect the database for common issues.  [multiple]")
 @argument_root(True)
 @option(
     "--fix",
