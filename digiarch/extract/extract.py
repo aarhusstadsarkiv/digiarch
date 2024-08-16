@@ -29,10 +29,10 @@ from digiarch.common import ctx_params
 from digiarch.common import end_program
 from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
+from digiarch.common import option_dry_run
 from digiarch.common import start_program
 from digiarch.identify.identify import identify_file
 
-from ..common import option_dry_run
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
 from .extractors.base import PasswordProtectedError
