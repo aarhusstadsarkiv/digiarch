@@ -21,7 +21,7 @@ from .common import argument_ids
 from .common import find_files
 
 
-@command("remove", no_args_is_help=True, short_help="Remove one or more files.")
+@command("remove", no_args_is_help=True, short_help="Remove files.")
 @argument_root(True)
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)

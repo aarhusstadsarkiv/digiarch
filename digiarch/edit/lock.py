@@ -42,6 +42,10 @@ def command_lock(
     Lock files from being edited by reidentify.
 
     To unlock files, use the --unlock option.
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the ID arguments, see the edit command.
     """
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
