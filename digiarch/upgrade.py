@@ -18,7 +18,7 @@ from digiarch.common import end_program
 from digiarch.common import start_program
 
 
-@command("upgrade", no_args_is_help=True, short_help="Upgrade the files' database.")
+@command("upgrade", no_args_is_help=True, short_help="Upgrade the database.")
 @argument_root(True)
 @option(
     "--backup/--no-backup",
