@@ -30,6 +30,7 @@ from digiarch.common import end_program
 from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
 from digiarch.common import start_program
+from digiarch.identify.identify import identify_file
 
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
@@ -182,7 +183,16 @@ def command_extract(
                     event.log(ERROR, log_file, log_stdout)
 
                 for path in extracted_files_paths:
-                    extracted_file = File.from_file(path, root, siegfried, actions, custom_signatures)
+                    extracted_file, file_history = identify_file(
+                        ctx,
+                        root,
+                        path,
+                        database,
+                        siegfried,
+                        None,
+                        actions,
+                        custom_signatures,
+                    )
                     extracted_file.parent = archive_file.puid
                     HistoryEntry.command_history(
                         ctx,
@@ -195,7 +205,9 @@ def command_extract(
                         action=archive_file.action,
                         path=archive_file.relative_path,
                     )
-                    database.files.insert(extracted_file)
+                    for event in file_history:
+                        event.log(INFO, log_stdout)
+                        database.history.insert(event)
 
                 archive_file.action = "ignore"
                 archive_file.action_data.ignore = IgnoreAction(template="not-preservable", reason="Extracted")
