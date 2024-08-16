@@ -61,7 +61,8 @@ def argument_ids(required: bool) -> Callable[[FC], FC]:
                 help="Use warnings as identifiers.",
             ),
             option(
-                "--id-files",
+                "--from-file",
+                "id_files",
                 is_flag=True,
                 default=False,
                 help="Interpret IDs as files from which to read the IDs.",
