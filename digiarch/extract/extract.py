@@ -32,6 +32,7 @@ from digiarch.common import fetch_custom_signatures
 from digiarch.common import start_program
 from digiarch.identify.identify import identify_file
 
+from ..common import option_dry_run
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
 from .extractors.base import PasswordProtectedError
@@ -98,6 +99,7 @@ def find_extractor(file: File) -> Type[ExtractorBase] | None:
     callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing custom signature specifications.",
 )
+@option_dry_run()
 @pass_context
 def command_extract(
     ctx: Context,
@@ -168,6 +170,7 @@ def command_extract(
                     database.files.update(archive_file)
                     database.history.insert(event)
                     event.log(ERROR, log_file, log_stdout)
+                    continue
                 except ExtractError as err:
                     event = HistoryEntry.command_history(
                         ctx,
@@ -181,6 +184,7 @@ def command_extract(
                     database.files.update(archive_file)
                     database.history.insert(event)
                     event.log(ERROR, log_file, log_stdout)
+                    continue
 
                 for path in extracted_files_paths:
                     extracted_file, file_history = identify_file(
