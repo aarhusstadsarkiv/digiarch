@@ -31,11 +31,11 @@ from digiarch.common import check_database_version
 from digiarch.common import ctx_params
 from digiarch.common import docstring_format
 from digiarch.common import end_program
+from digiarch.common import fetch_actions
 from digiarch.common import option_dry_run
 from digiarch.common import param_regex
 from digiarch.common import start_program
 
-from ..common import fetch_actions
 from .common import argument_ids
 from .common import find_files
 
