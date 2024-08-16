@@ -31,7 +31,7 @@ from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
 from digiarch.common import option_dry_run
 from digiarch.common import start_program
-from digiarch.identify.identify import identify_file
+from digiarch.identify import identify_file
 
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
