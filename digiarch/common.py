@@ -81,7 +81,7 @@ def option_dry_run():
     return option("--dry-run", is_flag=True, default=False, help="Show changes without committing them.")
 
 
-def docstring_format(**kwargs: Any) -> Callable[[Callable], Callable]:
+def docstring_format(**kwargs: Any) -> Callable[[Callable], Callable]:  # noqa: ANN401
     def decorator(func: Callable) -> Callable:
         func.__doc__ = (func.__doc__ or "").format(**kwargs)
         return func
