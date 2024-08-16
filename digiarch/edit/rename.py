@@ -35,9 +35,9 @@ from .common import find_files
     callback=param_regex(r"^((\.[a-zA-Z0-9]+)+| +)$"),
 )
 @argument("reason", nargs=1, type=str, required=True)
-@option("--replace", "replace_mode", flag_value="last", default=True, help="Replace the last extension.  [default]")
+@option("--append", "replace_mode", flag_value="append", default=True, help="Append the new extension.  [default]")
+@option("--replace", "replace_mode", flag_value="last", help="Replace the last extension.")
 @option("--replace-all", "replace_mode", flag_value="all", help="Replace all extensions.")
-@option("--append", "replace_mode", flag_value="append", help="Append the new extension.")
 @option_dry_run()
 @pass_context
 def command_rename(
