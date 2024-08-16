@@ -22,7 +22,6 @@ from click import Context
 from click import option
 from click import pass_context
 from click import Path as ClickPath
-from fontTools.ttx import process
 
 from digiarch.common import argument_root
 from digiarch.common import check_database_version
