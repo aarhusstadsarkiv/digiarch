@@ -1,6 +1,7 @@
 from logging import INFO
 from logging import Logger
 from pathlib import Path
+from typing import Any
 
 from acacore.database import FileDB
 from acacore.models.file import File
@@ -15,12 +16,14 @@ from acacore.models.reference_files import TemplateTypeEnum
 from acacore.models.reference_files import TTemplateType
 from acacore.utils.helpers import ExceptionManager
 from click import argument
+from click import BadParameter
 from click import Choice
 from click import Context
 from click import group
 from click import MissingParameter
 from click import option
 from click import pass_context
+from click import Path as ClickPath
 from pydantic import BaseModel
 
 from digiarch.common import argument_root
@@ -32,6 +35,7 @@ from digiarch.common import option_dry_run
 from digiarch.common import param_regex
 from digiarch.common import start_program
 
+from ..common import fetch_actions
 from .common import argument_ids
 from .common import find_files
 
@@ -41,15 +45,17 @@ def set_action(
     database: FileDB,
     file: File,
     action: TActionType,
-    action_data: BaseModel,
+    action_data: BaseModel | dict,
     reason: str,
     *loggers: Logger,
 ):
-    if file.action == action and file.action_data.model_dump().get(action) == action_data.model_dump():
+    if not isinstance(action_data, dict):
+        action_data = action_data.model_dump()
+    if file.action == action and file.action_data.model_dump().get(action) == action_data:
         HistoryEntry.command_history(ctx, "skip", file.uuid, None, "No changes").log(*loggers)
         return
     old_action: dict[TActionType, dict | None] = {action: file.action_data.model_dump().get(action)}
-    new_action: dict[TActionType, dict] = {action: action_data.model_dump()}
+    new_action: dict[TActionType, dict] = {action: action_data}
     event = HistoryEntry.command_history(ctx, "edit", file.uuid, [file.action, action, old_action, new_action], reason)
     file.action = action
     file.action_data = ActionData.model_validate(file.action_data.model_dump() | new_action)
@@ -270,5 +276,57 @@ def action_ignore(
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
                 set_action(ctx, database, file, "ignore", data, reason, log_stdout)
+
+        end_program(ctx, database, exception, dry_run, log_file, log_stdout)
+
+
+@group_action.command("copy", no_args_is_help=True, short_help="Copy action from a format.")
+@argument_root(True)
+@argument_ids(True)
+@argument("puid", nargs=1, type=str, required=True)
+@argument("action", type=Choice(["convert", "extract", "manual", "ignore"]))
+@argument("reason", nargs=1, type=str, required=True)
+@option(
+    "--actions",
+    "actions_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_ACTIONS",
+    show_envvar=True,
+    default=None,
+    callback=lambda _ctx, _param, value: Path(value) if value else None,
+    help="Path to a YAML file containing file format actions.",
+)
+@option_dry_run()
+@pass_context
+def command_copy(
+    ctx: Context,
+    root: Path,
+    puid: str,
+    action: TActionType,
+    reason: str,
+    ids: tuple[str, ...],
+    id_type: str,
+    id_files: bool,
+    actions_file: Path | None,
+    dry_run: bool,
+):
+    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
+
+    actions = fetch_actions(ctx, "actions_file", actions_file)
+
+    if not (action_model := actions.get(puid)):
+        raise BadParameter(f"Format {puid} not found.", ctx, ctx_params(ctx)["puid"])
+
+    action_data: dict[str, Any] = action_model.action_data.model_dump()
+
+    if not (data := action_data.get(action)):
+        raise BadParameter(f"Action {action} not found in {puid}.", ctx, ctx_params(ctx)["puid"])
+
+    with FileDB(db_path) as database:
+        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            for file in find_files(database, ids, id_type, id_files):
+                set_action(ctx, database, file, action, data, reason, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
