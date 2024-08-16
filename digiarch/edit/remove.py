@@ -21,7 +21,7 @@ from .common import argument_ids
 from .common import find_files
 
 
-@command("remove", no_args_is_help=True, short_help="Remove one or more files.")
+@command("remove", no_args_is_help=True, short_help="Remove files.")
 @argument_root(True)
 @argument_ids(True)
 @argument("reason", nargs=1, type=str, required=True)
@@ -41,11 +41,11 @@ def command_remove(
     """
     Remove one or more files in the files' database for the ROOT folder to EXTENSION.
 
-    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
-    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
-    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
-
     Using the --delete option removes the files from the disk.
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the ID arguments, see the edit command.
     """
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 

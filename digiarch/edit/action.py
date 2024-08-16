@@ -60,7 +60,7 @@ def set_action(
 
 @group("action")
 def group_action():
-    """Change the action of one or more files."""
+    """Change file actions."""
 
 
 @group_action.command("convert", no_args_is_help=True, short_help="Set convert action.")
@@ -92,6 +92,10 @@ def action_convert(
     Set files' action to "convert".
 
     The --outputs option may be omitted when using the "copy" tool.
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the ID arguments, see the edit command.
     """
     if tool not in ("copy",) and not outputs:
         raise MissingParameter(f"Required for tool {tool!r}.", ctx, ctx_params(ctx)["outputs"])
@@ -134,7 +138,13 @@ def action_extract(
     extension: str | None,
     dry_run: bool,
 ):
-    """Set files' action to "extract"."""
+    """
+    Set files' action to "extract".
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the ID arguments, see the edit command.
+    """
     data = ExtractAction(tool=tool, extension=extension)
 
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
@@ -181,7 +191,13 @@ def action_manual(
     process: str,
     dry_run: bool,
 ):
-    """Set files' action to "manual"."""
+    """
+    Set files' action to "manual".
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the ID arguments, see the edit command.
+    """
     data = ManualAction(reason=data_reason, process=process)
 
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
@@ -236,6 +252,10 @@ def action_ignore(
     {templates}
 
     The --reason option may be omitted when using a template other than "text".
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the ID arguments, see the edit command.
     """  # noqa: D301
     if template in ("text",) and not data_reason:
         raise MissingParameter(f"Required for template {template!r}.", ctx, ctx_params(ctx)["data_reason"])

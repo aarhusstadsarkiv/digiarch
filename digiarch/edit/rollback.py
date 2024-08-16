@@ -112,6 +112,8 @@ def command_rollback(
 
     Using the --command option allows to restrict rollbacks to specific events with the given commands if the
     timestamps are not precise enough.
+
+    To see the changes without committing them, use the --dry-run option.
     """
     from .edit import command_lock
     from .edit import command_remove
