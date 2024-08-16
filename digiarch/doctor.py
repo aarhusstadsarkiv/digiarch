@@ -131,6 +131,8 @@ def command_doctor(ctx: Context, root: Path, fix: tuple[str, ...], dry_run: bool
         characters removed
     * Duplicated extensions (extensions): paths ending with duplicated extensions will be rewritten to remove
         duplicated extensions and leave only one
+
+    To see the changes without committing them, use the --dry-run option.
     """  # noqa: D301
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 

@@ -326,14 +326,14 @@ def command_reidentify(
     id_files: bool,
 ):
     """
-    Re-indentify specific files.
+    Re-indentify specific files in the ROOT folder.
 
     Each file is re-identified with Siegfried and an action is assigned to it.
     Files that need re-identification with custom signatures, renaming, or ignoring are processed accordingly.
 
-    The ID arguments are interpreted as a list of UUID's by default. The behaviour can be changed with the
-    --puid, --path, --path-like, --checksum, and --warning options. If the --id-files option is used, each ID argument
-    is interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+    The ID arguments are interpreted as a list of UUID's by default. This behaviour can be changed with the --puid,
+    --path, --path-like, --checksum, and --warning options. If the --from-file option is used, each ID argument is
+    interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
 
     If no IDs are give, then all non-locked files with identification warnings or no PUID will be re-identified.
     """
