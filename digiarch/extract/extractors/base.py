@@ -14,6 +14,7 @@ class ExtractError(ACAException):
 
     def __init__(self, file: File, msg: str = "Extraction error"):
         self.file: File = file
+        self.msg: str = msg
         super().__init__(msg)
 
 
