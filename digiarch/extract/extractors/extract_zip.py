@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import ClassVar
 from typing import Generator
 from zipfile import ZipFile
 
@@ -7,7 +8,7 @@ from .base import PasswordProtectedError
 
 
 class ZipExtractor(ExtractorBase):
-    tool_name = ["zip"]
+    tool_name: ClassVar[list[str]] = ["zip"]
 
     def extract(self) -> Generator[Path, None, None]:
         extract_folder: Path = self.extract_folder

@@ -1,7 +1,7 @@
 from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
-from shutil import copy2
+from typing import ClassVar
 from typing import Generator
 
 from acacore.database import FileDB
@@ -10,9 +10,9 @@ from acacore.models.file import File
 
 
 class ExtractError(ACAException):
-    """Base class for unarchiver exceptions"""
+    """Base class for unarchiver exceptions."""
 
-    def __init__(self, file: File, msg: str = "Extraction error"):
+    def __init__(self, file: File, msg: str = "Extraction error") -> None:
         self.file: File = file
         self.msg: str = msg
         super().__init__(msg)
@@ -23,9 +23,9 @@ class PasswordProtectedError(ExtractError):
 
 
 class ExtractorBase(ABC):
-    tool_names: list[str]
+    tool_names: ClassVar[list[str]]
 
-    def __init__(self, database: FileDB, file: File, root: Path | None = None):
+    def __init__(self, database: FileDB, file: File, root: Path | None = None) -> None:
         self.database: FileDB = database
         self.file: File = file
         self.file.root = root or self.file.root or database.path.parent.parent

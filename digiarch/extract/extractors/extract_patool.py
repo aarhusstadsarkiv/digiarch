@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import ClassVar
 from typing import Generator
 
 from acacore.utils.functions import find_files
@@ -13,7 +14,7 @@ from .base import PasswordProtectedError
 
 
 class PatoolExtractor(ExtractorBase):
-    tool_names = [
+    tool_names: ClassVar[list[str]] = [
         "7z",
         "ace",
         "adf",
