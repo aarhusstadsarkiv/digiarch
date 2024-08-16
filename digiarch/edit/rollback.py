@@ -98,7 +98,7 @@ def rollback_edit_remove(
     type=str,
     multiple=True,
     callback=param_regex(r"^[a-z-]+(.[a-z-]+)*$"),
-    help="Specify commands to roll back.",
+    help="Specify commands to roll back.  [multiple]",
 )
 @option_dry_run()
 @pass_context
