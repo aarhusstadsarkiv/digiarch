@@ -165,13 +165,17 @@ def command_extract(
                     continue
 
                 if dry_run:
-                    HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid).log(INFO, log_stdout)
+                    HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid).log(
+                        INFO, log_stdout, path=archive_file.relative_path
+                    )
                     continue
 
                 try:
                     extractor = extractor_cls(database, archive_file, root)
                     extracted_files_paths = list(extractor.extract())
-                    HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid).log(INFO, log_stdout)
+                    HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid).log(
+                        INFO, log_stdout, path=archive_file.relative_path
+                    )
                 except PasswordProtectedError as err:
                     event = HistoryEntry.command_history(
                         ctx,
