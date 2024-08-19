@@ -321,6 +321,8 @@ def command_copy(
     * ignore
 
     If no actions file is give with --actions, the latest version will be downloaded from GitHub.
+
+    To see the changes without committing them, use the --dry-run option.
     """  # noqa: D301
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
