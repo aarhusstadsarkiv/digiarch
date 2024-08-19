@@ -2367,7 +2367,7 @@ x-fmt/263:
     .oxps: fmt/657
   action: extract
   extract:
-    tool: patool
+    tool: zip
     extension: .zip
 x-fmt/264:
   name: RAR Archive version
