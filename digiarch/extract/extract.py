@@ -207,6 +207,7 @@ def command_extract(
                         custom_signatures,
                     )
                     extracted_file.parent = archive_file.uuid
+                    database.files.update(extracted_file)
                     HistoryEntry.command_history(
                         ctx,
                         "new",
