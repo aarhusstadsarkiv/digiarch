@@ -191,7 +191,7 @@ def command_extract(
                         err.msg,
                     )
                     archive_file.action = "manual"
-                    archive_file.action_data.ignore = ManualAction(reason=err.msg, process="")
+                    archive_file.action_data.manual = ManualAction(reason=err.msg, process="")
                     database.files.update(archive_file)
                     database.history.insert(event)
                     event.log(ERROR, log_file, log_stdout)
