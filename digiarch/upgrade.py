@@ -7,6 +7,7 @@ from acacore.database.upgrade import is_latest
 from acacore.models.history import HistoryEntry
 from acacore.utils.helpers import ExceptionManager
 from click import BadParameter
+from click import ClickException
 from click import command
 from click import Context
 from click import option
@@ -39,7 +40,7 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
         log_file, log_stdout = start_program(ctx, database, None, True, True)
         updated: bool = False
 
-        with ExceptionManager(BaseException) as exception:
+        with ExceptionManager(BaseException, allow=[ClickException]) as exception:
             if not is_latest(database):
                 if backup:
                     backup_path = database.path.with_stem(database.path.stem + f"-{database.metadata.select().version}")
