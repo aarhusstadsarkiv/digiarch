@@ -74,6 +74,8 @@ def identify_file(
     custom_signatures: list[CustomSignature],
     *,
     update: bool = False,
+    parent: UUID | None = None,
+    processed: bool = False,
 ) -> tuple[File | None, list[HistoryEntry]]:
     uuid: UUID
     existing_file: File | None = database.files.select(
@@ -96,7 +98,15 @@ def identify_file(
         Exception,
         allow=[OSError, IOError],
     ) as identify_error:
-        file: File = File.from_file(path, root, siegfried_result or siegfried, actions, custom_signatures, uuid=uuid)
+        file: File = File.from_file(
+            path,
+            root,
+            siegfried_result or siegfried,
+            actions,
+            custom_signatures,
+            uuid=uuid,
+            processed=processed,
+        )
 
     if identify_error.exception:
         file = File.from_file(path, root, siegfried_result or siegfried)
@@ -143,6 +153,9 @@ def identify_file(
                 ),
             )
             return file, file_history
+
+    if parent:
+        file.parent = parent
 
     if update:
         database.files.update(file, {"uuid": file.uuid})
