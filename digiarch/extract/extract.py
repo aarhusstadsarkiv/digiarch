@@ -34,6 +34,7 @@ from digiarch.identify import identify_file
 
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
+from .extractors.base import NotPreservableFileError
 from .extractors.base import PasswordProtectedError
 from .extractors.extractor_patool import PatoolExtractor
 from .extractors.extractor_zip import ZipExtractor
@@ -177,6 +178,21 @@ def command_extract(
                     )
                     archive_file.action = "ignore"
                     archive_file.action_data.ignore = IgnoreAction(template="password-protected")
+                    archive_file.processed = True
+                    database.files.update(archive_file)
+                    database.history.insert(event)
+                    event.log(ERROR, log_file, log_stdout, path=archive_file.relative_path)
+                    continue
+                except NotPreservableFileError as err:
+                    event = HistoryEntry.command_history(
+                        ctx,
+                        "skip",
+                        archive_file.uuid,
+                        err.__class__.__name__,
+                        err.msg,
+                    )
+                    archive_file.action = "ignore"
+                    archive_file.action_data.ignore = IgnoreAction(template="not-preservable")
                     archive_file.processed = True
                     database.files.update(archive_file)
                     database.history.insert(event)
