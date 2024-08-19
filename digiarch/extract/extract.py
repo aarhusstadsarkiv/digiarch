@@ -39,15 +39,15 @@ from .extractors.extract_patool import PatoolExtractor
 from .extractors.extract_zip import ZipExtractor
 
 
-def find_extractor(file: File) -> Type[ExtractorBase] | None:
-    if not file.action_data.convert:
-        return None
+def find_extractor(file: File) -> tuple[Type[ExtractorBase] | None, str | None]:
+    if not file.action_data.extract:
+        return None, None
 
     for extractor in (ZipExtractor, PatoolExtractor):
-        if file.action_data.convert.tool in extractor.tool_names:
-            return extractor
+        if file.action_data.extract.tool in extractor.tool_names:
+            return extractor, file.action_data.extract.tool
 
-    return None
+    return None, file.action_data.extract.tool
 
 
 @command("extract", no_args_is_help=True, short_help="Unpack archives.")
@@ -140,18 +140,19 @@ def command_extract(
                 order_by=[("lower(relative_path)", "asc")],
                 limit=1,
             ).fetchone():
-                if not (extractor_cls := find_extractor(archive_file)):
+                extractor_cls, extractor_tool = find_extractor(archive_file)
+                if not extractor_cls:
                     event = HistoryEntry.command_history(
                         ctx,
                         "skip",
                         archive_file.uuid,
-                        archive_file.action_data.convert.tool,
+                        extractor_tool,
                         "Tool not found",
                     )
                     archive_file.action = "manual"
                     archive_file.action_data.manual = ManualAction(
                         reason="Extract tool not found",
-                        process=f"Extract manually or implement {archive_file.action_data.convert.tool} tool.",
+                        process=f"Extract manually or implement {extractor_tool!r} tool.",
                     )
                     database.history.insert(event)
                     database.files.update(archive_file)
