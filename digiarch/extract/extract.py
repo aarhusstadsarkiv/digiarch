@@ -206,7 +206,7 @@ def command_extract(
                         actions,
                         custom_signatures,
                     )
-                    extracted_file.parent = archive_file.puid
+                    extracted_file.parent = archive_file.uuid
                     HistoryEntry.command_history(
                         ctx,
                         "new",
