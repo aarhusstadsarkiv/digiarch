@@ -47,6 +47,7 @@ def set_action(
     action: TActionType,
     action_data: BaseModel | dict,
     reason: str,
+    dry_run: bool,
     *loggers: Logger,
 ):
     if not isinstance(action_data, dict):
@@ -59,8 +60,9 @@ def set_action(
     event = HistoryEntry.command_history(ctx, "edit", file.uuid, [file.action, action, old_action, new_action], reason)
     file.action = action
     file.action_data = ActionData.model_validate(file.action_data.model_dump() | new_action)
-    database.files.update(file, {"uuid": file.uuid})
-    database.history.insert(event)
+    if not dry_run:
+        database.files.update(file, {"uuid": file.uuid})
+        database.history.insert(event)
     event.log(INFO, *loggers)
 
 
@@ -115,7 +117,7 @@ def action_convert(
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
-                set_action(ctx, database, file, "convert", data, reason, log_stdout)
+                set_action(ctx, database, file, "convert", data, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -160,7 +162,7 @@ def action_extract(
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
-                set_action(ctx, database, file, "extract", data, reason, log_stdout)
+                set_action(ctx, database, file, "extract", data, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -213,7 +215,7 @@ def action_manual(
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
-                set_action(ctx, database, file, "manual", data, reason, log_stdout)
+                set_action(ctx, database, file, "manual", data, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -275,7 +277,7 @@ def action_ignore(
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
-                set_action(ctx, database, file, "ignore", data, reason, log_stdout)
+                set_action(ctx, database, file, "ignore", data, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -341,7 +343,7 @@ def command_copy(
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
-                set_action(ctx, database, file, action, data, reason, log_stdout)
+                set_action(ctx, database, file, action, data, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
