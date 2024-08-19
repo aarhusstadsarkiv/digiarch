@@ -35,8 +35,8 @@ from digiarch.identify import identify_file
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
 from .extractors.base import PasswordProtectedError
-from .extractors.extract_patool import PatoolExtractor
-from .extractors.extract_zip import ZipExtractor
+from .extractors.extractor_patool import PatoolExtractor
+from .extractors.extractor_zip import ZipExtractor
 
 
 def find_extractor(file: File) -> tuple[Type[ExtractorBase] | None, str | None]:
