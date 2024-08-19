@@ -138,7 +138,7 @@ def command_extract(
         with ExceptionManager(BaseException) as exception:
             while archive_file := database.files.select(
                 where="action = 'extract' and not processed",
-                order_by=[("relative_path", "asc")],
+                order_by=[("lower(relative_path)", "asc")],
                 limit=1,
             ).fetchone():
                 if not (extractor_cls := find_extractor(archive_file)):
