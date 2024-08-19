@@ -22,6 +22,14 @@ class PasswordProtectedError(ExtractError):
     """Archive is encrypted."""
 
 
+class UnrecognizedFileError(ExtractError):
+    """Archive file cannot be opened or recognized."""
+
+
+class NotPreservableFileError(ExtractError):
+    """Archive file cannot be preserved."""
+
+
 class ExtractorBase(ABC):
     tool_names: ClassVar[list[str]]
 
