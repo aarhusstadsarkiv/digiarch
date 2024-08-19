@@ -51,7 +51,7 @@ def find_extractor(file: File) -> Type[ExtractorBase] | None:
     return None
 
 
-@command("extract", no_args_is_help=True, short_help="Extract archives.")
+@command("extract", no_args_is_help=True, short_help="Unpack archives.")
 @argument_root(False)
 @option(
     "--siegfried-path",
@@ -111,6 +111,13 @@ def command_extract(
     custom_signatures_file: Path | None,
     dry_run: bool,
 ):
+    """
+    Unpack archives and identify files therein.
+
+    Files are unpacked recursively, i.e., if an archive contains another archive, this will be unpacked as well.
+
+    To see the changes without committing them, use the --dry-run option.
+    """
     # noinspection DuplicatedCode
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
