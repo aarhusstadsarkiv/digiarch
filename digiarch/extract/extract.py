@@ -112,6 +112,8 @@ def command_extract(
     Unpack archives and identify files therein.
 
     Files are unpacked recursively, i.e., if an archive contains another archive, this will be unpacked as well.
+
+    Archives with unrecognized extraction tools will be set to manual mode.
     """
     # noinspection DuplicatedCode
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
