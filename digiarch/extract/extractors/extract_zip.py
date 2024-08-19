@@ -8,7 +8,7 @@ from .base import PasswordProtectedError
 
 
 class ZipExtractor(ExtractorBase):
-    tool_name: ClassVar[list[str]] = ["zip"]
+    tool_names: ClassVar[list[str]] = ["zip"]
 
     def extract(self) -> Generator[Path, None, None]:
         extract_folder: Path = self.extract_folder
