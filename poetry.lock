@@ -434,6 +434,20 @@ files = [
 ]
 
 [[package]]
+name = "tnefparse"
+version = "1.4.0"
+description = "a TNEF decoding library written in Python, without external dependencies"
+optional = false
+python-versions = "*"
+files = [
+    {file = "tnefparse-1.4.0-py3-none-any.whl", hash = "sha256:b0e9e9dced05f182dafe19167fd28ff2cce102da30a7ff1101dc387194d012ba"},
+    {file = "tnefparse-1.4.0.tar.gz", hash = "sha256:bd871432b9afecb478fda2bbd4ab3673de00db4ba5dcc723bbb6c86a76420f95"},
+]
+
+[package.extras]
+optional = ["compressed-rtf"]
+
+[[package]]
 name = "types-click"
 version = "7.1.8"
 description = "Typing stubs for click"
@@ -458,4 +472,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "28901695401e1b294b09476fe05dbeb446cb320ebd239db864e29feadde188b8"
+content-hash = "6445e7bd4da363ba1dc51a8669a87fea37cefe83fd566a2422d701fb934cee30"
