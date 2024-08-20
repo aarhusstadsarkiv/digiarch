@@ -32,6 +32,7 @@ from digiarch.common import fetch_custom_signatures
 from digiarch.common import start_program
 from digiarch.identify import identify_file
 
+from ..common import option_dry_run
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
 from .extractors.base import NotPreservableFileError
@@ -99,6 +100,7 @@ def find_extractor(file: File) -> tuple[Type[ExtractorBase] | None, str | None]:
     callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing custom signature specifications.",
 )
+@option_dry_run()
 @pass_context
 def command_extract(
     ctx: Context,
@@ -108,6 +110,7 @@ def command_extract(
     siegfried_signature: TSignaturesProvider,
     actions_file: Path | None,
     custom_signatures_file: Path | None,
+    dry_run: bool,
 ):
     """
     Unpack archives and identify files therein.
@@ -115,6 +118,8 @@ def command_extract(
     Files are unpacked recursively, i.e., if an archive contains another archive, this will be unpacked as well.
 
     Archives with unrecognized extraction tools will be set to manual mode.
+
+    To see the which files will be unpacked (but not their contents) without unpacking them, use the --dry-run option.
     """
     # noinspection DuplicatedCode
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
@@ -135,31 +140,33 @@ def command_extract(
     custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, False)
+        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        offset: int = 0
 
         with ExceptionManager(BaseException) as exception:
             while archive_file := database.files.select(
                 where="action = 'extract' and not processed",
                 order_by=[("lower(relative_path)", "asc")],
+                offset=offset,
                 limit=1,
             ).fetchone():
                 extractor_cls, extractor_tool = find_extractor(archive_file)
                 if not extractor_cls:
-                    event = HistoryEntry.command_history(
+                    HistoryEntry.command_history(
                         ctx,
                         "skip",
                         archive_file.uuid,
                         extractor_tool,
                         "Tool not found",
+                    ).log(WARNING, log_stdout, path=archive_file.relative_path)
+                    offset += 1
+                    continue
+
+                if dry_run:
+                    HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid).log(
+                        INFO, log_stdout, tool=extractor_tool, path=archive_file.relative_path
                     )
-                    archive_file.action = "manual"
-                    archive_file.action_data.manual = ManualAction(
-                        reason="Extract tool not found",
-                        process=f"Extract manually or implement {extractor_tool!r} tool.",
-                    )
-                    database.history.insert(event)
-                    database.files.update(archive_file)
-                    event.log(WARNING, log_stdout, path=archive_file.relative_path)
+                    offset += 1
                     continue
 
                 try:
@@ -245,4 +252,4 @@ def command_extract(
                 archive_file.processed = True
                 database.files.update(archive_file)
 
-        end_program(ctx, database, exception, False, log_file, log_stdout)
+        end_program(ctx, database, exception, dry_run, log_file, log_stdout)
