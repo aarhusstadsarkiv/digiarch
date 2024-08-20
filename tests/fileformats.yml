@@ -65,7 +65,7 @@ aca-fmt/9:
     archive (winmail)
   action: extract
   extract:
-    tool: tnefparse
+    tool: tnef
     extension: .dat
 aca-fmt/18:
   name: OpenDocument Text (unspecified version)
@@ -1170,7 +1170,7 @@ fmt/411:
   name: RAR Archive version 2.9
   action: extract
   extract:
-    tool: patool
+    tool: rar
     extension: .rar
 fmt/412:
   name: Microsoft Word for Windows 2007 onwards
@@ -1328,7 +1328,7 @@ fmt/484:
   name: 7Zip format
   action: extract
   extract:
-    tool: py7zr
+    tool: 7z
     extension: .7z
 fmt/487:
   name: Macro Enabled Microsoft Powerpoint 2007 Onwards
@@ -1594,7 +1594,7 @@ fmt/613:
   name: RAR Archive version 5
   action: extract
   extract:
-    tool: patool
+    tool: rar
     extension: .rar
 fmt/627:
   name: Microsoft Excel Macro-Enabled Template 2007
@@ -2373,19 +2373,19 @@ x-fmt/264:
   name: RAR Archive version
   action: extract
   extract:
-    tool: patool
+    tool: rar
     extension: .rar
 x-fmt/265:
   name: Tape Archive Format
   action: extract
   extract:
-    tool: patool
+    tool: tar
     extension: .tar
 x-fmt/266:
   name: GZIP Format
   action: extract
   extract:
-    tool: patool
+    tool: gzip
     extension: .gz
   alternatives:
     .emz: aca-fmt/22
