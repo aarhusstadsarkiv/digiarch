@@ -15,7 +15,7 @@ from .base import PasswordProtectedError
 
 class PatoolExtractor(ExtractorBase):
     tool_names: ClassVar[list[str]] = [
-        "patool",
+        "patool",  # kept for backwards compatibility
         "7z",
         "ace",
         "adf",
