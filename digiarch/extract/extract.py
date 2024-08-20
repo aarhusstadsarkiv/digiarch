@@ -38,6 +38,7 @@ from .extractors.base import ExtractorBase
 from .extractors.base import NotPreservableFileError
 from .extractors.base import PasswordProtectedError
 from .extractors.extractor_patool import PatoolExtractor
+from .extractors.extractor_tnef import TNEFExtractor
 from .extractors.extractor_zip import ZipExtractor
 
 
@@ -45,7 +46,7 @@ def find_extractor(file: File) -> tuple[Type[ExtractorBase] | None, str | None]:
     if not file.action_data.extract:
         return None, None
 
-    for extractor in (ZipExtractor, PatoolExtractor):
+    for extractor in (ZipExtractor, TNEFExtractor, PatoolExtractor):
         if file.action_data.extract.tool in extractor.tool_names:
             return extractor, file.action_data.extract.tool
 
