@@ -2,9 +2,13 @@ from itertools import islice
 from logging import INFO
 from os import environ
 from pathlib import Path
+from re import compile as re_compile
+from re import error as re_error
+from re import IGNORECASE
 from traceback import format_tb
 from typing import Generator
 from typing import get_args as get_type_args
+from typing import Pattern
 from typing import Sequence
 from uuid import UUID
 from uuid import uuid4
@@ -213,6 +217,12 @@ def identify_file(
     callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing custom signature specifications.",
 )
+@option(
+    "--exclude",
+    type=str,
+    multiple=True,
+    help="Glob pattern for file and folder names to exclude.  [multiple]",
+)
 @option("--batch-size", type=IntRange(1), default=100)
 @pass_context
 def command_identify(
@@ -223,6 +233,7 @@ def command_identify(
     siegfried_signature: TSignaturesProvider,
     actions_file: Path | None,
     custom_signatures_file: Path | None,
+    exclude: tuple[str, ...],
     batch_size: int,
     *,
     update_where: list[tuple[str, Sequence[str]]] | None = None,
@@ -235,6 +246,14 @@ def command_identify(
 
     Files that are already in the database are not processed.
     """
+    try:
+        exclude_patterns: list[Pattern[str]] = [
+            re_compile(ex.strip().replace(".", "\\.").replace("*", ".*"), IGNORECASE) for ex in exclude if ex.strip()
+        ]
+        print(exclude_patterns)
+    except re_error as err:
+        raise BadParameter(f"{err.args[0] if err.args else err.msg} {err.pattern}", ctx, ctx_params(ctx)["exclude"])
+
     # noinspection DuplicatedCode
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
@@ -272,6 +291,14 @@ def command_identify(
                 files = find_files(root, exclude=[database.path.parent])
 
             while batch := list(islice(files, batch_size)):
+                if exclude_patterns and not update_where:
+                    batch = [
+                        p
+                        for p in batch
+                        if not any(
+                            any(exp.match(part) for exp in exclude_patterns) for part in p.relative_to(root).parts
+                        )
+                    ]
                 for path, result in siegfried.identify(*batch).files_dict.items():
                     file, file_history = identify_file(
                         ctx,
