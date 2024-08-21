@@ -383,6 +383,7 @@ def command_reidentify(
         siegfried_signature,
         actions_file,
         custom_signatures_file,
+        tuple(),
         batch_size,
         update_where=where,
     )
@@ -392,5 +393,5 @@ command_reidentify.params = [p for p in command_identify.params if p.name != "ro
 command_reidentify.params = [
     *(p for p in command_reidentify.params if isinstance(p, Argument)),
     *(p for p in command_identify.params if p.name not in [p_.name for p_ in command_reidentify.params]),
-    *(p for p in command_reidentify.params if not isinstance(p, Argument)),
+    *(p for p in command_reidentify.params if not isinstance(p, Argument) and p.name != "exclude"),
 ]
