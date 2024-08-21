@@ -11,6 +11,7 @@ from extract_msg import Message
 from extract_msg import MSGFile
 from extract_msg import openMsg
 from extract_msg.exceptions import ExMsgBaseException
+from extract_msg.msg_classes import MessageSigned
 
 from digiarch.doctor import sanitize_path
 
@@ -28,13 +29,13 @@ EXCLUDED_ATTACHMENTS: list[str] = [
 ]
 
 
-def validate_msg(file: File) -> Message:
+def validate_msg(file: File) -> Message | MessageSigned:
     try:
         msg: MSGFile = openMsg(file.get_absolute_path(), delayAttachments=True)
     except ExMsgBaseException as e:
         raise UnrecognizedFileError(file, e.args[0] if e.args else "File cannot be opened as msg")
 
-    if not isinstance(msg, Message):
+    if not isinstance(msg, (Message, MessageSigned)):
         raise NotPreservableFileError(file, f"Is of type {msg.__class__.__name__}")
 
     return msg
@@ -80,9 +81,9 @@ def msg_attachments(
     msg: Message,
     body_html: str | None,
     body_rtf: str | None,
-) -> tuple[list[AttachmentBase], list[AttachmentBase | Message]]:
+) -> tuple[list[AttachmentBase], list[AttachmentBase | Message | MessageSigned]]:
     inline_attachments: list[AttachmentBase] = []
-    attachments: list[AttachmentBase | Message] = []
+    attachments: list[AttachmentBase | Message | MessageSigned] = []
 
     for attachment in msg.attachments:
         if attachment.cid and attachment.cid in (body_html or body_rtf or ""):
@@ -107,12 +108,12 @@ class MsgExtractor(ExtractorBase):
         extract_folder: Path = self.extract_folder
         extract_folder.mkdir(parents=True, exist_ok=True)
 
-        msg: Message = validate_msg(self.file)
+        msg: Message | MessageSigned = validate_msg(self.file)
         _, body_html, body_rtf = msg_body(msg)
         inline_attachments, attachments = msg_attachments(msg, body_html, body_rtf)
 
         for attachment in inline_attachments + attachments:
-            if isinstance(attachment, Message):
+            if isinstance(attachment, (Message, MessageSigned)):
                 path: Path = extract_folder.joinpath(sanitize_path(attachment.filename))
                 if path.suffix != ".msg":
                     path.with_name(path.name + ".msg")
