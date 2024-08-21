@@ -98,7 +98,8 @@ def msg_attachments(
         elif attachment_msg is not None:
             attachments.append(attachment_msg)
         elif isinstance(attachment, SignedAttachment):
-            filename: str = attachment.longFilename()
+            # noinspection PyTypeChecker
+            filename: str = attachment.longFilename
             if any(match(pattern, filename.lower()) for pattern in EXCLUDED_ATTACHMENTS):
                 continue
             attachments.append(attachment)
@@ -132,7 +133,8 @@ class MsgExtractor(ExtractorBase):
             elif attachment.data is not None and not isinstance(attachment.data, bytes):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
             elif isinstance(attachment, SignedAttachment):
-                path: Path = extract_folder.joinpath(sanitize_path(attachment.longFilename()))
+                # noinspection PyTypeChecker
+                path: Path = extract_folder.joinpath(sanitize_path(attachment.longFilename))
             else:
                 path: Path = extract_folder.joinpath(sanitize_path(attachment.getFilename()))
 
