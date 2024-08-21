@@ -82,7 +82,7 @@ def msg_attachments(
     msg: Message,
     body_html: str | None,
     body_rtf: str | None,
-) -> tuple[list[AttachmentBase], list[AttachmentBase | Message | MessageSigned]]:
+) -> tuple[list[AttachmentBase], list[AttachmentBase | SignedAttachment | Message | MessageSigned]]:
     inline_attachments: list[AttachmentBase | SignedAttachment] = []
     attachments: list[AttachmentBase | SignedAttachment | Message | MessageSigned] = []
 
@@ -97,6 +97,11 @@ def msg_attachments(
             continue
         elif attachment_msg is not None:
             attachments.append(attachment_msg)
+        elif isinstance(attachment, SignedAttachment):
+            filename: str = attachment.longFilename()
+            if any(match(pattern, filename.lower()) for pattern in EXCLUDED_ATTACHMENTS):
+                continue
+            attachments.append(attachment)
         else:
             filename: str = attachment.getFilename()
             if any(match(pattern, filename.lower()) for pattern in EXCLUDED_ATTACHMENTS):
@@ -126,11 +131,14 @@ class MsgExtractor(ExtractorBase):
                 yield path
             elif attachment.data is not None and not isinstance(attachment.data, bytes):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
+            elif isinstance(attachment, SignedAttachment):
+                path: Path = extract_folder.joinpath(sanitize_path(attachment.longFilename()))
             else:
                 path: Path = extract_folder.joinpath(sanitize_path(attachment.getFilename()))
-                with path.open("wb") as fh:
-                    # noinspection PyTypeChecker
-                    fh.write(attachment.data or b"")
-                yield path
+
+            with path.open("wb") as fh:
+                # noinspection PyTypeChecker
+                fh.write(attachment.data or b"")
+            yield path
 
         yield from ()
