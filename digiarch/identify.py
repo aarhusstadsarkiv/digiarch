@@ -161,6 +161,8 @@ def identify_file(
     if parent:
         file.parent = parent
 
+    file.processed = False
+
     if update:
         database.files.update(file, {"uuid": file.uuid})
     else:
