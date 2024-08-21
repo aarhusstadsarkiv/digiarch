@@ -383,7 +383,7 @@ def command_reidentify(
         siegfried_signature,
         actions_file,
         custom_signatures_file,
-        tuple(),
+        (),
         batch_size,
         update_where=where,
     )
