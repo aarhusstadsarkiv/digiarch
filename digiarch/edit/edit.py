@@ -7,10 +7,10 @@ from .rename import command_rename
 from .rollback import command_rollback
 
 
-@group("edit", no_args_is_help=True, short_help="")
+@group("edit", no_args_is_help=True, short_help="Edit the database.")
 def group_edit():
     """
-    Edit files' database.
+    Edit the files' database.
 
     The ROOT argument in the edit subcommands is a folder that contains a _metadata/files.db database, not the
     _metadata folder itself.

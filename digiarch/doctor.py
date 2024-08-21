@@ -1,6 +1,7 @@
 from functools import reduce
 from logging import INFO
 from logging import Logger
+from os import PathLike
 from pathlib import Path
 
 from acacore.database import FileDB
@@ -19,18 +20,21 @@ from digiarch.common import end_program
 from digiarch.common import option_dry_run
 from digiarch.common import start_program
 
+invalid_characters: str = r'\?%*|"<>,:;=+[]!@' + bytes(range(20)).decode("ascii") + "\x7f"
+
+
+def sanitize_path(path: str | PathLike) -> Path:
+    return Path(*[reduce(lambda acc, cur: acc.replace(cur, "_"), invalid_characters, p) for p in Path(path).parts])
+
 
 def sanitize_paths(ctx: Context, database: FileDB, root: Path, dry_run: bool, *loggers: Logger | None):
-    invalid_characters: str = r'\?%*|"<>,:;=+[]!@' + bytes(range(20)).decode("ascii") + "\x7f"
     for file in database.files.select(
         where=" or ".join("instr(relative_path, ?) != 0" for _ in invalid_characters),
         parameters=list(invalid_characters),
     ):
         file.root = root
         old_path: Path = file.relative_path
-        new_path: Path = Path(
-            *[reduce(lambda acc, cur: acc.replace(cur, "_"), invalid_characters, p) for p in old_path.parts]
-        )
+        new_path: Path = sanitize_path(old_path)
 
         while file.root.joinpath(new_path).exists():
             new_path = new_path.with_name("_" + new_path.name)
@@ -111,7 +115,7 @@ def deduplicate_extensions(ctx: Context, database: FileDB, root: Path, dry_run: 
         event.log(INFO, *(log for log in loggers if log))
 
 
-@command("doctor", no_args_is_help=True, short_help="Inspect the database for common issues.  [multiple]")
+@command("doctor", no_args_is_help=True, short_help="Inspect the database.")
 @argument_root(True)
 @option(
     "--fix",

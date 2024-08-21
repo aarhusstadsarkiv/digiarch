@@ -1,3 +1,5 @@
+from datetime import datetime
+from logging import INFO
 from pathlib import Path
 from shutil import copy2
 
@@ -7,6 +9,7 @@ from acacore.database.upgrade import is_latest
 from acacore.models.history import HistoryEntry
 from acacore.utils.helpers import ExceptionManager
 from click import BadParameter
+from click import ClickException
 from click import command
 from click import Context
 from click import option
@@ -18,7 +21,7 @@ from digiarch.common import end_program
 from digiarch.common import start_program
 
 
-@command("upgrade", no_args_is_help=True, short_help="Upgrade the files' database.")
+@command("upgrade", no_args_is_help=True, short_help="Upgrade the database.")
 @argument_root(True)
 @option(
     "--backup/--no-backup",
@@ -35,15 +38,17 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
     When using --backup, a copy of the current database version will be created in the same folder with the name
     "files-{version}.db". The copy will not be created if the database is already at the latest version.
     """
-    with FileDB(root / "_metadata" / "files.db", check_version=False) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True)
-        updated: bool = False
+    start_time: datetime = datetime.now()
 
-        with ExceptionManager(BaseException) as exception:
+    with FileDB(root / "_metadata" / "files.db", check_version=False) as database:
+        updated: bool = False
+        log_file = log_stdout = None
+
+        with ExceptionManager(BaseException, allow=[ClickException]) as exception:
             if not is_latest(database):
                 if backup:
                     backup_path = database.path.with_stem(database.path.stem + f"-{database.metadata.select().version}")
-                    if backup_path.exists():
+                    if backup_path.exists() and database.path.stat().st_size != backup_path.stat().st_size:
                         raise BadParameter(
                             f"Backup file {backup_path.name} already exists.",
                             ctx,
@@ -58,7 +63,14 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
                 )
                 database.upgrade()
                 database.init()
+                log_file, log_stdout = start_program(ctx, database, start_time, True, True)
                 database.history.insert(event)
+                event.log(INFO, log_stdout)
                 updated = True
+            else:
+                log_file, log_stdout = start_program(ctx, database, start_time, False, True, True)
+                HistoryEntry.command_history(ctx, "skip", reason="Database is already at the latest version").log(
+                    INFO, log_stdout
+                )
 
         end_program(ctx, database, exception, updated, log_file, log_stdout)

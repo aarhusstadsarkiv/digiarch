@@ -24,9 +24,10 @@ from digiarch.edit.lock import command_lock
 from digiarch.edit.remove import command_remove
 from digiarch.edit.rename import command_rename
 from digiarch.edit.rollback import command_rollback
+from digiarch.extract.extract import command_extract
 from digiarch.history import command_history
-from digiarch.identify.identify import command_identify
-from digiarch.identify.identify import command_reidentify
+from digiarch.identify import command_identify
+from digiarch.identify import command_reidentify
 
 
 @pytest.fixture()
@@ -717,3 +718,41 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
                 where="uuid = ? and operation = 'digiarch.edit.rollback:rollback'",
                 parameters=[str(file2.uuid)],
             ).fetchone()
+
+
+# noinspection DuplicatedCode
+def test_extract(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = list(database.files.select(where="action = 'extract'"))
+
+    app.main(
+        [
+            command_extract.name,
+            str(files_folder_copy),
+            "--actions",
+            str(tests_folder / "fileformats.yml"),
+            "--custom-signatures",
+            str(tests_folder / "custom_signatures.yml"),
+            "--siegfried-home",
+            str(tests_folder),
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            file2 = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file2
+            assert file2.processed is True
+            assert file2.action == "ignore"
+            if file.relative_path.name.split(".", 1)[0].endswith("-encrypted"):
+                assert file2.action_data.ignore.template == "password-protected"
+            else:
+                assert file2.action_data.ignore.template == "not-preservable"
+                assert file2.action_data.ignore.reason.lower() == "extracted"
+                assert database.files.select(where="parent = ?", parameters=[str(file.uuid)]).fetchone()
