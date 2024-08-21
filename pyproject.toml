@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "3.2.0"
+version = "3.2.1"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Aryan Muhammadi Landi <arml@aarhus.dk>", "Nina Jensen <jnik@aarhus.dk>", "Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -12,9 +12,11 @@ include = ["pyproject.toml"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v3.0.3"}
+acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v3.0.4"}
 patool = "^2.3.0"
 tnefparse = "^1.4.0"
+extract-msg = "^0.48.7"
+chardet = "^5.2.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"

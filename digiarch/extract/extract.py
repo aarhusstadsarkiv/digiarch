@@ -37,6 +37,7 @@ from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
 from .extractors.base import NotPreservableFileError
 from .extractors.base import PasswordProtectedError
+from .extractors.extractor_msg import MsgExtractor
 from .extractors.extractor_patool import PatoolExtractor
 from .extractors.extractor_tnef import TNEFExtractor
 from .extractors.extractor_zip import ZipExtractor
@@ -46,7 +47,7 @@ def find_extractor(file: File) -> tuple[Type[ExtractorBase] | None, str | None]:
     if not file.action_data.extract:
         return None, None
 
-    for extractor in (ZipExtractor, TNEFExtractor, PatoolExtractor):
+    for extractor in (ZipExtractor, TNEFExtractor, MsgExtractor, PatoolExtractor):
         if file.action_data.extract.tool in extractor.tool_names:
             return extractor, file.action_data.extract.tool
 
@@ -248,9 +249,12 @@ def command_extract(
                         event.log(INFO, log_stdout)
                         database.history.insert(event)
 
-                archive_file.action = "ignore"
-                archive_file.action_data.ignore = IgnoreAction(template="not-preservable", reason="Extracted")
-                archive_file.processed = True
+                if archive_file.action_data.extract.on_success:
+                    archive_file.action = archive_file.action_data.extract.on_success
+                else:
+                    archive_file.action = "ignore"
+                    archive_file.action_data.ignore = IgnoreAction(template="extracted-archive")
+                    archive_file.processed = True
                 database.files.update(archive_file)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)

@@ -748,11 +748,14 @@ def test_extract(tests_folder: Path, files_folder: Path, files_folder_copy: Path
         for file in files:
             file2 = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
             assert file2
-            assert file2.processed is True
-            assert file2.action == "ignore"
             if file.relative_path.name.split(".", 1)[0].endswith("-encrypted"):
+                assert file2.action == "ignore"
                 assert file2.action_data.ignore.template == "password-protected"
+                assert file2.processed is True
+            elif on_success_action := file.action_data.extract.on_success:
+                assert file2.action == on_success_action
             else:
-                assert file2.action_data.ignore.template == "not-preservable"
-                assert file2.action_data.ignore.reason.lower() == "extracted"
+                assert file2.action == "ignore"
+                assert file2.action_data.ignore.template == "extracted-archive"
+                assert file2.processed is True
                 assert database.files.select(where="parent = ?", parameters=[str(file.uuid)]).fetchone()
