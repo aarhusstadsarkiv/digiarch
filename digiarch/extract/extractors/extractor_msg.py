@@ -52,13 +52,13 @@ def msg_body(msg: Message) -> tuple[str | None, str | None, str | None]:
     with suppress(AttributeError, UnicodeDecodeError):
         body_html_bytes: bytes | None = msg.htmlBody
         if body_html_bytes is not None:
-            encoding: str | None = chardet.detect(body_html_bytes).get("encoding", "utf-8")
+            encoding: str | None = chardet.detect(body_html_bytes).get("encoding") or "utf-8"
             body_html = body_html_bytes.decode(encoding)
 
     with suppress(AttributeError, UnicodeDecodeError):
         body_rtf_bytes: bytes | None = msg.rtfBody
         if body_rtf_bytes is not None:
-            encoding: str | None = chardet.detect(body_rtf_bytes).get("encoding", "utf-8")
+            encoding: str | None = chardet.detect(body_rtf_bytes).get("encoding") or "utf-8"
             body_rtf = body_rtf_bytes.decode(encoding)
 
     return body_txt, body_html, body_rtf
