@@ -248,9 +248,12 @@ def command_extract(
                         event.log(INFO, log_stdout)
                         database.history.insert(event)
 
-                archive_file.action = "ignore"
-                archive_file.action_data.ignore = IgnoreAction(template="not-preservable", reason="Extracted")
-                archive_file.processed = True
+                if archive_file.action_data.extract.on_success:
+                    archive_file.action = archive_file.action_data.extract.on_success
+                else:
+                    archive_file.action = "ignore"
+                    archive_file.action_data.ignore = IgnoreAction(template="not-preservable", reason="Extracted")
+                    archive_file.processed = True
                 database.files.update(archive_file)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
