@@ -253,7 +253,7 @@ def command_extract(
                     archive_file.action = archive_file.action_data.extract.on_success
                 else:
                     archive_file.action = "ignore"
-                    archive_file.action_data.ignore = IgnoreAction(template="not-preservable", reason="Extracted")
+                    archive_file.action_data.ignore = IgnoreAction(template="extracted-archive")
                     archive_file.processed = True
                 database.files.update(archive_file)
 
