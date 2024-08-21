@@ -75,6 +75,35 @@ def rollback_edit_remove(
     return file, None
 
 
+def rollback_extract_unpacked(database: FileDB, event: HistoryEntry, dry_run: bool) -> tuple[File | None, str | None]:
+    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+    if file and dry_run:
+        return file, None
+    elif not file:
+        return None, None
+    elif not file.action_data.extract:
+        return None, "file does not contain extract data"
+    elif file.action_data.extract.on_success:
+        file.action = "extract"
+        database.files.update(file, {"uuid": file.uuid})
+    else:
+        file.action = "extract"
+        file.action_data.ignore = None
+        file.processed = False
+        database.files.update(file, {"uuid": file.uuid})
+    return file, None
+
+
+def rollback_extract_new(
+    database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
+) -> tuple[File | None, str | None]:
+    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+    if file and not dry_run:
+        database.execute(f"delete from {database.files.name} where uuid = ?", [str(file.uuid)])
+        file.get_absolute_path(root).unlink(missing_ok=True)
+    return file, None
+
+
 @command("rollback", no_args_is_help=True, short_help="Roll back edits.")
 @argument_root(True)
 @argument(
@@ -122,6 +151,8 @@ def command_rollback(
 
     To see the changes without committing them, use the --dry-run option.
     """
+    from digiarch.extract.extract import command_extract
+
     from .edit import command_lock
     from .edit import command_remove
     from .edit import command_rename
@@ -164,6 +195,13 @@ def command_rollback(
                     if operation != "remove":
                         continue
                     file, error = rollback_edit_remove(database, root, event, dry_run)
+                elif name == f"{program_name}.{command_extract.name}":
+                    if operation == "unpacked":
+                        file, error = rollback_extract_unpacked(database, event, dry_run)
+                    elif operation == "new":
+                        file, error = rollback_extract_new(database, root, event, dry_run)
+                    else:
+                        continue
                 else:
                     HistoryEntry.command_history(ctx, "warning", None, event.operation, "Unknown event").log(
                         WARNING, log_stdout
