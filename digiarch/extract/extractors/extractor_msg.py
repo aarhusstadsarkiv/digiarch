@@ -35,7 +35,7 @@ def validate_msg(file: File) -> Message:
         raise UnrecognizedFileError(file, e.args[0] if e.args else "File cannot be opened as msg")
 
     if not isinstance(msg, Message):
-        raise NotPreservableFileError(file, msg.__class__.__name__)
+        raise NotPreservableFileError(file, f"Is of type {msg.__class__.__name__}")
 
     return msg
 
