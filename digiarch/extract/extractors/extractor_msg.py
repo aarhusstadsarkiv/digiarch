@@ -10,6 +10,7 @@ from extract_msg import AttachmentBase
 from extract_msg import Message
 from extract_msg import MSGFile
 from extract_msg import openMsg
+from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
 from extract_msg.msg_classes import MessageSigned
 
@@ -82,11 +83,15 @@ def msg_attachments(
     body_html: str | None,
     body_rtf: str | None,
 ) -> tuple[list[AttachmentBase], list[AttachmentBase | Message | MessageSigned]]:
-    inline_attachments: list[AttachmentBase] = []
-    attachments: list[AttachmentBase | Message | MessageSigned] = []
+    inline_attachments: list[AttachmentBase | SignedAttachment] = []
+    attachments: list[AttachmentBase | SignedAttachment | Message | MessageSigned] = []
 
     for attachment in msg.attachments:
-        if attachment.cid and attachment.cid in (body_html or body_rtf or ""):
+        if (
+            issubclass(type(attachment), AttachmentBase)
+            and attachment.cid
+            and attachment.cid in (body_html or body_rtf or "")
+        ):
             inline_attachments.append(attachment)
         elif (attachment_msg := msg_attachment(attachment)) is False:
             continue
