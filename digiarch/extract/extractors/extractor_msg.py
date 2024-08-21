@@ -10,7 +10,9 @@ from extract_msg import AttachmentBase
 from extract_msg import Message
 from extract_msg import MSGFile
 from extract_msg import openMsg
+from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
+from extract_msg.msg_classes import MessageSigned
 
 from digiarch.doctor import sanitize_path
 
@@ -28,14 +30,14 @@ EXCLUDED_ATTACHMENTS: list[str] = [
 ]
 
 
-def validate_msg(file: File) -> Message:
+def validate_msg(file: File) -> Message | MessageSigned:
     try:
         msg: MSGFile = openMsg(file.get_absolute_path(), delayAttachments=True)
     except ExMsgBaseException as e:
         raise UnrecognizedFileError(file, e.args[0] if e.args else "File cannot be opened as msg")
 
-    if not isinstance(msg, Message):
-        raise NotPreservableFileError(file, msg.__class__.__name__)
+    if not isinstance(msg, (Message, MessageSigned)):
+        raise NotPreservableFileError(file, f"Is of type {msg.__class__.__name__}")
 
     return msg
 
@@ -50,14 +52,16 @@ def msg_body(msg: Message) -> tuple[str | None, str | None, str | None]:
         body_txt = (msg.body or "").strip()
 
     with suppress(AttributeError, UnicodeDecodeError):
-        body_html_bytes: bytes = msg.htmlBody
-        encoding: str | None = chardet.detect(body_html_bytes).get("encoding", "utf-8")
-        body_html = body_html_bytes.decode(encoding)
+        body_html_bytes: bytes | None = msg.htmlBody
+        if body_html_bytes is not None:
+            encoding: str | None = chardet.detect(body_html_bytes).get("encoding") or "utf-8"
+            body_html = body_html_bytes.decode(encoding)
 
     with suppress(AttributeError, UnicodeDecodeError):
-        body_rtf_bytes: bytes = msg.rtfBody
-        encoding: str | None = chardet.detect(body_rtf_bytes).get("encoding", "utf-8")
-        body_rtf = body_rtf_bytes.decode(encoding)
+        body_rtf_bytes: bytes | None = msg.rtfBody
+        if body_rtf_bytes is not None:
+            encoding: str | None = chardet.detect(body_rtf_bytes).get("encoding") or "utf-8"
+            body_rtf = body_rtf_bytes.decode(encoding)
 
     return body_txt, body_html, body_rtf
 
@@ -78,17 +82,27 @@ def msg_attachments(
     msg: Message,
     body_html: str | None,
     body_rtf: str | None,
-) -> tuple[list[AttachmentBase], list[AttachmentBase | Message]]:
-    inline_attachments: list[AttachmentBase] = []
-    attachments: list[AttachmentBase | Message] = []
+) -> tuple[list[AttachmentBase], list[AttachmentBase | SignedAttachment | Message | MessageSigned]]:
+    inline_attachments: list[AttachmentBase | SignedAttachment] = []
+    attachments: list[AttachmentBase | SignedAttachment | Message | MessageSigned] = []
 
     for attachment in msg.attachments:
-        if attachment.cid and attachment.cid in (body_html or body_rtf or ""):
+        if (
+            issubclass(type(attachment), AttachmentBase)
+            and attachment.cid
+            and attachment.cid in (body_html or body_rtf or "")
+        ):
             inline_attachments.append(attachment)
         elif (attachment_msg := msg_attachment(attachment)) is False:
             continue
         elif attachment_msg is not None:
             attachments.append(attachment_msg)
+        elif isinstance(attachment, SignedAttachment):
+            # noinspection PyTypeChecker
+            filename: str = attachment.longFilename
+            if any(match(pattern, filename.lower()) for pattern in EXCLUDED_ATTACHMENTS):
+                continue
+            attachments.append(attachment)
         else:
             filename: str = attachment.getFilename()
             if any(match(pattern, filename.lower()) for pattern in EXCLUDED_ATTACHMENTS):
@@ -105,12 +119,12 @@ class MsgExtractor(ExtractorBase):
         extract_folder: Path = self.extract_folder
         extract_folder.mkdir(parents=True, exist_ok=True)
 
-        msg: Message = validate_msg(self.file)
+        msg: Message | MessageSigned = validate_msg(self.file)
         _, body_html, body_rtf = msg_body(msg)
         inline_attachments, attachments = msg_attachments(msg, body_html, body_rtf)
 
         for attachment in inline_attachments + attachments:
-            if isinstance(attachment, Message):
+            if isinstance(attachment, (Message, MessageSigned)):
                 path: Path = extract_folder.joinpath(sanitize_path(attachment.filename))
                 if path.suffix != ".msg":
                     path.with_name(path.name + ".msg")
@@ -118,11 +132,15 @@ class MsgExtractor(ExtractorBase):
                 yield path
             elif attachment.data is not None and not isinstance(attachment.data, bytes):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
+            elif isinstance(attachment, SignedAttachment):
+                # noinspection PyTypeChecker
+                path: Path = extract_folder.joinpath(sanitize_path(attachment.longFilename))
             else:
                 path: Path = extract_folder.joinpath(sanitize_path(attachment.getFilename()))
-                with path.open("wb") as fh:
-                    # noinspection PyTypeChecker
-                    fh.write(attachment.data or b"")
-                yield path
+
+            with path.open("wb") as fh:
+                # noinspection PyTypeChecker
+                fh.write(attachment.data or b"")
+            yield path
 
         yield from ()
