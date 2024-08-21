@@ -713,11 +713,78 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
             file2: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
             assert file2
             assert file2.get_absolute_path(files_folder_copy).is_file()
-            assert file.relative_path == file2.relative_path
+            assert file2.relative_path == file.relative_path
             assert database.history.select(
                 where="uuid = ? and operation = 'digiarch.edit.rollback:rollback'",
                 parameters=[str(file2.uuid)],
             ).fetchone()
+
+
+def test_rollback_extract(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    # Ensure the selected file exists and is not one that is renamed by identify
+    with FileDB(database_path_copy) as database:
+        files: list[File] = [
+            f
+            for f in database.files.select(where="action = 'extract'")
+            if f.get_absolute_path(files_folder_copy).is_file()
+        ]
+
+    test_reason_rollback: str = "rollback extract"
+    start_time: datetime = datetime.now()
+
+    app.main(
+        [
+            command_extract.name,
+            str(files_folder_copy),
+            "--actions",
+            str(tests_folder / "fileformats.yml"),
+            "--custom-signatures",
+            str(tests_folder / "custom_signatures.yml"),
+            "--siegfried-home",
+            str(tests_folder),
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        extracted_files: list[File] = [
+            f
+            for f in database.files.select(where="relative_path like '%/_archive_%/%'")
+            if f.get_absolute_path(files_folder_copy).is_file()
+        ]
+
+    app.main(
+        [
+            group_edit.name,
+            command_rollback.name,
+            str(files_folder_copy),
+            start_time.isoformat(),
+            datetime.now().isoformat(),
+            test_reason_rollback,
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            if file.relative_path.name.split(".", 1)[0].endswith("-encrypted"):
+                continue
+            file2: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file2
+            assert file2.get_absolute_path(files_folder_copy).is_file()
+            assert file2.relative_path == file.relative_path
+            assert file2.action == file.action
+            assert file2.processed is False
+
+        for file in extracted_files:
+            file3: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert not file3
+            assert not file3.get_absolute_path(files_folder_copy).is_file()
 
 
 # noinspection DuplicatedCode
