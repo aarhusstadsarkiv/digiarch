@@ -250,7 +250,6 @@ def command_identify(
         exclude_patterns: list[Pattern[str]] = [
             re_compile(ex.strip().replace(".", "\\.").replace("*", ".*"), IGNORECASE) for ex in exclude if ex.strip()
         ]
-        print(exclude_patterns)
     except re_error as err:
         raise BadParameter(f"{err.args[0] if err.args else err.msg} {err.pattern}", ctx, ctx_params(ctx)["exclude"])
 
