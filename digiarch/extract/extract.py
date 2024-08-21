@@ -174,9 +174,9 @@ def command_extract(
                 try:
                     extractor = extractor_cls(database, archive_file, root)
                     extracted_files_paths = list(extractor.extract())
-                    HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid).log(
-                        INFO, log_stdout, path=archive_file.relative_path
-                    )
+                    event = HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid)
+                    event.log(INFO, log_stdout, path=archive_file.relative_path)
+                    database.history.insert(event)
                 except PasswordProtectedError as err:
                     event = HistoryEntry.command_history(
                         ctx,
@@ -234,20 +234,35 @@ def command_extract(
                         custom_signatures,
                         parent=archive_file.uuid,
                     )
-                    HistoryEntry.command_history(
-                        ctx,
-                        "new",
-                        archive_file.uuid,
-                    ).log(
-                        INFO,
-                        log_stdout,
-                        puid=extracted_file.puid,
-                        action=extracted_file.action,
-                        path=extracted_file.relative_path,
-                    )
-                    for event in file_history:
-                        event.log(INFO, log_stdout)
+                    if extracted_file:
+                        event = HistoryEntry.command_history(
+                            ctx,
+                            "new",
+                            extracted_file.uuid,
+                        )
+                        event.log(
+                            INFO,
+                            log_stdout,
+                            puid=extracted_file.puid,
+                            action=extracted_file.action,
+                            path=extracted_file.relative_path,
+                        )
                         database.history.insert(event)
+                        for event in file_history:
+                            event.log(INFO, log_stdout)
+                            database.history.insert(event)
+                    else:
+                        HistoryEntry.command_history(
+                            ctx,
+                            "skip",
+                            extracted_file.uuid,
+                        ).log(
+                            WARNING,
+                            log_stdout,
+                            path=path,
+                        )
+                        for event in file_history:
+                            event.log(WARNING, log_stdout)
 
                 if archive_file.action_data.extract.on_success:
                     archive_file.action = archive_file.action_data.extract.on_success
