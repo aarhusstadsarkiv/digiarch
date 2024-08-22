@@ -68,13 +68,15 @@ def msg_body(msg: Message) -> tuple[str | None, str | None, str | None]:
 
 def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
     try:
-        if isinstance(attachment.data, (Message, MessageSigned)):
+        if not attachment.data:
+            return None
+        elif isinstance(attachment.data, (Message, MessageSigned)):
             attachment_msg = attachment.data
-        elif isinstance(attachment.data, (str, bytes)):
+        elif isinstance(attachment.data, bytes):
             attachment_msg = openMsg(attachment.data, delayAttachments=True)
         else:
             raise TypeError(f"Unsupported attachment data type {type(attachment.data)}")
-    except ExMsgBaseException:
+    except (ExMsgBaseException, FileNotFoundError):
         return None
 
     return attachment_msg if isinstance(attachment_msg, (Message, MessageSigned)) else False
