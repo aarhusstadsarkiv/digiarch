@@ -73,4 +73,4 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
                     INFO, log_stdout
                 )
 
-        end_program(ctx, database, exception, updated, log_file, log_stdout)
+        end_program(ctx, database, exception, not updated, log_file, log_stdout)
