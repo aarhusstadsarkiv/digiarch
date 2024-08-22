@@ -40,7 +40,10 @@ class ExtractorBase(ABC):
 
     @property
     def extract_folder(self):
-        return self.file.get_absolute_path().parent / f"_archive_{self.file.name}"
+        path: Path = self.file.get_absolute_path().parent / "_archive_files"
+        while path.exists() and not path.is_dir():
+            path = path.with_name("_" + path.name)
+        return path
 
     @abstractmethod
     def extract(self) -> Generator[Path, None, None]: ...
