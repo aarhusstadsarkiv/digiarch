@@ -72,7 +72,7 @@ def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
             attachment_msg = attachment.data
         elif not attachment.data:
             return None
-        elif isinstance(attachment.data, (str, bytes)):
+        elif isinstance(attachment.data, bytes):
             attachment_msg = openMsg(attachment.data, delayAttachments=True)
         else:
             raise TypeError(f"Unsupported attachment data type {type(attachment.data)}")
