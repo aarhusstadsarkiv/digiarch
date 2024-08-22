@@ -886,4 +886,4 @@ def test_rollback_extract(tests_folder: Path, files_folder: Path, files_folder_c
         for file in extracted_files:
             file3: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
             assert not file3
-            assert not file3.get_absolute_path(files_folder_copy).is_file()
+            assert not file.get_absolute_path(files_folder_copy).is_file()
