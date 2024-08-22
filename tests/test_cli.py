@@ -150,6 +150,47 @@ def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: P
 
 
 # noinspection DuplicatedCode
+def test_extract(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = list(database.files.select(where="action = 'extract'"))
+
+    app.main(
+        [
+            command_extract.name,
+            str(files_folder_copy),
+            "--actions",
+            str(tests_folder / "fileformats.yml"),
+            "--custom-signatures",
+            str(tests_folder / "custom_signatures.yml"),
+            "--siegfried-home",
+            str(tests_folder),
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            file2 = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file2
+            if file.relative_path.name.split(".", 1)[0].endswith("-encrypted"):
+                assert file2.action == "ignore"
+                assert file2.action_data.ignore.template == "password-protected"
+                assert file2.processed is True
+            elif on_success_action := file.action_data.extract.on_success:
+                assert file2.action == on_success_action
+            else:
+                assert file2.action == "ignore"
+                assert file2.action_data.ignore.template == "extracted-archive"
+                assert file2.processed is True
+                assert database.files.select(where="parent = ?", parameters=[str(file.uuid)]).fetchone()
+
+
+# noinspection DuplicatedCode
 def test_history(tests_folder: Path, files_folder: Path):
     app.main(
         [
@@ -785,44 +826,3 @@ def test_rollback_extract(tests_folder: Path, files_folder: Path, files_folder_c
             file3: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
             assert not file3
             assert not file3.get_absolute_path(files_folder_copy).is_file()
-
-
-# noinspection DuplicatedCode
-def test_extract(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
-    database_path: Path = files_folder / "_metadata" / "files.db"
-    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
-    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
-    copy(database_path, database_path_copy)
-
-    with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(where="action = 'extract'"))
-
-    app.main(
-        [
-            command_extract.name,
-            str(files_folder_copy),
-            "--actions",
-            str(tests_folder / "fileformats.yml"),
-            "--custom-signatures",
-            str(tests_folder / "custom_signatures.yml"),
-            "--siegfried-home",
-            str(tests_folder),
-        ],
-        standalone_mode=False,
-    )
-
-    with FileDB(database_path_copy) as database:
-        for file in files:
-            file2 = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
-            assert file2
-            if file.relative_path.name.split(".", 1)[0].endswith("-encrypted"):
-                assert file2.action == "ignore"
-                assert file2.action_data.ignore.template == "password-protected"
-                assert file2.processed is True
-            elif on_success_action := file.action_data.extract.on_success:
-                assert file2.action == on_success_action
-            else:
-                assert file2.action == "ignore"
-                assert file2.action_data.ignore.template == "extracted-archive"
-                assert file2.processed is True
-                assert database.files.select(where="parent = ?", parameters=[str(file.uuid)]).fetchone()
