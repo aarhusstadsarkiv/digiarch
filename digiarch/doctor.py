@@ -141,7 +141,7 @@ def command_doctor(ctx: Context, root: Path, fix: tuple[str, ...], dry_run: bool
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, not dry_run, True, False)
+        log_file, log_stdout, _ = start_program(ctx, database, None, not dry_run, True, False)
 
         with ExceptionManager(BaseException) as exception:
             if not fix or "paths" in fix:

@@ -276,7 +276,7 @@ def command_identify(
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, False)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, False)
         database.init()
 
         with ExceptionManager(BaseException) as exception:

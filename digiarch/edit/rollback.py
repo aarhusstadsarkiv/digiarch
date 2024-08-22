@@ -164,7 +164,7 @@ def command_rollback(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             where = "uuid is not null and time >= ? and time <= ?"

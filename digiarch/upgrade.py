@@ -63,12 +63,12 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
                 )
                 database.upgrade()
                 database.init()
-                log_file, log_stdout = start_program(ctx, database, start_time, True, True)
+                log_file, log_stdout, _ = start_program(ctx, database, start_time, True, True)
                 database.history.insert(event)
                 event.log(INFO, log_stdout)
                 updated = True
             else:
-                log_file, log_stdout = start_program(ctx, database, start_time, False, True, True)
+                log_file, log_stdout, _ = start_program(ctx, database, start_time, False, True, True)
                 HistoryEntry.command_history(ctx, "skip", reason="Database is already at the latest version").log(
                     INFO, log_stdout
                 )

@@ -144,7 +144,7 @@ def start_program(
     log_file: bool = True,
     log_stdout: bool = True,
     dry_run: bool = False,
-) -> tuple[Logger | None, Logger | None]:
+) -> tuple[Logger | None, Logger | None, HistoryEntry]:
     prog: str = ctx.find_root().command.name
     log_file: Logger | None = (
         setup_logger(f"{prog}_file", files=[database.path.parent / f"{prog}.log"]) if log_file else None
@@ -166,7 +166,7 @@ def start_program(
     if log_stdout:
         program_start.log(INFO, log_stdout, show_args=False)
 
-    return log_file, log_stdout
+    return log_file, log_stdout, program_start
 
 
 def end_program(
