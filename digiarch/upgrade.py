@@ -1,4 +1,3 @@
-from datetime import datetime
 from logging import INFO
 from pathlib import Path
 from shutil import copy2
@@ -38,11 +37,9 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
     When using --backup, a copy of the current database version will be created in the same folder with the name
     "files-{version}.db". The copy will not be created if the database is already at the latest version.
     """
-    start_time: datetime = datetime.now()
-
     with FileDB(root / "_metadata" / "files.db", check_version=False) as database:
+        log_file, log_stdout, start_event = start_program(ctx, database, None, True, True, True)
         updated: bool = False
-        log_file = log_stdout = None
 
         with ExceptionManager(BaseException, allow=[ClickException]) as exception:
             if not is_latest(database):
@@ -63,14 +60,13 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
                 )
                 database.upgrade()
                 database.init()
-                log_file, log_stdout = start_program(ctx, database, start_time, True, True)
+                database.history.insert(start_event)
                 database.history.insert(event)
                 event.log(INFO, log_stdout)
                 updated = True
             else:
-                log_file, log_stdout = start_program(ctx, database, start_time, False, True, True)
                 HistoryEntry.command_history(ctx, "skip", reason="Database is already at the latest version").log(
                     INFO, log_stdout
                 )
 
-        end_program(ctx, database, exception, updated, log_file, log_stdout)
+        end_program(ctx, database, exception, not updated, log_file, log_stdout)

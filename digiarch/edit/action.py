@@ -113,7 +113,7 @@ def action_convert(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
@@ -158,7 +158,7 @@ def action_extract(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
@@ -211,7 +211,7 @@ def action_manual(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
@@ -273,7 +273,7 @@ def action_ignore(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
@@ -339,7 +339,7 @@ def command_copy(
         raise BadParameter(f"Action {action} not found in {puid}.", ctx, ctx_params(ctx)["puid"])
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):

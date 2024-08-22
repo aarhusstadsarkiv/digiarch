@@ -121,7 +121,7 @@ class MsgExtractor(ExtractorBase):
             if isinstance(attachment, (Message, MessageSigned)):
                 path: Path = extract_folder.joinpath(sanitize_path(attachment.filename))
                 if path.suffix != ".msg":
-                    path.with_name(path.name + ".msg")
+                    path = path.with_name(path.name + ".msg")
                 attachment.export(path)
                 yield path
             elif attachment.data is not None and not isinstance(attachment.data, bytes):

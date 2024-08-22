@@ -142,7 +142,7 @@ def command_extract(
     custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
         offset: int = 0
 
         with ExceptionManager(BaseException) as exception:

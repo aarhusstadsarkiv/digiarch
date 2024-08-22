@@ -50,7 +50,7 @@ def command_remove(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
