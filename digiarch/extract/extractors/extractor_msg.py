@@ -68,14 +68,16 @@ def msg_body(msg: Message) -> tuple[str | None, str | None, str | None]:
 
 def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
     try:
-        if attachment.type == "msg":
+        if isinstance(attachment.data, (Message, MessageSigned)):
             attachment_msg = attachment.data
-        else:
+        elif isinstance(attachment.data, (str, bytes)):
             attachment_msg = openMsg(attachment.data, delayAttachments=True)
+        else:
+            raise TypeError(f"Unsupported attachment data type {type(attachment.data)}")
     except ExMsgBaseException:
         return None
 
-    return attachment_msg if isinstance(attachment_msg, Message) else False
+    return attachment_msg if isinstance(attachment_msg, (Message, MessageSigned)) else False
 
 
 def msg_attachments(
@@ -87,25 +89,15 @@ def msg_attachments(
     attachments: list[AttachmentBase | SignedAttachment | Message | MessageSigned] = []
 
     for attachment in msg.attachments:
-        if (
-            issubclass(type(attachment), AttachmentBase)
-            and attachment.cid
-            and attachment.cid in (body_html or body_rtf or "")
-        ):
+        if (cid := getattr(attachment, "cid", None)) and cid in (body_html or body_rtf or ""):
             inline_attachments.append(attachment)
         elif (attachment_msg := msg_attachment(attachment)) is False:
             continue
         elif attachment_msg is not None:
             attachments.append(attachment_msg)
-        elif isinstance(attachment, SignedAttachment):
-            # noinspection PyTypeChecker
-            filename: str = attachment.longFilename
-            if any(match(pattern, filename.lower()) for pattern in EXCLUDED_ATTACHMENTS):
-                continue
-            attachments.append(attachment)
         else:
-            filename: str = attachment.getFilename()
-            if any(match(pattern, filename.lower()) for pattern in EXCLUDED_ATTACHMENTS):
+            name = attachment.longFilename if isinstance(attachment, SignedAttachment) else attachment.getFilename()
+            if any(match(pattern, name.lower()) for pattern in EXCLUDED_ATTACHMENTS):
                 continue
             attachments.append(attachment)
 
@@ -132,15 +124,12 @@ class MsgExtractor(ExtractorBase):
                 yield path
             elif attachment.data is not None and not isinstance(attachment.data, bytes):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
-            elif isinstance(attachment, SignedAttachment):
-                # noinspection PyTypeChecker
-                path: Path = extract_folder.joinpath(sanitize_path(attachment.longFilename))
             else:
-                path: Path = extract_folder.joinpath(sanitize_path(attachment.getFilename()))
-
-            with path.open("wb") as fh:
-                # noinspection PyTypeChecker
-                fh.write(attachment.data or b"")
-            yield path
+                name = attachment.longFilename if isinstance(attachment, SignedAttachment) else attachment.getFilename()
+                path: Path = extract_folder.joinpath(sanitize_path(name))
+                with path.open("wb") as fh:
+                    # noinspection PyTypeChecker
+                    fh.write(attachment.data or b"")
+                yield path
 
         yield from ()
