@@ -62,16 +62,16 @@ def sanitize_paths(ctx: Context, database: FileDB, root: Path, dry_run: bool, *l
 
 
 def deduplicate_extensions(ctx: Context, database: FileDB, root: Path, dry_run: bool, *loggers: Logger | None):
+    database.create_function("__reverse", 1, lambda s: s[::-1])
     for file in database.files.select(
-        where="instr(reverse(relative_path), '.') != 0"
+        where="instr(__reverse(relative_path), '.') != 0"
         " and relative_path like '%' ||"
-        " substr(relative_path, length(relative_path) - instr(reverse(relative_path), '.') + 1) ||"
-        " substr(relative_path, length(relative_path) - instr(reverse(relative_path), '.') + 1)"
+        " substr(relative_path, length(relative_path) - instr(__reverse(relative_path), '.') + 1) ||"
+        " substr(relative_path, length(relative_path) - instr(__reverse(relative_path), '.') + 1)"
     ):
         old_suffixes: list[str] = [s.lower() for s in file.suffixes.split(".") if s]
-        new_suffixes: list[str] = [s.lower() for s in old_suffixes]
         # Deduplicate suffixes
-        new_suffixes = sorted(set(new_suffixes), key=new_suffixes.index)
+        new_suffixes: list[str] = sorted(set(old_suffixes), key=old_suffixes.index)
         # Restore original letter case
         new_suffixes = [next(s2 for s2 in old_suffixes if s2.lower() == s) for s in new_suffixes]
         old_name: str = file.name

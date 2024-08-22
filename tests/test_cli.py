@@ -18,6 +18,7 @@ from click import BadParameter
 from pydantic import BaseModel
 
 from digiarch.cli import app
+from digiarch.doctor import command_doctor
 from digiarch.edit.action import group_action
 from digiarch.edit.edit import group_edit
 from digiarch.edit.lock import command_lock
@@ -147,6 +148,107 @@ def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: P
         ).fetchone()
         assert isinstance(file, File)
         assert "extension mismatch" not in (file_new.warning or [])
+
+
+# noinspection DuplicatedCode
+def test_extract(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = list(database.files.select(where="action = 'extract'"))
+
+    app.main(
+        [
+            command_extract.name,
+            str(files_folder_copy),
+            "--actions",
+            str(tests_folder / "fileformats.yml"),
+            "--custom-signatures",
+            str(tests_folder / "custom_signatures.yml"),
+            "--siegfried-home",
+            str(tests_folder),
+        ],
+        standalone_mode=False,
+    )
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            file2 = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file2
+            if file.relative_path.name.split(".", 1)[0].endswith("-encrypted"):
+                assert file2.action == "ignore"
+                assert file2.action_data.ignore.template == "password-protected"
+                assert file2.processed is True
+            elif on_success_action := file.action_data.extract.on_success:
+                assert file2.action == on_success_action
+            else:
+                assert file2.action == "ignore"
+                assert file2.action_data.ignore.template == "extracted-archive"
+                assert file2.processed is True
+                assert database.files.select(where="parent = ?", parameters=[str(file.uuid)]).fetchone()
+
+
+# noinspection DuplicatedCode
+def test_doctor_paths(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = list(database.files.select())
+        for file in files:
+            file.root = files_folder_copy
+            file.relative_path = (
+                file.get_absolute_path()
+                .rename(file.get_absolute_path().with_name("*" + file.name))
+                .relative_to(files_folder_copy)
+            )
+            database.files.update({"relative_path": file.relative_path}, {"uuid": file.uuid})
+            database.commit()
+
+    app.main([command_doctor.name, str(files_folder_copy), "--fix", "paths"], standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            file2: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file2
+            assert not file.get_absolute_path(files_folder_copy).is_file()
+            assert file2.get_absolute_path(files_folder_copy).is_file()
+            assert file2.relative_path == file.relative_path.with_name(file.name.replace("*", "_"))
+
+
+# noinspection DuplicatedCode
+def test_doctor_extensions(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = [f for f in database.files.select() if f.suffix]
+        for file in files:
+            file.root = files_folder_copy
+            file.relative_path = (
+                file.get_absolute_path()
+                .rename(file.get_absolute_path().with_name(file.name + file.suffix))
+                .relative_to(files_folder_copy)
+            )
+            database.files.update({"relative_path": file.relative_path}, {"uuid": file.uuid})
+            database.commit()
+
+    app.main([command_doctor.name, str(files_folder_copy), "--fix", "extensions"], standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            file2: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file2
+            assert not file.get_absolute_path(files_folder_copy).is_file()
+            assert file2.get_absolute_path(files_folder_copy).is_file()
+            assert file2.relative_path == file.relative_path.with_name(file.name.removesuffix(file.suffix))
 
 
 # noinspection DuplicatedCode
@@ -785,44 +887,3 @@ def test_rollback_extract(tests_folder: Path, files_folder: Path, files_folder_c
             file3: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
             assert not file3
             assert not file3.get_absolute_path(files_folder_copy).is_file()
-
-
-# noinspection DuplicatedCode
-def test_extract(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
-    database_path: Path = files_folder / "_metadata" / "files.db"
-    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
-    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
-    copy(database_path, database_path_copy)
-
-    with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(where="action = 'extract'"))
-
-    app.main(
-        [
-            command_extract.name,
-            str(files_folder_copy),
-            "--actions",
-            str(tests_folder / "fileformats.yml"),
-            "--custom-signatures",
-            str(tests_folder / "custom_signatures.yml"),
-            "--siegfried-home",
-            str(tests_folder),
-        ],
-        standalone_mode=False,
-    )
-
-    with FileDB(database_path_copy) as database:
-        for file in files:
-            file2 = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
-            assert file2
-            if file.relative_path.name.split(".", 1)[0].endswith("-encrypted"):
-                assert file2.action == "ignore"
-                assert file2.action_data.ignore.template == "password-protected"
-                assert file2.processed is True
-            elif on_success_action := file.action_data.extract.on_success:
-                assert file2.action == on_success_action
-            else:
-                assert file2.action == "ignore"
-                assert file2.action_data.ignore.template == "extracted-archive"
-                assert file2.processed is True
-                assert database.files.select(where="parent = ?", parameters=[str(file.uuid)]).fetchone()
