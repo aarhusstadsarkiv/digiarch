@@ -384,7 +384,7 @@ def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_fold
     copy(database_path, database_path_copy)
 
     with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=3))
+        files: list[File] = list(database.files.select(order_by=[("random()", "asc")]))
 
     ids_file: Path = files_folder_copy.joinpath("ids.txt")
     ids_file.write_text("\n".join(str(f.uuid) for f in files))
@@ -434,11 +434,7 @@ def test_edit_rename(files_folder: Path, files_folder_copy: Path):
 
     # Ensure the selected file exists and is not one that is renamed by identify
     with FileDB(database_path_copy) as database:
-        file_old: File = next(
-            f
-            for f in database.files.select(order_by=[("random()", "asc")])
-            if files_folder.joinpath(f.relative_path).is_file()
-        )
+        file_old: File = next(f for f in database.files.select() if files_folder.joinpath(f.relative_path).is_file())
         assert isinstance(file_old, File)
         file_old.root = files_folder_copy
 
@@ -485,7 +481,7 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
     with FileDB(database_path_copy) as database:
         file_old: File = next(
             f
-            for f in database.files.select(order_by=[("random()", "asc")])
+            for f in database.files.select()
             if files_folder.joinpath(f.relative_path).is_file() and f.relative_path.suffix
         )
         assert isinstance(file_old, File)
@@ -527,7 +523,7 @@ def test_edit_rename_empty(files_folder: Path, files_folder_copy: Path):
     with FileDB(database_path_copy) as database:
         file_old: File = next(
             f
-            for f in database.files.select(order_by=[("random()", "asc")])
+            for f in database.files.select()
             if files_folder.joinpath(f.relative_path).is_file() and f.relative_path.suffix
         )
         assert isinstance(file_old, File)
@@ -592,7 +588,7 @@ def test_edit_remove_ids_file(tests_folder: Path, files_folder: Path, files_fold
     copy(database_path, database_path_copy)
 
     with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=3))
+        files: list[File] = list(database.files.select())
 
     ids_file: Path = files_folder_copy.joinpath("ids.txt")
     ids_file.write_text("\n".join(str(f.uuid) for f in files))
@@ -630,7 +626,7 @@ def test_edit_lock(tests_folder: Path, files_folder: Path, files_folder_copy: Pa
     copy(database_path, database_path_copy)
 
     with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=3))
+        files: list[File] = list(database.files.select())
 
     test_reason: str = "lock"
 
@@ -667,13 +663,7 @@ def test_edit_rollback_action(tests_folder: Path, files_folder: Path, files_fold
     copy(database_path, database_path_copy)
 
     with FileDB(database_path_copy) as database:
-        files: list[File] = list(
-            database.files.select(
-                where="action!= 'ignore'",
-                order_by=[("random()", "asc")],
-                limit=3,
-            )
-        )
+        files: list[File] = list(database.files.select(where="action!= 'ignore'"))
 
     test_reason_edit: str = "action"
     test_reason_rollback: str = "rollback action"
@@ -726,7 +716,7 @@ def test_edit_rollback_remove(tests_folder: Path, files_folder: Path, files_fold
     copy(database_path, database_path_copy)
 
     with FileDB(database_path_copy) as database:
-        files: list[File] = list(database.files.select(order_by=[("random()", "asc")], limit=2))
+        files: list[File] = list(database.files.select())
 
     test_reason_edit: str = "remove"
     test_reason_rollback: str = "rollback remove"
@@ -774,11 +764,7 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
 
     # Ensure the selected file exists and is not one that is renamed by identify
     with FileDB(database_path_copy) as database:
-        files: list[File] = [
-            f
-            for f in database.files.select(order_by=[("random()", "asc")], limit=3)
-            if f.get_absolute_path(files_folder_copy).is_file()
-        ]
+        files: list[File] = [f for f in database.files.select() if f.get_absolute_path(files_folder_copy).is_file()]
 
     test_reason_edit: str = "rename"
     test_reason_rollback: str = "rollback rename"
@@ -886,4 +872,4 @@ def test_rollback_extract(tests_folder: Path, files_folder: Path, files_folder_c
         for file in extracted_files:
             file3: File | None = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
             assert not file3
-            assert not file3.get_absolute_path(files_folder_copy).is_file()
+            assert not file.get_absolute_path(files_folder_copy).is_file()
