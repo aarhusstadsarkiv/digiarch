@@ -74,7 +74,7 @@ def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
             attachment_msg = openMsg(attachment.data, delayAttachments=True)
         else:
             raise TypeError(f"Unsupported attachment data type {type(attachment.data)}")
-    except ExMsgBaseException:
+    except (ExMsgBaseException, FileNotFoundError):
         return None
 
     return attachment_msg if isinstance(attachment_msg, (Message, MessageSigned)) else False
