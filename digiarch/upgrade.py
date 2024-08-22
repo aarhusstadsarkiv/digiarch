@@ -1,4 +1,3 @@
-from datetime import datetime
 from logging import INFO
 from pathlib import Path
 from shutil import copy2
