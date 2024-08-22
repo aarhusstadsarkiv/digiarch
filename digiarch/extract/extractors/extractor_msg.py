@@ -68,10 +68,10 @@ def msg_body(msg: Message) -> tuple[str | None, str | None, str | None]:
 
 def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
     try:
-        if isinstance(attachment.data, (Message, MessageSigned)):
-            attachment_msg = attachment.data
-        elif not attachment.data:
+        if not attachment.data:
             return None
+        elif isinstance(attachment.data, (Message, MessageSigned)):
+            attachment_msg = attachment.data
         elif isinstance(attachment.data, bytes):
             attachment_msg = openMsg(attachment.data, delayAttachments=True)
         else:
