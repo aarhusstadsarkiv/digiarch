@@ -52,7 +52,7 @@ def sanitize_paths(ctx: Context, database: FileDB, root: Path, dry_run: bool, *l
 
         event: HistoryEntry = HistoryEntry.command_history(
             ctx,
-            "sanitize-path",
+            "sanitize-path.rename",
             file.uuid,
             [str(file.relative_path), str(new_path)],
         )
@@ -106,7 +106,7 @@ def deduplicate_extensions(ctx: Context, database: FileDB, root: Path, dry_run: 
 
         event: HistoryEntry = HistoryEntry.command_history(
             ctx,
-            "deduplicate-extensions",
+            "deduplicate-extensions.rename",
             file.uuid,
             [old_path.relative_to(root), new_path.relative_to(root)],
         )
