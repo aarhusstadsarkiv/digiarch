@@ -18,7 +18,7 @@ def group_edit():
     The ID arguments used in the edit subcommands are interpreted as a list of UUID's by default. This behaviour can
     be changed with the --puid, --path, --path-like, --checksum, and --warning options. If the --from-file option is
     used, each ID argument is interpreted as the path to a file containing a list of IDs (one per line, empty lines
-    are ignored).
+    are ignored). To match a field as NULL, use @null as a value (can be used both as argument and in an IDs file).
 
     Every edit subcommand requires a REASON argument that will be used in the database log to explain the reason behind
     the edit.
