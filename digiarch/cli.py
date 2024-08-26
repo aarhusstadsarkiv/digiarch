@@ -3,6 +3,7 @@ from click import group
 from click import version_option
 
 from .__version__ import __version__
+from .completions import command_completions
 from .doctor import command_doctor
 from .edit.edit import group_edit
 from .extract.extract import command_extract
@@ -26,5 +27,6 @@ app.add_command(group_edit, group_edit.name)
 app.add_command(command_history, command_history.name)
 app.add_command(command_doctor, command_doctor.name)
 app.add_command(command_upgrade, command_upgrade.name)
+app.add_command(command_completions, command_completions.name)
 
 app.list_commands = lambda _ctx: list(app.commands)
