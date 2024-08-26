@@ -43,14 +43,14 @@ class ShellChoice(CompleteChoice):
 @docstring_format(shells="\n    ".join(f"* {s.value}\t{s.help}" for s in ShellChoice.completion_items))
 def command_completions(ctx: Context, shell: Type[ShellComplete] | None):
     """
-    Generate tab-completion scripts for your shell. The generated completion must be saved in the correct location for
-    it to be recognized and used by the shell.
+    Generate tab-completion scripts for your shell.
+
+    The generated completion must be saved in the correct location for it to be recognized and used by the shell.
 
     \b
     Supported shells are:
     {shells}
-    """
-
+    """  # noqa: D301
     if not shell:
         raise BadParameter("shell not found.", ctx, ctx_params(ctx)["shell"])
 
