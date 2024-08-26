@@ -3,6 +3,7 @@ from logging import INFO
 from logging import Logger
 from os import PathLike
 from pathlib import Path
+from uuid import UUID
 
 from acacore.database import FileDB
 from acacore.models.history import HistoryEntry
@@ -115,6 +116,25 @@ def deduplicate_extensions(ctx: Context, database: FileDB, root: Path, dry_run: 
         event.log(INFO, *(log for log in loggers if log))
 
 
+def check_files(ctx: Context, database: FileDB, root: Path, dry_run: bool, *loggers: Logger | None):
+    missing_files_uuids: list[UUID] = []
+
+    for file in database.files.select():
+        if not file.get_absolute_path(root).is_file():
+            event = HistoryEntry.command_history(
+                ctx,
+                "files.remove",
+                file.uuid,
+                data=file.model_dump(mode="json"),
+                reason="File not found",
+            )
+            if not dry_run:
+                database.execute(f"delete from {database.files.name} where uuid = ?", [str(file.uuid)])
+                database.history.insert(event)
+            event.log(INFO, *(log for log in loggers if log), show_args=["uuid"], path=file.relative_path)
+            missing_files_uuids.append(file.uuid)
+
+
 @command("doctor", no_args_is_help=True, short_help="Inspect the database.")
 @argument_root(True)
 @option(
@@ -135,6 +155,7 @@ def command_doctor(ctx: Context, root: Path, fix: tuple[str, ...], dry_run: bool
         characters removed
     * Duplicated extensions (extensions): paths ending with duplicated extensions will be rewritten to remove
         duplicated extensions and leave only one
+    * Check files (files): ensure that all files in the database exist, if not they are removed
 
     To see the changes without committing them, use the --dry-run option.
     """  # noqa: D301
@@ -150,5 +171,8 @@ def command_doctor(ctx: Context, root: Path, fix: tuple[str, ...], dry_run: bool
             if not fix or "extensions" in fix:
                 HistoryEntry.command_history(ctx, "deduplicate-extensions.start").log(INFO, log_stdout)
                 deduplicate_extensions(ctx, database, root, dry_run, log_stdout)
+            if not fix or "files" in fix:
+                HistoryEntry.command_history(ctx, "files.start").log(INFO, log_stdout)
+                check_files(ctx, database, root, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
