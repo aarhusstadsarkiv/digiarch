@@ -44,6 +44,15 @@ from .extractors.extractor_zip import ZipExtractor
 
 
 def find_extractor(file: File) -> tuple[Type[ExtractorBase] | None, str | None]:
+    """
+    Match an extractor class to a file.
+
+    Matches the value at ``File.action_data.extract.tool`` to the ``ExtractorBase.tool_names`` of the various
+    converters. The first matching extractor is returned. If multiple extractors support the same tool, then priority is
+    given to the extractor matched first.
+    :param file: The ``acacore.models.file.File`` object to find the extractor for.
+    :return: An ``ExtractorBase`` class or ``None`` if an extractor could not be found, and the name of the tool.
+    """
     if not file.action_data.extract:
         return None, None
 

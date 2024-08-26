@@ -57,7 +57,7 @@ def argument_ids(required: bool) -> Callable[[FC], FC]:
             option(
                 "--warning",
                 "id_type",
-                flag_value="warnings",
+                flag_value="warnings-like",
                 help="Use warnings as identifiers.",
             ),
             option(
@@ -79,12 +79,19 @@ def find_files(database: FileDB, ids: tuple[str, ...], id_type: str, id_files: b
     if id_files:
         ids = tuple(i.strip() for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
-    if id_type in ("warnings",):
-        where: str = f"{id_type} like '%\"' || ? || '\"%'"
-    elif id_type.endswith("-like"):
-        id_type = id_type.removesuffix("-like")
-        where: str = f"{id_type} like ?"
-    else:
-        where: str = f"{id_type} = ?"
+    where: list[str] = []
+    parameters: list[str] = []
+    like: bool = id_type.endswith("-like")
+    id_type = id_type.removesuffix("-like")
 
-    yield from (file for file_id in ids for file in database.files.select(where=where, parameters=[file_id]))
+    for id_value in ids:
+        if id_value == "@null":
+            where.append(f"{id_type} is null")
+            continue
+        elif like:
+            where.append(f"{id_type} like '%' || ? || '%'")
+        else:
+            where.append(f"{id_type} = ?")
+        parameters.append(id_value)
+
+    yield from database.files.select(where=" or ".join(where), parameters=parameters)
