@@ -48,6 +48,7 @@ def rollback_edit_lock(database: FileDB, event: HistoryEntry, dry_run: bool) -> 
     return file, None
 
 
+# noinspection DuplicatedCode
 def rollback_edit_rename(
     database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
 ) -> tuple[File | None, str | None]:
@@ -104,6 +105,34 @@ def rollback_extract_new(
     return file, None
 
 
+# noinspection DuplicatedCode
+def rollback_doctor_rename(
+    database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
+) -> tuple[File | None, str | None]:
+    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+    if file and not dry_run:
+        file.root = root
+        # noinspection PyUnresolvedReferences
+        old_name: str = event.data[0]
+        if (old_path := file.get_absolute_path().with_name(old_name)).is_file():
+            return None, "file already exists"
+        file.get_absolute_path().rename(old_path)
+        file.name = old_name
+        database.files.update(file, {"uuid": file.uuid})
+    return file, None
+
+
+def rollback_doctor_files(
+    database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
+) -> tuple[File | None, str | None]:
+    file = File.model_validate(event.data)
+    if not file.get_absolute_path(root).is_file():
+        return None, "file does not exist"
+    elif file and not dry_run:
+        database.files.insert(file)
+    return file, None
+
+
 @command("rollback", no_args_is_help=True, short_help="Roll back edits.")
 @argument_root(True)
 @argument(
@@ -151,6 +180,7 @@ def command_rollback(
 
     To see the changes without committing them, use the --dry-run option.
     """
+    from digiarch.doctor import command_doctor
     from digiarch.extract.extract import command_extract
 
     from .edit import command_lock
@@ -200,6 +230,15 @@ def command_rollback(
                         file, error = rollback_extract_unpacked(database, event, dry_run)
                     elif operation == "new":
                         file, error = rollback_extract_new(database, root, event, dry_run)
+                    else:
+                        continue
+                elif name == f"{program_name}.{command_doctor.name}":
+                    if operation == "deduplicate-extensions.rename":
+                        file, error = rollback_doctor_rename(database, root, event, dry_run)
+                    elif operation == "deduplicate-extensions.rename":
+                        file, error = rollback_doctor_rename(database, root, event, dry_run)
+                    elif operation == "files.remove":
+                        file, error = rollback_doctor_files(database, root, event, dry_run)
                     else:
                         continue
                 else:
