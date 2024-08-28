@@ -233,9 +233,7 @@ def command_rollback(
                     else:
                         continue
                 elif name == f"{program_name}.{command_doctor.name}":
-                    if operation == "sanitize-paths.rename":
-                        file, error = rollback_doctor_rename(database, root, event, dry_run)
-                    elif operation == "deduplicate-extensions.rename":
+                    if operation in ("sanitize-paths.rename", "deduplicate-extensions.rename"):
                         file, error = rollback_doctor_rename(database, root, event, dry_run)
                     elif operation == "files.remove":
                         file, error = rollback_doctor_files(database, root, event, dry_run)
