@@ -139,7 +139,7 @@ def check_files(ctx: Context, database: FileDB, root: Path, dry_run: bool, *logg
 @argument_root(True)
 @option(
     "--fix",
-    type=Choice(["paths", "extensions"]),
+    type=Choice(["paths", "extensions", "files"]),
     multiple=True,
     help="Specify which fixes to apply.",
 )
