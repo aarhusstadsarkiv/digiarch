@@ -80,6 +80,7 @@ def find_files(
     ids: tuple[str, ...],
     id_type: str,
     id_files: bool,
+    order_by: list[tuple[str, str]] | None = None,
     limit: int | None = None,
 ) -> Generator[File, None, None]:
     if id_files:
@@ -100,4 +101,4 @@ def find_files(
             where.append(f"{id_type} = ?")
         parameters.append(id_value)
 
-    yield from database.files.select(where=" or ".join(where), parameters=parameters, limit=limit)
+    yield from database.files.select(where=" or ".join(where), parameters=parameters, order_by=order_by, limit=limit)
