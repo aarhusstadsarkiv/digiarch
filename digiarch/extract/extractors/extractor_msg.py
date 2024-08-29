@@ -119,7 +119,7 @@ class MsgExtractor(ExtractorBase):
 
         for attachment in inline_attachments + attachments:
             if isinstance(attachment, (Message, MessageSigned)):
-                path: Path = extract_folder.joinpath(sanitize_path(attachment.filename))
+                path: Path = extract_folder.joinpath(sanitize_path(attachment.filename.replace("/", "_")))
                 if path.suffix != ".msg":
                     path = path.with_name(path.name + ".msg")
                 attachment.export(path)
@@ -128,7 +128,7 @@ class MsgExtractor(ExtractorBase):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
             else:
                 name = attachment.longFilename if isinstance(attachment, SignedAttachment) else attachment.getFilename()
-                path: Path = extract_folder.joinpath(sanitize_path(name))
+                path: Path = extract_folder.joinpath(sanitize_path(name.replace("/", "_")))
                 with path.open("wb") as fh:
                     # noinspection PyTypeChecker
                     fh.write(attachment.data or b"")
