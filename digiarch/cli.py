@@ -10,6 +10,7 @@ from .extract.extract import command_extract
 from .history import command_history
 from .identify import command_identify
 from .identify import command_reidentify
+from .search import command_search
 from .upgrade import command_upgrade
 
 
@@ -24,6 +25,7 @@ app.add_command(command_identify, command_identify.name)
 app.add_command(command_reidentify, command_reidentify.name)
 app.add_command(command_extract, command_extract.name)
 app.add_command(group_edit, group_edit.name)
+app.add_command(command_search, command_search.name)
 app.add_command(command_history, command_history.name)
 app.add_command(command_doctor, command_doctor.name)
 app.add_command(command_upgrade, command_upgrade.name)
