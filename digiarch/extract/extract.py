@@ -261,14 +261,8 @@ def command_extract(
                             event.log(INFO, log_stdout)
                             database.history.insert(event)
                     else:
-                        HistoryEntry.command_history(
-                            ctx,
-                            "skip",
-                            extracted_file.uuid,
-                        ).log(
-                            WARNING,
-                            log_stdout,
-                            path=path,
+                        HistoryEntry.command_history(ctx, "skip", reason="File already exists").log(
+                            WARNING, log_stdout, path=path
                         )
                         for event in file_history:
                             event.log(WARNING, log_stdout)
