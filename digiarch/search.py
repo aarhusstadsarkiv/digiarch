@@ -15,6 +15,7 @@ from click import pass_context
 
 from digiarch.edit.common import argument_ids
 from digiarch.edit.common import find_files
+
 from .common import argument_root
 from .common import check_database_version
 from .common import ctx_params
