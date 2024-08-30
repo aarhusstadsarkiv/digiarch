@@ -127,7 +127,7 @@ class MsgExtractor(ExtractorBase):
             elif attachment.data is not None and not isinstance(attachment.data, bytes):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
             else:
-                name: str =  attachment.getFilename() if isinstance(attachment, Attachment) else attachment.longFilename
+                name: str = attachment.getFilename() if isinstance(attachment, Attachment) else attachment.longFilename
                 name = name or f"attachment-{n}"
                 path: Path = extract_folder.joinpath(sanitize_path(name.replace("/", "_")))
                 with path.open("wb") as fh:
