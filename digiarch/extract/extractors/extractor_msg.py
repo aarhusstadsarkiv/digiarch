@@ -120,7 +120,7 @@ class MsgExtractor(ExtractorBase):
 
         for n, attachment in enumerate(inline_attachments + attachments):
             if isinstance(attachment, (Message, MessageSigned)):
-                name = attachment.filename or f"attachment-{n}"
+                name = attachment.filename or attachment.subject or f"attachment-{n}"
                 path: Path = extract_folder.joinpath(sanitize_path(name.replace("/", "_")))
                 attachment.export(path)
                 yield path
