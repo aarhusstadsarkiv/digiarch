@@ -21,7 +21,7 @@ from digiarch.common import end_program
 from digiarch.common import option_dry_run
 from digiarch.common import start_program
 
-invalid_characters: str = r'\?%*|"<>,:;=+[]!@' + bytes(range(20)).decode("ascii") + "\x7f"
+invalid_characters: str = '\\#%&{}[]<>*?/$!\'":@+`|=' + bytes(range(32)).decode("ascii") + "\x7f"
 
 
 def sanitize_path(path: str | PathLike) -> Path:
