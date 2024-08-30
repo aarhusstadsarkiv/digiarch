@@ -40,6 +40,17 @@ from .common import argument_ids
 from .common import find_files
 
 
+def set_lock(ctx: Context, database: FileDB, file: File, reason: str, dry_run: bool, *loggers: Logger,):
+    if file.lock is True:
+        return
+    event = HistoryEntry.command_history(ctx, "lock", file.uuid, [file.lock, True], reason)
+    file.lock = True
+    if not dry_run:
+        database.files.update(file, {"uuid": file.uuid})
+        database.history.insert(event)
+    event.log(INFO, *loggers)
+
+
 def set_action(
     ctx: Context,
     database: FileDB,
@@ -83,6 +94,7 @@ def group_action():
     callback=param_regex("^(.[a-zA-Z0-9]+)+$"),
     help='The file extensions to generate.  [multiple; required for tools other than "copy"]',
 )
+@option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
 def action_convert(
@@ -94,12 +106,15 @@ def action_convert(
     id_files: bool,
     tool: str,
     outputs: tuple[str, ...],
+    lock: bool,
     dry_run: bool,
 ):
     """
     Set files' action to "convert".
 
     The --outputs option may be omitted when using the "copy" tool.
+
+    To lock the file(s) after editing them, use the --lock option.
 
     To see the changes without committing them, use the --dry-run option.
 
@@ -118,6 +133,8 @@ def action_convert(
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
                 set_action(ctx, database, file, "convert", data, reason, dry_run, log_stdout)
+                if lock:
+                    set_lock(ctx, database, file, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -133,6 +150,7 @@ def action_convert(
     callback=param_regex(r"^(.[a-zA-Z0-9]+)+$"),
     help="The extension the file must have for extraction to succeed.",
 )
+@option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
 def action_extract(
@@ -144,10 +162,13 @@ def action_extract(
     id_files: bool,
     tool: str,
     extension: str | None,
+    lock: bool,
     dry_run: bool,
 ):
     """
     Set files' action to "extract".
+
+    To lock the file(s) after editing them, use the --lock option.
 
     To see the changes without committing them, use the --dry-run option.
 
@@ -163,6 +184,8 @@ def action_extract(
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
                 set_action(ctx, database, file, "extract", data, reason, dry_run, log_stdout)
+                if lock:
+                    set_lock(ctx, database, file, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -186,6 +209,7 @@ def action_extract(
     callback=param_regex(r"^.*\S.*$"),
     help="The steps to take to process the file.",
 )
+@option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
 def action_manual(
@@ -197,10 +221,13 @@ def action_manual(
     id_files: bool,
     data_reason: str | None,
     process: str,
+    lock: bool,
     dry_run: bool,
 ):
     """
     Set files' action to "manual".
+
+    To lock the file(s) after editing them, use the --lock option.
 
     To see the changes without committing them, use the --dry-run option.
 
@@ -216,6 +243,8 @@ def action_manual(
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
                 set_action(ctx, database, file, "manual", data, reason, dry_run, log_stdout)
+                if lock:
+                    set_lock(ctx, database, file, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -238,6 +267,7 @@ def action_manual(
     callback=param_regex(r"^.*\S.*$"),
     help='The reason why the file is ignored.  [required for "text" template]',
 )
+@option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
 @docstring_format(templates="\n".join(f"    * {t}" for t in TemplateTypeEnum).strip())
@@ -250,6 +280,7 @@ def action_ignore(
     id_files: bool,
     template: TTemplateType,
     data_reason: str | None,
+    lock: bool,
     dry_run: bool,
 ):
     """
@@ -260,6 +291,8 @@ def action_ignore(
     {templates}
 
     The --reason option may be omitted when using a template other than "text".
+    
+    To lock the file(s) after editing them, use the --lock option.
 
     To see the changes without committing them, use the --dry-run option.
 
@@ -278,6 +311,8 @@ def action_ignore(
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
                 set_action(ctx, database, file, "ignore", data, reason, dry_run, log_stdout)
+                if lock:
+                    set_lock(ctx, database, file, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -298,6 +333,7 @@ def action_ignore(
     callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing file format actions.",
 )
+@option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
 def command_copy(
@@ -310,6 +346,7 @@ def command_copy(
     id_type: str,
     id_files: bool,
     actions_file: Path | None,
+    lock: bool,
     dry_run: bool,
 ):
     """
@@ -323,8 +360,12 @@ def command_copy(
     * ignore
 
     If no actions file is give with --actions, the latest version will be downloaded from GitHub.
+    
+    To lock the file(s) after editing them, use the --lock option.
 
     To see the changes without committing them, use the --dry-run option.
+
+    For details on the ID arguments, see the edit command.
     """  # noqa: D301
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
@@ -344,6 +385,8 @@ def command_copy(
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, ids, id_type, id_files):
                 set_action(ctx, database, file, action, data, reason, dry_run, log_stdout)
+                if lock:
+                    set_lock(ctx, database, file, reason, dry_run, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
