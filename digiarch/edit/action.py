@@ -40,7 +40,14 @@ from .common import argument_ids
 from .common import find_files
 
 
-def set_lock(ctx: Context, database: FileDB, file: File, reason: str, dry_run: bool, *loggers: Logger,):
+def set_lock(
+    ctx: Context,
+    database: FileDB,
+    file: File,
+    reason: str,
+    dry_run: bool,
+    *loggers: Logger,
+):
     if file.lock is True:
         return
     event = HistoryEntry.command_history(ctx, "lock", file.uuid, [file.lock, True], reason)
@@ -291,7 +298,7 @@ def action_ignore(
     {templates}
 
     The --reason option may be omitted when using a template other than "text".
-    
+
     To lock the file(s) after editing them, use the --lock option.
 
     To see the changes without committing them, use the --dry-run option.
@@ -360,7 +367,7 @@ def command_copy(
     * ignore
 
     If no actions file is give with --actions, the latest version will be downloaded from GitHub.
-    
+
     To lock the file(s) after editing them, use the --lock option.
 
     To see the changes without committing them, use the --dry-run option.
