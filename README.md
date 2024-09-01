@@ -19,6 +19,7 @@
     * [lock](#digiarch-edit-lock)
     * [remove](#digiarch-edit-remove)
     * [rollback](#digiarch-edit-rollback)
+  * [search](#digiarch-search)
   * [history](#digiarch-history)
   * [doctor](#digiarch-doctor)
   * [upgrade](#digiarch-upgrade)
@@ -42,6 +43,7 @@ Commands:
   reidentify   Reidentify files.
   extract      Unpack archives.
   edit         Edit the database.
+  search       Search the database.
   history      View events log.
   doctor       Inspect the database.
   upgrade      Upgrade the database.
@@ -464,6 +466,28 @@ Options:
   --command TEXT  Specify commands to roll back.  [multiple]
   --dry-run       Show changes without committing them.
   --help          Show this message and exit.
+```
+
+## digiarch search
+
+```
+Usage: digiarch search [OPTIONS] ROOT ID...
+
+Options:
+  --uuid                          Use UUIDs as identifiers.  [default]
+  --puid                          Use PUIDs as identifiers.
+  --path                          Use relative paths as identifiers.
+  --path-like                     Use relative paths as identifiers, match
+                                  with LIKE.
+  --checksum                      Use checksums as identifiers.
+  --warning                       Use warnings as identifiers.
+  --from-file                     Interpret IDs as files from which to read
+                                  the IDs.
+  --order-by [relative_path|size|action]
+                                  Set sorting field.  [default: relative_path]
+  --sort [asc|desc]               Set sorting direction.
+  --limit INTEGER RANGE           Limit the number of results.  [x>=1]
+  --help                          Show this message and exit.
 ```
 
 ## digiarch history
