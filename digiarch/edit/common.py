@@ -12,7 +12,6 @@ from click import BadParameter
 from click import ClickException
 from click import Context
 from click import MissingParameter
-from click import option
 from click import Parameter
 
 FC = TypeVar("FC", bound=Callable[..., Any])
