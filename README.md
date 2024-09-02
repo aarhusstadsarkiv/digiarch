@@ -495,7 +495,7 @@ Options:
                                   the IDs.
   --order-by [relative_path|size|action]
                                   Set sorting field.  [default: relative_path]
-  --sort [asc|desc]               Set sorting direction.
+  --sort [asc|desc]               Set sorting direction.  [default: asc]
   --limit INTEGER RANGE           Limit the number of results.  [x>=1]
   --help                          Show this message and exit.
 ```
