@@ -10,6 +10,7 @@
     * Supports sorting by relative path, size, and action (both ascending and descending)
 * `edit action` commands have a new `--lock` option that locks the files after editing them
     * The default behaviour is to _not_ lock the files
+* `history`  command has a new `--limit` option
 
 ### Changes
 
@@ -41,7 +42,7 @@
 
 ### Fixes
 
-* Fix `doctor` command `--fix` option not allowing "files" value  
+* Fix `doctor` command `--fix` option not allowing "files" value
 
 ## v3.2.13
 
