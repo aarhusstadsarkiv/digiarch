@@ -6,6 +6,7 @@ from typing import Generator
 
 import chardet
 from acacore.models.file import File
+from extract_msg import Attachment
 from extract_msg import AttachmentBase
 from extract_msg import Message
 from extract_msg import MSGFile
@@ -117,17 +118,17 @@ class MsgExtractor(ExtractorBase):
         _, body_html, body_rtf = msg_body(msg)
         inline_attachments, attachments = msg_attachments(msg, body_html, body_rtf)
 
-        for attachment in inline_attachments + attachments:
+        for n, attachment in enumerate(inline_attachments + attachments):
             if isinstance(attachment, (Message, MessageSigned)):
-                path: Path = extract_folder.joinpath(sanitize_path(attachment.filename.replace("/", "_")))
-                if path.suffix != ".msg":
-                    path = path.with_name(path.name + ".msg")
+                name = attachment.filename or attachment.subject or f"attachment-{n}"
+                path: Path = extract_folder.joinpath(sanitize_path(name.replace("/", "_")))
                 attachment.export(path)
                 yield path
             elif attachment.data is not None and not isinstance(attachment.data, bytes):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
             else:
-                name = attachment.longFilename if isinstance(attachment, SignedAttachment) else attachment.getFilename()
+                name: str = attachment.getFilename() if isinstance(attachment, Attachment) else attachment.longFilename
+                name = name or f"attachment-{n}"
                 path: Path = extract_folder.joinpath(sanitize_path(name.replace("/", "_")))
                 with path.open("wb") as fh:
                     # noinspection PyTypeChecker

@@ -75,7 +75,14 @@ def argument_ids(required: bool) -> Callable[[FC], FC]:
     return inner
 
 
-def find_files(database: FileDB, ids: tuple[str, ...], id_type: str, id_files: bool) -> Generator[File, None, None]:
+def find_files(
+    database: FileDB,
+    ids: tuple[str, ...],
+    id_type: str,
+    id_files: bool,
+    order_by: list[tuple[str, str]] | None = None,
+    limit: int | None = None,
+) -> Generator[File, None, None]:
     if id_files:
         ids = tuple(i.strip() for f in ids for i in Path(f).read_text().splitlines() if i.strip())
 
@@ -94,4 +101,4 @@ def find_files(database: FileDB, ids: tuple[str, ...], id_type: str, id_files: b
             where.append(f"{id_type} = ?")
         parameters.append(id_value)
 
-    yield from database.files.select(where=" or ".join(where), parameters=parameters)
+    yield from database.files.select(where=" or ".join(where), parameters=parameters, order_by=order_by, limit=limit)

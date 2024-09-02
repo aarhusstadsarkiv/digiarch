@@ -9,6 +9,7 @@ from acacore.database import FileDB
 from click import command
 from click import Context
 from click import DateTime
+from click import IntRange
 from click import option
 from click import pass_context
 
@@ -59,6 +60,7 @@ from digiarch.common import param_regex
     show_default=True,
     help="Sort by ascending or descending order.",
 )
+@option("--limit", type=IntRange(1), default=None, help="Limit the number of results.")
 @pass_context
 def command_history(
     ctx: Context,
@@ -69,6 +71,7 @@ def command_history(
     uuid: tuple[str, ...] | None,
     reason: tuple[str, ...] | None,
     ascending: bool,
+    limit: int | None,
 ):
     """
     View and search events log.
@@ -77,7 +80,7 @@ def command_history(
 
     If multiple --uuid, --operation, or --reason options are used, the query will match any of them.
 
-    If no query option is given, only the first 100 results will be shown.
+    If no query option is given, then the limit is automatically set to 100 if not set with the --limit option.
     """
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
@@ -117,12 +120,15 @@ def command_history(
         ),
     )
 
+    if not where:
+        limit = limit or 100
+
     with FileDB(db_path) as database:
         for event in database.history.select(
             where=" and ".join(where) or None,
             parameters=parameters or None,
             order_by=[("time", "asc" if ascending else "desc")],
-            limit=None if where else 100,
+            limit=limit,
         ):
             yaml.dump(event.model_dump(), stdout, yaml.Dumper, sort_keys=False)
             print()

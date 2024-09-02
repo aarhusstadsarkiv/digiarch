@@ -180,6 +180,7 @@ def command_extract(
                     offset += 1
                     continue
 
+                # noinspection PyBroadException
                 try:
                     extractor = extractor_cls(database, archive_file, root)
                     extracted_files_paths = list(extractor.extract())
@@ -230,6 +231,10 @@ def command_extract(
                     database.history.insert(event)
                     event.log(ERROR, log_file, log_stdout)
                     continue
+                except Exception as err:
+                    event = HistoryEntry.command_history(ctx, "error", archive_file.uuid, None, repr(err))
+                    event.log(ERROR, log_file, log_stdout)
+                    raise
 
                 for path in extracted_files_paths:
                     extracted_file, file_history = identify_file(
