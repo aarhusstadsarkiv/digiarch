@@ -37,6 +37,12 @@
 
 * Fix issue with extract when file is already found
 
+## v3.2.14
+
+### Fixes
+
+* Fix `doctor` command `--fix` option not allowing "files" value  
+
 ## v3.2.13
 
 ### New Features
