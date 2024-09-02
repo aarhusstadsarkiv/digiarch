@@ -45,6 +45,17 @@ def command_search(
     sort: str,
     limit: int | None,
 ):
+    """
+    Search for specific files in the database.
+
+    Files are displayed in YAML format.
+
+    The ID arguments are interpreted as a list of UUID's by default. This behaviour can be changed with the --puid,
+    --path, --path-like, --checksum, and --warning options. If the --from-file option is used, each ID argument is
+    interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+
+    If there are no ID arguments, then the limit is automatically set to 100 if not set with the --limit option.
+    """
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     yaml.add_representer(
