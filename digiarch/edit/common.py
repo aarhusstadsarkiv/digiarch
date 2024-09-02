@@ -124,4 +124,4 @@ def find_files(
 ) -> Generator[File, None, None]:
     where, parameters = query_to_where(query)
 
-    yield from database.files.select(where=" and ".join(where), parameters=parameters, order_by=order_by, limit=limit)
+    yield from database.files.select(where=where, parameters=parameters, order_by=order_by, limit=limit)
