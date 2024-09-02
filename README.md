@@ -533,7 +533,8 @@ Usage: digiarch history [OPTIONS] ROOT
   If multiple --uuid, --operation, or --reason options are used, the query
   will match any of them.
 
-  If no query option is given, only the first 100 results will be shown.
+  If no query option is given, then the limit is automatically set to 100 if
+  not set with the --limit option.
 
 Options:
   --from [%Y-%m-%d|%Y-%m-%dT%H:%M:%S|%Y-%m-%dT%H:%M:%S.%f]
@@ -545,6 +546,7 @@ Options:
   --reason TEXT                   Event reason.
   --ascending / --descending      Sort by ascending or descending order.
                                   [default: ascending]
+  --limit INTEGER RANGE           Limit the number of results.  [x>=1]
   --help                          Show this message and exit.
 ```
 
