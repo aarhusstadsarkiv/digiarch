@@ -41,7 +41,7 @@ def group_edit():
     @relative_path @like %.pdf @lock @true = (relative_path like ?) and (lock is true)
 
     @action convert @relative_path @like %.pdf %.msg = (action = ?) and (relative_path like ? or relative_path like ?)
-    """
+    """  # noqa: D301
 
 
 # noinspection DuplicatedCode
