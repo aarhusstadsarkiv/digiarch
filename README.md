@@ -219,6 +219,8 @@ Usage: digiarch edit action convert [OPTIONS] ROOT ID... REASON
 
   The --outputs option may be omitted when using the "copy" tool.
 
+  To lock the file(s) after editing them, use the --lock option.
+
   To see the changes without committing them, use the --dry-run option.
 
   For details on the ID arguments, see the edit command.
@@ -234,6 +236,7 @@ Options:
   --tool TEXT     The tool to use for conversion.  [required]
   --outputs TEXT  The file extensions to generate.  [multiple; required for
                   tools other than "copy"]
+  --lock          Lock the edited files.
   --dry-run       Show changes without committing them.
   --help          Show this message and exit.
 ```
@@ -244,6 +247,8 @@ Options:
 Usage: digiarch edit action extract [OPTIONS] ROOT ID... REASON
 
   Set files' action to "extract".
+
+  To lock the file(s) after editing them, use the --lock option.
 
   To see the changes without committing them, use the --dry-run option.
 
@@ -260,6 +265,7 @@ Options:
   --tool TEXT       The tool to use for extraction.  [required]
   --extension TEXT  The extension the file must have for extraction to
                     succeed.
+  --lock            Lock the edited files.
   --dry-run         Show changes without committing them.
   --help            Show this message and exit.
 ```
@@ -270,6 +276,8 @@ Options:
 Usage: digiarch edit action manual [OPTIONS] ROOT ID... REASON
 
   Set files' action to "manual".
+
+  To lock the file(s) after editing them, use the --lock option.
 
   To see the changes without committing them, use the --dry-run option.
 
@@ -286,6 +294,7 @@ Options:
   --reason TEXT   The reason why the file must be processed manually.
                   [required]
   --process TEXT  The steps to take to process the file.  [required]
+  --lock          Lock the edited files.
   --dry-run       Show changes without committing them.
   --help          Show this message and exit.
 ```
@@ -310,6 +319,8 @@ Usage: digiarch edit action ignore [OPTIONS] ROOT ID... REASON
 
   The --reason option may be omitted when using a template other than "text".
 
+  To lock the file(s) after editing them, use the --lock option.
+
   To see the changes without committing them, use the --dry-run option.
 
   For details on the ID arguments, see the edit command.
@@ -325,6 +336,7 @@ Options:
   --template TEMPLATE  The template type to use.  [required]
   --reason TEXT        The reason why the file is ignored.  [required for
                        "text" template]
+  --lock               Lock the edited files.
   --dry-run            Show changes without committing them.
   --help               Show this message and exit.
 ```
@@ -346,7 +358,11 @@ Usage: digiarch edit action copy [OPTIONS] ROOT ID... PUID
   If no actions file is give with --actions, the latest version will be
   downloaded from GitHub.
 
+  To lock the file(s) after editing them, use the --lock option.
+
   To see the changes without committing them, use the --dry-run option.
+
+  For details on the ID arguments, see the edit command.
 
 Options:
   --uuid          Use UUIDs as identifiers.  [default]
@@ -358,6 +374,7 @@ Options:
   --from-file     Interpret IDs as files from which to read the IDs.
   --actions FILE  Path to a YAML file containing file format actions.  [env
                   var: DIGIARCH_ACTIONS]
+  --lock          Lock the edited files.
   --dry-run       Show changes without committing them.
   --help          Show this message and exit.
 ```
@@ -473,15 +490,18 @@ Options:
 ```
 Usage: digiarch search [OPTIONS] ROOT ID...
 
-Search for specific files in the database.
+  Search for specific files in the database.
 
-Files are displayed in YAML format.
+  Files are displayed in YAML format.
 
-The ID arguments are interpreted as a list of UUID's by default. This behaviour can be changed with the --puid,
---path, --path-like, --checksum, and --warning options. If the --from-file option is used, each ID argument is
-interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+  The ID arguments are interpreted as a list of UUID's by default. This
+  behaviour can be changed with the --puid, --path, --path-like, --checksum,
+  and --warning options. If the --from-file option is used, each ID argument
+  is interpreted as the path to a file containing a list of IDs (one per line,
+  empty lines are ignored).
 
-If there are no ID arguments, then the limit is automatically set to 100 if not set with the --limit option.
+  If there are no ID arguments, then the limit is automatically set to 100 if
+  not set with the --limit option.
 
 Options:
   --uuid                          Use UUIDs as identifiers.  [default]
