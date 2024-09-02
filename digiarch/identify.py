@@ -44,7 +44,9 @@ from digiarch.common import end_program
 from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
 from digiarch.common import start_program
-from digiarch.edit.common import argument_ids
+from digiarch.edit.common import argument_query
+from digiarch.edit.common import query_to_where
+from digiarch.edit.common import TQuery
 
 
 def handle_rename_action(file: File, action: RenameAction) -> tuple[Path, Path] | tuple[None, None]:
@@ -335,7 +337,7 @@ def command_identify(
 
 @command("reidentify", no_args_is_help=True, short_help="Reidentify files.")
 @argument_root(True)
-@argument_ids(False)
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @pass_context
 def command_reidentify(
     _ctx: Context,
@@ -346,9 +348,7 @@ def command_reidentify(
     actions_file: Path | None,
     custom_signatures_file: Path | None,
     batch_size: int,
-    ids: tuple[str],
-    id_type: str,
-    id_files: bool,
+    query: TQuery,
 ):
     """
     Re-indentify specific files in the ROOT folder.
@@ -356,26 +356,14 @@ def command_reidentify(
     Each file is re-identified with Siegfried and an action is assigned to it.
     Files that need re-identification with custom signatures, renaming, or ignoring are processed accordingly.
 
-    The ID arguments are interpreted as a list of UUID's by default. This behaviour can be changed with the --puid,
-    --path, --path-like, --checksum, and --warning options. If the --from-file option is used, each ID argument is
-    interpreted as the path to a file containing a list of IDs (one per line, empty lines are ignored).
+    For details on the QUERY argument, see the edit command.
 
-    If no IDs are give, then all non-locked files with identification warnings or no PUID will be re-identified.
+    If there is no query, then all non-locked files with identification warnings or no PUID will be re-identified.
     """
-    if id_files:
-        ids = tuple(i.strip("\n\r\t") for f in ids for i in Path(f).read_text().splitlines() if i.strip())
-
-    if not ids:
-        where: list[tuple[str, Sequence[str]]] = [("(warning is not null or puid is null) and not lock", [])]
-    elif id_type in ("warnings",):
-        where: list[tuple[str, Sequence[str]]] = [
-            (f"{id_type} like '%\"' || ? || '\"%' and not lock", [i]) for i in ids
-        ]
-    elif id_type.endswith("-like"):
-        id_type = id_type.removesuffix("-like")
-        where: list[tuple[str, Sequence[str]]] = [(f"{id_type} like ? and not lock", [i]) for i in ids]
+    if query:
+        where, params = query_to_where(query)
     else:
-        where: list[tuple[str, Sequence[str]]] = [(f"{id_type} = ? and not lock", [i]) for i in ids]
+        where, params = "(warning is not null or puid is null) and not lock", []
 
     command_identify.callback(
         root,
@@ -386,7 +374,7 @@ def command_reidentify(
         custom_signatures_file,
         (),
         batch_size,
-        update_where=where,
+        update_where=[(where, params)],
     )
 
 

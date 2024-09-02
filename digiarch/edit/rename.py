@@ -20,13 +20,14 @@ from digiarch.common import option_dry_run
 from digiarch.common import param_regex
 from digiarch.common import start_program
 
-from .common import argument_ids
+from .common import argument_query
 from .common import find_files
+from .common import TQuery
 
 
 @command("rename", no_args_is_help=True, short_help="Change file extensions.")
 @argument_root(True)
-@argument_ids(True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument(
     "extension",
     nargs=1,
@@ -44,9 +45,7 @@ def command_rename(
     ctx: Context,
     root: Path,
     reason: str,
-    ids: tuple[str, ...],
-    id_type: str,
-    id_files: bool,
+    query: TQuery,
     extension: str,
     replace_mode: str,
     dry_run: bool,
@@ -69,7 +68,7 @@ def command_rename(
         log_file, log_stdout, _ = start_program(ctx, database, None, not dry_run, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, ids, id_type, id_files):
+            for file in find_files(database, query):
                 old_name: str = file.name
                 new_name: str = old_name
 

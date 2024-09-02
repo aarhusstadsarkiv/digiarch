@@ -15,13 +15,32 @@ def group_edit():
     The ROOT argument in the edit subcommands is a folder that contains a _metadata/files.db database, not the
     _metadata folder itself.
 
-    The ID arguments used in the edit subcommands are interpreted as a list of UUID's by default. This behaviour can
-    be changed with the --puid, --path, --path-like, --checksum, and --warning options. If the --from-file option is
-    used, each ID argument is interpreted as the path to a file containing a list of IDs (one per line, empty lines
-    are ignored). To match a field as NULL, use @null as a value (can be used both as argument and in an IDs file).
+    \b
+    The QUERY argument uses a simple search syntax.
+    @<field> will match a specific field, the following are supported: uuid,
+    checksum, puid, relative_path, action, warning, processed, lock.
+    @null and @notnull will match columns with null and not null values respectively.
+    @true and @false will match columns with true and false values respectively.
+    @like toggles LIKE syntax for the values following it in the same column.
+    @file toggles file reading for the values following it in the same column: each
+    value will be considered as a file path and values will be read from the lines
+    in the given file (@null, @notnull, @true, and @false in files are not supported).
+    Changing to a new @<field> resets like and file toggles. Values for the same
+    column will be matched with OR logic, while values from different columns will
+    be matched with AND logic.
 
     Every edit subcommand requires a REASON argument that will be used in the database log to explain the reason behind
     the edit.
+
+    \b
+    Query Examples
+    --------------
+
+    @uuid @file uuids.txt @warning @notnull = (uuid = ? or uuid = ? or uuid = ?) and (warning is not null)
+
+    @relative_path @like %.pdf @lock @true = (relative_path like ?) and (lock is true)
+
+    @action convert @relative_path @like %.pdf %.msg = (action = ?) and (relative_path like ? or relative_path like ?)
     """
 
 
