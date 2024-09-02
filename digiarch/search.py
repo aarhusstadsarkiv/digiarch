@@ -47,10 +47,6 @@ def command_search(
 ):
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
-    yaml.add_representer(UUID, lambda dumper, data: dumper.represent_str(str(data)))
-    yaml.add_representer(Path, lambda dumper, data: dumper.represent_str(str(data)))
-    yaml.add_representer(PosixPath, lambda dumper, data: dumper.represent_str(str(data)))
-    yaml.add_representer(WindowsPath, lambda dumper, data: dumper.represent_str(str(data)))
     yaml.add_representer(
         str,
         lambda dumper, data: (
@@ -62,7 +58,7 @@ def command_search(
 
     with FileDB(db_path) as database:
         for file in find_files(database, ids, id_type, id_files, [(order_by, sort)], limit):
-            model_dump = file.model_dump()
+            model_dump = file.model_dump(mode="json")
             del model_dump["root"]
             yaml.dump(model_dump, stdout, yaml.Dumper, sort_keys=False)
             print()
