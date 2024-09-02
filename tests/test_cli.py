@@ -69,6 +69,8 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         str(tests_folder / "custom_signatures.yml"),
         "--siegfried-home",
         str(tests_folder),
+        "--exclude",
+        ".DS_Store",
     ]
 
     app.main(args, standalone_mode=False)
