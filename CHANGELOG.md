@@ -1,5 +1,21 @@
 # Changelog
 
+## v4.0.0
+
+### New Features
+
+* Overhauled query syntax for edit, reidentify, and search commands
+    * `@<field>` will match a specific field, the following are supported: uuid, checksum, puid, relative_path, action,
+      warning, processed, lock.
+    * `@null` and `@notnull` will match columns with null and not null values respectively.
+    * `@true` and `@false` will match columns with true and false values respectively.
+    * `@like` toggles LIKE syntax for the values following it in the same column.
+    * `@file` toggles file reading for the values following it in the same column: each value will be considered as a
+      file path and values will be read from the lines in the given file (`@null`, `@notnull`, `@true`, and `@false` in
+      files are not supported).
+    * Changing to a new `@<field>` resets like and file toggles. Values for the same column will be matched with OR
+      logic, while values from different columns will be matched with AND logic.
+
 ## v3.3.0
 
 ### New Features
