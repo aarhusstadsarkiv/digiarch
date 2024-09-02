@@ -56,6 +56,9 @@ def command_search(
         ),
     )
 
+    if not ids:
+        limit = limit or 100
+
     with FileDB(db_path) as database:
         for file in find_files(database, ids, id_type, id_files, [(order_by, sort)], limit):
             model_dump = file.model_dump(mode="json")
