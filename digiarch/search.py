@@ -29,7 +29,14 @@ from .common import ctx_params
     show_choices=True,
     help="Set sorting field.",
 )
-@option("--sort", type=Choice(["asc", "desc"]), default="asc", help="Set sorting direction.")
+@option(
+    "--sort",
+    type=Choice(["asc", "desc"]),
+    default="asc",
+    show_default=True,
+    show_choices=True,
+    help="Set sorting direction.",
+)
 @option("--limit", type=IntRange(1), default=None, help="Limit the number of results.")
 @pass_context
 def command_search(
