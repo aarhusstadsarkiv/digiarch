@@ -1,8 +1,5 @@
 from pathlib import Path
-from pathlib import PosixPath
-from pathlib import WindowsPath
 from sys import stdout
-from uuid import UUID
 
 import yaml
 from acacore.database import FileDB
