@@ -63,7 +63,7 @@ def argument_query(required: bool, default: str, allowed_fields: list[str] | Non
     def callback(ctx: Context, param: Parameter, value: str | None) -> list[tuple[str, str, bool]]:
         if not (value := value or "").strip() and required:
             raise MissingParameter(None, ctx, param)
-        elif not value:
+        if not value:
             return []
 
         try:
