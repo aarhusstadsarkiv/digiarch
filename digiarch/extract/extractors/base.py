@@ -48,6 +48,8 @@ class ExtractorBase(ABC):
     @abstractmethod
     def extract(self) -> Generator[tuple[Path, Path], None, None]:
         """
+        Extract files from archive.
+
         :return: A tuple containing the extracted file path and the original path before sanitization.
         """
         ...
