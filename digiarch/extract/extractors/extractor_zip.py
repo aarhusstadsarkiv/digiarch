@@ -20,7 +20,7 @@ class ZipExtractor(ExtractorBase):
         "kmz",
     ]
 
-    def extract(self) -> Generator[Path, None, None]:
+    def extract(self) -> Generator[tuple[Path, Path], None, None]:
         extract_folder: Path = self.extract_folder
         extract_folder_tmp: Path = extract_folder.with_name(extract_folder.name + "_tmp")
         rm_tree(extract_folder_tmp)
@@ -37,7 +37,7 @@ class ZipExtractor(ExtractorBase):
                     while path_sanitized.exists():
                         path_sanitized = path_sanitized.with_name("_" + path_sanitized.name)
                     path_sanitized.parent.mkdir(parents=True, exist_ok=True)
-                    yield path.replace(path_sanitized)
+                    yield path.replace(path_sanitized), extract_folder.joinpath(path.relative_to(extract_folder_tmp))
         except (BadZipFile, LargeZipFile) as e:
             raise ExtractError(self.file, repr(e))
         finally:

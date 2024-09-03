@@ -110,7 +110,7 @@ def msg_attachments(
 class MsgExtractor(ExtractorBase):
     tool_names: ClassVar[list[str]] = ["msg"]
 
-    def extract(self) -> Generator[Path, None, None]:
+    def extract(self) -> Generator[tuple[Path, Path], None, None]:
         extract_folder: Path = self.extract_folder
         extract_folder.mkdir(parents=True, exist_ok=True)
 
@@ -121,21 +121,21 @@ class MsgExtractor(ExtractorBase):
         for n, attachment in enumerate(inline_attachments + attachments):
             if isinstance(attachment, (Message, MessageSigned)):
                 name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
-                name = sanitize_filename(name).strip("_") or f"attachment-{n}"
-                path: Path = extract_folder.joinpath(name)
+                name = name.strip() or f"attachment-{n}"
+                path: Path = extract_folder.joinpath(sanitize_filename(name).strip("_") or f"attachment-{n}")
                 attachment.export(path)
-                yield path
+                yield path, extract_folder.joinpath(name)
             elif attachment.data is not None and not isinstance(attachment.data, bytes):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
             else:
                 name: str = (
                     attachment.getFilename() if isinstance(attachment, Attachment) else attachment.longFilename or ""
                 )
-                name = sanitize_filename(name).strip("_") or f"attachment-{n}"
-                path: Path = extract_folder.joinpath(name)
+                name = name.strip() or f"attachment-{n}"
+                path: Path = extract_folder.joinpath(sanitize_filename(name).strip("_") or f"attachment-{n}")
                 with path.open("wb") as fh:
                     # noinspection PyTypeChecker
                     fh.write(attachment.data or b"")
-                yield path
+                yield path, extract_folder.joinpath(name)
 
         yield from ()

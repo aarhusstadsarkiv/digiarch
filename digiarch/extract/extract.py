@@ -236,7 +236,7 @@ def command_extract(
                     event.log(ERROR, log_file, log_stdout)
                     raise
 
-                for path in extracted_files_paths:
+                for path, _ in extracted_files_paths:
                     extracted_file, file_history = identify_file(
                         ctx,
                         root,

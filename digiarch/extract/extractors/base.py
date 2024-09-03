@@ -46,4 +46,8 @@ class ExtractorBase(ABC):
         return path
 
     @abstractmethod
-    def extract(self) -> Generator[Path, None, None]: ...
+    def extract(self) -> Generator[tuple[Path, Path], None, None]:
+        """
+        :return: A tuple containing the extracted file path and the original path before sanitization.
+        """
+        ...

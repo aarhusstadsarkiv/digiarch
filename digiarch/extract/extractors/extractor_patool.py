@@ -55,7 +55,7 @@ class PatoolExtractor(ExtractorBase):
         "zpaq",
     ]
 
-    def extract(self) -> Generator[Path, None, None]:
+    def extract(self) -> Generator[tuple[Path, Path], None, None]:
         extract_folder: Path = self.extract_folder
         extract_folder_tmp: Path = extract_folder.with_name(extract_folder.name + "_tmp")
         rm_tree(extract_folder_tmp)
@@ -68,7 +68,7 @@ class PatoolExtractor(ExtractorBase):
                 while path_sanitized.exists():
                     path_sanitized = path_sanitized.with_name("_" + path_sanitized.name)
                 path_sanitized.parent.mkdir(parents=True, exist_ok=True)
-                yield path.replace(path_sanitized)
+                yield path.replace(path_sanitized), extract_folder.joinpath(path.relative_to(extract_folder_tmp))
         except PatoolError as err:
             if any("encrypted" in str(arg) for arg in err.args):
                 raise PasswordProtectedError(self.file)
