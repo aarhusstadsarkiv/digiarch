@@ -236,7 +236,7 @@ def command_extract(
                     event.log(ERROR, log_file, log_stdout)
                     raise
 
-                for path, _ in extracted_files_paths:
+                for path, original_path in extracted_files_paths:
                     extracted_file, file_history = identify_file(
                         ctx,
                         root,
@@ -262,6 +262,16 @@ def command_extract(
                             path=extracted_file.relative_path,
                         )
                         database.history.insert(event)
+                        if path != original_path:
+                            file_history.insert(
+                                0,
+                                HistoryEntry.command_history(
+                                    ctx,
+                                    "rename",
+                                    extracted_file.uuid,
+                                    [str(original_path.relative_to(root)), str(path.relative_to(root))],
+                                ),
+                            )
                         for event in file_history:
                             event.log(INFO, log_stdout)
                             database.history.insert(event)
