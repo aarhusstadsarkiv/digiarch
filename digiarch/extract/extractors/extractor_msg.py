@@ -121,9 +121,7 @@ class MsgExtractor(ExtractorBase):
         for n, attachment in enumerate(inline_attachments + attachments):
             if isinstance(attachment, (Message, MessageSigned)):
                 name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
-                name = sanitize_filename(name)
-                if not name.strip("_"):
-                    name = f"attachment-{n}"
+                name = sanitize_filename(name).strip("_") or f"attachment-{n}"
                 path: Path = extract_folder.joinpath(name)
                 attachment.export(path)
                 yield path
@@ -133,9 +131,7 @@ class MsgExtractor(ExtractorBase):
                 name: str = (
                     attachment.getFilename() if isinstance(attachment, Attachment) else attachment.longFilename or ""
                 )
-                name = sanitize_filename(name)
-                if not name.strip("_"):
-                    name = f"attachment-{n}"
+                name = sanitize_filename(name).strip("_") or f"attachment-{n}"
                 path: Path = extract_folder.joinpath(name)
                 with path.open("wb") as fh:
                     # noinspection PyTypeChecker
