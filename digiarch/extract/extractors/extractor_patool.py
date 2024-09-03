@@ -3,10 +3,13 @@ from typing import ClassVar
 from typing import Generator
 
 from acacore.utils.functions import find_files
+from acacore.utils.functions import rm_tree
 
 # noinspection PyProtectedMember
 from patoolib import extract_archive
 from patoolib.util import PatoolError
+
+from digiarch.doctor import sanitize_path
 
 from .base import ExtractError
 from .base import ExtractorBase
@@ -54,12 +57,21 @@ class PatoolExtractor(ExtractorBase):
 
     def extract(self) -> Generator[Path, None, None]:
         extract_folder: Path = self.extract_folder
+        extract_folder_tmp: Path = extract_folder.with_name(extract_folder.name + "_tmp")
+        rm_tree(extract_folder_tmp)
 
         try:
-            extract_archive(str(self.file.get_absolute_path()), outdir=str(extract_folder))
+            extract_archive(str(self.file.get_absolute_path()), outdir=str(extract_folder_tmp))
+
+            for path in find_files(extract_folder_tmp):
+                path_sanitized: Path = extract_folder / sanitize_path(path.relative_to(extract_folder_tmp))
+                while path_sanitized.exists():
+                    path_sanitized = path_sanitized.with_name("_" + path_sanitized.name)
+                path_sanitized.parent.mkdir(parents=True, exist_ok=True)
+                yield path.replace(path_sanitized)
         except PatoolError as err:
             if any("encrypted" in str(arg) for arg in err.args):
                 raise PasswordProtectedError(self.file)
             raise ExtractError(err.args[0] if err.args else repr(err))
-
-        yield from find_files(extract_folder)
+        finally:
+            rm_tree(extract_folder_tmp)
