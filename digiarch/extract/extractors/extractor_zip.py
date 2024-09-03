@@ -23,6 +23,7 @@ class ZipExtractor(ExtractorBase):
     def extract(self) -> Generator[Path, None, None]:
         extract_folder: Path = self.extract_folder
         extract_folder_tmp: Path = extract_folder.with_name(extract_folder.name + "_tmp")
+        rm_tree(extract_folder_tmp)
 
         try:
             with ZipFile(self.file.get_absolute_path()) as zf:
@@ -33,6 +34,8 @@ class ZipExtractor(ExtractorBase):
                         raise PasswordProtectedError(self.file)
                     path: Path = Path(zf.extract(member, extract_folder_tmp))
                     path_sanitized: Path = extract_folder / sanitize_path(path.relative_to(extract_folder_tmp))
+                    while path_sanitized.exists():
+                        path_sanitized = path_sanitized.with_name("_" + path_sanitized.name)
                     path_sanitized.parent.mkdir(parents=True, exist_ok=True)
                     yield path.replace(path_sanitized)
         except (BadZipFile, LargeZipFile) as e:
