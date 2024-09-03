@@ -24,8 +24,12 @@ from digiarch.common import start_program
 invalid_characters: str = "\\#%&{}[]<>*?/$!'\":@+`|=" + bytes(range(32)).decode("ascii") + "\x7f"
 
 
+def sanitize_filename(name: str) -> str:
+    return reduce(lambda acc, cur: acc.replace(cur, "_"), invalid_characters, name.strip().replace("/", "_"))
+
+
 def sanitize_path(path: str | PathLike) -> Path:
-    return Path(*[reduce(lambda acc, cur: acc.replace(cur, "_"), invalid_characters, p) for p in Path(path).parts])
+    return Path(*[sanitize_filename(p) for p in Path(path).parts])
 
 
 def sanitize_paths(ctx: Context, database: FileDB, root: Path, dry_run: bool, *loggers: Logger | None):
