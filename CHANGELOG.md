@@ -16,6 +16,11 @@
     * Changing to a new `@<field>` resets like and file toggles. Values for the same column will be matched with OR
       logic, while values from different columns will be matched with AND logic.
 
+### Changes
+
+* `extract` sanitized paths of extracted files and saves the originals to history with operation "digiarch.extract:
+  rename"
+
 ## v3.3.0
 
 ### New Features
