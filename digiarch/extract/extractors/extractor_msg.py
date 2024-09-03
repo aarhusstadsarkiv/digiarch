@@ -15,7 +15,7 @@ from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
 from extract_msg.msg_classes import MessageSigned
 
-from digiarch.doctor import sanitize_path
+from digiarch.doctor import sanitize_filename
 
 from .base import ExtractError
 from .base import ExtractorBase
@@ -120,16 +120,23 @@ class MsgExtractor(ExtractorBase):
 
         for n, attachment in enumerate(inline_attachments + attachments):
             if isinstance(attachment, (Message, MessageSigned)):
-                name = attachment.filename or attachment.subject or f"attachment-{n}"
-                path: Path = extract_folder.joinpath(sanitize_path(name.replace("/", "_")))
+                name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
+                name = sanitize_filename(name)
+                if not name.strip("_"):
+                    name = f"attachment-{n}"
+                path: Path = extract_folder.joinpath(name)
                 attachment.export(path)
                 yield path
             elif attachment.data is not None and not isinstance(attachment.data, bytes):
                 raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
             else:
-                name: str = attachment.getFilename() if isinstance(attachment, Attachment) else attachment.longFilename
-                name = name or f"attachment-{n}"
-                path: Path = extract_folder.joinpath(sanitize_path(name.replace("/", "_")))
+                name: str = (
+                    attachment.getFilename() if isinstance(attachment, Attachment) else attachment.longFilename or ""
+                )
+                name = sanitize_filename(name)
+                if not name.strip("_"):
+                    name = f"attachment-{n}"
+                path: Path = extract_folder.joinpath(name)
                 with path.open("wb") as fh:
                     # noinspection PyTypeChecker
                     fh.write(attachment.data or b"")
