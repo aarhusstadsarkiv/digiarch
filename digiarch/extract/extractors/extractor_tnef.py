@@ -4,6 +4,7 @@ from typing import Generator
 
 from tnefparse import TNEF
 
+from digiarch.doctor import sanitize_filename
 from digiarch.extract.extractors.base import ExtractorBase
 
 
@@ -21,7 +22,10 @@ class TNEFExtractor(ExtractorBase):
             tnef = TNEF(fh.read())
 
             for attachment in tnef.attachments:
-                path = extract_folder.joinpath("attachments", attachment.long_filename() or attachment.name)
+                path = extract_folder.joinpath(
+                    "attachments",
+                    sanitize_filename(attachment.long_filename() or attachment.name),
+                )
                 path.parent.mkdir(parents=True, exist_ok=True)
                 with path.open("wb") as oh:
                     oh.write(attachment.data)
