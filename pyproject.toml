@@ -109,6 +109,7 @@ ignore = [
     "UP007",   # not using | in type anotations
     "INP001",  # implicit namespace without __init__ (throws errors in tests)
     "PLW2901", # redefing loop variables
+    "SIM114",  # combine `if` branches using logical `or` operator
     "C901",    # complexity check
     "ISC001",  # check for implicit concatanation of str on one line, not compatabil with black.
 ]
