@@ -22,15 +22,15 @@ from .common import find_files
 from .common import TQuery
 
 
-def remove_empty_dir(root: Path, path: Path):
+def remove_empty_dir(root: Path, path: Path) -> None:
     if path == root:
-        return
+        return None
     elif not path.is_relative_to(root):
-        return
+        return None
     elif not path.is_dir():
-        return
+        return None
     elif next(path.iterdir(), None):
-        return
+        return None
 
     path.rmdir()
 
