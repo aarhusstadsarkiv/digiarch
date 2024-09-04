@@ -20,6 +20,7 @@
 
 * `extract` sanitized paths of extracted files and saves the originals to history with operation "digiarch.extract:
   rename"
+* `edit remove` deletes empty parent directories if the `--delete` option is used
 
 ## v3.3.0
 
