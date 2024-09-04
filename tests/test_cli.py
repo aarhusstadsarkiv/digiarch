@@ -69,6 +69,8 @@ def test_identify(tests_folder: Path, files_folder: Path, files_folder_copy: Pat
         str(tests_folder / "custom_signatures.yml"),
         "--siegfried-home",
         str(tests_folder),
+        "--exclude",
+        ".DS_Store",
     ]
 
     app.main(args, standalone_mode=False)
@@ -128,8 +130,7 @@ def test_reidentify(tests_folder: Path, files_folder: Path, files_folder_copy: P
         [
             command_reidentify.name,
             str(files_folder_copy),
-            "--uuid",
-            str(file.uuid),
+            f"@uuid {file.uuid}",
             "--actions",
             str(tests_folder / "fileformats.yml"),
             "--custom-signatures",
@@ -341,8 +342,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
             group_action.name,
             action,
             str(files_folder_copy),
-            str(file.uuid),
-            action,
+            f"@uuid {file.uuid}",
             f"edit action {action}",
         ]
 
@@ -395,9 +395,7 @@ def test_edit_action_ids_file(tests_folder: Path, files_folder: Path, files_fold
         group_action.name,
         "ignore",
         str(files_folder_copy),
-        "--uuid",
-        "--from-file",
-        str(ids_file),
+        f"@uuid @file {ids_file}",
         "--template",
         "not-preservable",
         test_reason,
@@ -446,8 +444,7 @@ def test_edit_rename(files_folder: Path, files_folder_copy: Path):
         command_rename.name,
         "--append",
         str(files_folder_copy),
-        "--uuid",
-        str(file_old.uuid),
+        f"@uuid {file_old.uuid}",
         test_extension,
         test_reason,
     ]
@@ -495,8 +492,7 @@ def test_edit_rename_same(files_folder: Path, files_folder_copy: Path):
         command_rename.name,
         "--replace",
         str(files_folder_copy),
-        "--uuid",
-        str(file_old.uuid),
+        f"@uuid {file_old.uuid}",
         test_extension,
         test_reason,
     ]
@@ -533,9 +529,8 @@ def test_edit_rename_empty(files_folder: Path, files_folder_copy: Path):
     args: list[str] = [
         group_edit.name,
         command_rename.name,
-        "--uuid",
         str(files_folder_copy),
-        str(file_old.uuid),
+        f"@uuid {file_old.uuid}",
         "--replace",
         " ",
         test_reason,
@@ -567,9 +562,8 @@ def test_edit_remove(files_folder: Path, files_folder_copy: Path):
     args: list[str] = [
         group_edit.name,
         command_remove.name,
-        "--uuid",
         str(files_folder_copy),
-        str(file.uuid),
+        f"@uuid {file.uuid}",
         "Remove file with uuid",
     ]
 
@@ -597,10 +591,8 @@ def test_edit_remove_ids_file(tests_folder: Path, files_folder: Path, files_fold
     args: list[str] = [
         group_edit.name,
         command_remove.name,
-        "--uuid",
-        "--from-file",
         str(files_folder_copy),
-        str(ids_file),
+        f"@uuid @file {ids_file}",
         test_reason,
     ]
 
@@ -634,8 +626,7 @@ def test_edit_lock(tests_folder: Path, files_folder: Path, files_folder_copy: Pa
         group_edit.name,
         command_lock.name,
         str(files_folder_copy),
-        "--uuid",
-        *(str(f.uuid) for f in files),
+        f"@uuid {' '.join(str(f.uuid) for f in files)}",
         test_reason,
     ]
 
@@ -675,8 +666,7 @@ def test_edit_rollback_action(tests_folder: Path, files_folder: Path, files_fold
             group_action.name,
             "ignore",
             str(files_folder_copy),
-            *(str(f.uuid) for f in files),
-            "ignore",
+            f"@uuid {' '.join(str(f.uuid) for f in files)}",
             test_reason_edit,
             "--template",
             "not-preservable",
@@ -727,8 +717,7 @@ def test_edit_rollback_remove(tests_folder: Path, files_folder: Path, files_fold
             group_edit.name,
             command_remove.name,
             str(files_folder_copy),
-            "--uuid",
-            *(str(f.uuid) for f in files),
+            f"@uuid {' '.join(str(f.uuid) for f in files)}",
             test_reason_edit,
         ],
         standalone_mode=False,
@@ -774,9 +763,8 @@ def test_edit_rollback_rename(tests_folder: Path, files_folder: Path, files_fold
         [
             group_edit.name,
             command_rename.name,
-            "--uuid",
             str(files_folder_copy),
-            *(str(f.uuid) for f in files),
+            f"@uuid {' '.join(str(f.uuid) for f in files)}",
             "--append",
             ".test",
             test_reason_edit,

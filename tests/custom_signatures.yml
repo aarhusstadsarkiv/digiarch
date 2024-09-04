@@ -120,7 +120,9 @@
   puid: aca-fmt/23
   signature: Microsoft Word XML Document
   description: Microsoft Word allows exporting document as standalone XML files, which PRONOM incorrectly identifies as plain XML (fmt/101)
-- bof: (?i)424547494E3A5643415244.*454E443A5643415244
+- bof: (?i)(42|62)(45|65)(47|67)(49|69)(4e|6e)3a(56|76)(43|63)(41|61)(52|72)(44|64)
+  operator: AND
+  eof: (?i)(45|65)(4e|6e)(44|64)3a(56|76)(43|63)(41|61)(52|72)(44|64)((0d)?0a)*
   plain_bof: |
     BEGIN:VCARD
     *

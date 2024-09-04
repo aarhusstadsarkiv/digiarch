@@ -36,8 +36,9 @@ from digiarch.common import option_dry_run
 from digiarch.common import param_regex
 from digiarch.common import start_program
 
-from .common import argument_ids
+from .common import argument_query
 from .common import find_files
+from .common import TQuery
 
 
 def set_lock(
@@ -91,7 +92,7 @@ def group_action():
 
 @group_action.command("convert", no_args_is_help=True, short_help="Set convert action.")
 @argument_root(True)
-@argument_ids(True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--tool", type=str, required=True, help="The tool to use for conversion.")
 @option(
@@ -108,9 +109,7 @@ def action_convert(
     ctx: Context,
     root: Path,
     reason: str,
-    ids: tuple[str, ...],
-    id_type: str,
-    id_files: bool,
+    query: TQuery,
     tool: str,
     outputs: tuple[str, ...],
     lock: bool,
@@ -125,7 +124,7 @@ def action_convert(
 
     To see the changes without committing them, use the --dry-run option.
 
-    For details on the ID arguments, see the edit command.
+    For details on the QUERY argument, see the edit command.
     """
     if tool not in ("copy",) and not outputs:
         raise MissingParameter(f"Required for tool {tool!r}.", ctx, ctx_params(ctx)["outputs"])
@@ -138,7 +137,7 @@ def action_convert(
         log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, ids, id_type, id_files):
+            for file in find_files(database, query):
                 set_action(ctx, database, file, "convert", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -148,7 +147,7 @@ def action_convert(
 
 @group_action.command("extract", no_args_is_help=True, short_help="Set extract action.")
 @argument_root(True)
-@argument_ids(True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--tool", type=str, required=True, help="The tool to use for extraction.")
 @option(
@@ -164,9 +163,7 @@ def action_extract(
     ctx: Context,
     root: Path,
     reason: str,
-    ids: tuple[str, ...],
-    id_type: str,
-    id_files: bool,
+    query: TQuery,
     tool: str,
     extension: str | None,
     lock: bool,
@@ -179,7 +176,7 @@ def action_extract(
 
     To see the changes without committing them, use the --dry-run option.
 
-    For details on the ID arguments, see the edit command.
+    For details on the QUERY argument, see the edit command.
     """
     data = ExtractAction(tool=tool, extension=extension)
 
@@ -189,7 +186,7 @@ def action_extract(
         log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, ids, id_type, id_files):
+            for file in find_files(database, query):
                 set_action(ctx, database, file, "extract", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -199,7 +196,7 @@ def action_extract(
 
 @group_action.command("manual", no_args_is_help=True, short_help="Set manual action.")
 @argument_root(True)
-@argument_ids(True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option(
     "--reason",
@@ -223,9 +220,7 @@ def action_manual(
     ctx: Context,
     root: Path,
     reason: str,
-    ids: tuple[str, ...],
-    id_type: str,
-    id_files: bool,
+    query: TQuery,
     data_reason: str | None,
     process: str,
     lock: bool,
@@ -238,7 +233,7 @@ def action_manual(
 
     To see the changes without committing them, use the --dry-run option.
 
-    For details on the ID arguments, see the edit command.
+    For details on the QUERY argument, see the edit command.
     """
     data = ManualAction(reason=data_reason, process=process)
 
@@ -248,7 +243,7 @@ def action_manual(
         log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, ids, id_type, id_files):
+            for file in find_files(database, query):
                 set_action(ctx, database, file, "manual", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -258,7 +253,7 @@ def action_manual(
 
 @group_action.command("ignore", no_args_is_help=True, short_help="Set ignore action.")
 @argument_root(True)
-@argument_ids(True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option(
     "--template",
@@ -282,9 +277,7 @@ def action_ignore(
     ctx: Context,
     root: Path,
     reason: str,
-    ids: tuple[str, ...],
-    id_type: str,
-    id_files: bool,
+    query: TQuery,
     template: TTemplateType,
     data_reason: str | None,
     lock: bool,
@@ -303,7 +296,7 @@ def action_ignore(
 
     To see the changes without committing them, use the --dry-run option.
 
-    For details on the ID arguments, see the edit command.
+    For details on the QUERY argument, see the edit command.
     """  # noqa: D301
     if template in ("text",) and not data_reason:
         raise MissingParameter(f"Required for template {template!r}.", ctx, ctx_params(ctx)["data_reason"])
@@ -316,7 +309,7 @@ def action_ignore(
         log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, ids, id_type, id_files):
+            for file in find_files(database, query):
                 set_action(ctx, database, file, "ignore", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -326,7 +319,7 @@ def action_ignore(
 
 @group_action.command("copy", no_args_is_help=True, short_help="Copy action from a format.")
 @argument_root(True)
-@argument_ids(True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("puid", nargs=1, type=str, required=True)
 @argument("action", type=Choice(["convert", "extract", "manual", "ignore"]))
 @argument("reason", nargs=1, type=str, required=True)
@@ -349,9 +342,7 @@ def command_copy(
     puid: str,
     action: TActionType,
     reason: str,
-    ids: tuple[str, ...],
-    id_type: str,
-    id_files: bool,
+    query: TQuery,
     actions_file: Path | None,
     lock: bool,
     dry_run: bool,
@@ -372,7 +363,7 @@ def command_copy(
 
     To see the changes without committing them, use the --dry-run option.
 
-    For details on the ID arguments, see the edit command.
+    For details on the QUERY argument, see the edit command.
     """  # noqa: D301
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
@@ -390,7 +381,7 @@ def command_copy(
         log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, ids, id_type, id_files):
+            for file in find_files(database, query):
                 set_action(ctx, database, file, action, data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)

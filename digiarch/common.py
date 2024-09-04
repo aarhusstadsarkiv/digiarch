@@ -43,7 +43,7 @@ def param_regex(pattern: str, flags: int = 0):
     def callback(ctx: Context, param: Parameter, value: str | tuple[str, ...] | None) -> str | tuple[str, ...] | None:
         if value is None:
             return value
-        elif isinstance(value, str) and not compiled_pattern.match(value):  # noqa: SIM114
+        elif isinstance(value, str) and not compiled_pattern.match(value):
             raise BadParameter(f"does not match {pattern!r}", ctx, param)
         elif isinstance(value, tuple) and any(not compiled_pattern.match(v) for v in value):
             raise BadParameter(f"does not match {pattern!r}", ctx, param)

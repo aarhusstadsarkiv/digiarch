@@ -17,13 +17,29 @@ from digiarch.common import end_program
 from digiarch.common import option_dry_run
 from digiarch.common import start_program
 
-from .common import argument_ids
+from .common import argument_query
 from .common import find_files
+from .common import TQuery
+
+
+def remove_empty_dir(root: Path, path: Path) -> None:
+    if path == root:
+        return None
+    elif not path.is_relative_to(root):
+        return None
+    elif not path.is_dir():
+        return None
+    elif next(path.iterdir(), None):
+        return None
+
+    path.rmdir()
+
+    return remove_empty_dir(root, path.parent)
 
 
 @command("remove", no_args_is_help=True, short_help="Remove files.")
 @argument_root(True)
-@argument_ids(True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--delete", is_flag=True, default=False, help="Remove selected files from the disk.")
 @option_dry_run()
@@ -32,9 +48,7 @@ def command_remove(
     ctx: Context,
     root: Path,
     reason: str,
-    ids: tuple[str, ...],
-    id_type: str,
-    id_files: bool,
+    query: TQuery,
     delete: bool,
     dry_run: bool,
 ):
@@ -45,7 +59,7 @@ def command_remove(
 
     To see the changes without committing them, use the --dry-run option.
 
-    For details on the ID arguments, see the edit command.
+    For details on the QUERY argument, see the edit command.
     """
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
@@ -53,7 +67,7 @@ def command_remove(
         log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, ids, id_type, id_files):
+            for file in find_files(database, query):
                 event = HistoryEntry.command_history(
                     ctx, "delete" if delete else "remove", file.uuid, file.model_dump(mode="json"), reason
                 )
@@ -62,6 +76,7 @@ def command_remove(
                     database.history.insert(event)
                     if delete:
                         file.get_absolute_path(root).unlink(missing_ok=True)
+                        remove_empty_dir(root, file.get_absolute_path(root).parent)
                 event.log(INFO, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)

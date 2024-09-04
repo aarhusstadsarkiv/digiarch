@@ -85,7 +85,7 @@ Options:
 ## digiarch reidentify
 
 ```
-Usage: digiarch reidentify [OPTIONS] ROOT ID...
+Usage: digiarch reidentify [OPTIONS] ROOT [QUERY]
 
   Re-indentify specific files in the ROOT folder.
 
@@ -93,13 +93,9 @@ Usage: digiarch reidentify [OPTIONS] ROOT ID...
   Files that need re-identification with custom signatures, renaming, or
   ignoring are processed accordingly.
 
-  The ID arguments are interpreted as a list of UUID's by default. This
-  behaviour can be changed with the --puid, --path, --path-like, --checksum,
-  and --warning options. If the --from-file option is used, each ID argument
-  is interpreted as the path to a file containing a list of IDs (one per line,
-  empty lines are ignored).
+  For details on the QUERY argument, see the edit command.
 
-  If no IDs are give, then all non-locked files with identification warnings
+  If there is no query, then all non-locked files with identification warnings
   or no PUID will be re-identified.
 
 Options:
@@ -116,15 +112,6 @@ Options:
                                   signature specifications.  [env var:
                                   DIGIARCH_CUSTOM_SIGNATURES]
   --batch-size INTEGER RANGE      [x>=1]
-  --uuid                          Use UUIDs as identifiers.  [default]
-  --puid                          Use PUIDs as identifiers.
-  --path                          Use relative paths as identifiers.
-  --path-like                     Use relative paths as identifiers, match
-                                  with LIKE.
-  --checksum                      Use checksums as identifiers.
-  --warning                       Use warnings as identifiers.
-  --from-file                     Interpret IDs as files from which to read
-                                  the IDs.
   --help                          Show this message and exit.
 ```
 
@@ -170,16 +157,33 @@ Usage: digiarch edit [OPTIONS] COMMAND [ARGS]...
   The ROOT argument in the edit subcommands is a folder that contains a
   _metadata/files.db database, not the _metadata folder itself.
 
-  The ID arguments used in the edit subcommands are interpreted as a list of
-  UUID's by default. This behaviour can be changed with the --puid, --path,
-  --path-like, --checksum, and --warning options. If the --from-file option is
-  used, each ID argument is interpreted as the path to a file containing a
-  list of IDs (one per line, empty lines are ignored). To match a field as
-  NULL, use @null as a value (can be used both as argument and in an IDs
-  file).
+  The QUERY argument uses a simple search syntax.
+  @<field> will match a specific field, the following are supported: uuid,
+  checksum, puid, relative_path, action, warning, processed, lock.
+  @null and @notnull will match columns with null and not null values respectively.
+  @true and @false will match columns with true and false values respectively.
+  @like toggles LIKE syntax for the values following it in the same column.
+  @file toggles file reading for the values following it in the same column: each
+  value will be considered as a file path and values will be read from the lines
+  in the given file (@null, @notnull, @true, and @false in files are not supported).
+  Changing to a new @<field> resets like and file toggles. Values for the same
+  column will be matched with OR logic, while values from different columns will
+  be matched with AND logic.
 
   Every edit subcommand requires a REASON argument that will be used in the
   database log to explain the reason behind the edit.
+
+  Query Examples
+  --------------
+
+  @uuid @file uuids.txt @warning @notnull = (uuid = ? or uuid = ? or uuid = ?)
+  and (warning is not null)
+
+  @relative_path @like %.pdf @lock @true = (relative_path like ?) and (lock is
+  true)
+
+  @action convert @relative_path @like %.pdf %.msg = (action = ?) and
+  (relative_path like ? or relative_path like ?)
 
 Options:
   --help  Show this message and exit.
@@ -213,7 +217,7 @@ Commands:
 #### digiarch edit action convert
 
 ```
-Usage: digiarch edit action convert [OPTIONS] ROOT ID... REASON
+Usage: digiarch edit action convert [OPTIONS] ROOT QUERY REASON
 
   Set files' action to "convert".
 
@@ -223,16 +227,9 @@ Usage: digiarch edit action convert [OPTIONS] ROOT ID... REASON
 
   To see the changes without committing them, use the --dry-run option.
 
-  For details on the ID arguments, see the edit command.
+  For details on the QUERY argument, see the edit command.
 
 Options:
-  --uuid          Use UUIDs as identifiers.  [default]
-  --puid          Use PUIDs as identifiers.
-  --path          Use relative paths as identifiers.
-  --path-like     Use relative paths as identifiers, match with LIKE.
-  --checksum      Use checksums as identifiers.
-  --warning       Use warnings as identifiers.
-  --from-file     Interpret IDs as files from which to read the IDs.
   --tool TEXT     The tool to use for conversion.  [required]
   --outputs TEXT  The file extensions to generate.  [multiple; required for
                   tools other than "copy"]
@@ -244,7 +241,7 @@ Options:
 #### digiarch edit action extract
 
 ```
-Usage: digiarch edit action extract [OPTIONS] ROOT ID... REASON
+Usage: digiarch edit action extract [OPTIONS] ROOT QUERY REASON
 
   Set files' action to "extract".
 
@@ -252,16 +249,9 @@ Usage: digiarch edit action extract [OPTIONS] ROOT ID... REASON
 
   To see the changes without committing them, use the --dry-run option.
 
-  For details on the ID arguments, see the edit command.
+  For details on the QUERY argument, see the edit command.
 
 Options:
-  --uuid            Use UUIDs as identifiers.  [default]
-  --puid            Use PUIDs as identifiers.
-  --path            Use relative paths as identifiers.
-  --path-like       Use relative paths as identifiers, match with LIKE.
-  --checksum        Use checksums as identifiers.
-  --warning         Use warnings as identifiers.
-  --from-file       Interpret IDs as files from which to read the IDs.
   --tool TEXT       The tool to use for extraction.  [required]
   --extension TEXT  The extension the file must have for extraction to
                     succeed.
@@ -273,7 +263,7 @@ Options:
 #### digiarch edit action manual
 
 ```
-Usage: digiarch edit action manual [OPTIONS] ROOT ID... REASON
+Usage: digiarch edit action manual [OPTIONS] ROOT QUERY REASON
 
   Set files' action to "manual".
 
@@ -281,16 +271,9 @@ Usage: digiarch edit action manual [OPTIONS] ROOT ID... REASON
 
   To see the changes without committing them, use the --dry-run option.
 
-  For details on the ID arguments, see the edit command.
+  For details on the QUERY argument, see the edit command.
 
 Options:
-  --uuid          Use UUIDs as identifiers.  [default]
-  --puid          Use PUIDs as identifiers.
-  --path          Use relative paths as identifiers.
-  --path-like     Use relative paths as identifiers, match with LIKE.
-  --checksum      Use checksums as identifiers.
-  --warning       Use warnings as identifiers.
-  --from-file     Interpret IDs as files from which to read the IDs.
   --reason TEXT   The reason why the file must be processed manually.
                   [required]
   --process TEXT  The steps to take to process the file.  [required]
@@ -302,7 +285,7 @@ Options:
 #### digiarch edit action ignore
 
 ```
-Usage: digiarch edit action ignore [OPTIONS] ROOT ID... REASON
+Usage: digiarch edit action ignore [OPTIONS] ROOT QUERY REASON
 
   Set files' action to "ignore".
 
@@ -323,16 +306,9 @@ Usage: digiarch edit action ignore [OPTIONS] ROOT ID... REASON
 
   To see the changes without committing them, use the --dry-run option.
 
-  For details on the ID arguments, see the edit command.
+  For details on the QUERY argument, see the edit command.
 
 Options:
-  --uuid               Use UUIDs as identifiers.  [default]
-  --puid               Use PUIDs as identifiers.
-  --path               Use relative paths as identifiers.
-  --path-like          Use relative paths as identifiers, match with LIKE.
-  --checksum           Use checksums as identifiers.
-  --warning            Use warnings as identifiers.
-  --from-file          Interpret IDs as files from which to read the IDs.
   --template TEMPLATE  The template type to use.  [required]
   --reason TEXT        The reason why the file is ignored.  [required for
                        "text" template]
@@ -344,7 +320,7 @@ Options:
 #### digiarch edit action copy
 
 ```
-Usage: digiarch edit action copy [OPTIONS] ROOT ID... PUID
+Usage: digiarch edit action copy [OPTIONS] ROOT QUERY PUID
                                  {convert|extract|manual|ignore} REASON
 
   Set files' action by copying it from an existing format.
@@ -362,16 +338,9 @@ Usage: digiarch edit action copy [OPTIONS] ROOT ID... PUID
 
   To see the changes without committing them, use the --dry-run option.
 
-  For details on the ID arguments, see the edit command.
+  For details on the QUERY argument, see the edit command.
 
 Options:
-  --uuid          Use UUIDs as identifiers.  [default]
-  --puid          Use PUIDs as identifiers.
-  --path          Use relative paths as identifiers.
-  --path-like     Use relative paths as identifiers, match with LIKE.
-  --checksum      Use checksums as identifiers.
-  --warning       Use warnings as identifiers.
-  --from-file     Interpret IDs as files from which to read the IDs.
   --actions FILE  Path to a YAML file containing file format actions.  [env
                   var: DIGIARCH_ACTIONS]
   --lock          Lock the edited files.
@@ -382,7 +351,7 @@ Options:
 ### digiarch edit rename
 
 ```
-Usage: digiarch edit rename [OPTIONS] ROOT ID... EXTENSION REASON
+Usage: digiarch edit rename [OPTIONS] ROOT QUERY EXTENSION REASON
 
   Change the extension of one or more files in the files' database for the
   ROOT folder to EXTENSION.
@@ -395,13 +364,6 @@ Usage: digiarch edit rename [OPTIONS] ROOT ID... EXTENSION REASON
   The --append option will not add the new extension if it is already present.
 
 Options:
-  --uuid         Use UUIDs as identifiers.  [default]
-  --puid         Use PUIDs as identifiers.
-  --path         Use relative paths as identifiers.
-  --path-like    Use relative paths as identifiers, match with LIKE.
-  --checksum     Use checksums as identifiers.
-  --warning      Use warnings as identifiers.
-  --from-file    Interpret IDs as files from which to read the IDs.
   --append       Append the new extension.  [default]
   --replace      Replace the last extension.
   --replace-all  Replace all extensions.
@@ -412,7 +374,7 @@ Options:
 ### digiarch edit lock
 
 ```
-Usage: digiarch edit lock [OPTIONS] ROOT ID... REASON
+Usage: digiarch edit lock [OPTIONS] ROOT QUERY REASON
 
   Lock files from being edited by reidentify.
 
@@ -420,16 +382,9 @@ Usage: digiarch edit lock [OPTIONS] ROOT ID... REASON
 
   To see the changes without committing them, use the --dry-run option.
 
-  For details on the ID arguments, see the edit command.
+  For details on the QUERY argument, see the edit command.
 
 Options:
-  --uuid             Use UUIDs as identifiers.  [default]
-  --puid             Use PUIDs as identifiers.
-  --path             Use relative paths as identifiers.
-  --path-like        Use relative paths as identifiers, match with LIKE.
-  --checksum         Use checksums as identifiers.
-  --warning          Use warnings as identifiers.
-  --from-file        Interpret IDs as files from which to read the IDs.
   --lock / --unlock  Lock or unlock files.  [default: lock]
   --dry-run          Show changes without committing them.
   --help             Show this message and exit.
@@ -438,7 +393,7 @@ Options:
 ### digiarch edit remove
 
 ```
-Usage: digiarch edit remove [OPTIONS] ROOT ID... REASON
+Usage: digiarch edit remove [OPTIONS] ROOT QUERY REASON
 
   Remove one or more files in the files' database for the ROOT folder to
   EXTENSION.
@@ -447,19 +402,12 @@ Usage: digiarch edit remove [OPTIONS] ROOT ID... REASON
 
   To see the changes without committing them, use the --dry-run option.
 
-  For details on the ID arguments, see the edit command.
+  For details on the QUERY argument, see the edit command.
 
 Options:
-  --uuid       Use UUIDs as identifiers.  [default]
-  --puid       Use PUIDs as identifiers.
-  --path       Use relative paths as identifiers.
-  --path-like  Use relative paths as identifiers, match with LIKE.
-  --checksum   Use checksums as identifiers.
-  --warning    Use warnings as identifiers.
-  --from-file  Interpret IDs as files from which to read the IDs.
-  --delete     Remove selected files from the disk.
-  --dry-run    Show changes without committing them.
-  --help       Show this message and exit.
+  --delete   Remove selected files from the disk.
+  --dry-run  Show changes without committing them.
+  --help     Show this message and exit.
 ```
 
 ### digiarch edit rollback
@@ -488,31 +436,18 @@ Options:
 ## digiarch search
 
 ```
-Usage: digiarch search [OPTIONS] ROOT ID...
+Usage: digiarch search [OPTIONS] ROOT [QUERY]
 
   Search for specific files in the database.
 
   Files are displayed in YAML format.
 
-  The ID arguments are interpreted as a list of UUID's by default. This
-  behaviour can be changed with the --puid, --path, --path-like, --checksum,
-  and --warning options. If the --from-file option is used, each ID argument
-  is interpreted as the path to a file containing a list of IDs (one per line,
-  empty lines are ignored).
+  For details on the QUERY argument, see the edit command.
 
-  If there are no ID arguments, then the limit is automatically set to 100 if
-  not set with the --limit option.
+  If there is no query, then the limit is automatically set to 100 if not set
+  with the --limit option.
 
 Options:
-  --uuid                          Use UUIDs as identifiers.  [default]
-  --puid                          Use PUIDs as identifiers.
-  --path                          Use relative paths as identifiers.
-  --path-like                     Use relative paths as identifiers, match
-                                  with LIKE.
-  --checksum                      Use checksums as identifiers.
-  --warning                       Use warnings as identifiers.
-  --from-file                     Interpret IDs as files from which to read
-                                  the IDs.
   --order-by [relative_path|size|action]
                                   Set sorting field.  [default: relative_path]
   --sort [asc|desc]               Set sorting direction.  [default: asc]
