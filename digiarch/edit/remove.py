@@ -22,6 +22,21 @@ from .common import find_files
 from .common import TQuery
 
 
+def remove_empty_dir(root: Path, path: Path):
+    if path == root:
+        return
+    elif not path.is_relative_to(root):
+        return
+    elif not path.is_dir():
+        return
+    elif next(path.iterdir(), None):
+        return
+
+    path.rmdir()
+
+    return remove_empty_dir(root, path.parent)
+
+
 @command("remove", no_args_is_help=True, short_help="Remove files.")
 @argument_root(True)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
@@ -61,6 +76,7 @@ def command_remove(
                     database.history.insert(event)
                     if delete:
                         file.get_absolute_path(root).unlink(missing_ok=True)
+                        remove_empty_dir(root, file.get_absolute_path(root).parent)
                 event.log(INFO, log_stdout)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
