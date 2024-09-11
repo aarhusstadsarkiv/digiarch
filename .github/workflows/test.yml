@@ -60,8 +60,24 @@ jobs:
           acacore_package="${acacore_package%\"}"
           test "$acacore_remote" = "$acacore_package"
 
+  version-database:
+    name: Test database version
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test database version
+        run: |
+          acacore_database="$(sqlite3 tests/files/_metadata/files.db "select value from Metadata where key = 'version'")"
+          acacore_package="$(grep 'acacore =' pyproject.toml | grep -oE 'tag[ ]*=[ ]*"[^"]+"')"
+          acacore_package="${acacore_package#*\"}"
+          acacore_package="${acacore_package#v}"
+          acacore_package="${acacore_package%\"}"
+          test "$acacore_database" = "$acacore_package"
+          
+
   pytest:
     name: pytest
+    needs: version-database
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
