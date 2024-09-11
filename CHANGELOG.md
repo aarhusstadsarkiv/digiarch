@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.0.1
+
+### Changes
+
+* Use acacore 3.0.9
+    * Fix #723
+
+### Fixes
+
+* Fix BMP images not being properly checked
+    * Caused by imagesize library not supporting them
+
 ## v4.0.0
 
 ### New Features
