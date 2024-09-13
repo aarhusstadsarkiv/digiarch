@@ -4,7 +4,7 @@
 
 ### New Feature
 
-* New `edit processed` command to set file(s) processed status
+* New `edit processed` command to set files' processed status
 
 ### Changes
 
