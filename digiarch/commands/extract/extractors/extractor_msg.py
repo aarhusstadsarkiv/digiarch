@@ -15,7 +15,7 @@ from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
 from extract_msg.msg_classes import MessageSigned
 
-from digiarch.doctor import sanitize_filename
+from digiarch.commands.doctor import sanitize_filename
 
 from .base import ExtractError
 from .base import ExtractorBase

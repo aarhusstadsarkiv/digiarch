@@ -191,8 +191,8 @@ def command_rollback(
 
     To see the changes without committing them, use the --dry-run option.
     """
-    from digiarch.doctor import command_doctor
-    from digiarch.extract.extract import command_extract
+    from digiarch.commands.doctor import command_doctor
+    from digiarch.commands.extract.extract import command_extract
 
     from .edit import command_lock
     from .edit import command_processed

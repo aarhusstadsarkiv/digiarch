@@ -4,8 +4,8 @@ from typing import Generator
 
 from tnefparse import TNEF
 
-from digiarch.doctor import sanitize_filename
-from digiarch.extract.extractors.base import ExtractorBase
+from digiarch.commands.doctor import sanitize_filename
+from digiarch.commands.extract.extractors.base import ExtractorBase
 
 
 class TNEFExtractor(ExtractorBase):

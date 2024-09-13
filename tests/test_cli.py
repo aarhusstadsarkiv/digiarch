@@ -18,18 +18,18 @@ from click import BadParameter
 from pydantic import BaseModel
 
 from digiarch.cli import app
-from digiarch.doctor import command_doctor
-from digiarch.edit.action import group_action
-from digiarch.edit.edit import group_edit
-from digiarch.edit.lock import command_lock
-from digiarch.edit.processed import command_processed
-from digiarch.edit.remove import command_remove
-from digiarch.edit.rename import command_rename
-from digiarch.edit.rollback import command_rollback
-from digiarch.extract.extract import command_extract
-from digiarch.history import command_history
-from digiarch.identify import command_identify
-from digiarch.identify import command_reidentify
+from digiarch.commands.doctor import command_doctor
+from digiarch.commands.edit.action import group_action
+from digiarch.commands.edit.edit import group_edit
+from digiarch.commands.edit.lock import command_lock
+from digiarch.commands.edit.processed import command_processed
+from digiarch.commands.edit.remove import command_remove
+from digiarch.commands.edit.rename import command_rename
+from digiarch.commands.edit.rollback import command_rollback
+from digiarch.commands.extract.extract import command_extract
+from digiarch.commands.history import command_history
+from digiarch.commands.identify import command_identify
+from digiarch.commands.identify import command_reidentify
 
 
 @pytest.fixture()
