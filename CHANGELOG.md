@@ -2,6 +2,10 @@
 
 ## v4.0.2
 
+### New Feature
+
+* New `edit processed` command to set file(s) processed status
+
 ### Changes
 
 * Use acacore 3.0.10
