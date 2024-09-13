@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.0.2
+
+### Changes
+
+* Use acacore 3.0.10
+
+### Fixes
+
+* Fix `PIL.UnidentifiedImageError` causing `identify` and `reidentify` to stop
+
 ## v4.0.1
 
 ### Changes
