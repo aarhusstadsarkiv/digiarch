@@ -22,6 +22,7 @@ from digiarch.doctor import command_doctor
 from digiarch.edit.action import group_action
 from digiarch.edit.edit import group_edit
 from digiarch.edit.lock import command_lock
+from digiarch.edit.processed import command_processed
 from digiarch.edit.remove import command_remove
 from digiarch.edit.rename import command_rename
 from digiarch.edit.rollback import command_rollback
@@ -641,6 +642,41 @@ def test_edit_lock(tests_folder: Path, files_folder: Path, files_folder_copy: Pa
             history_edit: Optional[HistoryEntry] = database.history.select(
                 where="uuid = ? and operation like ? || '%'",
                 parameters=[str(file.uuid), "digiarch.edit.lock:"],
+            ).fetchone()
+            assert history_edit is not None
+            assert history_edit.reason == test_reason
+
+
+def test_edit_processed(tests_folder: Path, files_folder: Path, files_folder_copy: Path):
+    database_path: Path = files_folder / "_metadata" / "files.db"
+    database_path_copy: Path = files_folder_copy / database_path.relative_to(files_folder)
+    database_path_copy.parent.mkdir(parents=True, exist_ok=True)
+    copy(database_path, database_path_copy)
+
+    with FileDB(database_path_copy) as database:
+        files: list[File] = list(database.files.select())
+
+    test_reason: str = "processed"
+
+    args: list[str] = [
+        group_edit.name,
+        command_processed.name,
+        str(files_folder_copy),
+        f"@uuid {' '.join(str(f.uuid) for f in files)}",
+        test_reason,
+    ]
+
+    app.main(args, standalone_mode=False)
+
+    with FileDB(database_path_copy) as database:
+        for file in files:
+            file_new: Optional[File] = database.files.select(where="uuid = ?", parameters=[str(file.uuid)]).fetchone()
+            assert file_new is not None
+            assert file_new.processed is True
+
+            history_edit: Optional[HistoryEntry] = database.history.select(
+                where="uuid = ? and operation like ? || '%'",
+                parameters=[str(file.uuid), "digiarch.edit.processed:"],
             ).fetchone()
             assert history_edit is not None
             assert history_edit.reason == test_reason
