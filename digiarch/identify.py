@@ -36,6 +36,7 @@ from click import IntRange
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+from PIL import UnidentifiedImageError
 
 from digiarch.common import argument_root
 from digiarch.common import check_database_version
@@ -102,6 +103,7 @@ def identify_file(
 
     with ExceptionManager(
         Exception,
+        UnidentifiedImageError,
         allow=[OSError, IOError],
     ) as identify_error:
         file: File = File.from_file(
