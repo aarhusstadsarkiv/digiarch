@@ -1,6 +1,7 @@
 from acacore.__version__ import __version__ as __acacore_version__
 from click import group
 from click import version_option
+from PIL import Image
 
 from .__version__ import __version__
 from .completions import command_completions
@@ -12,6 +13,8 @@ from .identify import command_identify
 from .identify import command_reidentify
 from .search import command_search
 from .upgrade import command_upgrade
+
+Image.MAX_IMAGE_PIXELS = int(50e3**2)
 
 
 @group("digiarch", no_args_is_help=True)
