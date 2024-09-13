@@ -36,7 +36,11 @@ from click import IntRange
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+from PIL import UnidentifiedImageError
 
+from digiarch.commands.edit.common import argument_query
+from digiarch.commands.edit.common import query_to_where
+from digiarch.commands.edit.common import TQuery
 from digiarch.common import argument_root
 from digiarch.common import check_database_version
 from digiarch.common import ctx_params
@@ -44,9 +48,6 @@ from digiarch.common import end_program
 from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
 from digiarch.common import start_program
-from digiarch.edit.common import argument_query
-from digiarch.edit.common import query_to_where
-from digiarch.edit.common import TQuery
 
 
 def handle_rename_action(file: File, action: RenameAction) -> tuple[Path, Path] | tuple[None, None]:
@@ -102,6 +103,7 @@ def identify_file(
 
     with ExceptionManager(
         Exception,
+        UnidentifiedImageError,
         allow=[OSError, IOError],
     ) as identify_error:
         file: File = File.from_file(

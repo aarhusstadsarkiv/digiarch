@@ -1,17 +1,20 @@
 from acacore.__version__ import __version__ as __acacore_version__
 from click import group
 from click import version_option
+from PIL import Image
 
 from .__version__ import __version__
-from .completions import command_completions
-from .doctor import command_doctor
-from .edit.edit import group_edit
-from .extract.extract import command_extract
-from .history import command_history
-from .identify import command_identify
-from .identify import command_reidentify
-from .search import command_search
-from .upgrade import command_upgrade
+from .commands.completions import command_completions
+from .commands.doctor import command_doctor
+from .commands.edit.edit import group_edit
+from .commands.extract.extract import command_extract
+from .commands.history import command_history
+from .commands.identify import command_identify
+from .commands.identify import command_reidentify
+from .commands.search import command_search
+from .commands.upgrade import command_upgrade
+
+Image.MAX_IMAGE_PIXELS = int(50e3**2)
 
 
 @group("digiarch", no_args_is_help=True)

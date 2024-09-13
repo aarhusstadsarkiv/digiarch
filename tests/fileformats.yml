@@ -22,12 +22,11 @@ aca-fmt/1:
       - ods
 aca-fmt/2:
   name: Microsoft Word Markup
-  action: convert
-  convert:
-    tool: libre
-    outputs:
-      - odt
-      - pdf
+  action: manual
+  description: Microsoft Word Markup xml
+  manual:
+    reason: Libre often converts incorrectly xml saved in MS Word.
+    process: Open in MS Word and save as pdf.
 aca-fmt/3:
   name: Microsoft Excel Markup
   action: convert
@@ -60,6 +59,12 @@ aca-fmt/7:
   ignore:
     template: not-preservable
     reason: User ID files. Not preservation-worthy
+aca-fmt/8:
+  name: Lotus Notes Database
+  action: manual
+  manual:
+    reason: What to do? We dont know what we can do with Lotus Notes Database
+    process: Investigate what to do with Lotus Notes Database
 aca-fmt/9:
   name: Transport Neutral Encapsulation Format (TNEF)/Microsoft email attachments
     archive (winmail)
@@ -121,6 +126,25 @@ aca-fmt/26:
   ignore:
     template: not-preservable
     reason: Used for sharing links to documents over email and in Web pages. Not preservation-worthy
+aca-fmt/27:
+  name: Windows Media Player Skin Package
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: Pre-installed or custom skin that changes the appearance of the Windows Media Player interface. Not preservation-worthy
+  description: A WMZ file is a pre-installed or custom skin that changes the appearance of the Windows Media Player interface, often to match a certain theme. It contains a combination of graphics and JScript code that defines the look and behavior of each skin element. WMZ files are compressed using GZIP compression.
+aca-fmt/28:
+  name: Bentley Microstation V7 File
+  description: Bentley CAD file. https://www.loc.gov/preservation/digital/formats/fdd/fdd000603.shtml
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open in Bentley View, save as pdf.
+aca-fmt/29:
+  name: XML Schema Definition (Custom XSD)
+  action: convert
+  convert:
+    tool: copy
 fmt/3:
   name: Graphics Interchange Format 87a
   ignore_if:
@@ -706,30 +730,22 @@ fmt/96:
   name: Hypertext Markup Language
   action: convert
   convert:
-    tool: browser
-    outputs:
-      - pdf
+    tool: copy
 fmt/98:
   name: Hypertext Markup Language 3.2
   action: convert
   convert:
-    tool: browser
-    outputs:
-      - pdf
+    tool: copy
 fmt/99:
   name: Hypertext Markup Language 4.0
   action: convert
   convert:
-    tool: browser
-    outputs:
-      - pdf
+    tool: copy
 fmt/100:
   name: Hypertext Markup Language 4.01
   action: convert
   convert:
-    tool: browser
-    outputs:
-      - pdf
+    tool: copy
 fmt/101:
   name: Extensible Markup Language 1.0
   reidentify:
@@ -744,9 +760,7 @@ fmt/102:
   name: Extensible Hypertext Markup Language 1.0
   action: convert
   convert:
-    tool: browser
-    outputs:
-      - pdf
+    tool: copy
 fmt/109:
   name: Macromedia Flash 6
   action: ignore
@@ -2378,6 +2392,7 @@ x-fmt/263:
   alternatives:
     .xps: fmt/657
     .oxps: fmt/657
+    .kmz: fmt/724
   action: extract
   extract:
     tool: zip
@@ -2403,12 +2418,16 @@ x-fmt/266:
   alternatives:
     .emz: aca-fmt/22
     .emz.gz: aca-fmt/22
+    .wmz: aca-fmt/27
 x-fmt/280:
   name: XML Schema Definition
   action: ignore
+  reidentify:
+    reason: If the XSD is not custom made, then we ignore the XSD file.
+    on_fail: "action"
   ignore:
     template: not-preservable
-    reason: A prescriptive XML template, for validating XML files with. Not preservation-worthy
+    reason: A prescriptive XML template, for validating XML files with. Not preservation-worthy if not with a GML file.
 x-fmt/315:
   name: Document Type Definition
   action: convert
@@ -2431,7 +2450,7 @@ x-fmt/332:
     reason: It's a file containing formatting information for Lotus spreadsheets.
       Not preservation-worthy
 x-fmt/340:
-  name: ''
+  name: 'Lotus WordPro Document'
   action: convert
   convert:
     tool: symphovert
@@ -2445,6 +2464,16 @@ x-fmt/345:
     outputs:
       - odt
       - pdf
+x-fmt/346:
+  name: Microstation CAD Drawing
+  action: ignore
+  reidentify:
+    reason: Pronom identifies the format on extension alone
+    chunk_size: 2048
+    on_fail: "action"
+  ignore:
+    template: not-convertable
+    reason: At the moment the file can't be converted with the current tools for CAD-files.
 x-fmt/375:
   name: CorelDraw Drawing
   action: convert
@@ -2569,6 +2598,14 @@ x-fmt/413:
   ignore:
     template: not-preservable
     reason: An executable non-binary .bat-file. Not preservation-worthy
+x-fmt/414:
+  name: Windows Cabinet File
+  action: manual
+  manual:
+    reason: Cannot extract with digiarch
+    process: Find the dir where .cab file is located. Create a subdir in the same dir
+      as the .cab file with the uuid of the .cab file as name. Open the .cab file with
+      windows. Copy everything into the subdir.
 x-fmt/415:
   name: Java Compiled Object Code
   action: ignore
@@ -2602,13 +2639,19 @@ x-fmt/420:
   action: ignore
   ignore:
     template: not-preservable
-    reason: Windows Setup File or  Installer Script. Not preservation-worthy
+    reason: Windows Setup File or Installer Script. Not preservation-worthy
 x-fmt/421:
   name: Text Configuration file
   action: ignore
   ignore:
     template: not-preservable
     reason: A text config file. Not preservation-worthy
+x-fmt/423:
+  name: JavaScript file
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: A script in JavaScript. Not preservation-worthy
 x-fmt/426:
   name: License file
   action: convert
@@ -2676,3 +2719,18 @@ xfmt/157:
     tool: image
     outputs:
       - png
+fmt/1549:
+  name: Bentley Microstation Hidden Line File
+  action: manual
+  reidentify:
+    reason: Pronom sometimes wrongly identifies .dgn as .hln due to small byteheader definition
+    on_fail: "action"
+  manual:
+    reason: Never able to find this type of file.
+    process: Try to open in Bentley View or AB Viewer.
+fmt/502:
+  name: Bentley V8 DGN
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open in Bentley View, save as pdf.

@@ -10,13 +10,12 @@ from click import IntRange
 from click import option
 from click import pass_context
 
-from digiarch.edit.common import argument_query
-from digiarch.edit.common import find_files
-from digiarch.edit.common import TQuery
-
-from .common import argument_root
-from .common import check_database_version
-from .common import ctx_params
+from digiarch.commands.edit.common import argument_query
+from digiarch.commands.edit.common import find_files
+from digiarch.commands.edit.common import TQuery
+from digiarch.common import argument_root
+from digiarch.common import check_database_version
+from digiarch.common import ctx_params
 
 
 @command("search", no_args_is_help=True, short_help="Search the database.")

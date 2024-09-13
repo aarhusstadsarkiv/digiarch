@@ -9,7 +9,7 @@ from acacore.utils.functions import rm_tree
 from patoolib import extract_archive
 from patoolib.util import PatoolError
 
-from digiarch.doctor import sanitize_path
+from digiarch.commands.doctor import sanitize_path
 
 from .base import ExtractError
 from .base import ExtractorBase

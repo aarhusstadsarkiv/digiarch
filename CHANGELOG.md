@@ -1,5 +1,19 @@
 # Changelog
 
+## v4.1.0
+
+### New Feature
+
+* New `edit processed` command to set files' processed status
+
+### Changes
+
+* Use acacore 3.0.10
+
+### Fixes
+
+* Fix `PIL.UnidentifiedImageError` causing `identify` and `reidentify` to stop
+
 ## v4.0.1
 
 ### Changes

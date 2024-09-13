@@ -39,11 +39,22 @@ def rollback_edit_action(database: FileDB, event: HistoryEntry, dry_run: bool) -
     return file, None
 
 
+# noinspection DuplicatedCode
 def rollback_edit_lock(database: FileDB, event: HistoryEntry, dry_run: bool) -> tuple[File | None, str | None]:
     file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
     if file and not dry_run:
         # noinspection PyUnresolvedReferences
         file.lock = event.data[0]
+        database.files.update(file, {"uuid": file.uuid})
+    return file, None
+
+
+# noinspection DuplicatedCode
+def rollback_edit_processed(database: FileDB, event: HistoryEntry, dry_run: bool) -> tuple[File | None, str | None]:
+    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
+    if file and not dry_run:
+        # noinspection PyUnresolvedReferences
+        file.processed = event.data[0]
         database.files.update(file, {"uuid": file.uuid})
     return file, None
 
@@ -180,10 +191,11 @@ def command_rollback(
 
     To see the changes without committing them, use the --dry-run option.
     """
-    from digiarch.doctor import command_doctor
-    from digiarch.extract.extract import command_extract
+    from digiarch.commands.doctor import command_doctor
+    from digiarch.commands.extract.extract import command_extract
 
     from .edit import command_lock
+    from .edit import command_processed
     from .edit import command_remove
     from .edit import command_rename
     from .edit import group_action
@@ -217,6 +229,10 @@ def command_rollback(
                     if operation != "edit":
                         continue
                     file, error = rollback_edit_lock(database, event, dry_run)
+                elif name == f"{program_name}.{group_edit.name}.{command_processed.name}":
+                    if operation != "edit":
+                        continue
+                    file, error = rollback_edit_processed(database, event, dry_run)
                 elif name == f"{program_name}.{group_edit.name}.{command_rename.name}":
                     if operation != "edit":
                         continue
