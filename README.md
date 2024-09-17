@@ -17,6 +17,7 @@
       * [copy](#digiarch-edit-action-copy)
     * [rename](#digiarch-edit-rename)
     * [lock](#digiarch-edit-lock)
+    * [processed](#digiarch-edit-processed)
     * [remove](#digiarch-edit-remove)
     * [rollback](#digiarch-edit-rollback)
   * [search](#digiarch-search)
@@ -189,11 +190,12 @@ Options:
   --help  Show this message and exit.
 
 Commands:
-  action    Change file actions.
-  rename    Change file extensions.
-  lock      Lock files.
-  remove    Remove files.
-  rollback  Roll back edits.
+  action     Change file actions.
+  rename     Change file extensions.
+  lock       Lock files.
+  processed  Lock files.
+  remove     Remove files.
+  rollback   Roll back edits.
 ```
 
 ### digiarch edit action
@@ -388,6 +390,26 @@ Options:
   --lock / --unlock  Lock or unlock files.  [default: lock]
   --dry-run          Show changes without committing them.
   --help             Show this message and exit.
+```
+
+### digiarch edit processed
+
+```
+Usage: digiarch edit processed [OPTIONS] ROOT QUERY REASON
+
+  Set files as processed.
+
+  To set files as unprocessed, use the --unprocessed option.
+
+  To see the changes without committing them, use the --dry-run option.
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --processed / --unprocessed  Set files as processed or unprocessed.
+                               [default: processed]
+  --dry-run                    Show changes without committing them.
+  --help                       Show this message and exit.
 ```
 
 ### digiarch edit remove
