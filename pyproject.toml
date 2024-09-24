@@ -103,7 +103,7 @@ ignore = [
     "FBT001",  # boolean arguement in function definition
     "INP001",  # implicit namespace without __init__ (throws errors in tests)
     "ISC001",  # check for implicit concatanation of str on one line, not compatabil with black.
-    "N802",    # name of function should be lower case
+    "N802",    # name of function should be lowercase
     "PLR2004", # magic value used in comparison
     "PLW2901", # redefing loop variables
     "PT012",   # ptest.raises should contain a simple statement
