@@ -192,7 +192,7 @@ Commands:
   action     Change file actions.
   rename     Change file extensions.
   lock       Lock files.
-  processed  Lock files.
+  processed  Set files as processed.
   remove     Remove files.
   rollback   Roll back edits.
 ```
