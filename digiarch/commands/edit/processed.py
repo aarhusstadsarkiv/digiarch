@@ -22,7 +22,7 @@ from .common import find_files
 from .common import TQuery
 
 
-@command("processed", no_args_is_help=True, short_help="Lock files.")
+@command("processed", no_args_is_help=True, short_help="Set files as processed.")
 @argument_root(True)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
