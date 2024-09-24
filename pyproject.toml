@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "4.1.0"
+version = "4.1.1"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -12,7 +12,7 @@ include = ["pyproject.toml"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v3.0.10"}
+acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v3.0.11"}
 patool = "^2.4.0"
 tnefparse = "^1.4.0"
 extract-msg = "^0.49.0"
@@ -103,7 +103,7 @@ ignore = [
     "FBT001",  # boolean arguement in function definition
     "INP001",  # implicit namespace without __init__ (throws errors in tests)
     "ISC001",  # check for implicit concatanation of str on one line, not compatabil with black.
-    "N802",    # name of function should be lower case
+    "N802",    # name of function should be lowercase
     "PLR2004", # magic value used in comparison
     "PLW2901", # redefing loop variables
     "PT012",   # ptest.raises should contain a simple statement
