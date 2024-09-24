@@ -5,29 +5,28 @@
 # Commands
 
 * [digiarch](#digiarch)
-  * [identify](#digiarch-identify)
-  * [reidentify](#digiarch-reidentify)
-  * [extract](#digiarch-extract)
-  * [edit](#digiarch-edit)
-    * [action](#digiarch-edit-action)
-      * [convert](#digiarch-edit-action-convert)
-      * [extract](#digiarch-edit-action-extract)
-      * [manual](#digiarch-edit-action-manual)
-      * [ignore](#digiarch-edit-action-ignore)
-      * [copy](#digiarch-edit-action-copy)
-    * [rename](#digiarch-edit-rename)
-    * [lock](#digiarch-edit-lock)
-    * [processed](#digiarch-edit-processed)
-    * [remove](#digiarch-edit-remove)
-    * [rollback](#digiarch-edit-rollback)
-  * [search](#digiarch-search)
-  * [history](#digiarch-history)
-  * [doctor](#digiarch-doctor)
-  * [upgrade](#digiarch-upgrade)
-  * [completions](#digiarch-completions)
+    * [identify](#digiarch-identify)
+    * [reidentify](#digiarch-reidentify)
+    * [extract](#digiarch-extract)
+    * [edit](#digiarch-edit)
+        * [action](#digiarch-edit-action)
+            * [convert](#digiarch-edit-action-convert)
+            * [extract](#digiarch-edit-action-extract)
+            * [manual](#digiarch-edit-action-manual)
+            * [ignore](#digiarch-edit-action-ignore)
+            * [copy](#digiarch-edit-action-copy)
+        * [rename](#digiarch-edit-rename)
+        * [lock](#digiarch-edit-lock)
+        * [processed](#digiarch-edit-processed)
+        * [remove](#digiarch-edit-remove)
+        * [rollback](#digiarch-edit-rollback)
+    * [search](#digiarch-search)
+    * [history](#digiarch-history)
+    * [doctor](#digiarch-doctor)
+    * [upgrade](#digiarch-upgrade)
+    * [completions](#digiarch-completions)
 
-
-# digiarch
+## digiarch
 
 ```
 Usage: digiarch [OPTIONS] COMMAND [ARGS]...
@@ -51,7 +50,7 @@ Commands:
   completions  Generate shell completions.
 ```
 
-## digiarch identify
+### digiarch identify
 
 ```
 Usage: digiarch identify [OPTIONS] ROOT
@@ -83,7 +82,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-## digiarch reidentify
+### digiarch reidentify
 
 ```
 Usage: digiarch reidentify [OPTIONS] ROOT [QUERY]
@@ -116,7 +115,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-## digiarch extract
+### digiarch extract
 
 ```
 Usage: digiarch extract [OPTIONS] ROOT
@@ -148,7 +147,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-## digiarch edit
+### digiarch edit
 
 ```
 Usage: digiarch edit [OPTIONS] COMMAND [ARGS]...
@@ -198,7 +197,7 @@ Commands:
   rollback   Roll back edits.
 ```
 
-### digiarch edit action
+#### digiarch edit action
 
 ```
 Usage: digiarch edit action [OPTIONS] COMMAND [ARGS]...
@@ -216,7 +215,7 @@ Commands:
   copy     Copy action from a format.
 ```
 
-#### digiarch edit action convert
+##### digiarch edit action convert
 
 ```
 Usage: digiarch edit action convert [OPTIONS] ROOT QUERY REASON
@@ -240,7 +239,7 @@ Options:
   --help          Show this message and exit.
 ```
 
-#### digiarch edit action extract
+##### digiarch edit action extract
 
 ```
 Usage: digiarch edit action extract [OPTIONS] ROOT QUERY REASON
@@ -262,7 +261,7 @@ Options:
   --help            Show this message and exit.
 ```
 
-#### digiarch edit action manual
+##### digiarch edit action manual
 
 ```
 Usage: digiarch edit action manual [OPTIONS] ROOT QUERY REASON
@@ -284,7 +283,7 @@ Options:
   --help          Show this message and exit.
 ```
 
-#### digiarch edit action ignore
+##### digiarch edit action ignore
 
 ```
 Usage: digiarch edit action ignore [OPTIONS] ROOT QUERY REASON
@@ -319,7 +318,7 @@ Options:
   --help               Show this message and exit.
 ```
 
-#### digiarch edit action copy
+##### digiarch edit action copy
 
 ```
 Usage: digiarch edit action copy [OPTIONS] ROOT QUERY PUID
@@ -350,7 +349,7 @@ Options:
   --help          Show this message and exit.
 ```
 
-### digiarch edit rename
+#### digiarch edit rename
 
 ```
 Usage: digiarch edit rename [OPTIONS] ROOT QUERY EXTENSION REASON
@@ -373,7 +372,7 @@ Options:
   --help         Show this message and exit.
 ```
 
-### digiarch edit lock
+#### digiarch edit lock
 
 ```
 Usage: digiarch edit lock [OPTIONS] ROOT QUERY REASON
@@ -392,7 +391,7 @@ Options:
   --help             Show this message and exit.
 ```
 
-### digiarch edit processed
+#### digiarch edit processed
 
 ```
 Usage: digiarch edit processed [OPTIONS] ROOT QUERY REASON
@@ -412,7 +411,7 @@ Options:
   --help                       Show this message and exit.
 ```
 
-### digiarch edit remove
+#### digiarch edit remove
 
 ```
 Usage: digiarch edit remove [OPTIONS] ROOT QUERY REASON
@@ -432,7 +431,7 @@ Options:
   --help     Show this message and exit.
 ```
 
-### digiarch edit rollback
+#### digiarch edit rollback
 
 ```
 Usage: digiarch edit rollback [OPTIONS] ROOT FROM TO REASON
@@ -455,7 +454,7 @@ Options:
   --help          Show this message and exit.
 ```
 
-## digiarch search
+### digiarch search
 
 ```
 Usage: digiarch search [OPTIONS] ROOT [QUERY]
@@ -477,7 +476,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-## digiarch history
+### digiarch history
 
 ```
 Usage: digiarch history [OPTIONS] ROOT
@@ -507,7 +506,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-## digiarch doctor
+### digiarch doctor
 
 ```
 Usage: digiarch doctor [OPTIONS] ROOT
@@ -529,7 +528,7 @@ Options:
   --help                          Show this message and exit.
 ```
 
-## digiarch upgrade
+### digiarch upgrade
 
 ```
 Usage: digiarch upgrade [OPTIONS] ROOT
@@ -545,7 +544,7 @@ Options:
   --help                  Show this message and exit.
 ```
 
-## digiarch completions
+### digiarch completions
 
 ```
 Usage: digiarch completions [OPTIONS] {bash|fish|zsh}
