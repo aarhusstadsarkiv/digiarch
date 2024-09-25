@@ -9,6 +9,10 @@ from acacore.models.file import File
 from acacore.models.history import HistoryEntry
 from acacore.models.reference_files import ActionData
 from acacore.models.reference_files import TActionType
+from acacore.utils.click import check_database_version
+from acacore.utils.click import end_program
+from acacore.utils.click import param_callback_regex
+from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
 from click import argument
 from click import command
@@ -17,13 +21,10 @@ from click import DateTime
 from click import option
 from click import pass_context
 
+from digiarch.__version__ import __version__
 from digiarch.common import argument_root
-from digiarch.common import check_database_version
 from digiarch.common import ctx_params
-from digiarch.common import end_program
 from digiarch.common import option_dry_run
-from digiarch.common import param_regex
-from digiarch.common import start_program
 
 
 def rollback_edit_action(database: FileDB, event: HistoryEntry, dry_run: bool) -> tuple[File | None, str | None]:
@@ -166,7 +167,7 @@ def rollback_doctor_files(
     "commands",
     type=str,
     multiple=True,
-    callback=param_regex(r"^[a-z-]+(.[a-z-]+)*$"),
+    callback=param_callback_regex(r"^[a-z-]+(.[a-z-]+)*$"),
     help="Specify commands to roll back.  [multiple]",
 )
 @option_dry_run()
@@ -206,7 +207,7 @@ def command_rollback(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             where = "uuid is not null and time >= ? and time <= ?"
