@@ -14,6 +14,11 @@ from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import TActionType
 from acacore.models.reference_files import TemplateTypeEnum
 from acacore.models.reference_files import TTemplateType
+from acacore.utils.click import check_database_version
+from acacore.utils.click import end_program
+from acacore.utils.click import param_callback_regex
+from acacore.utils.click import start_program
+from acacore.utils.decorators import docstring_format
 from acacore.utils.helpers import ExceptionManager
 from click import argument
 from click import BadParameter
@@ -26,15 +31,11 @@ from click import pass_context
 from click import Path as ClickPath
 from pydantic import BaseModel
 
+from digiarch.__version__ import __version__
 from digiarch.common import argument_root
-from digiarch.common import check_database_version
 from digiarch.common import ctx_params
-from digiarch.common import docstring_format
-from digiarch.common import end_program
 from digiarch.common import fetch_actions
 from digiarch.common import option_dry_run
-from digiarch.common import param_regex
-from digiarch.common import start_program
 
 from .common import argument_query
 from .common import find_files
@@ -99,7 +100,7 @@ def group_action():
     "--outputs",
     type=str,
     multiple=True,
-    callback=param_regex("^(.[a-zA-Z0-9]+)+$"),
+    callback=param_callback_regex("^(.[a-zA-Z0-9]+)+$"),
     help='The file extensions to generate.  [multiple; required for tools other than "copy"]',
 )
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
@@ -134,7 +135,7 @@ def action_convert(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, query):
@@ -153,7 +154,7 @@ def action_convert(
 @option(
     "--extension",
     type=str,
-    callback=param_regex(r"^(.[a-zA-Z0-9]+)+$"),
+    callback=param_callback_regex(r"^(.[a-zA-Z0-9]+)+$"),
     help="The extension the file must have for extraction to succeed.",
 )
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
@@ -183,7 +184,7 @@ def action_extract(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, query):
@@ -203,14 +204,14 @@ def action_extract(
     "data_reason",
     type=str,
     required=True,
-    callback=param_regex(r"^.*\S.*$"),
+    callback=param_callback_regex(r"^.*\S.*$"),
     help="The reason why the file must be processed manually.",
 )
 @option(
     "--process",
     type=str,
     required=True,
-    callback=param_regex(r"^.*\S.*$"),
+    callback=param_callback_regex(r"^.*\S.*$"),
     help="The steps to take to process the file.",
 )
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
@@ -240,7 +241,7 @@ def action_manual(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, query):
@@ -266,7 +267,7 @@ def action_manual(
     "--reason",
     "data_reason",
     type=str,
-    callback=param_regex(r"^.*\S.*$"),
+    callback=param_callback_regex(r"^.*\S.*$"),
     help='The reason why the file is ignored.  [required for "text" template]',
 )
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
@@ -306,7 +307,7 @@ def action_ignore(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, query):
@@ -378,7 +379,7 @@ def command_copy(
         raise BadParameter(f"Action {action} not found in {puid}.", ctx, ctx_params(ctx)["puid"])
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, query):

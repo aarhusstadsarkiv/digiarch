@@ -14,6 +14,9 @@ from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
 from acacore.siegfried import Siegfried
 from acacore.siegfried.siegfried import TSignaturesProvider
+from acacore.utils.click import check_database_version
+from acacore.utils.click import end_program
+from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
 from click import BadParameter
 from click import Choice
@@ -23,15 +26,13 @@ from click import option
 from click import pass_context
 from click import Path as ClickPath
 
+from digiarch.__version__ import __version__
 from digiarch.commands.identify import identify_file
 from digiarch.common import argument_root
-from digiarch.common import check_database_version
 from digiarch.common import ctx_params
-from digiarch.common import end_program
 from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
 from digiarch.common import option_dry_run
-from digiarch.common import start_program
 
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
@@ -151,7 +152,7 @@ def command_extract(
     custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
         offset: int = 0
 
         with ExceptionManager(BaseException) as exception:

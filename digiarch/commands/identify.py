@@ -25,6 +25,9 @@ from acacore.models.reference_files import RenameAction
 from acacore.siegfried import Siegfried
 from acacore.siegfried.siegfried import SiegfriedFile
 from acacore.siegfried.siegfried import TSignaturesProvider
+from acacore.utils.click import check_database_version
+from acacore.utils.click import end_program
+from acacore.utils.click import start_program
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
 from click import Argument
@@ -38,16 +41,14 @@ from click import pass_context
 from click import Path as ClickPath
 from PIL import UnidentifiedImageError
 
+from digiarch.__version__ import __version__
 from digiarch.commands.edit.common import argument_query
 from digiarch.commands.edit.common import query_to_where
 from digiarch.commands.edit.common import TQuery
 from digiarch.common import argument_root
-from digiarch.common import check_database_version
 from digiarch.common import ctx_params
-from digiarch.common import end_program
 from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
-from digiarch.common import start_program
 
 
 def handle_rename_action(file: File, action: RenameAction) -> tuple[Path, Path] | tuple[None, None]:
@@ -280,7 +281,7 @@ def command_identify(
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, False)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, False)
         database.init()
 
         with ExceptionManager(BaseException) as exception:

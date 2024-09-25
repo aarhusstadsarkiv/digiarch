@@ -3,6 +3,9 @@ from pathlib import Path
 
 from acacore.database import FileDB
 from acacore.models.history import HistoryEntry
+from acacore.utils.click import check_database_version
+from acacore.utils.click import end_program
+from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
 from click import argument
 from click import command
@@ -10,12 +13,10 @@ from click import Context
 from click import option
 from click import pass_context
 
+from digiarch.__version__ import __version__
 from digiarch.common import argument_root
-from digiarch.common import check_database_version
 from digiarch.common import ctx_params
-from digiarch.common import end_program
 from digiarch.common import option_dry_run
-from digiarch.common import start_program
 
 from .common import argument_query
 from .common import find_files
@@ -64,7 +65,7 @@ def command_remove(
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
     with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, None, True, True, dry_run)
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
             for file in find_files(database, query):

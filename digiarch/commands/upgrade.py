@@ -6,6 +6,8 @@ from acacore.__version__ import __version__ as __acacore_version__
 from acacore.database import FileDB
 from acacore.database.upgrade import is_latest
 from acacore.models.history import HistoryEntry
+from acacore.utils.click import end_program
+from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
 from click import BadParameter
 from click import ClickException
@@ -14,10 +16,9 @@ from click import Context
 from click import option
 from click import pass_context
 
+from digiarch.__version__ import __version__
 from digiarch.common import argument_root
 from digiarch.common import ctx_params
-from digiarch.common import end_program
-from digiarch.common import start_program
 
 
 @command("upgrade", no_args_is_help=True, short_help="Upgrade the database.")
@@ -38,7 +39,7 @@ def command_upgrade(ctx: Context, root: Path, backup: bool):
     "files-{version}.db". The copy will not be created if the database is already at the latest version.
     """
     with FileDB(root / "_metadata" / "files.db", check_version=False) as database:
-        log_file, log_stdout, start_event = start_program(ctx, database, None, True, True, True)
+        log_file, log_stdout, start_event = start_program(ctx, database, __version__, None, True, True, True)
         updated: bool = False
 
         with ExceptionManager(BaseException, allow=[ClickException]) as exception:

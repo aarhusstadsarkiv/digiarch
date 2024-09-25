@@ -3,6 +3,7 @@ from sys import stdout
 
 import yaml
 from acacore.database import FileDB
+from acacore.utils.click import check_database_version
 from click import Choice
 from click import command
 from click import Context
@@ -14,7 +15,6 @@ from digiarch.commands.edit.common import argument_query
 from digiarch.commands.edit.common import find_files
 from digiarch.commands.edit.common import TQuery
 from digiarch.common import argument_root
-from digiarch.common import check_database_version
 from digiarch.common import ctx_params
 
 

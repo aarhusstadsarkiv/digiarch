@@ -1,6 +1,7 @@
 from typing import ClassVar
 from typing import Type
 
+from acacore.utils.decorators import docstring_format
 from click import argument
 from click import BadParameter
 from click import Choice
@@ -16,7 +17,6 @@ from click.shell_completion import ShellComplete
 from click.shell_completion import ZshComplete
 
 from digiarch.common import ctx_params
-from digiarch.common import docstring_format
 
 
 class CompleteChoice(Choice):

@@ -6,6 +6,8 @@ from uuid import UUID
 
 import yaml
 from acacore.database import FileDB
+from acacore.utils.click import check_database_version
+from acacore.utils.click import param_callback_regex
 from click import command
 from click import Context
 from click import DateTime
@@ -14,9 +16,7 @@ from click import option
 from click import pass_context
 
 from digiarch.common import argument_root
-from digiarch.common import check_database_version
 from digiarch.common import ctx_params
-from digiarch.common import param_regex
 
 
 @command("history", no_args_is_help=True, short_help="View events log.")
@@ -40,7 +40,7 @@ from digiarch.common import param_regex
     type=str,
     default=None,
     multiple=True,
-    callback=param_regex(r"[a-z%-]+(\.[a-z%-]+)*(:[a-z%-]+([.:][a-z%-]+)*)?", IGNORECASE),
+    callback=param_callback_regex(r"[a-z%-]+(\.[a-z%-]+)*(:[a-z%-]+([.:][a-z%-]+)*)?", IGNORECASE),
     help="Operation and sub-operation.  [multiple]",
 )
 @option(
@@ -48,7 +48,7 @@ from digiarch.common import param_regex
     type=str,
     default=None,
     multiple=True,
-    callback=param_regex(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", IGNORECASE),
+    callback=param_callback_regex(r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}", IGNORECASE),
     help="File UUID.  [multiple]",
 )
 @option("--reason", type=str, default=None, multiple=True, help="Event reason.")
