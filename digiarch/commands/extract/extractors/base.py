@@ -12,10 +12,10 @@ from acacore.models.file import File
 class ExtractError(ACAException):
     """Base class for unarchiver exceptions."""
 
-    def __init__(self, file: File, msg: str = "Extraction error") -> None:
+    def __init__(self, file: File, msg: str = "Extraction error", *args: object) -> None:
         self.file: File = file
         self.msg: str = msg
-        super().__init__(msg)
+        super().__init__(msg, *args)
 
 
 class PasswordProtectedError(ExtractError):

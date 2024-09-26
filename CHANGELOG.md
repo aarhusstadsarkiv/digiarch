@@ -1,5 +1,11 @@
 # Changelog
 
+## v4.1.3
+
+### New Features
+
+* Add webarchive extractor
+
 ## v4.1.2
 
 ### Changes
