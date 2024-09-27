@@ -1,5 +1,11 @@
 # Changelog
 
+## v4.1.5
+
+### Fixes
+
+* Fix `parent` column being sometimes reset when running `reidentify` on files extracted from archives
+
 ## v4.1.4
 
 ### Changes
