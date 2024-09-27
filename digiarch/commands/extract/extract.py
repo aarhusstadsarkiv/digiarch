@@ -199,7 +199,6 @@ def command_extract(
                         err.__class__.__name__,
                         err.msg,
                     )
-                    archive_file.processed = True
                     archive_file.action = "ignore"
                     archive_file.action_data.ignore = IgnoreAction(template="password-protected")
                     archive_file.processed = True
@@ -215,7 +214,6 @@ def command_extract(
                         err.__class__.__name__,
                         err.msg,
                     )
-                    archive_file.processed = True
                     archive_file.action = "ignore"
                     archive_file.action_data.ignore = IgnoreAction(template="not-preservable")
                     archive_file.processed = True
