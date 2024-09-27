@@ -95,8 +95,9 @@ Usage: digiarch reidentify [OPTIONS] ROOT [QUERY]
 
   For details on the QUERY argument, see the edit command.
 
-  If there is no query, then all non-locked files with identification warnings
-  or no PUID will be re-identified.
+  If there is no query, then all files with identification warnings or have no
+  PUID or have no action, and that are neither locked nor processed will be
+  re-identified.
 
 Options:
   --siegfried-path FILE           The path to the Siegfried executable.  [env

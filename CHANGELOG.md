@@ -1,5 +1,15 @@
 # Changelog
 
+## v4.1.4
+
+### Changes
+
+* When running `reidentify`, the lock and processed values of files are preserved
+* When running `reidentify` without a query, both locked and processed files are ignored, and files without an action
+  are selected
+* `extract` command removes empty folders when it is done
+* When `extract` encounters an error and sets the file to "manual", the file is also locked
+
 ## v4.1.3
 
 ### New Features

@@ -13,6 +13,18 @@
   ignore_if:
     image_pixels_min: 20000
   action: null
+'!iname=dkalsignaturbevis.xml':
+  name: XML
+  description: Signature files attached to emails
+  action: ignore
+  ignore:
+    template: not-preservable
+'!iname=dkalmetadata.xml':
+  name: XML
+  description: Signature files attached to emails
+  action: ignore
+  ignore:
+    template: not-preservable
 aca-fmt/1:
   name: Lotus 1-2-3 Worksheet
   action: convert
@@ -31,7 +43,7 @@ aca-fmt/3:
   name: Microsoft Excel Markup
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
       - pdf
@@ -61,10 +73,10 @@ aca-fmt/7:
     reason: User ID files. Not preservation-worthy
 aca-fmt/8:
   name: Lotus Notes Database
-  action: manual
-  manual:
-    reason: What to do? We dont know what we can do with Lotus Notes Database
-    process: Investigate what to do with Lotus Notes Database
+  action: ignore
+  ignore:
+    template: not-convertable
+    reason: No software available. Requires IBM Notes V9.0.
 aca-fmt/9:
   name: Transport Neutral Encapsulation Format (TNEF)/Microsoft email attachments
     archive (winmail)
@@ -76,7 +88,7 @@ aca-fmt/18:
   name: OpenDocument Text (unspecified version)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 aca-fmt/20:
@@ -90,14 +102,14 @@ aca-fmt/21:
   name: OpenDocument Spreadsheet (unspecified version)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 aca-fmt/22:
   name: Windows Compressed Enhanced Metafile
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - jpg
 aca-fmt/23:
@@ -105,7 +117,7 @@ aca-fmt/23:
   description: A Microsoft Word document saved as a standalone XML file
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
 aca-fmt/24:
@@ -145,6 +157,20 @@ aca-fmt/29:
   action: convert
   convert:
     tool: copy
+aca-fmt/30:
+  name: PTV Visum Graphics Parameters file
+  action: ignore
+  ignore:
+    template: not-convertable
+    reason: Unable to convert. Unable to open in PTV Visum Student Edition.
+  description: Format used by PTV Visum traffic planning tool. Used by Cowi.
+aca-fmt/31:
+  name: eDrawings Assembly File
+  action: manual
+  manual:
+    reason: No cli for this format.
+    process: Open in eDrawings Viewer and save as pdf. www.edrawingsviewer.com/download-edrawings
+  description: An EASM file is a CAD drawing created by Dassault Systemes eDrawings Publisher, a plug-in used to export designs from CAD applications.
 fmt/3:
   name: Graphics Interchange Format 87a
   ignore_if:
@@ -376,28 +402,28 @@ fmt/37:
   name: Microsoft Word for Windows Document 1.0
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/38:
   name: Microsoft Word for Windows Document 2.0
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/39:
   name: Microsoft Word Document 95
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/40:
   name: Microsoft Word Document 97-2003
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/41:
@@ -440,35 +466,35 @@ fmt/45:
   name: Rich Text Format 1.0-1.4
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/50:
   name: Rich Text Format 1.5-1.6
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/52:
   name: Rich Text Format 1.7
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/53:
   name: Rich Text Format 1.8
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/55:
   name: Microsoft Excel 2.x Worksheet (xls)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -476,7 +502,7 @@ fmt/56:
   name: Microsoft Excel 3.0 Worksheet (xls)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -484,7 +510,7 @@ fmt/57:
   name: Microsoft Excel 4.0 Worksheet (xls) 4S
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -492,7 +518,7 @@ fmt/58:
   name: Microsoft Excel 4.0 Workbook (xls) 4W
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -500,7 +526,7 @@ fmt/59:
   name: Microsoft Excel 5.0/95 Workbook (xls)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -508,7 +534,7 @@ fmt/61:
   name: Microsoft Excel 97 Workbook (xls) 8
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -750,12 +776,10 @@ fmt/101:
   name: Extensible Markup Language 1.0
   reidentify:
     reason: Some applications allow saving documents as XML and can re-open them
-    on_fail: "null"
+    on_fail: "action"
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 fmt/102:
   name: Extensible Hypertext Markup Language 1.0
   action: convert
@@ -783,7 +807,7 @@ fmt/111:
     reason: why do we re-run these?
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -818,14 +842,14 @@ fmt/122:
   name: Encapsulated PostScript File Format 1.2
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/123:
   name: Encapsulated PostScript File Format 2.0
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/124:
@@ -834,14 +858,14 @@ fmt/124:
     image_pixels_min: 20000
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/125:
   name: Microsoft Powerpoint Presentation 95
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odp
       - pdf
@@ -849,7 +873,7 @@ fmt/126:
   name: Microsoft Powerpoint Presentation 97-2003
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odp
       - pdf
@@ -878,14 +902,14 @@ fmt/136:
   name: OpenDocument Text 1.0
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/137:
   name: OpenDocument Spreadsheet 1.0
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -935,8 +959,17 @@ fmt/163:
   name: Microsoft Works Word Processor 1-3 for DOS and 2 for Windows
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
+      - pdf
+fmt/189:
+  name: Microsoft Office Open XML
+  action: convert
+  description: Microsoft developed office Open XML (OOXML) in 2007. It is an XML based format representing a departure from previous Microsoft Office suites, which were binary file based. Starting with Microsoft Office 2007, the Office Open XML file formats have become the default file format of Microsoft Office.
+  convert:
+    tool: document
+    outputs:
+      - ods
       - pdf
 fmt/199:
   name: MPEG-4 Media File
@@ -953,9 +986,7 @@ fmt/206:
   name: Structured Query Language Data
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 fmt/208:
   name: Binary File
   action: ignore
@@ -972,7 +1003,7 @@ fmt/214:
   name: Microsoft Excel for Windows 2007 onwards
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -980,7 +1011,7 @@ fmt/215:
   name: Microsoft Powerpoint for Windows 2007 onwards
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odp
       - pdf
@@ -995,11 +1026,12 @@ fmt/233:
   name: Microsoft Works Word Processor 3-4 for Windows
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/244:
   name: Keyhole Markup Language (XML)
+  description: KML is an open standard officially named the OpenGIS® KML Encoding Standard (OGC KML). https://developers.google.com/kml/documentation/kmlreference
   action: convert
   convert:
     tool: gis
@@ -1009,7 +1041,7 @@ fmt/258:
   name: Microsoft Works Word Processor 5-6
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/276:
@@ -1036,7 +1068,7 @@ fmt/290:
   name: OpenDocument Text 1.1
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
       - pdf
@@ -1044,14 +1076,14 @@ fmt/291:
   name: OpenDocument Text 1.2
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/292:
   name: OpenDocument Presentation 1.1
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
       - pdf
@@ -1059,7 +1091,7 @@ fmt/294:
   name: OpenDocument Spreadsheet 1.1
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -1067,7 +1099,7 @@ fmt/295:
   name: OpenDocument Spreadsheet 1.2
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -1075,7 +1107,7 @@ fmt/296:
   name: OpenDocument Graphics
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - svg
       - pdf
@@ -1083,7 +1115,7 @@ fmt/297:
   name: OpenDocument Graphics
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - svg
       - pdf
@@ -1149,7 +1181,7 @@ fmt/355:
   name: Rich Text Format 1.9
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/356:
@@ -1170,9 +1202,7 @@ fmt/388:
   name: Internet Calendar and Scheduling format
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 fmt/394:
   name: DS_store file (MAC)
   action: ignore
@@ -1196,7 +1226,7 @@ fmt/412:
   name: Microsoft Word for Windows 2007 onwards
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/413:
@@ -1224,7 +1254,7 @@ fmt/428:
   name: CorelDraw Drawing
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - svg
       - pdf
@@ -1258,11 +1288,19 @@ fmt/440:
   ignore:
     template: not-preservable
     reason: Project files. Not preservation-worthy
+fmt/441:
+  name: Windows Media Video
+  description: Windows Media Video 9 Advanced Profile or WVC1 is a fuly compliant Advanced Profile of the VC-1 codec standard.
+  action: convert
+  convert:
+    tool: video
+    outputs:
+      - mp4
 fmt/442:
   name: Microsoft Visio (generic)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - svg
       - pdf
@@ -1270,7 +1308,7 @@ fmt/443:
   name: Microsoft Visio Drawing 2003-2010
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - svg
       - pdf
@@ -1278,10 +1316,16 @@ fmt/445:
   name: Microsoft Excel Macro-Enabled 2007
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
+fmt/468:
+  name: ISO 9660 Disk Image File
+  action: extract
+  extract:
+    tool: iso
+    extension: .iso
 fmt/471:
   name: Hypertext Markup Language 5
   action: convert
@@ -1354,7 +1398,7 @@ fmt/487:
   name: Macro Enabled Microsoft Powerpoint 2007 Onwards
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odp
       - pdf
@@ -1431,7 +1475,7 @@ fmt/523:
   name: Macro enabled Microsoft Word Document OOXML 2007 Onwards
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/524:
@@ -1564,9 +1608,7 @@ fmt/584:
   name: Windows Media Metafile
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 fmt/589:
   name: Windows Media Playlist
   action: ignore
@@ -1578,7 +1620,7 @@ fmt/595:
   name: Microsoft Excel Non-XML Binary Workbook 2007 onwards
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -1586,14 +1628,14 @@ fmt/597:
   name: Microsoft Word Template 2007 onwards
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/598:
   name: Microsoft Excel Template 2007 onwards
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -1603,11 +1645,19 @@ fmt/599:
   ignore:
     template: not-preservable
     reason: A template document file. Not preservation-worthy
+fmt/607:
+  name: Statistical Analysis System Data (Windows)
+  action: convert
+  convert:
+    tool: sas
+    outputs:
+      - ods
+      - pdf
 fmt/609:
   name: Microsoft Word (Generic) 6.0-2003
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/613:
@@ -1626,7 +1676,7 @@ fmt/629:
   name: Microsoft PowerPoint Show 2007
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odp
       - pdf
@@ -1634,7 +1684,7 @@ fmt/631:
   name: Microsoft PowerPoint Template 2007
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odp
       - pdf
@@ -1694,14 +1744,14 @@ fmt/744:
   name: ClarisWorks/AppleWorks Word Processor 5
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/749:
   name: AppleWorks Word Processor 6
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
       - pdf
@@ -1723,9 +1773,13 @@ fmt/817:
   name: JSON Data Interchange Format
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
+fmt/866:
+  name: Apple Safari Webarchive
+  action: extract
+  extract:
+    tool: webarchive
+    extension: .webarchive
 fmt/870:
   name: Perl Script
   action: ignore
@@ -1764,7 +1818,7 @@ fmt/901:
   name: Microsoft Works Spreadsheet 6-9
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -1785,9 +1839,16 @@ fmt/950:
   name: MIME Email 1.0
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
+fmt/979:
+  name: XML Property List
+  alternatives:
+    .webarchive: fmt/866
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: A property list file is a a serialised storage file, usually used by programs to store configurations in a
+      more compact form. Not preservation-worthy
 fmt/997:
   name: SPSS Portable File
   action: ignore
@@ -1933,7 +1994,7 @@ fmt/1439:
   name: Apple iWork Pages 09
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
       - pdf
@@ -1948,7 +2009,7 @@ fmt/1452:
   name: Lotus 1-2-3 Worksheet (97)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -1956,7 +2017,7 @@ fmt/1453:
   name: Lotus 1-2-3 Worksheet (9.8 Millennium)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -1980,42 +2041,42 @@ fmt/1511:
   name: Microsoft Publisher 1
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/1512:
   name: Microsoft Publisher 2003
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/1513:
   name: Microsoft Publisher 2007
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/1514:
   name: Microsoft Publisher 2010
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/1515:
   name: Microsoft Publisher 2013
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/1516:
   name: Microsoft Publisher 2016-2019
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 fmt/1600:
@@ -2024,6 +2085,13 @@ fmt/1600:
     reason: Identifies .dat-files as mapinfo-files by extension only. They are sometimes
       winmail.dat
   action:
+fmt/1711:
+  name: Software602 Printer Configuration File
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: Binary format for configuration, containing paths to printers and/ or dictionaries,
+      used by Software602 programmes.
 fmt/1729:
   name: Esri Shapefile Geospatial Metadata File
   action: convert
@@ -2042,6 +2110,12 @@ fmt/1756:
   reidentify:
     reason: Identified by ext only. Prone to error
   action:
+fmt/1763:
+  name: MacBinary
+  action: manual
+  manual:
+    reason: Not handled by Digiarch Extract yet.
+    process: Open on Mac and save as pdf, rename to .bin file and use macutils in Linux, ex. macunpack input.bin and rename output file to correct format and save as pdf. manpages.debian.org/buster/macutils/macutil.1.en.html
 fmt/1768:
   name: C Source Code file
   action: ignore
@@ -2052,6 +2126,14 @@ fmt/1879:
   name: vCard
   description: Contact information file. vCards are often attached to e-mail messages,
     but can be exchanged in other ways, such as on the internet or instant messaging.
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: Not preservation-worthy
+fmt/1915:
+  name: ActiveMime Object
+  description: ActiveMime Object, or mso, are attached to e-mail messages as a way for the
+    user to view the attached Office document as part of the e-mail itself.
   action: ignore
   ignore:
     template: not-preservable
@@ -2068,7 +2150,7 @@ x-fmt/9:
   name: dBASE Database III
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -2076,7 +2158,7 @@ x-fmt/10:
   name: dBASE Database IV
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -2091,7 +2173,7 @@ x-fmt/17:
   name: Microsoft Excel Template 97-2003
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -2110,14 +2192,14 @@ x-fmt/44:
   name: WordPerfect for MS-DOS/Windows Document 6.0
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/45:
   name: Microsoft Word Document Template 97-2003
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/49:
@@ -2144,14 +2226,12 @@ x-fmt/62:
   name: Log File
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 x-fmt/64:
   name: Microsoft Word for Macintosh Document
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/78:
@@ -2164,14 +2244,12 @@ x-fmt/90:
   name: Microsoft Print File
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 x-fmt/92:
   name: Adobe Photoshop
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - svg
       - pdf
@@ -2204,7 +2282,7 @@ x-fmt/114:
   name: Lotus 1-2-3 Worksheet (2.0)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -2212,7 +2290,7 @@ x-fmt/115:
   name: ' Lotus 1-2-3 Worksheet (3.0)'
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -2220,7 +2298,7 @@ x-fmt/116:
   name: Lotus 1-2-3 Worksheet (4-5)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -2228,7 +2306,7 @@ x-fmt/117:
   name: Lotus 1-2-3 Worksheet (1.0)
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - ods
       - pdf
@@ -2288,9 +2366,7 @@ x-fmt/224:
   name: Cascading Style Sheet
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 x-fmt/225:
   name: ESRI MapInfo Data File
   action: ignore
@@ -2341,49 +2417,49 @@ x-fmt/252:
   name: Microsoft Publisher 2.0
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/253:
   name: Microsoft Publisher 95
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/254:
   name: Microsoft Publisher 97
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/255:
   name: Microsoft Publisher 98
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/256:
   name: Microsoft Publisher 2000
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/257:
   name: Microsoft Publisher 2002
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - pdf
 x-fmt/258:
   name: Microsoft Visio Drawing 2000
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - svg
       - pdf
@@ -2432,9 +2508,7 @@ x-fmt/315:
   name: Document Type Definition
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 x-fmt/328:
   name: InterBase Database file
   action: ignore
@@ -2460,7 +2534,7 @@ x-fmt/345:
   name: Microsoft Works Document
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
       - pdf
@@ -2478,7 +2552,7 @@ x-fmt/375:
   name: CorelDraw Drawing
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - svg
       - pdf
@@ -2559,7 +2633,7 @@ x-fmt/393:
   name: WordPerfect for MS-DOS Document 5.0
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
       - pdf
@@ -2567,7 +2641,7 @@ x-fmt/394:
   name: WordPerfect for MS-DOS/Windows Document 5.1
   action: convert
   convert:
-    tool: libre
+    tool: document
     outputs:
       - odt
       - pdf
@@ -2605,7 +2679,8 @@ x-fmt/414:
     reason: Cannot extract with digiarch
     process: Find the dir where .cab file is located. Create a subdir in the same dir
       as the .cab file with the uuid of the .cab file as name. Open the .cab file with
-      windows. Copy everything into the subdir.
+      windows. Copy everything into the subdir. Make sure that it is just like
+      'digiarch extract'
 x-fmt/415:
   name: Java Compiled Object Code
   action: ignore
@@ -2656,9 +2731,7 @@ x-fmt/426:
   name: License file
   action: convert
   convert:
-    tool: text
-    outputs:
-      - tif
+    tool: copy
 x-fmt/428:
   name: Microsoft Windows Shortcut
   action: ignore

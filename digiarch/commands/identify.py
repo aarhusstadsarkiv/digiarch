@@ -83,9 +83,10 @@ def identify_file(
     *,
     update: bool = False,
     parent: UUID | None = None,
-    processed: bool = False,
 ) -> tuple[File | None, list[HistoryEntry]]:
     uuid: UUID
+    lock: bool
+    processed: bool
     existing_file: File | None = database.files.select(
         where="relative_path = ?",
         limit=1,
@@ -93,11 +94,13 @@ def identify_file(
     ).fetchone()
 
     if existing_file and update:
-        uuid = existing_file.uuid
+        uuid, lock, processed = existing_file.uuid, existing_file.lock, existing_file.processed
     elif existing_file:
         return None, []
     else:
         uuid = uuid4()
+        lock = False
+        processed = False
         update = False
 
     file_history: list[HistoryEntry] = []
@@ -116,6 +119,7 @@ def identify_file(
             uuid=uuid,
             processed=processed,
         )
+        file.lock = lock
 
     if identify_error.exception:
         file = File.from_file(path, root, siegfried_result or siegfried)
@@ -361,12 +365,13 @@ def command_reidentify(
 
     For details on the QUERY argument, see the edit command.
 
-    If there is no query, then all non-locked files with identification warnings or no PUID will be re-identified.
+    If there is no query, then all files with identification warnings or have no PUID or have no action, and that are
+    neither locked nor processed will be re-identified.
     """
     if query:
         where, params = query_to_where(query)
     else:
-        where, params = "(warning is not null or puid is null) and not lock", []
+        where, params = "(warning is not null or puid is null or action is null) and not lock and not processed", []
 
     command_identify.callback(
         root,
