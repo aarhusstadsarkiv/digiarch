@@ -243,8 +243,8 @@ def command_extract(
                     event.log(ERROR, log_file, log_stdout)
                     raise
                 finally:
-                    if not next(extractor.extract_folder.iterdir(), None):
-                        rm_tree(extractor.extract_folder)
+                    if (folder := extractor.extract_folder).is_dir() and not next(folder.iterdir(), None):
+                        rm_tree(folder)
 
                 for path, original_path in extracted_files_paths:
                     extracted_file, file_history = identify_file(
