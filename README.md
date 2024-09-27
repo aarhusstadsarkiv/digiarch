@@ -1,6 +1,8 @@
 # Installation
 
-`pipx install git+https://github.com/aarhusstadsarkiv/digiarch.git`
+```shell
+pipx install git+https://github.com/aarhusstadsarkiv/digiarch.git
+```
 
 # Commands
 
