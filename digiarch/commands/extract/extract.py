@@ -215,7 +215,7 @@ def command_extract(
                         err.msg,
                     )
                     archive_file.action = "ignore"
-                    archive_file.action_data.ignore = IgnoreAction(template="not-preservable")
+                    archive_file.action_data.ignore = IgnoreAction(template="not-preservable", reason=err.msg)
                     archive_file.processed = True
                     database.files.update(archive_file)
                     database.history.insert(event)
