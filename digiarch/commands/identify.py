@@ -83,9 +83,9 @@ def identify_file(
     *,
     update: bool = False,
     parent: UUID | None = None,
-    processed: bool = False,
 ) -> tuple[File | None, list[HistoryEntry]]:
     uuid: UUID
+    processed: bool
     existing_file: File | None = database.files.select(
         where="relative_path = ?",
         limit=1,
@@ -93,11 +93,12 @@ def identify_file(
     ).fetchone()
 
     if existing_file and update:
-        uuid = existing_file.uuid
+        uuid, processed = existing_file.uuid, existing_file.processed
     elif existing_file:
         return None, []
     else:
         uuid = uuid4()
+        processed = False
         update = False
 
     file_history: list[HistoryEntry] = []
