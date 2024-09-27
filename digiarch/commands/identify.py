@@ -365,13 +365,13 @@ def command_reidentify(
 
     For details on the QUERY argument, see the edit command.
 
-    If there is no query, then all files with identification warnings or no PUID that are not locked and not processed
-    will be re-identified.
+    If there is no query, then all files with identification warnings or have no PUID or have no action, and that are
+    neither locked nor processed will be re-identified.
     """
     if query:
         where, params = query_to_where(query)
     else:
-        where, params = "(warning is not null or puid is null) and not lock and not processed", []
+        where, params = "(warning is not null or puid is null or action is null) and not lock and not processed", []
 
     command_identify.callback(
         root,
