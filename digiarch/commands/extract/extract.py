@@ -231,6 +231,7 @@ def command_extract(
                         err.__class__.__name__,
                         err.msg,
                     )
+                    archive_file.lock = True
                     archive_file.action = "manual"
                     archive_file.action_data.manual = ManualAction(reason=err.msg, process="")
                     database.files.update(archive_file)
