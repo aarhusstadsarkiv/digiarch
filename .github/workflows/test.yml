@@ -2,12 +2,6 @@ name: Linting & Test
 
 on:
   push:
-    paths:
-      - digiarch/**
-      - tests/**
-      - pyproject.toml
-      - poetry.lock
-      - .github/workflows/test.yml
     tags-ignore:
       - '!**'
 
