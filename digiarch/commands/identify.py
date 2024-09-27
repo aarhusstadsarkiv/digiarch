@@ -85,6 +85,7 @@ def identify_file(
     parent: UUID | None = None,
 ) -> tuple[File | None, list[HistoryEntry]]:
     uuid: UUID
+    lock: bool
     processed: bool
     existing_file: File | None = database.files.select(
         where="relative_path = ?",
@@ -93,11 +94,12 @@ def identify_file(
     ).fetchone()
 
     if existing_file and update:
-        uuid, processed = existing_file.uuid, existing_file.processed
+        uuid, lock, processed = existing_file.uuid, existing_file.lock, existing_file.processed
     elif existing_file:
         return None, []
     else:
         uuid = uuid4()
+        lock = False
         processed = False
         update = False
 
@@ -117,6 +119,7 @@ def identify_file(
             uuid=uuid,
             processed=processed,
         )
+        file.lock = lock
 
     if identify_error.exception:
         file = File.from_file(path, root, siegfried_result or siegfried)
