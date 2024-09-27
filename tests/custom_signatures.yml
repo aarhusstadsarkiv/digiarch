@@ -158,3 +158,13 @@
   plain_bof: aarhusstadsarkiv="http://www.aarhusstadsarkiv.dk/gml/aarhusstadsarkiv"
   puid: aca-fmt/29
   signature: XML Schema Definition (Custom XSD)
+- bof: (?i)^50545653595354454D202020564953554D202020202020204772617068696B706172616D65746572
+  extension: .gpa
+  plain_bof: PTVSYSTEM   VISUM       Graphikparameter
+  puid: aca-fmt/30
+  signature: PTV Visum Graphics Parameters file
+- bof: (?i)^3B3B204853462056
+  extension: .easm
+  plain_bof: ;; HSF V
+  puid: aca-fmt/31
+  signature: eDrawings Assembly File
