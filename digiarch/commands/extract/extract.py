@@ -17,6 +17,7 @@ from acacore.siegfried.siegfried import TSignaturesProvider
 from acacore.utils.click import check_database_version
 from acacore.utils.click import end_program
 from acacore.utils.click import start_program
+from acacore.utils.functions import rm_tree
 from acacore.utils.helpers import ExceptionManager
 from click import BadParameter
 from click import Choice
@@ -183,8 +184,9 @@ def command_extract(
                     continue
 
                 # noinspection PyBroadException
+                extractor = extractor_cls(database, archive_file, root)
+
                 try:
-                    extractor = extractor_cls(database, archive_file, root)
                     extracted_files_paths = list(extractor.extract())
                     event = HistoryEntry.command_history(ctx, "unpacked", archive_file.uuid)
                     event.log(INFO, log_stdout, path=archive_file.relative_path)
@@ -237,6 +239,9 @@ def command_extract(
                     event = HistoryEntry.command_history(ctx, "error", archive_file.uuid, None, repr(err))
                     event.log(ERROR, log_file, log_stdout)
                     raise
+                finally:
+                    if not next(extractor.extract_folder.iterdir(), None):
+                        rm_tree(extractor.extract_folder)
 
                 for path, original_path in extracted_files_paths:
                     extracted_file, file_history = identify_file(
