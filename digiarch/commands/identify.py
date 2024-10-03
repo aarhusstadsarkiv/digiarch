@@ -145,8 +145,7 @@ def identify_file(
                 "".join(format_tb(identify_error.traceback)) if identify_error.traceback else None,
             ),
         )
-
-    if file.action_data and file.action_data.rename:
+    elif file.action_data.rename:
         old_path, new_path = handle_rename_action(file, file.action_data.rename)
         if new_path:
             file, file_history = identify_file(
