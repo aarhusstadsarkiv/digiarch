@@ -84,6 +84,48 @@ aca-fmt/9:
   extract:
     tool: tnef
     extension: .dat
+aca-fmt/10:
+  name: MS Access 95
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open with Microsoft Access. For each table in the database, save the table as .xlsx. Reidentify with digiarch.
+aca-fmt/11:
+  name: MS Access 97
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open with Microsoft Access. For each table in the database, save the table as .xlsx. Reidentify with digiarch.
+aca-fmt/12:
+  name: MS Access 2000
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open with Microsoft Access. For each table in the database, save the table as .xlsx. Reidentify with digiarch.
+aca-fmt/13:
+  name: MS Access 2002/3
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open with Microsoft Access. For each table in the database, save the table as .xlsx. Reidentify with digiarch.
+aca-fmt/14:
+  name: MS Access database unspecified version (Jet 3 DB)
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open with Microsoft Access. For each table in the database, save the table as .xlsx. Reidentify with digiarch.
+aca-fmt/15:
+  name: MS Access database unspecified version (Jet 4 DB)
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open with Microsoft Access. For each table in the database, save the table as .xlsx. Reidentify with digiarch.
+aca-fmt/16:
+  name: MS Access database unspecified version (ACE DB)
+  action: manual
+  manual:
+    reason: Unable to convert automatically.
+    process: Open with Microsoft Access. For each table in the database, save the table as .xlsx. Reidentify with digiarch.
 aca-fmt/18:
   name: OpenDocument Text (unspecified version)
   action: convert
@@ -805,12 +847,11 @@ fmt/111:
   name: OLE2 Compound Document Format
   reidentify:
     reason: why do we re-run these?
-  action: convert
-  convert:
-    tool: document
-    outputs:
-      - ods
-      - pdf
+    on_fail: "action"
+  action: manual
+  manual:
+    reason: We don't know what to do with this format.
+    process: Find out what we can do with this format.
 fmt/115:
   name: Windows Bitmap 2.0
   ignore_if:
@@ -2080,11 +2121,15 @@ fmt/1516:
     outputs:
       - pdf
 fmt/1600:
-  name: ''
+  name: 'ESRI ArcInfo DAT File (Internal)'
   reidentify:
     reason: Identifies .dat-files as mapinfo-files by extension only. They are sometimes
       winmail.dat
-  action:
+    on_fail: "action"
+  action: "manual"
+  manual:
+    reason: There was no bit-header which matches the file.
+    process: Find out what we can do with this format. You can try and see, if there is a mismatch between our bit-header and the bit-header for the fil with the repository "byteheader".
 fmt/1711:
   name: Software602 Printer Configuration File
   action: ignore
@@ -2104,12 +2149,20 @@ fmt/1730:
   reidentify:
     reason: Identifies .dat-files as mapinfo-files by extension only. They are sometimes
       winmail.dat
-  action:
+    on_fail: "action"
+  action: "manual"
+  manual:
+    reason: There was no bit-header which matches the file.
+    process: Find out what we can do with this format. You can try and see, if there is a mismatch between our bit-header and the bit-header for the fil with the repository "byteheader".
 fmt/1756:
   name: Opendocument Text 1.3
   reidentify:
     reason: Identified by ext only. Prone to error
-  action:
+    on_fail: "action"
+  action: "manual"
+  manual:
+    reason: There was no bit-header which matches the file.
+    process: Find out what we can do with this format. You can try and see, if there is a mismatch between our bit-header and the bit-header for the fil with the repository "byteheader".
 fmt/1763:
   name: MacBinary
   action: manual
@@ -2166,6 +2219,7 @@ x-fmt/13:
   name: Tab-separated values
   reidentify:
     reason: .TAB-files related to GIS is sometimes identified as plaintext
+    on_fail: "action"
   action: convert
   convert:
     tool: copy
@@ -2497,10 +2551,10 @@ x-fmt/266:
     .wmz: aca-fmt/27
 x-fmt/280:
   name: XML Schema Definition
-  action: ignore
   reidentify:
     reason: If the XSD is not custom made, then we ignore the XSD file.
     on_fail: "action"
+  action: ignore
   ignore:
     template: not-preservable
     reason: A prescriptive XML template, for validating XML files with. Not preservation-worthy if not with a GML file.
@@ -2540,11 +2594,11 @@ x-fmt/345:
       - pdf
 x-fmt/346:
   name: Microstation CAD Drawing
-  action: ignore
   reidentify:
     reason: Pronom identifies the format on extension alone
     chunk_size: 2048
     on_fail: "action"
+  action: ignore
   ignore:
     template: not-convertable
     reason: At the moment the file can't be converted with the current tools for CAD-files.
@@ -2794,10 +2848,10 @@ xfmt/157:
       - png
 fmt/1549:
   name: Bentley Microstation Hidden Line File
-  action: manual
   reidentify:
     reason: Pronom sometimes wrongly identifies .dgn as .hln due to small byteheader definition
     on_fail: "action"
+  action: manual
   manual:
     reason: Never able to find this type of file.
     process: Try to open in Bentley View or AB Viewer.
