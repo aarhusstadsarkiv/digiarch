@@ -6,8 +6,8 @@ on:
       - 'v*.*.*'
 
 env:
-  PYTHON_VERSION: 3.11.5
-  POETRY_VERSION: 1.6.1
+  PYTHON_VERSION: 3.11.9
+  POETRY_VERSION: 1.8.3
 
 jobs:
   wheel:
