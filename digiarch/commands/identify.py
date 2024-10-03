@@ -128,7 +128,7 @@ def identify_file(
         )
 
     if identify_error.exception:
-        file = File.from_file(path, root, siegfried_result or siegfried)
+        file = File.from_file(path, root, siegfried_result or siegfried, uuid=uuid)
         file.action = "manual"
         file.action_data = ActionData(
             manual=ManualAction(
