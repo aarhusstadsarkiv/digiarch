@@ -4,6 +4,7 @@
 
 ### Changes
 
+* Use acacore 3.1.1
 * `extract` for TNEF files does not create an HTML/RTF/TXT file for the body
 
 ### Fixes
