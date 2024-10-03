@@ -84,6 +84,11 @@ aca-fmt/9:
   extract:
     tool: tnef
     extension: .dat
+    on_success: convert
+  convert:
+    tool: tnef
+    outputs:
+      - html
 aca-fmt/10:
   name: MS Access 95
   action: manual
@@ -1771,10 +1776,12 @@ fmt/682:
     reason: Windows OS file, contains folder metadata. Not preservation-worthy
 fmt/724:
   name: Keyhole Markup Language (Container)
-  action: extract
-  extract:
-    tool: kmz
-    extension: .kmz
+  description: kmz file. There will be data loss if kmz file contains 3d model.
+  action: convert
+  convert:
+    tool: gis
+    outputs:
+      - gml3
 fmt/725:
   name: Microsoft Project 2010
   action: ignore
@@ -1978,6 +1985,13 @@ fmt/1258:
     template: not-preservable
     reason: A file containing usernames and passwords for users and groups that require
       access to a specific Microsoft Access database. Not preservation-worthy
+fmt/1265:
+  name: SketchUp Document
+  action: manual
+  description: Google SketchUp 3d model.
+  manual:
+    reason: gis conversion does not preserve 3d model in kmz file.
+    process: Open in SketchUp 8.0.15158 as save as PDF.
 fmt/1303:
   name: Microsoft Shell Scrap Object File
   action: ignore
@@ -2395,6 +2409,15 @@ x-fmt/148:
       that has been discontinued; saves document text and basic formatting; can be
       converted to more recent word processing formats using WordPort.. It might not
       be preservation-worthy, but either way we don't know how to handle it
+x-fmt/153:
+  name: Microsoft Windows Enhanced Metafile 1.0
+  ignore_if:
+    image_pixels_min: 20000
+  action: convert
+  convert:
+    tool: image
+    outputs:
+      - png
 x-fmt/169:
   name: PHP Script Page
   action: ignore
