@@ -46,7 +46,8 @@ jobs:
           version_package="$(grep --color=never '__version__ *= *".*"' "$project_name"/__version__.py)"
           version_package="${version_package%\"}"
           version_package="${version_package#*\"}"
-          test "$version_project" = "$version_package"
+          test "$version_project" = "$version_package" || exit $?
+          grep -E "## v$version_project"'( .*)?$' CHANGELOG.md || exit $?
 
   version-acacore:
     name: Test acacore Version
