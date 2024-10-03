@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.1.6
+
+### Changes
+
+* Use acacore 3.1.1
+* `extract` for TNEF files does not create an HTML/RTF/TXT file for the body
+
+### Fixes
+
+* Fix `reidentify` using the wrong UUID when an error occurred during identification, causing it to not updated the file
+
 ## v4.1.5
 
 ### Fixes

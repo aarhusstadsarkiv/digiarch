@@ -10,8 +10,8 @@ on:
       - .github/workflows/test.yml
 
 env:
-  PYTHON_VERSION: 3.11.5
-  POETRY_VERSION: 1.6.1
+  PYTHON_VERSION: 3.11.9
+  POETRY_VERSION: 1.8.3
 
 jobs:
   linting:
@@ -36,17 +36,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: |
-          project_name="$(grep --color=never 'name *= *".*"' pyproject.toml)"
-          project_name="${project_name%\"}"
-          project_name="${project_name#*\"}"
+      - name: Get Versions
+        id: version
+        run: |
           version_project="$(grep --color=never 'version *= *".*"' pyproject.toml)"
           version_project="${version_project%\"}"
           version_project="${version_project#*\"}"
+          echo "version_project=$version_project" >> "$GITHUB_OUTPUT"
+          
+          project_name="$(grep --color=never 'name *= *".*"' pyproject.toml)"
+          project_name="${project_name%\"}"
+          project_name="${project_name#*\"}"
           version_package="$(grep --color=never '__version__ *= *".*"' "$project_name"/__version__.py)"
           version_package="${version_package%\"}"
           version_package="${version_package#*\"}"
-          test "$version_project" = "$version_package"
+          echo "version_package=$version_package" >> "$GITHUB_OUTPUT"
+      - name: Test Package and Project Version Match
+        env:
+          version_project: ${{ steps.version.outputs.version_project }}
+          version_package: ${{ steps.version.outputs.version_package }}
+        run: test "$version_project" = "$version_package" || exit $?
+      - name: Test Version in CHANGELOG.md
+        env:
+          version_project: ${{ steps.version.outputs.version_project }}
+        run: grep -E "## v$version_project"'( .*)?$' CHANGELOG.md || exit $?
 
   version-acacore:
     name: Test acacore Version
@@ -79,7 +92,7 @@ jobs:
           acacore_package="${acacore_package#v}"
           acacore_package="${acacore_package%\"}"
           test "$acacore_database" = "$acacore_package"
-          
+  
 
   pytest:
     name: pytest

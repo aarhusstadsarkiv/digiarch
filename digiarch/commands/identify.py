@@ -128,7 +128,7 @@ def identify_file(
         )
 
     if identify_error.exception:
-        file = File.from_file(path, root, siegfried_result or siegfried)
+        file = File.from_file(path, root, siegfried_result or siegfried, uuid=uuid)
         file.action = "manual"
         file.action_data = ActionData(
             manual=ManualAction(
@@ -145,8 +145,7 @@ def identify_file(
                 "".join(format_tb(identify_error.traceback)) if identify_error.traceback else None,
             ),
         )
-
-    if file.action_data and file.action_data.rename:
+    elif file.action_data.rename:
         old_path, new_path = handle_rename_action(file, file.action_data.rename)
         if new_path:
             file, file_history = identify_file(
