@@ -38,7 +38,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Get Versions
         id: version
-      - run: |
+        run: |
           version_project="$(grep --color=never 'version *= *".*"' pyproject.toml)"
           version_project="${version_project%\"}"
           version_project="${version_project#*\"}"
