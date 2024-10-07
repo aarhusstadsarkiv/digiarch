@@ -1,170 +1,197 @@
-#file: noinspection SpellCheckingInspection
-- bof: (?i)^576F726450726F0DFB000000000000000005985C8172030040CCC1BFFFBDF970
-  extension: .lwp
-  puid: x-fmt/340
+- puid: x-fmt/340
   signature: Lotus WordPro Document
-- bof: (?i)^00001A000(3|4|5)10040000000000
-  extension: '.123'
-  puid: aca-fmt/1
+  bof: (?i)^576F726450726F0DFB000000000000000005985C8172030040CCC1BFFFBDF970
+  extension: .lwp
+- puid: aca-fmt/1
   signature: Lotus 1-2-3 Spreadsheet
-- bof: (?i)(50|70)726F67(49|69)64[0-9A-F]{2,20}576f72642e446f63756d656e74
-  extension: .doc
-  puid: aca-fmt/2
+  bof: (?i)^00001A000(3|4|5)10040000000000
+  extension: '.123'
+- puid: aca-fmt/2
   signature: Microsoft Word Markup
-- bof: (?i)(50|70)726F67(49|69)64[0-9A-F]{2,18}457863656C2E5368656574
-  extension: .xls
-  puid: aca-fmt/3
+  bof: (?i)(50|70)726F67(49|69)64[0-9A-F]{2,20}576f72642e446f63756d656e74
+  extension: .doc
+- puid: aca-fmt/3
   signature: Microsoft Excel Markup
-- bof: (?i)75726e3a736368656d61732d6d6963726f736f66742d636f6d3a6f66666963653a657863656c
+  bof: (?i)(50|70)726F67(49|69)64[0-9A-F]{2,18}457863656C2E5368656574
   extension: .xls
-  puid: aca-fmt/3
+- puid: aca-fmt/3
   signature: Microsoft Excel Markup
-- bof: (?i)^1a000003000014000000
-  extension: .ntf
-  puid: aca-fmt/5
+  bof: (?i)75726e3a736368656d61732d6d6963726f736f66742d636f6d3a6f66666963653a657863656c
+  extension: .xls
+- puid: aca-fmt/5
   signature: Lotus Notes Template
-- bof: (?i)^0300000041505052
-  extension: .adx
-  puid: aca-fmt/6
+  bof: (?i)^1a000003000014000000
+  extension: .ntf
+- puid: aca-fmt/6
   signature: Lotus Approach Index File
-- bof: (?i)^1a000004000029000000
-  eof: (?i)bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
-  extension: .nsf
-  operator: AND
-  puid: aca-fmt/8
+  bof: (?i)^0300000041505052
+  extension: .adx
+- puid: aca-fmt/8
   signature: Lotus Notes Database
-- bof: (?i)4D696E644d616E61676572
-  extension: .mmap
-  puid: aca-fmt/4
+  bof: (?i)^1a000004000029000000
+  eof: (?i)bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb
+  operator: AND
+  extension: .nsf
+- puid: aca-fmt/4
   signature: MindManager Mind Map
-- bof: (?i)010000002E010000(43|03)000000
-  extension: .id
-  puid: aca-fmt/7
+  bof: (?i)4D696E644d616E61676572
+  extension: .mmap
+- puid: aca-fmt/7
   signature: ID File
-- bof: (?i)474946383961
-  extension: .gif
-  puid: fmt/4
+  bof: (?i)010000002E010000(43|03)000000
+  extension: .id
+- puid: fmt/4
   signature: GIF 1989a
-- bof: (?i)010690080004000000000001000100010790060008000000E404000000000000E80001088007001800000049504D2E4D6963726F736F6674204D61696C2E4E6F746500310801
-  extension: .dat
-  puid: aca-fmt/9
+  bof: (?i)474946383961
+  extension: .gif
+- puid: aca-fmt/9
   signature: Microsoft email attachments archive (winmail)
-- bof: (?i)010690080004000000000001000100010790060008000000E404000000000000E800010
+  bof: (?i)010690080004000000000001000100010790060008000000E404000000000000E80001088007001800000049504D2E4D6963726F736F6674204D61696C2E4E6F746500310801
   extension: .dat
-  puid: aca-fmt/9
+- puid: aca-fmt/9
   signature: Microsoft email attachments archive (winmail)
-- bof: (?i)^789F3E22
+  bof: (?i)010690080004000000000001000100010790060008000000E404000000000000E800010
   extension: .dat
-  puid: aca-fmt/9
+- puid: aca-fmt/9
   signature: Microsoft email attachments archive (winmail)
-- bof: (?i)41636365737356657273696F6E.{0,1024}30362E
-  extension: .mdb
-  puid: aca-fmt/10
+  bof: (?i)^789F3E22
+  extension: .dat
+- puid: aca-fmt/10
   signature: MS Access 95
-- bof: (?i)41636365737356657273696F6E.{0,1024}30372E
+  bof: (?i)41636365737356657273696F6E.{0,1024}30362E
   extension: .mdb
-  puid: aca-fmt/11
+- puid: aca-fmt/11
   signature: MS Access 97
-- bof: (?i)410063006300650073007300560065007200730069006F006E.{0,2048}300038002E00
+  bof: (?i)41636365737356657273696F6E.{0,1024}30372E
   extension: .mdb
-  puid: aca-fmt/12
+- puid: aca-fmt/12
   signature: MS Access 2000
-- bof: (?i)410063006300650073007300560065007200730069006F006E.{0,2048}300039002E00
+  bof: (?i)410063006300650073007300560065007200730069006F006E.{0,2048}300038002E00
   extension: .mdb
-  puid: aca-fmt/13
+- puid: aca-fmt/13
   signature: MS Access 2002/3
-- bof: (?i)^000100005374616E64617264204A65742044420000000000
+  bof: (?i)410063006300650073007300560065007200730069006F006E.{0,2048}300039002E00
   extension: .mdb
-  puid: aca-fmt/14
+- puid: aca-fmt/14
   signature: MS Access database unspecified version (Jet 3 DB)
-- bof: (?i)^000100005374616E64617264204A65742044420001000000
+  bof: (?i)^000100005374616E64617264204A65742044420000000000
   extension: .mdb
-  puid: aca-fmt/15
+- puid: aca-fmt/15
   signature: MS Access database unspecified version (Jet 4 DB)
-- bof: (?i)000100005374616E646172642041434520444200
+  bof: (?i)^000100005374616E64617264204A65742044420001000000
   extension: .mdb
-  puid: aca-fmt/16
+- puid: aca-fmt/16
   signature: MS Access database unspecified version (ACE DB)
-- bof: (?i)00A0E150E161BA2A6AB1A2A2FA5A9B5A7B5D90F1723131F2B0F17234F57639CA4A9A0A8ADA4A8AD161A390D1137A5A9B5A4A8ADB2B6DCBDBDF42B2F55C8CCD8C7CBD0D3D7FDC2C2F90
-  extension: .map
-  puid: aca-fmt/17
+  bof: (?i)000100005374616E646172642041434520444200
+  extension: .mdb
+- puid: aca-fmt/17
   signature: MapInfo MAP file
-- bof: (?i)^504B0304{26}6D696D65747970656170706C69636174696F6E2F766E642E6F617369732E6F70656E646F63756D656E742E74657874
-  extension: .odt
-  puid: aca-fmt/18
+  bof: (?i)00A0E150E161BA2A6AB1A2A2FA5A9B5A7B5D90F1723131F2B0F17234F57639CA4A9A0A8ADA4A8AD161A390D1137A5A9B5A4A8ADB2B6DCBDBDF42B2F55C8CCD8C7CBD0D3D7FDC2C2F90
+  extension: .map
+- puid: aca-fmt/18
   signature: OpenDocument Text (unspecified version)
-- bof: (?i)41007000700072006F0061006300680044006F006300
-  extension: .apr
-  puid: aca-fmt/19
+  bof: (?i)^504B0304{26}6D696D65747970656170706C69636174696F6E2F766E642E6F617369732E6F70656E646F63756D656E742E74657874
+  extension: .odt
+- puid: aca-fmt/19
   signature: Lotus Approach View File
-- bof: (?i)^217461626C650D0A2176657273696F6E.{20,512}446566696E6974696F6E205461626C65
-  extension: .tab
-  puid: aca-fmt/20
+  bof: (?i)41007000700072006F0061006300680044006F006300
+  extension: .apr
+- puid: aca-fmt/20
   signature: MapInfo TAB file
   description: https://www.loc.gov/preservation/digital/formats/fdd/fdd000300.shtml
-- bof: (?i)^6d696d65747970656170706c69636174696f6e2f766e642e6f617369732e6f70656e646f63756d656e742e7370726561647368656574
-  extension: .ods
-  plain_bof: mimetypeapplication/vnd.oasis.opendocument.spreadsheet
-  puid: aca-fmt/21
+  bof: (?i)^217461626C650D0A2176657273696F6E.{20,512}446566696E6974696F6E205461626C65
+  extension: .tab
+- puid: aca-fmt/21
   signature: OpenDocument Spreadsheet (unspecified version)
-- bof: (?i)^1F8B08
-  extension: .emz
-  plain_bof: ""
-  puid: aca-fmt/22
+  bof: (?i)^6d696d65747970656170706c69636174696f6e2f766e642e6f617369732e6f70656e646f63756d656e742e7370726561647368656574
+  plain_bof: mimetypeapplication/vnd.oasis.opendocument.spreadsheet
+  extension: .ods
+- puid: aca-fmt/22
   signature: Windows Compressed Enhanced Metafile, usually image file
-  description: .emz files are actually .gz files, which are identified with a 10-byte header, containing a magic number (1f 8b), a compression ID (08 for DEFLATE which is normal), and a variety of timestamps and flags. .emz files are compressed image files that we can convert directly with libreoffice.
-- bof: (?i)^3c3f786d6c(3[^e]|[^3].)*3e(0a|20)*3c3f6d736f2d6170706c69636174696f6e2070726f6769643d22576f72642e446f63756d656e74223f3e
-  plain_bof: |
-    <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-    <?mso-application progid="Word.Document"?>
-  puid: aca-fmt/23
+  description: .emz files are actually .gz files, which are identified with a 10-byte
+    header, containing a magic number (1f 8b), a compression ID (08 for DEFLATE which
+    is normal), and a variety of timestamps and flags. .emz files are compressed image
+    files that we can convert directly with libreoffice.
+  bof: (?i)^1F8B08
+  plain_bof: ''
+  extension: .emz
+- puid: aca-fmt/23
   signature: Microsoft Word XML Document
-  description: Microsoft Word allows exporting document as standalone XML files, which PRONOM incorrectly identifies as plain XML (fmt/101)
-- bof: (?i)(42|62)(45|65)(47|67)(49|69)(4e|6e)3a(56|76)(43|63)(41|61)(52|72)(44|64)
-  operator: AND
-  eof: (?i)(45|65)(4e|6e)(44|64)3a(56|76)(43|63)(41|61)(52|72)(44|64)((0d)?0a)*
-  plain_bof: |
-    BEGIN:VCARD
-    *
-    END:VCARD
-  extension: .vcf
-  puid: aca-fmt/24
+  description: Microsoft Word allows exporting document as standalone XML files, which
+    PRONOM incorrectly identifies as plain XML (fmt/101)
+  bof: (?i)^3c3f786d6c(3[^e]|[^3].)*3e(0a|20)*3c3f6d736f2d6170706c69636174696f6e2070726f6769643d22576f72642e446f63756d656e74223f3e
+  plain_bof: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+
+    <?mso-application progid="Word.Document"?>
+
+    '
+- puid: aca-fmt/24
   signature: vCard (Unspecified version)
-  description: Only looks for BEGIN:VCARD and END:VCARD, as Pronom assumes VERSION declaration must come directly after BEGIN:VCARD, which is not always the case in the wild.
-- bof: (?i)5B496E7465726E657453686F72746375745D0D0A55524C3D
-  plain_bof: |
-    [InternetShortcut]
-    URL=
-  extension: .url
-  puid: aca-fmt/25
+  description: Only looks for BEGIN:VCARD and END:VCARD, as Pronom assumes VERSION
+    declaration must come directly after BEGIN:VCARD, which is not always the case
+    in the wild.
+  bof: (?i)(42|62)(45|65)(47|67)(49|69)(4e|6e)3a(56|76)(43|63)(41|61)(52|72)(44|64)
+  plain_bof: 'BEGIN:VCARD
+
+    *
+
+    END:VCARD
+
+    '
+  eof: (?i)(45|65)(4e|6e)(44|64)3a(56|76)(43|63)(41|61)(52|72)(44|64)((0d)?0a)*
+  operator: AND
+  extension: .vcf
+- puid: aca-fmt/25
   signature: URL file
   description: Internet shortcut file. Looks for the tag "[InternetShortcut]\nURL="
-- bof: (?i)3c4e444c3e.*3c2f4e444c3e
-  plain_bof: |
-    <NDL>
-    *
-    </NDL>
-  extension: .ndl
-  puid: aca-fmt/26
+  bof: (?i)5B496E7465726E657453686F72746375745D0D0A55524C3D
+  plain_bof: '[InternetShortcut]
+
+    URL=
+
+    '
+  extension: .url
+- puid: aca-fmt/26
   signature: Lotus Notes Doclink File
-  description: Link file used by Lotus Notes, a business productivity and collaboration application suite; saved in an XML format and contains a reference to a Lotus Notes document; used for sharing links to documents over email and in Web pages.
-- bof: (?i)000000000000000000000000000000000000000000008040000000000000000000000000000000000000000000000000000000000000
-  extension: .dgn
-  puid: aca-fmt/28
+  description: Link file used by Lotus Notes, a business productivity and collaboration
+    application suite; saved in an XML format and contains a reference to a Lotus
+    Notes document; used for sharing links to documents over email and in Web pages.
+  bof: (?i)3c4e444c3e.*3c2f4e444c3e
+  plain_bof: '<NDL>
+
+    *
+
+    </NDL>
+
+    '
+  extension: .ndl
+- puid: aca-fmt/28
   signature: Bentley Microstation V7 File
   description: CAD file.
-- bof: (?i)^(..){0,250}616172687573737461647361726B69763D22687474703A2F2F7777772E616172687573737461647361726B69762E646B2F676D6C2F616172687573737461647361726B697622
-  extension: .xsd
-  plain_bof: aarhusstadsarkiv="http://www.aarhusstadsarkiv.dk/gml/aarhusstadsarkiv"
-  puid: aca-fmt/29
+  bof: (?i)000000000000000000000000000000000000000000008040000000000000000000000000000000000000000000000000000000000000
+  extension: .dgn
+- puid: aca-fmt/29
   signature: XML Schema Definition (Custom XSD)
-- bof: (?i)^50545653595354454D202020564953554D202020202020204772617068696B706172616D65746572
-  extension: .gpa
-  plain_bof: PTVSYSTEM   VISUM       Graphikparameter
-  puid: aca-fmt/30
+  bof: (?i)^(..){0,250}616172687573737461647361726B69763D22687474703A2F2F7777772E616172687573737461647361726B69762E646B2F676D6C2F616172687573737461647361726B697622
+  plain_bof: aarhusstadsarkiv="http://www.aarhusstadsarkiv.dk/gml/aarhusstadsarkiv"
+  extension: .xsd
+- puid: aca-fmt/30
   signature: PTV Visum Graphics Parameters file
-- bof: (?i)^3B3B204853462056
-  extension: .easm
-  plain_bof: ;; HSF V
-  puid: aca-fmt/31
+  bof: (?i)^50545653595354454D202020564953554D202020202020204772617068696B706172616D65746572
+  plain_bof: PTVSYSTEM   VISUM       Graphikparameter
+  extension: .gpa
+- puid: aca-fmt/31
   signature: eDrawings Assembly File
+  bof: (?i)^3B3B204853462056
+  plain_bof: ;; HSF V
+  extension: .easm
+- puid: aca-fmt/32
+  signature: Calculux Road Project file
+  bof: (?i)^43616C63756C757820526F61642050726F6A6563742066696C65
+  plain_bof: Calculux Road Project file
+  extension: .CRO
+- puid: aca-fmt/33
+  signature: PTV Visum File
+  bof: (?i)^50545653595354454D202020564953554D2020202020202056657273696F6E
+  plain_bof: PTVSYSTEM   VISUM       Version
+  extension: .ver
