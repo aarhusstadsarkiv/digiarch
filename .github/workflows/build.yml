@@ -34,16 +34,19 @@ jobs:
           acacore="${acacore%\"}"
           sed -ie "s/acacore *=.*/acacore = \"$acacore\"/g" pyproject.toml
           poetry build
+      - name: Create Wheels ZIP
+        run: zip -j wheels.zip dist/*.whl
       - name: Get Tag
         id: tag
         run: echo "tag=$(git tag -l --sort=-version:refname | head -1)" >> "$GITHUB_OUTPUT"
-      - name: Create Wheels ZIP
-        run: zip -j wheels.zip dist/*.whl
+      - name: Get Changelog
+        run: python .github/workflows/get_changelog.py CHANGELOG.md "${{ steps.tag.outputs.tag }}" > release.md
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
+          body_path: release.md
           files: |
             wheels.zip

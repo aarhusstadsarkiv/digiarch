@@ -7,6 +7,7 @@ on:
       - tests/**
       - pyproject.toml
       - poetry.lock
+      - CHANGELOG.md
       - .github/workflows/test.yml
 
 env:

@@ -325,7 +325,7 @@ def test_edit_action(tests_folder: Path, files_folder: Path, files_folder_copy: 
 
         if action == "convert":
             previous_action_data = file.action_data.convert if file.action_data.convert else None
-            file.action_data.convert = action_data = ConvertAction(tool="test", outputs=["ext"])
+            file.action_data.convert = action_data = ConvertAction(tool="test", output="ext")
         elif action == "extract":
             previous_action_data = file.action_data.extract if file.action_data.extract else None
             file.action_data.extract = action_data = ExtractAction(tool="tool", extension="zip")

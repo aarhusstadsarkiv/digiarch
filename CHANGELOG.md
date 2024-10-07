@@ -1,5 +1,11 @@
 # Changelog
 
+## v4.1.7
+
+### Changes
+
+* Use acacore 3.2.0
+
 ## v4.1.6
 
 ### Changes
