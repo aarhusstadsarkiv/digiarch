@@ -97,11 +97,11 @@ def group_action():
 @argument("reason", nargs=1, type=str, required=True)
 @option("--tool", type=str, required=True, help="The tool to use for conversion.")
 @option(
-    "--outputs",
+    "--output",
     type=str,
-    multiple=True,
-    callback=param_callback_regex("^(.[a-zA-Z0-9]+)+$"),
-    help='The file extensions to generate.  [multiple; required for tools other than "copy"]',
+    default=None,
+    callback=param_callback_regex("^[a-zA-Z0-9-]+$"),
+    help='The output of the converter.  [required for tools other than "copy"]',
 )
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
@@ -112,14 +112,14 @@ def action_convert(
     reason: str,
     query: TQuery,
     tool: str,
-    outputs: tuple[str, ...],
+    output: str | None,
     lock: bool,
     dry_run: bool,
 ):
     """
     Set files' action to "convert".
 
-    The --outputs option may be omitted when using the "copy" tool.
+    The --output option may be omitted when using the "copy" tool.
 
     To lock the file(s) after editing them, use the --lock option.
 
@@ -127,10 +127,10 @@ def action_convert(
 
     For details on the QUERY argument, see the edit command.
     """
-    if tool not in ("copy",) and not outputs:
-        raise MissingParameter(f"Required for tool {tool!r}.", ctx, ctx_params(ctx)["outputs"])
+    if tool not in ("copy",) and not output:
+        raise MissingParameter(f"Required for tool {tool!r}.", ctx, ctx_params(ctx)["output"])
 
-    data = ConvertAction(tool=tool, outputs=outputs)
+    data = ConvertAction(tool=tool, output=output)
 
     check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
 
