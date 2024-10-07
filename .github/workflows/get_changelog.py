@@ -22,4 +22,4 @@ def main(file: str, tag: str) -> str:
 
 
 if __name__ == "__main__":
-    print(main(argv[1], argv[2]))
+    print(main(argv[1], argv[2]), end="", flush=True)
