@@ -225,7 +225,7 @@ Usage: digiarch edit action convert [OPTIONS] ROOT QUERY REASON
 
   Set files' action to "convert".
 
-  The --outputs option may be omitted when using the "copy" tool.
+  The --output option may be omitted when using the "copy" tool.
 
   To lock the file(s) after editing them, use the --lock option.
 
@@ -234,12 +234,12 @@ Usage: digiarch edit action convert [OPTIONS] ROOT QUERY REASON
   For details on the QUERY argument, see the edit command.
 
 Options:
-  --tool TEXT     The tool to use for conversion.  [required]
-  --outputs TEXT  The file extensions to generate.  [multiple; required for
-                  tools other than "copy"]
-  --lock          Lock the edited files.
-  --dry-run       Show changes without committing them.
-  --help          Show this message and exit.
+  --tool TEXT    The tool to use for conversion.  [required]
+  --output TEXT  The output of the converter.  [required for tools other than
+                 "copy"]
+  --lock         Lock the edited files.
+  --dry-run      Show changes without committing them.
+  --help         Show this message and exit.
 ```
 
 ##### digiarch edit action extract
