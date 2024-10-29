@@ -136,12 +136,22 @@ aca-fmt/16:
     reason: Unable to convert automatically.
     process: Open with Microsoft Access. For each table in the database, save the
       table as .xlsx. Reidentify with digiarch.
+aca-fmt/17:
+  name: MapInfo MAP file
+  action: ignore
+  ignore:
+    template: temporary-file
 aca-fmt/18:
   name: OpenDocument Text (unspecified version)
   action: convert
   convert:
     tool: document
     output: pdf
+aca-fmt/19:
+  name: Lotus Approach View File
+  action: ignore
+  ignore:
+    template: not-preservable
 aca-fmt/20:
   name: MapInfo TAB file
   action: convert
@@ -173,6 +183,7 @@ aca-fmt/24:
   ignore:
     template: not-preservable
     reason: Virtual business card. Not preservation-worthy
+  description: Extension is .vcf
 aca-fmt/25:
   name: Microsoft Windows URL
   action: ignore
@@ -256,7 +267,7 @@ fmt/5:
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 fmt/11:
   name: Portable Network Graphics 1.0
   ignore_if:
@@ -823,7 +834,7 @@ fmt/133:
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 fmt/134:
   name: MPEG 1/2 Audio Layer 3
   action: convert
@@ -862,8 +873,7 @@ fmt/155:
   name: Geographic Tagged Image File Format (GeoTIFF)
   action: convert
   convert:
-    tool: image
-    output: tif
+    tool: copy
 fmt/157:
   name: Acrobat PDF/X - Portable Document Format - Exchange 1a:2001
   action: convert
@@ -901,7 +911,7 @@ fmt/199:
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 fmt/206:
   name: Structured Query Language Data
   action: convert
@@ -944,6 +954,13 @@ fmt/233:
   convert:
     tool: document
     output: pdf
+fmt/243:
+  name: GPS Exchange Format 1.0
+  description: GPX is an XML schema used by various software applications and websites to show and describe
+    GPS data such as routes, tracks, projecting GPS data onto maps and annotating maps. Extension is .pgx.
+  action: convert
+  convert:
+    tool: copy
 fmt/244:
   name: Keyhole Markup Language (XML)
   description: "KML is an open standard officially named the OpenGIS\xAE KML Encoding\
@@ -1062,8 +1079,7 @@ fmt/353:
     image_pixels_min: 20000
   action: convert
   convert:
-    tool: image
-    output: tif
+    tool: copy
 fmt/354:
   name: Acrobat PDF/A - Portable Document Format 1b
   action: convert
@@ -1087,7 +1103,7 @@ fmt/357:
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 fmt/388:
   name: Internet Calendar and Scheduling format
   action: convert
@@ -1106,6 +1122,7 @@ fmt/395:
   ignore:
     template: not-preservable
     reason: Windows native contact files. Not preservation-worthy
+  description: Extension is .vcf
 fmt/411:
   name: RAR Archive version 2.9
   action: extract
@@ -1173,7 +1190,7 @@ fmt/441:
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 fmt/442:
   name: Microsoft Visio (generic)
   action: convert
@@ -1375,8 +1392,20 @@ fmt/532:
   convert:
     tool: cad2d
     output: svg
+fmt/549:
+  name: Adobe InDesign Document CS3
+  description: Adobe InDesign Document can be used to produce a number of works such as posters, flyers,
+    brochures, magazines, newspapers, presentations and books. Extension is .indd.
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: File used by adobe software for image editing and manipulation. Not preservable,
+      we are unable to open and convert this format without and photoshop license.
+      The files also rarely if ever contains preservable info.
 fmt/550:
   name: Adobe InDesign Document CS4
+  description: Adobe InDesign Document can be used to produce a number of works such as posters, flyers,
+    brochures, magazines, newspapers, presentations and books. Extension is .indd.
   action: ignore
   ignore:
     template: not-preservable
@@ -1385,6 +1414,8 @@ fmt/550:
       The files also rarely if ever contains preservable info.
 fmt/551:
   name: Adobe InDesign Document CS5
+  description: Adobe InDesign Document can be used to produce a number of works such as posters, flyers,
+    brochures, magazines, newspapers, presentations and books. Extension is .indd.
   action: ignore
   ignore:
     template: not-preservable
@@ -1444,7 +1475,7 @@ fmt/573:
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 fmt/583:
   name: Vector Markup Language
   action: convert
@@ -1535,6 +1566,14 @@ fmt/637:
   ignore:
     template: not-preservable
     reason: An Onenote note file. Not preservation-worthy / not convertable
+fmt/638:
+  name: SPSS Data File
+  description: SPSS (Statistical Package for the Social Sciences) is a software package used for
+    statistical analysis in the social sciences.
+  action: manual
+  manual:
+    reason: Not converable.
+    process: Open in GNU PSPP. gnu.org/software/pspp/pspp.html. Export BOTH data and variables to csv.
 fmt/645:
   name: Exchangeable Image File Format (Compressed) 2.2.1
   ignore_if:
@@ -1600,6 +1639,17 @@ fmt/761:
     reason: Flash is no longer supported, and it is in a very messy format - The file
       can be a image, video or interactive game. It might not be preservation-worthy,
       but either way we don't know how to handle it
+fmt/796:
+  name: Adobe After Effects
+  description: Adobe After Effects is a digital visual effects, motion graphics, and compositing application developed
+    by Adobe Systems and used in the post-production process of filmmaking and television production. Among other things,
+    After Effects can be used for keying, tracking, rotoscoping, compositing and animation. Extension is .aep
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: File used by adobe software for image editing and manipulation. Not preservable,
+      we are unable to open and convert this format without and photoshop license.
+      The files also rarely if ever contains preservable info.
 fmt/817:
   name: JSON Data Interchange Format
   action: convert
@@ -1741,6 +1791,14 @@ fmt/1132:
   ignore:
     template: not-preservable
     reason: A bookmark in the Netscape web browser. Not preservation-worthy
+fmt/1134:
+  name: GPS Exchange Format 1.1
+  description: GPX is an XML schema used by various software applications and
+    websites to show and describe GPS data such as routes, tracks, projecting GPS
+    data onto maps and annotating maps. Extension is .gp
+  action: convert
+  convert:
+    tool: copy
 fmt/1216:
   name: ''
   action: convert
@@ -1887,6 +1945,15 @@ fmt/1516:
   convert:
     tool: document
     output: pdf
+fmt/1566:
+  name: ColdFusion Markup Language
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: ColdFusion Markup Language, more commonly known as CFML, is a scripting language
+     for web development that runs on the Java virtual machine (JVM), the .NET framework,
+     and Google App Engine. Not preservation-worthy
+  description: Extension is .cfm
 fmt/1600:
   name: ESRI ArcInfo DAT File (Internal)
   reidentify:
@@ -1899,6 +1966,15 @@ fmt/1600:
     process: Find out what we can do with this format. You can try and see, if there
       is a mismatch between our bit-header and the bit-header for the fil with the
       repository "byteheader".
+fmt/1628:
+  name: Adobe InDesign Document 1.0
+  description: Extension is .indd
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: File used by adobe software for image editing and manipulation. Not preservable,
+      we are unable to open and convert this format without and photoshop license.
+      The files also rarely if ever contains preservable info.
 fmt/1711:
   name: Software602 Printer Configuration File
   action: ignore
@@ -1953,6 +2029,16 @@ fmt/1879:
   name: vCard
   description: Contact information file. vCards are often attached to e-mail messages,
     but can be exchanged in other ways, such as on the internet or instant messaging.
+    Extension is .vcf
+  action: ignore
+  ignore:
+    template: not-preservable
+    reason: Not preservation-worthy
+fmt/1880:
+  name: vCard 3
+  description: Contact information file. vCards are often attached to e-mail messages,
+    but can be exchanged in other ways, such as on the internet or instant messaging.
+    Extension is .vcf
   action: ignore
   ignore:
     template: not-preservable
@@ -2359,25 +2445,25 @@ x-fmt/382:
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 x-fmt/384:
   name: Quicktime
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 x-fmt/385:
   name: MPEG-1 Program Stream
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 x-fmt/386:
   name: MPEG-2 Program Stream
   action: convert
   convert:
     tool: video
-    output: mp4
+    output: h265
 x-fmt/387:
   name: Exchangeable Image File Format (Uncompressed) 2.2
   ignore_if:
