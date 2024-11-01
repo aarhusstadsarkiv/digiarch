@@ -1,5 +1,11 @@
 # Changelog
 
+## v4.1.10
+
+### Fixes
+
+* Fix `doctor` command adding underscores to files that required no fixing when sanitizing paths
+
 ## v4.1.9
 
 ### Changes
