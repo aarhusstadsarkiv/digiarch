@@ -42,8 +42,18 @@ def sanitize_paths(ctx: Context, database: FileDB, root: Path, dry_run: bool, *l
         old_path: Path = file.relative_path
         new_path: Path = sanitize_path(old_path)
 
+        if new_path == old_path:
+            continue
+
         while file.root.joinpath(new_path).exists():
             new_path = new_path.with_name("_" + new_path.name)
+
+        event: HistoryEntry = HistoryEntry.command_history(
+            ctx,
+            "sanitize-path.rename",
+            file.uuid,
+            [str(file.relative_path), str(new_path)],
+        )
 
         if not dry_run:
             file.root.joinpath(new_path).parent.mkdir(parents=True, exist_ok=True)
@@ -54,14 +64,6 @@ def sanitize_paths(ctx: Context, database: FileDB, root: Path, dry_run: bool, *l
             except BaseException:
                 file.get_absolute_path().rename(file.root / old_path)
                 raise
-
-        event: HistoryEntry = HistoryEntry.command_history(
-            ctx,
-            "sanitize-path.rename",
-            file.uuid,
-            [str(file.relative_path), str(new_path)],
-        )
-        if not dry_run:
             database.history.insert(event)
 
         event.log(INFO, *(log for log in loggers if log))
