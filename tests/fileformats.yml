@@ -1009,8 +1009,7 @@ fmt/292:
   name: OpenDocument Presentation 1.1
   action: convert
   convert:
-    tool: document
-    output: odt
+    tool: copy
 fmt/294:
   name: OpenDocument Spreadsheet 1.1
   action: convert
@@ -1022,13 +1021,13 @@ fmt/295:
   convert:
     tool: copy
 fmt/296:
-  name: OpenDocument Graphics
+  name: OpenDocument Graphics 1.1
   action: convert
   convert:
     tool: document
     output: svg
 fmt/297:
-  name: OpenDocument Graphics
+  name: OpenDocument Graphics 1.2
   action: convert
   convert:
     tool: document
@@ -1945,6 +1944,22 @@ fmt/1516:
   convert:
     tool: document
     output: pdf
+fmt/1753:
+  name: OpenDocument Graphics 1.3
+  action: convert
+  convert:
+    tool: document
+    output: svg
+fmt/1754:
+  name: OpenDocument Presentation 1.3
+  action: convert
+  convert:
+    tool: copy
+fmt/1755:
+  name: OpenDocument Spreadsheet 1.3
+  action: convert
+  convert:
+    tool: copy
 fmt/1566:
   name: ColdFusion Markup Language
   action: ignore
