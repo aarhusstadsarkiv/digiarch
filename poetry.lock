@@ -347,13 +347,13 @@ files = [
 
 [[package]]
 name = "extract-msg"
-version = "0.49.0"
+version = "0.52.0"
 description = "Extracts emails and attachments saved in Microsoft Outlook's .msg files"
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "extract_msg-0.49.0-py3-none-any.whl", hash = "sha256:6a1756164ef2d0c230bce1966d52155da8bd4bec9a6a1c3166cbdff8ffd9e0ba"},
-    {file = "extract_msg-0.49.0.tar.gz", hash = "sha256:cc700cdcc0cb6fcdbfa3b9e477201958cc28c584716d5c45fdd47261c1f2dfcc"},
+    {file = "extract_msg-0.52.0-py3-none-any.whl", hash = "sha256:93c919846bac2a6034cf7d0dcf8e825d640b6ddb8539e42f7f1817869cd1eeaf"},
+    {file = "extract_msg-0.52.0.tar.gz", hash = "sha256:c21c548c43e1f0cdce5616102d33e590e2b46fbdc9d04f21af4eb62dcbf296dd"},
 ]
 
 [package.dependencies]
@@ -475,14 +475,17 @@ files = [
 
 [[package]]
 name = "patool"
-version = "2.4.0"
+version = "3.0.3"
 description = "portable archive file manager"
 optional = false
 python-versions = ">=3.10"
 files = [
-    {file = "patool-2.4.0-py2.py3-none-any.whl", hash = "sha256:0ab5ab376b0f7838c495a8583fab2d73b43889820c7ef2e9300a7e5c952054f2"},
-    {file = "patool-2.4.0.tar.gz", hash = "sha256:2c54bcd2b904bf37253fad4f5d04cec808056b15fa974fd36b2a84fc931f3c0f"},
+    {file = "patool-3.0.3-py2.py3-none-any.whl", hash = "sha256:6b2a319817908849774815d231482daee8e08fd6ead2a9b53a442b5ea8e2f78b"},
+    {file = "patool-3.0.3.tar.gz", hash = "sha256:08a79e570b4ed7298b0901717a4fb5aee20299f0ec70e3c44fa431699e0badb3"},
 ]
+
+[package.extras]
+argcompletion = ["argcomplete (==3.5.1)"]
 
 [[package]]
 name = "pcodedmp"
@@ -985,4 +988,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "a42bbb424530c6514b5377790678ad6d38594c2e13a879ab1d99f467628fef3e"
+content-hash = "7ee8f8066e3fedf4b71bb07c2ec1919cd273fa91e0874bc3f85bb2ea25870970"
