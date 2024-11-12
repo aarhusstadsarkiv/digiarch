@@ -187,9 +187,9 @@ class AVID:
 def option_avid():
     def _callback(ctx: Context, param: Parameter, value: str | PathLike[str] | None):
         if value is None and (value := AVID.find_database_root(Path.cwd())) is None:
-            raise BadParameter("No AVID directory found in path", ctx, param)
+            raise BadParameter(f"No AVID directory found in path {str(Path.cwd())!r}.", ctx, param)
         if not AVID.is_avid_dir(value):
-            raise BadParameter(f"Not a valid AVID directory {value!r}", ctx, param)
+            raise BadParameter(f"Not a valid AVID directory {value!r}.", ctx, param)
         if not (avid := AVID(value)).database_path.is_file():
             raise BadParameter(f"No _metadata/avid.db present in {value!r}.", ctx, param)
         return avid
@@ -199,7 +199,6 @@ def option_avid():
         "avid",
         type=ClickPath(exists=True, file_okay=False, writable=True, readable=True, resolve_path=True),
         default=None,
-        required=True,
         callback=_callback,
     )
 
