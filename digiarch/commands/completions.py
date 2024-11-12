@@ -41,7 +41,7 @@ class ShellChoice(CompleteChoice):
 @argument("shell", type=ShellChoice(), callback=lambda _c, _p, v: get_completion_class(v))
 @pass_context
 @docstring_format(shells="\n    ".join(f"* {s.value}\t{s.help}" for s in ShellChoice.completion_items))
-def command_completions(ctx: Context, shell: Type[ShellComplete] | None):
+def cmd_completions(ctx: Context, shell: Type[ShellComplete] | None):
     """
     Generate tab-completion scripts for your shell.
 
