@@ -42,7 +42,7 @@ def cmd_init(ctx: Context, avid_dir: Path):
         _, log_stdout, event_start = start_program(ctx, db, __version__, None, False, True, True)
         initialized: bool = False
 
-        with ExceptionManager() as exception:
+        with ExceptionManager(BaseException) as exception:
             if db.is_initialised():
                 is_latest(db.connection, raise_on_difference=True)
                 Event.from_command(ctx, "initialized", data=db.version()).log(INFO, log_stdout)
