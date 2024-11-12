@@ -5,6 +5,7 @@ from PIL import Image
 
 from .__version__ import __version__
 from .commands.completions import cmd_completions
+from .commands.init import cmd_init
 from .commands.upgrade import cmd_upgrade
 
 Image.MAX_IMAGE_PIXELS = int(50e3**2)
@@ -17,6 +18,7 @@ def app():
 
 
 # noinspection DuplicatedCode
+app.add_command(cmd_init, cmd_init.name)
 app.add_command(cmd_upgrade, cmd_upgrade.name)
 app.add_command(cmd_completions, cmd_completions.name)
 
