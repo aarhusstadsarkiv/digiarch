@@ -162,7 +162,7 @@ class AVID:
             return False
         if not avid_dirs.schemas.path.is_dir():
             return False
-        if not avid_dirs.original_documents.is_dir():
+        if not avid_dirs.original_documents.is_dir() and not avid_dirs.documents.is_dir():
             return False
         return True
 
