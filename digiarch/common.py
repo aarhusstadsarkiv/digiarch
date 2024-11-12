@@ -8,7 +8,6 @@ from acacore.models.reference_files import CustomSignature
 from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
 from acacore.utils.click import ctx_params
-from click import argument
 from click import BadParameter
 from click import Context
 from click import option
@@ -185,27 +184,24 @@ class AVID:
         return self.metadata_dir / "avid.db"
 
 
-def argument_root(exists: bool):
-    if exists:
+def option_avid():
+    def _callback(ctx: Context, param: Parameter, value: str | PathLike[str] | None):
+        if value is None and (value := AVID.find_database_root(Path.cwd())) is None:
+            raise BadParameter("No AVID directory found in path", ctx, param)
+        if not AVID.is_avid_dir(value):
+            raise BadParameter(f"Not a valid AVID directory {value!r}", ctx, param)
+        if not (avid := AVID(value)).database_path.is_file():
+            raise BadParameter(f"No _metadata/avid.db present in {value!r}.", ctx, param)
+        return avid
 
-        def _callback(ctx: Context, param: Parameter, value: str):
-            if not (path := Path(value)).joinpath("_metadata", "files.db").is_file():
-                raise BadParameter(f"No _metadata/files.db present in {value!r}.", ctx, param)
-            return path
-
-        return argument(
-            "root",
-            nargs=1,
-            type=ClickPath(exists=True, file_okay=False, writable=True, resolve_path=True),
-            callback=_callback,
-        )
-    else:
-        return argument(
-            "root",
-            nargs=1,
-            type=ClickPath(file_okay=False, writable=True, resolve_path=True),
-            callback=lambda _ctx, _param, value: Path(value),
-        )
+    return option(
+        "--avid-root",
+        "avid",
+        type=ClickPath(exists=True, file_okay=False, writable=True, readable=True, resolve_path=True),
+        default=None,
+        required=True,
+        callback=_callback,
+    )
 
 
 def option_dry_run():
