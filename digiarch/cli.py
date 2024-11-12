@@ -4,15 +4,8 @@ from click import version_option
 from PIL import Image
 
 from .__version__ import __version__
-from .commands.completions import command_completions
-from .commands.doctor import command_doctor
-from .commands.edit.edit import group_edit
-from .commands.extract.extract import command_extract
-from .commands.history import command_history
-from .commands.identify import command_identify
-from .commands.identify import command_reidentify
-from .commands.search import command_search
-from .commands.upgrade import command_upgrade
+from .commands.completions import cmd_completions
+from .commands.upgrade import cmd_upgrade
 
 Image.MAX_IMAGE_PIXELS = int(50e3**2)
 
@@ -24,14 +17,7 @@ def app():
 
 
 # noinspection DuplicatedCode
-app.add_command(command_identify, command_identify.name)
-app.add_command(command_reidentify, command_reidentify.name)
-app.add_command(command_extract, command_extract.name)
-app.add_command(group_edit, group_edit.name)
-app.add_command(command_search, command_search.name)
-app.add_command(command_history, command_history.name)
-app.add_command(command_doctor, command_doctor.name)
-app.add_command(command_upgrade, command_upgrade.name)
-app.add_command(command_completions, command_completions.name)
+app.add_command(cmd_upgrade, cmd_upgrade.name)
+app.add_command(cmd_completions, cmd_completions.name)
 
 app.list_commands = lambda _ctx: list(app.commands)
