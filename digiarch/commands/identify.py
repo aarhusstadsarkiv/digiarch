@@ -85,7 +85,7 @@ def identify_original_file(
     with ExceptionManager(Exception, UnidentifiedImageError, allow=[OSError, IOError]) as error:
         file = OriginalFile.from_file(
             siegfried_file.filename,
-            avid.dirs.original_documents,
+            avid.path,
             siegfried_file,
             actions,
             custom_signatures,
@@ -95,7 +95,7 @@ def identify_original_file(
     if error.exception:
         file = OriginalFile.from_file(
             siegfried_file.filename,
-            avid.dirs.original_documents,
+            avid.path,
             siegfried_file,
             parent=parent,
         )
@@ -134,7 +134,7 @@ def identify_original_file(
             *loggers,
             puid=str(file.puid).ljust(10),
             action=str(file.action).ljust(7),
-            path=file.relative_path,
+            path=file.relative_path.relative_to(avid.dirs.original_documents.name),
         )
 
         for error in errors:
