@@ -249,7 +249,7 @@ def grp_identify():
     help="Path to a YAML file containing custom signature specifications.",
 )
 @option("--exclude", type=str, multiple=True, help="File and folder names to exclude.  [multiple]")
-@option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identofy at a time.")
+@option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identify at a time.")
 @option_dry_run()
 @pass_context
 def cmd_identify_original(
