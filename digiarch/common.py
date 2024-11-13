@@ -21,7 +21,7 @@ from pydantic import TypeAdapter
 
 # noinspection PyPep8Naming
 class AVIDIndices:
-    def __init__(self, avid_dir: Path):
+    def __init__(self, avid_dir: Path) -> None:
         self.avid_dir = avid_dir
 
     @property
@@ -56,7 +56,7 @@ class AVIDIndices:
 
 # noinspection PyPep8Naming
 class AVIDSchemas:
-    def __init__(self, avid_dir: Path):
+    def __init__(self, avid_dir: Path) -> None:
         self.avid_dir: Path = avid_dir
 
     @property
@@ -109,7 +109,7 @@ class AVIDSchemas:
 
 
 class AVIDDirs:
-    def __init__(self, avid_dir: Path):
+    def __init__(self, avid_dir: Path) -> None:
         self.dir: Path = avid_dir
 
     @property
@@ -149,7 +149,7 @@ class AVIDDirs:
 
 
 class AVID:
-    def __init__(self, directory: str | PathLike):
+    def __init__(self, directory: str | PathLike) -> None:
         if not self.is_avid_dir(directory):
             raise ValueError(f"{directory} is not a valid AVID directory")
 
@@ -165,7 +165,7 @@ class AVID:
             return False
         if not avid_dirs.schemas.path.is_dir():
             return False
-        if not avid_dirs.original_documents.is_dir() and not avid_dirs.documents.is_dir():
+        if not avid_dirs.original_documents.is_dir() and not avid_dirs.documents.is_dir():  # noqa: SIM103
             return False
         return True
 

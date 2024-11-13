@@ -21,7 +21,7 @@ from digiarch.common import AVID
 
 def root_callback(ctx: Context, param: Parameter, value: str):
     if not AVID.is_avid_dir(value):
-        raise BadParameter(f"Not a valid AVID directory.", ctx, param)
+        raise BadParameter("Not a valid AVID directory.", ctx, param)
     return Path(value)
 
 
