@@ -9,8 +9,10 @@ from typing import get_args as get_type_args
 from uuid import UUID
 
 from acacore.database import FilesDB
+from acacore.database.table import Table
 from acacore.exceptions.files import IdentificationError
 from acacore.models.event import Event
+from acacore.models.file import BaseFile
 from acacore.models.file import OriginalFile
 from acacore.models.reference_files import Action
 from acacore.models.reference_files import ActionData
@@ -72,11 +74,16 @@ def identify_requirements(
     return siegfried, actions, custom_signatures
 
 
-def find_original_files_query(avid: AVID, db: FilesDB, query: TQuery, batch_size: int) -> Generator[Path, None, None]:
+def find_files_query(
+    avid: AVID,
+    table: Table[BaseFile],
+    query: TQuery,
+    batch_size: int,
+) -> Generator[Path, None, None]:
     where, parameters = query_to_where(query)
     offset: int = 0
 
-    while batch := db.original_files.select(
+    while batch := table.select(
         where,
         parameters,
         order_by=[("relative_path", "asc")],
@@ -273,7 +280,7 @@ def cmd_identify_original(
 
         with ExceptionManager(BaseException) as exception:
             if query:
-                files = find_original_files_query(avid, db, query, batch_size)
+                files = find_files_query(avid, db.original_files, query, batch_size)
             else:
                 files = find_files(avid.dirs.original_documents)
 
