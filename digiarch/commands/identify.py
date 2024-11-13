@@ -4,6 +4,7 @@ from logging import INFO
 from logging import Logger
 from pathlib import Path
 from traceback import format_tb
+from typing import Generator
 from typing import get_args as get_type_args
 from uuid import UUID
 
@@ -40,6 +41,9 @@ from digiarch.common import fetch_custom_signatures
 from digiarch.common import open_database
 from digiarch.common import option_avid
 from digiarch.common import option_dry_run
+from digiarch.query import argument_query
+from digiarch.query import query_to_where
+from digiarch.query import TQuery
 
 
 def identify_requirements(
@@ -66,6 +70,23 @@ def identify_requirements(
     custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
     return siegfried, actions, custom_signatures
+
+
+def find_original_files_query(avid: AVID, db: FilesDB, query: TQuery, batch_size: int) -> Generator[Path, None, None]:
+    where, parameters = query_to_where(query)
+    offset: int = 0
+
+    while batch := db.original_files.select(
+        where,
+        parameters,
+        order_by=[("relative_path", "asc")],
+        limit=batch_size,
+        offset=offset,
+    ).fetchall():
+        offset += len(batch)
+        yield from (avid.path / f.relative_path for f in batch)
+
+    yield from ()
 
 
 def identify_original_file(
@@ -176,7 +197,8 @@ def grp_identify():
     pass
 
 
-@grp_identify.command("original")
+@grp_identify.command("original", short_help="Identify files in OriginalDocuments.")
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @option(
     "--siegfried-path",
     type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
@@ -226,6 +248,7 @@ def grp_identify():
 @pass_context
 def cmd_identify_original(
     ctx: Context,
+    query: TQuery,
     avid: AVID,
     siegfried_path: str | None,
     siegfried_signature: str,
@@ -249,7 +272,11 @@ def cmd_identify_original(
         log_file, log_stdout, _ = start_program(ctx, db, __version__, None, not dry_run, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            files = find_files(avid.dirs.original_documents)
+            if query:
+                files = find_original_files_query(avid, db, query, batch_size)
+            else:
+                files = find_files(avid.dirs.original_documents)
+
             while batch := list(islice(files, batch_size)):
                 if exclude:
                     batch = [f for f in batch if not any(p in exclude for p in f.parts)]
@@ -263,7 +290,7 @@ def cmd_identify_original(
                     actions,
                     custom_signatures,
                     dry_run,
-                    False,
+                    bool(query),
                     None,
                     log_stdout,
                 )
