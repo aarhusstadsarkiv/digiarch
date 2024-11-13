@@ -95,6 +95,7 @@ ignore = [
     "D212",    # multi-line docstring summary should start at the first line,
     "D213",    # multi-line docstring summary should start at the second line,
     "D300",    # use triple docstring
+    "D400",    # First line should end with a period
     "D401",    # first line of docstring should be in imperative mood
     "DTZ005",  # datetime.datetime.now() called without a tz argument
     "DTZ006",  # datetime.datetime.fromtimestamp() called without a tz argument
