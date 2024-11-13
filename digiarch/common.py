@@ -222,10 +222,10 @@ def open_database(ctx: Context, avid: AVID) -> FilesDB:
     return db
 
 
-def fetch_actions(ctx: Context, parameter_name: str, file: Path | None) -> dict[str, Action]:
+def fetch_actions(ctx: Context, parameter_name: str, file: str | PathLike | None) -> dict[str, Action]:
     if file:
         try:
-            with file.open() as fh:
+            with open(file) as fh:
                 return TypeAdapter(dict[str, Action]).validate_python(yaml.load(fh, yaml.Loader))
         except BaseException:
             raise BadParameter("Invalid actions file.", ctx, ctx_params(ctx)[parameter_name])
@@ -238,10 +238,10 @@ def fetch_actions(ctx: Context, parameter_name: str, file: Path | None) -> dict[
         )
 
 
-def fetch_custom_signatures(ctx: Context, parameter_name: str, file: Path | None) -> list[CustomSignature]:
+def fetch_custom_signatures(ctx: Context, parameter_name: str, file: str | PathLike | None) -> list[CustomSignature]:
     if file:
         try:
-            with file.open() as fh:
+            with open(file) as fh:
                 return TypeAdapter(list[CustomSignature]).validate_python(yaml.load(fh, yaml.Loader))
         except BaseException:
             raise BadParameter("Invalid custom signatures file.", ctx, ctx_params(ctx)[parameter_name])
