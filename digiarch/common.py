@@ -1,8 +1,11 @@
 from os import PathLike
 from pathlib import Path
 from re import match
+from sqlite3 import DatabaseError
 
 import yaml
+from acacore.database import FilesDB
+from acacore.database.upgrade import is_latest
 from acacore.models.reference_files import Action
 from acacore.models.reference_files import CustomSignature
 from acacore.reference_files import get_actions
@@ -205,6 +208,18 @@ def option_avid():
 
 def option_dry_run():
     return option("--dry-run", is_flag=True, default=False, help="Show changes without committing them.")
+
+
+def open_database(ctx: Context, avid: AVID) -> FilesDB:
+    db = FilesDB(avid.database_path, check_initialisation=False, check_version=True)
+    if not db.is_initialised():
+        raise BadParameter("Database is not initialised.", ctx, ctx_params(ctx)["avid"])
+    try:
+        is_latest(db.connection, raise_on_difference=True)
+    except DatabaseError as e:
+        raise BadParameter(e.args[0], ctx, ctx_params(ctx)["avid"])
+
+    return db
 
 
 def fetch_actions(ctx: Context, parameter_name: str, file: Path | None) -> dict[str, Action]:
