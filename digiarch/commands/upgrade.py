@@ -16,13 +16,11 @@ from click import option
 from click import pass_context
 
 from digiarch.__version__ import __version__
-from digiarch.common import AVID
 from digiarch.common import ctx_params
-from digiarch.common import option_avid
+from digiarch.common import get_avid
 
 
 @command("upgrade", no_args_is_help=True, short_help="Upgrade the database.")
-@option_avid()
 @option(
     "--backup/--no-backup",
     is_flag=True,
@@ -31,13 +29,14 @@ from digiarch.common import option_avid
     help="Backup current version.",
 )
 @pass_context
-def cmd_upgrade(ctx: Context, avid: AVID, backup: bool):
+def cmd_upgrade(ctx: Context, backup: bool):
     """
     Upgrade the files' database to the latest version of acacore.
 
     When using --backup, a copy of the current database version will be created in the same folder with the name
     "avid-{version}.db". The copy will not be created if the database is already at the latest version.
     """
+    avid = get_avid(ctx)
     with FilesDB(avid.database_path, check_initialisation=True, check_version=False) as database:
         log_file, log_stdout, start_event = start_program(ctx, database, __version__, None, True, True, True)
         updated: bool = False

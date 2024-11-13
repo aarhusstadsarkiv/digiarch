@@ -30,7 +30,7 @@ from pydantic import UUID4
 
 from digiarch.__version__ import __version__
 from digiarch.common import AVID
-from digiarch.common import option_avid
+from digiarch.common import get_avid
 
 
 class OldFile(BaseModel):
@@ -153,9 +153,9 @@ def import_log(db: FilesDB, db_old: Connection) -> int:
 
 @command("import", no_args_is_help=True, short_help="Import files.db")
 @argument("FILESDB", type=ClickPath(exists=True, dir_okay=False, readable=True, resolve_path=True), required=True)
-@option_avid()
 @pass_context
-def cmd_import(ctx: Context, avid: AVID, filesdb: str):
+def cmd_import(ctx: Context, filesdb: str):
+    avid = get_avid(ctx)
     filesdb = Path(filesdb)
     if not filesdb.is_relative_to(avid.dirs.original_documents):
         raise BadParameter(

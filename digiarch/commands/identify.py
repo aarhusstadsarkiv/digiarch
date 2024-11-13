@@ -40,8 +40,8 @@ from digiarch.__version__ import __version__
 from digiarch.common import AVID
 from digiarch.common import fetch_actions
 from digiarch.common import fetch_custom_signatures
+from digiarch.common import get_avid
 from digiarch.common import open_database
-from digiarch.common import option_avid
 from digiarch.common import option_dry_run
 from digiarch.query import argument_query
 from digiarch.query import query_to_where
@@ -250,13 +250,11 @@ def grp_identify():
 )
 @option("--exclude", type=str, multiple=True, help="File and folder names to exclude.  [multiple]")
 @option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identofy at a time.")
-@option_avid()
 @option_dry_run()
 @pass_context
 def cmd_identify_original(
     ctx: Context,
     query: TQuery,
-    avid: AVID,
     siegfried_path: str | None,
     siegfried_signature: str,
     siegfried_home: str | None,
@@ -266,6 +264,7 @@ def cmd_identify_original(
     batch_size: int | None,
     dry_run: bool,
 ):
+    avid = get_avid(ctx)
     siegfried, actions, custom_signatures = identify_requirements(
         ctx,
         siegfried_path,

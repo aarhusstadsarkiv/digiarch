@@ -1,5 +1,4 @@
 from logging import INFO
-from pathlib import Path
 
 from acacore.database import FilesDB
 from acacore.database.upgrade import is_latest
@@ -19,23 +18,23 @@ from digiarch.__version__ import __version__
 from digiarch.common import AVID
 
 
-def root_callback(ctx: Context, param: Parameter, value: str):
+def root_callback(ctx: Context, param: Parameter, value: str) -> AVID:
     if not AVID.is_avid_dir(value):
-        raise BadParameter("Not a valid AVID directory.", ctx, param)
-    return Path(value)
+        raise BadParameter(f"{value!r} is not a valid AVID directory.", ctx, param)
+    return AVID(value)
 
 
 @command("init", no_args_is_help=True, short_help="Initialize the database.")
 @argument(
-    "AVID_DIR",
+    "avid",
+    metavar="AVID_DIR",
     type=ClickPath(exists=True, file_okay=False, writable=True, readable=True, resolve_path=True),
     default=None,
     required=True,
     callback=root_callback,
 )
 @pass_context
-def cmd_init(ctx: Context, avid_dir: Path):
-    avid = AVID(avid_dir)
+def cmd_init(ctx: Context, avid: AVID):
     avid.database_path.parent.mkdir(parents=True, exist_ok=True)
 
     with FilesDB(avid.database_path, check_initialisation=False, check_version=False) as db:

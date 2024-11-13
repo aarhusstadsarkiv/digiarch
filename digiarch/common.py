@@ -16,6 +16,7 @@ from click import Context
 from click import option
 from click import Parameter
 from click import Path as ClickPath
+from click import UsageError
 from pydantic import TypeAdapter
 
 
@@ -185,6 +186,16 @@ class AVID:
     @property
     def database_path(self):
         return self.metadata_dir / "avid.db"
+
+
+def get_avid(ctx: Context, path: str | PathLike[str] | None = None) -> AVID:
+    if path is None and (path := AVID.find_database_root(Path.cwd())) is None:
+        raise UsageError(f"No AVID directory found in path {str(Path.cwd())!r}.", ctx)
+    if not AVID.is_avid_dir(path):
+        raise UsageError(f"Not a valid AVID directory {str(path)!r}.", ctx)
+    if not (avid := AVID(path)).database_path.is_file():
+        raise UsageError(f"No {avid.database_path.relative_to(avid.path)} present in {str(path)!r}.", ctx)
+    return avid
 
 
 def option_avid():
