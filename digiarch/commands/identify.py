@@ -184,7 +184,6 @@ def grp_identify():
     default=None,
     required=False,
     show_envvar=True,
-    callback=lambda _ctx, _param, value: Path(value),
     help="The path to the Siegfried executable.",
 )
 @option(
@@ -193,7 +192,6 @@ def grp_identify():
     envvar="SIEGFRIED_HOME",
     required=True,
     show_envvar=True,
-    callback=lambda _ctx, _param, value: Path(value),
     help="The path to the Siegfried home folder.",
 )
 @option(
@@ -210,7 +208,6 @@ def grp_identify():
     envvar="DIGIARCH_ACTIONS",
     show_envvar=True,
     default=None,
-    callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing file format actions.",
 )
 @option(
@@ -220,7 +217,6 @@ def grp_identify():
     envvar="DIGIARCH_CUSTOM_SIGNATURES",
     show_envvar=True,
     default=None,
-    callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing custom signature specifications.",
 )
 @option("--exclude", type=str, multiple=True, help="File and folder names to exclude.  [multiple]")
