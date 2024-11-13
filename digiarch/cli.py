@@ -6,6 +6,7 @@ from PIL import Image
 from .__version__ import __version__
 from .commands.cmd_import import cmd_import
 from .commands.completions import cmd_completions
+from .commands.identify import grp_identify
 from .commands.init import cmd_init
 from .commands.upgrade import cmd_upgrade
 
@@ -20,6 +21,7 @@ def app():
 
 # noinspection DuplicatedCode
 app.add_command(cmd_init, cmd_init.name)
+app.add_command(grp_identify, grp_identify.name)
 app.add_command(cmd_import, cmd_import.name)
 app.add_command(cmd_upgrade, cmd_upgrade.name)
 app.add_command(cmd_completions, cmd_completions.name)
