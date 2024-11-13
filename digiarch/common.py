@@ -14,8 +14,6 @@ from acacore.utils.click import ctx_params
 from click import BadParameter
 from click import Context
 from click import option
-from click import Parameter
-from click import Path as ClickPath
 from click import UsageError
 from pydantic import TypeAdapter
 
@@ -196,25 +194,6 @@ def get_avid(ctx: Context, path: str | PathLike[str] | None = None) -> AVID:
     if not (avid := AVID(path)).database_path.is_file():
         raise UsageError(f"No {avid.database_path.relative_to(avid.path)} present in {str(path)!r}.", ctx)
     return avid
-
-
-def option_avid():
-    def _callback(ctx: Context, param: Parameter, value: str | PathLike[str] | None):
-        if value is None and (value := AVID.find_database_root(Path.cwd())) is None:
-            raise BadParameter(f"No AVID directory found in path {str(Path.cwd())!r}.", ctx, param)
-        if not AVID.is_avid_dir(value):
-            raise BadParameter(f"Not a valid AVID directory {value!r}.", ctx, param)
-        if not (avid := AVID(value)).database_path.is_file():
-            raise BadParameter(f"No _metadata/avid.db present in {value!r}.", ctx, param)
-        return avid
-
-    return option(
-        "--avid-root",
-        "avid",
-        type=ClickPath(exists=True, file_okay=False, writable=True, readable=True, resolve_path=True),
-        default=None,
-        callback=_callback,
-    )
 
 
 def option_dry_run():
