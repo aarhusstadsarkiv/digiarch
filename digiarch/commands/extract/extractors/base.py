@@ -2,18 +2,16 @@ from abc import ABC
 from abc import abstractmethod
 from pathlib import Path
 from typing import ClassVar
-from typing import Generator
 
-from acacore.database import FileDB
 from acacore.exceptions.base import ACAException
-from acacore.models.file import File
+from acacore.models.file import BaseFile
 
 
 class ExtractError(ACAException):
     """Base class for unarchiver exceptions."""
 
-    def __init__(self, file: File, msg: str = "Extraction error", *args: object) -> None:
-        self.file: File = file
+    def __init__(self, file: BaseFile, msg: str = "Extraction error", *args: object) -> None:
+        self.file: BaseFile = file
         self.msg: str = msg
         super().__init__(msg, *args)
 
@@ -33,10 +31,9 @@ class NotPreservableFileError(ExtractError):
 class ExtractorBase(ABC):
     tool_names: ClassVar[list[str]]
 
-    def __init__(self, database: FileDB, file: File, root: Path | None = None) -> None:
-        self.database: FileDB = database
-        self.file: File = file
-        self.file.root = root or self.file.root or database.path.parent.parent
+    def __init__(self, file: BaseFile, root: Path | None = None) -> None:
+        self.file: BaseFile = file
+        self.file.root = root or self.file.root
 
     @property
     def extract_folder(self):
@@ -46,10 +43,10 @@ class ExtractorBase(ABC):
         return path
 
     @abstractmethod
-    def extract(self) -> Generator[tuple[Path, Path], None, None]:
+    def extract(self) -> list[tuple[Path, Path]]:
         """
         Extract files from archive.
 
-        :return: A tuple containing the extracted file path and the original path before sanitization.
+        :return: A list of tuples containing the extracted file path and the original path before sanitization.
         """
         ...
