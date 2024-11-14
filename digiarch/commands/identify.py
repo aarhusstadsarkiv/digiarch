@@ -2,6 +2,7 @@ from itertools import islice
 from logging import ERROR
 from logging import INFO
 from logging import Logger
+from os import PathLike
 from pathlib import Path
 from traceback import format_tb
 from typing import Generator
@@ -106,6 +107,7 @@ def identify_original_file(
     dry_run: bool,
     update: bool,
     parent: UUID | None,
+    original_path: str | PathLike | None,
     *loggers: Logger,
 ):
     errors: list[Event] = []
@@ -139,6 +141,7 @@ def identify_original_file(
             )
         )
 
+    file.original_path = Path(original_path).relative_to(file.root) if original_path else file.relative_path
     existing_file: OriginalFile | None = db.original_files[file]
 
     if existing_file and update:
@@ -162,7 +165,7 @@ def identify_original_file(
             *loggers,
             puid=str(file.puid).ljust(10),
             action=str(file.action).ljust(7),
-            path=file.relative_path.relative_to(avid.dirs.original_documents.name),
+            path=file.relative_path,
         )
 
         for error in errors:
@@ -195,6 +198,7 @@ def identify_original_files(
             dry_run,
             update,
             parent,
+            None,
             *loggers,
         )
 
