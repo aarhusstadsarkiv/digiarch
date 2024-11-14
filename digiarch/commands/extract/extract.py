@@ -28,6 +28,9 @@ from digiarch.commands.identify import identify_requirements
 from digiarch.common import get_avid
 from digiarch.common import open_database
 from digiarch.common import option_dry_run
+from digiarch.query import argument_query
+from digiarch.query import query_to_where
+from digiarch.query import TQuery
 
 from .extractors.base import ExtractError
 from .extractors.base import ExtractorBase
@@ -66,13 +69,10 @@ def find_extractor(file: OriginalFile) -> tuple[Type[ExtractorBase] | None, str 
     return None, file.action_data.extract.tool
 
 
-def next_archive_file(db: FilesDB, offset: int = 0) -> OriginalFile | None:
-    return db.original_files.select(
-        "action = 'extract'",
-        order_by=[("lower(relative_path)", "asc")],
-        limit=1,
-        offset=offset,
-    ).fetchone()
+def next_archive_file(db: FilesDB, query: TQuery, offset: int = 0) -> OriginalFile | None:
+    where, params = query_to_where(query)
+    where = where or "action = 'extract'"
+    return db.original_files.select(where, params, [("lower(relative_path)", "asc")], 1, offset).fetchone()
 
 
 def handle_extract_error(
@@ -109,6 +109,7 @@ def handle_extract_error(
 
 
 @command("extract", short_help="Unpack archives.")
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @option(
     "--siegfried-path",
     type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
@@ -155,6 +156,7 @@ def handle_extract_error(
 @pass_context
 def cmd_extract(
     ctx: Context,
+    query: TQuery,
     siegfried_path: str | None,
     siegfried_signature: str,
     siegfried_home: str | None,
@@ -186,7 +188,7 @@ def cmd_extract(
         offset: int = 0
 
         with ExceptionManager(BaseException) as exception:
-            while archive_file := next_archive_file(db, offset):
+            while archive_file := next_archive_file(db, query, offset):
                 archive_file.root = avid.path
                 extractor_cls, extractor_tool = find_extractor(archive_file)
 
@@ -213,7 +215,12 @@ def cmd_extract(
 
                 try:
                     extracted_files_paths = extractor.extract()
-                    event = Event.from_command(ctx, "unpacked", (archive_file.uuid, "original"))
+                    event = Event.from_command(
+                        ctx,
+                        "unpacked",
+                        (archive_file.uuid, "original"),
+                        len(extracted_files_paths),
+                    )
                     event.log(INFO, log_stdout, files=len(extracted_files_paths), path=archive_file.relative_path)
                     db.log.insert(event)
                 except ExtractError as err:
