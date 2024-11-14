@@ -2,6 +2,7 @@ from os import PathLike
 from pathlib import Path
 from re import match
 from sqlite3 import DatabaseError
+from tempfile import TemporaryDirectory
 
 import yaml
 from acacore.database import FilesDB
@@ -184,6 +185,16 @@ class AVID:
     @property
     def database_path(self):
         return self.metadata_dir / "avid.db"
+
+
+class TempDir(TemporaryDirectory):
+    prefix: str = ".tmp_digiarch_"
+
+    def __init__(self, parent_dir: str | PathLike) -> None:
+        super().__init__(dir=parent_dir, prefix=self.prefix)
+
+    def __enter__(self) -> Path:
+        return Path(self.name)
 
 
 def get_avid(ctx: Context, path: str | PathLike[str] | None = None) -> AVID:
