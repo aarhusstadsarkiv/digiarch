@@ -87,7 +87,7 @@ def find_files_query(
     while batch := table.select(
         where,
         parameters,
-        order_by=[("relative_path", "asc")],
+        order_by=[("lower(relative_path)", "asc")],
         limit=batch_size,
         offset=offset,
     ).fetchall():
