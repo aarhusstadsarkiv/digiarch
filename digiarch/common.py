@@ -1,3 +1,4 @@
+from functools import reduce
 from os import PathLike
 from pathlib import Path
 from re import match
@@ -17,6 +18,8 @@ from click import Context
 from click import option
 from click import UsageError
 from pydantic import TypeAdapter
+
+_invalid_characters: str = '\\/%&${}[]<>*?":|' + bytes(range(32)).decode("ascii") + "\x7f"
 
 
 # noinspection PyPep8Naming
@@ -221,6 +224,14 @@ def open_database(ctx: Context, avid: AVID) -> FilesDB:
         raise BadParameter(e.args[0], ctx, ctx_params(ctx)["avid"])
 
     return db
+
+
+def sanitize_filename(name: str) -> str:
+    return reduce(lambda acc, cur: acc.replace(cur, "_"), _invalid_characters, name.strip().replace("/", "_"))
+
+
+def sanitize_path(path: str | PathLike) -> Path:
+    return Path(*[sanitize_filename(p) for p in Path(path).parts])
 
 
 def fetch_actions(ctx: Context, parameter_name: str, file: str | PathLike | None) -> dict[str, Action]:
