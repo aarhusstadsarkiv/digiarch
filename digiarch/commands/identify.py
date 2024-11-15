@@ -123,12 +123,7 @@ def identify_original_file(
         )
 
     if error.exception:
-        file = OriginalFile.from_file(
-            siegfried_file.filename,
-            avid.path,
-            siegfried_file,
-            parent=parent,
-        )
+        file = OriginalFile.from_file(siegfried_file.filename, avid.path, siegfried_file, parent=parent)
         file.action = "manual"
         file.action_data = ActionData(manual=ManualAction(reason=repr(error.exception), process=""))
         errors.append(
