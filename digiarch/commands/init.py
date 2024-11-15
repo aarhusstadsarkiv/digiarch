@@ -106,26 +106,6 @@ def import_original_files(
     return imported_original_files, imported_master_files
 
 
-def import_log(db: FilesDB, db_old: Connection) -> int:
-    log_cur = db_old.execute("select * from History")
-    log_cur.row_factory = Row
-    imported_events: int = 0
-
-    for event_row in log_cur:
-        event = Event(
-            file_uuid=event_row["uuid"],
-            file_type="original" if event_row["uuid"] else None,
-            time=event_row["time"],
-            operation=event_row["operation"],
-            data=loads(event_row["data"]) if event_row["data"] else None,
-            reason=event_row["reason"],
-        )
-        db.log.insert(event)
-        imported_events += 1
-
-    return imported_events
-
-
 def import_db(
     ctx: Context,
     avid: AVID,
@@ -135,18 +115,14 @@ def import_db(
 ):
     db_old = connect(import_db_path)
 
-    Event.from_command(ctx, "import.files:start").log(INFO, *loggers)
+    Event.from_command(ctx, "import:start").log(INFO, *loggers)
     new_original_files, new_master_files = import_original_files(ctx, avid, db, db_old, *loggers)
-    Event.from_command(ctx, "import.files:end").log(
+    Event.from_command(ctx, "import:end").log(
         INFO,
         *loggers,
         original_files=new_original_files,
         master_files=new_master_files,
     )
-
-    Event.from_command(ctx, "import.log:start").log(INFO, *loggers)
-    new_events = import_log(db, db_old)
-    Event.from_command(ctx, "import.log:end").log(INFO, *loggers, events=new_events)
 
 
 @command("init", no_args_is_help=True, short_help="Initialize the database.")
