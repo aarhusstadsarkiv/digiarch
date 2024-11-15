@@ -37,9 +37,9 @@ def commands_completion(ctx: Context, param: Option, incomplete: str) -> list[Co
 def cmd_help(ctx: Context, commands: tuple[str, ...]):
     """Show the help for a command."""
     app = ctx.find_root().command
+    cmds = [c for c in commands if not c.startswith("-")]
 
     try:
-        cmds = [c for c in commands if not c.startswith("-")]
         cmd = reduce(lambda a, c: a.commands[c] if isinstance(a, Group) else a, cmds, app)
         print(cmd.get_help(app.make_context(cmd.name, cmds, ctx.parent)))
     except (KeyError, AttributeError):
