@@ -194,3 +194,6 @@ def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
                 import_db(ctx, avid, db, import_db_path, log_stdout)
 
         end_program(ctx, db, exception, not initialized, log_stdout)
+
+    if initialized and exception.exception:
+        avid.database_path.unlink(missing_ok=True)
