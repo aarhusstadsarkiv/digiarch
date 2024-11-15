@@ -71,12 +71,13 @@ def import_original_files(
     db: FilesDB,
     db_old: Connection,
     *loggers: Logger,
-) -> tuple[int, int]:
+) -> tuple[int, int, int]:
     original_files_cur = db_old.execute("select * from Files")
     original_files_cur.row_factory = Row
 
-    imported_original_files: int = 0
-    imported_master_files: int = 0
+    total_imported_original_files: int = 0
+    total_imported_master_files: int = 0
+    total_missing_master_files: int = 0
 
     for original_file_row in original_files_cur:
         original_file, master_files, missing_master_files = import_original_file(avid, original_file_row)
@@ -100,10 +101,11 @@ def import_original_files(
                 *loggers,
                 name=missing_master_file,
             )
-        imported_original_files += 1
-        imported_master_files += len(master_files)
+        total_imported_original_files += 1
+        total_imported_master_files += len(master_files)
+        total_missing_master_files += len(missing_master_files)
 
-    return imported_original_files, imported_master_files
+    return total_imported_original_files, total_imported_master_files, total_missing_master_files
 
 
 def import_db(
@@ -116,13 +118,28 @@ def import_db(
     db_old = connect(import_db_path)
 
     Event.from_command(ctx, "import:start").log(INFO, *loggers)
-    new_original_files, new_master_files = import_original_files(ctx, avid, db, db_old, *loggers)
+    new_original_files, new_master_files, missing_master_files = import_original_files(ctx, avid, db, db_old, *loggers)
     Event.from_command(ctx, "import:end").log(
         INFO,
         *loggers,
         original_files=new_original_files,
         master_files=new_master_files,
+        missing_master_files=missing_master_files,
     )
+
+    db.log.insert(
+        Event.from_command(
+            ctx,
+            "import",
+            None,
+            {
+                "original_files": new_original_files,
+                "master_files": new_master_files,
+                "missing_master_files": missing_master_files,
+            },
+        )
+    )
+    db.commit()
 
 
 @command("init", no_args_is_help=True, short_help="Initialize the database.")
