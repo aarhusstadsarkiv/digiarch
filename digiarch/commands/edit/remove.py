@@ -63,31 +63,33 @@ def reset_parent_processed(db: FilesDB, file: BaseFile):
         parent_table.update(parent_file)
 
 
+def remove_child(
+    ctx: Context,
+    avid: AVID,
+    db: FilesDB,
+    table: Table[BaseFile],
+    file: BaseFile,
+    file_type: Literal["original", "master", "access", "statutory"],
+    *loggers: Logger,
+):
+    file.get_absolute_path(avid.path).unlink(missing_ok=True)
+    remove_empty_dir(avid.path, file.get_absolute_path(avid.path).parent)
+    table.delete(file)
+    event = Event.from_command(ctx, "delete", (file.uuid, file_type), file.model_dump(mode="json"))
+    db.log.insert(event)
+    event.log(INFO, *loggers, show_args=["uuid"], path=file.relative_path)
+
+
 def remove_children(ctx: Context, avid: AVID, db: FilesDB, file: BaseFile, *loggers: Logger) -> None:
     if isinstance(file, OriginalFile):
         for child in db.master_files.select({"original_uuid": str(file.uuid)}):
-            child.get_absolute_path(avid.path).unlink(missing_ok=True)
-            remove_empty_dir(avid.path, child.get_absolute_path().parent)
-            db.master_files.delete(child)
-            event = Event.from_command(ctx, "delete", (child.uuid, "master"), child.model_dump(mode="json"))
-            db.log.insert(event)
-            event.log(INFO, *loggers, show_args=["uuid"], path=child.relative_path)
+            remove_child(ctx, avid, db, db.master_files, child, "master", *loggers)
             remove_children(ctx, avid, db, child)
     elif isinstance(file, MasterFile):
         for child in db.access_files.select({"original_uuid": str(file.uuid)}):
-            child.get_absolute_path(avid.path).unlink(missing_ok=True)
-            remove_empty_dir(avid.path, child.get_absolute_path().parent)
-            db.access_files.delete(child)
-            event = Event.from_command(ctx, "delete", (child.uuid, "access"), child.model_dump(mode="json"))
-            db.log.insert(event)
-            event.log(INFO, *loggers, show_args=["uuid"], path=child.relative_path)
+            remove_child(ctx, avid, db, db.access_files, child, "access", *loggers)
         for child in db.statutory_files.select({"original_uuid": str(file.uuid)}):
-            child.get_absolute_path(avid.path).unlink(missing_ok=True)
-            remove_empty_dir(avid.path, child.get_absolute_path().parent)
-            db.statutory_files.delete(child)
-            event = Event.from_command(ctx, "delete", (child.uuid, "statutory"), child.model_dump(mode="json"))
-            db.log.insert(event)
-            event.log(INFO, *loggers, show_args=["uuid"], path=child.relative_path)
+            remove_child(ctx, avid, db, db.statutory_files, child, "statutory", *loggers)
 
 
 @command("remove", no_args_is_help=True, short_help="Remove files.")
