@@ -1,17 +1,22 @@
 from functools import reduce
+from http.client import HTTPResponse
 from os import PathLike
 from pathlib import Path
 from re import match
 from sqlite3 import DatabaseError
 from tempfile import TemporaryDirectory
+from typing import Any
+from typing import Type
+from typing import TypeVar
+from urllib.error import HTTPError
+from urllib.request import urlopen
 
 import yaml
 from acacore.database import FilesDB
 from acacore.database.upgrade import is_latest
 from acacore.models.reference_files import Action
 from acacore.models.reference_files import CustomSignature
-from acacore.reference_files import get_actions
-from acacore.reference_files import get_custom_signatures
+from acacore.models.reference_files import MasterConvertAction
 from acacore.utils.click import ctx_params
 from click import BadParameter
 from click import Context
@@ -20,6 +25,7 @@ from click import UsageError
 from pydantic import TypeAdapter
 
 _invalid_characters: str = '\\/%&${}[]<>*?":|' + bytes(range(32)).decode("ascii") + "\x7f"
+T = TypeVar("T")
 
 
 # noinspection PyPep8Naming
@@ -234,33 +240,56 @@ def sanitize_path(path: str | PathLike) -> Path:
     return Path(*[sanitize_filename(p) for p in Path(path).parts])
 
 
-def fetch_actions(ctx: Context, parameter_name: str, file: str | PathLike | None) -> dict[str, Action]:
+def get_yaml(url: str) -> Any:  # noqa: ANN401
+    response: HTTPResponse = urlopen(url)
+    if response.getcode() != 200:
+        raise HTTPError(url, response.getcode(), "", response.headers, response)
+    return yaml.load(response.read(), yaml.Loader)
+
+
+def fetch_reference_files(ctx: Context, adapter: Type[T], file: str | PathLike | None, url: str, parameter: str) -> T:
     if file:
         try:
-            with open(file) as fh:
-                return TypeAdapter(dict[str, Action]).validate_python(yaml.load(fh, yaml.Loader))
+            data = yaml.load(Path(file).read_text(), yaml.Loader)
         except BaseException:
-            raise BadParameter("Invalid actions file.", ctx, ctx_params(ctx)[parameter_name])
-
-    try:
-        return get_actions()
-    except BaseException as err:
-        raise BadParameter(
-            f"Cannot download actions. {err.args[0] if err.args else ''}", ctx, ctx_params(ctx)[parameter_name]
-        )
-
-
-def fetch_custom_signatures(ctx: Context, parameter_name: str, file: str | PathLike | None) -> list[CustomSignature]:
-    if file:
+            raise BadParameter(f"Cannot load file {file}", ctx, ctx_params(ctx)[parameter])
+    else:
         try:
-            with open(file) as fh:
-                return TypeAdapter(list[CustomSignature]).validate_python(yaml.load(fh, yaml.Loader))
+            data = get_yaml(url)
         except BaseException:
-            raise BadParameter("Invalid custom signatures file.", ctx, ctx_params(ctx)[parameter_name])
+            raise BadParameter(f"Cannot download file from url {url!r}", ctx, ctx_params(ctx)[parameter])
 
     try:
-        return get_custom_signatures()
+        return TypeAdapter(adapter).validate_python(data)
     except BaseException as err:
-        raise BadParameter(
-            f"Cannot download actions. {err.args[0] if err.args else ''}", ctx, ctx_params(ctx)[parameter_name]
-        )
+        raise BadParameter(f"Invalid data. {''.join(err.args[:1])}", ctx, ctx_params(ctx)[parameter])
+
+
+def fetch_actions(ctx: Context, parameter: str, file: str | PathLike | None) -> dict[str, Action]:
+    return fetch_reference_files(
+        ctx,
+        dict[str, Action],
+        file,
+        "https://github.com/aarhusstadsarkiv/reference-files/releases/latest/download/fileformats.yml",
+        parameter,
+    )
+
+
+def fetch_actions_master(ctx: Context, parameter: str, file: str | PathLike | None) -> dict[str, MasterConvertAction]:
+    return fetch_reference_files(
+        ctx,
+        dict[str, MasterConvertAction],
+        file,
+        "https://github.com/aarhusstadsarkiv/reference-files/releases/latest/download/fileformats_master.yml",
+        parameter,
+    )
+
+
+def fetch_custom_signatures(ctx: Context, parameter: str, file: str | PathLike | None) -> list[CustomSignature]:
+    return fetch_reference_files(
+        ctx,
+        list[CustomSignature],
+        file,
+        "https://github.com/aarhusstadsarkiv/reference-files/releases/latest/download/custom_signatures.yml",
+        parameter,
+    )
