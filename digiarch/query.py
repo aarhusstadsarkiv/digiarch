@@ -1,16 +1,20 @@
 from re import compile as re_compile
 from typing import Any
 from typing import Callable
+from typing import Generator
 from typing import Type
 from typing import TypeVar
 
+from acacore.database.table import Table
 from click import argument
 from click import BadParameter
 from click import ClickException
 from click import Context
 from click import MissingParameter
 from click import Parameter
+from pydantic import BaseModel
 
+M = TypeVar("M", bound=BaseModel)
 FC = TypeVar("FC", bound=Callable[..., Any])
 TQuery = list[tuple[str, str | bool | Type[Ellipsis] | None, bool]]
 
@@ -109,3 +113,13 @@ def argument_query(required: bool, default: str, allowed_fields: list[str] | Non
             raise BadParameter(repr(err), ctx, param)
 
     return argument("QUERY", nargs=1, required=required, callback=callback)
+
+
+def query_table(
+    table: Table[M],
+    query: TQuery,
+    order_by: list[tuple[str, str]] | None = None,
+    limit: int | None = None,
+) -> Generator[M, None, None]:
+    where, parameters = query_to_where(query)
+    yield from table.select(where, parameters, order_by, limit)
