@@ -13,7 +13,6 @@ from urllib.request import urlopen
 
 import yaml
 from acacore.database import FilesDB
-from acacore.database.upgrade import is_latest
 from acacore.models.reference_files import Action
 from acacore.models.reference_files import CustomSignature
 from acacore.models.reference_files import MasterConvertAction
@@ -221,15 +220,10 @@ def option_dry_run():
 
 
 def open_database(ctx: Context, avid: AVID) -> FilesDB:
-    db = FilesDB(avid.database_path, check_initialisation=False, check_version=True)
-    if not db.is_initialised():
-        raise BadParameter("Database is not initialised.", ctx, ctx_params(ctx)["avid"])
     try:
-        is_latest(db.connection, raise_on_difference=True)
+        return FilesDB(avid.database_path, check_initialisation=True, check_version=True)
     except DatabaseError as e:
         raise BadParameter(e.args[0], ctx, ctx_params(ctx)["avid"])
-
-    return db
 
 
 def sanitize_filename(name: str) -> str:
