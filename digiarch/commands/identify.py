@@ -291,6 +291,8 @@ def command_identify(
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
     with FileDB(db_path) as database:
+        if not database.is_initialised():
+            database.init()
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, False)
         database.init()
 
