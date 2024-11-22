@@ -181,6 +181,7 @@ def cmd_remove_original(
 @argument("file_type", type=Choice(["original", "master", "access", "statutory"]), required=True)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed"])
 @argument("reason", nargs=1, type=str, required=True)
+@option("--reset-processed", is_flag=True, default=False, help="Reset processed status of parent files.")
 @option_dry_run()
 @pass_context
 def cmd_remove_master(
