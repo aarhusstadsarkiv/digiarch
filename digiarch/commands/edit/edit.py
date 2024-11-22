@@ -1,5 +1,6 @@
 from click import group
 
+from .lock import cmd_lock_original
 from .processed import cmd_processed_master
 from .processed import cmd_processed_original
 
@@ -52,6 +53,7 @@ def grp_edit_master():
 
 
 grp_edit_original.add_command(cmd_processed_original, cmd_processed_original.name)
+grp_edit_original.add_command(cmd_lock_original, cmd_lock_original.name)
 
 grp_edit_master.add_command(cmd_processed_master, cmd_processed_master.name)
 
