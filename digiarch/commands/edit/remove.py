@@ -7,15 +7,12 @@ from acacore.database import FilesDB
 from acacore.database.table import Table
 from acacore.models.event import Event
 from acacore.models.file import BaseFile
-from acacore.models.file import ConvertedFile
 from acacore.models.file import MasterFile
 from acacore.models.file import OriginalFile
-from acacore.utils.click import ctx_params
 from acacore.utils.click import end_program
 from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
 from click import argument
-from click import BadParameter
 from click import Choice
 from click import command
 from click import Context
@@ -92,25 +89,64 @@ def remove_children(ctx: Context, avid: AVID, db: FilesDB, file: BaseFile, *logg
             remove_child(ctx, avid, db, db.statutory_files, child, "statutory", *loggers)
 
 
+def remove_files(
+    ctx: Context,
+    avid: AVID,
+    database: FilesDB,
+    table: Table[BaseFile],
+    query: TQuery,
+    file_type: Literal["original", "master", "access", "statutory"],
+    reason: str,
+    delete: bool,
+    reset_processed: bool,
+    dry_run: bool,
+    *loggers: Logger,
+) -> None:
+    while files := list(query_table(table, query, [("lower(relative_path)", "asc")], 100)):
+        for file in files:
+            event = Event.from_command(
+                ctx,
+                "delete" if delete else "remove",
+                (file.uuid, file_type),
+                file.model_dump(mode="json"),
+                reason,
+            )
+
+            event.log(INFO, *loggers, show_args=["uuid"], path=file.relative_path)
+
+            if dry_run:
+                continue
+
+            table.delete(file)
+            database.log.insert(event)
+
+            if delete:
+                file.root = avid.path
+                file.get_absolute_path().unlink(missing_ok=True)
+                remove_empty_dir(avid.path, file.get_absolute_path().parent)
+
+            remove_children(ctx, avid, database, file)
+
+            if reset_processed:
+                reset_parent_processed(database, file)
+
+
 @command("remove", no_args_is_help=True, short_help="Remove files.")
 @argument("file_type", type=Choice(["original", "master", "access", "statutory"]), required=True)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--delete", is_flag=True, default=False, help="Remove selected files from the disk.")
-@option("--reset-processed", is_flag=True, default=False, help="Reset processed status of parent files.")
 @option_dry_run()
 @pass_context
-def command_remove(
+def cmd_remove_original(
     ctx: Context,
-    file_type: Literal["original", "master"],
     reason: str,
     query: TQuery,
     delete: bool,
-    reset_processed: bool,
     dry_run: bool,
 ):
     """
-    Remove one or more files in the files' database for the ROOT folder to EXTENSION.
+    Remove one or more original files in the files' database for the ROOT folder to EXTENSION.
 
     Using the --delete option removes the files from the disk.
 
@@ -122,46 +158,65 @@ def command_remove(
 
     with open_database(ctx, avid) as database:
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
-        table: Table[OriginalFile | ConvertedFile]
-
-        if file_type == "original":
-            table = database.original_files
-        elif file_type == "master":
-            table = database.master_files
-        elif file_type == "access":
-            table = database.access_files
-        elif file_type == "statutory":
-            table = database.statutory_files
-        else:
-            raise BadParameter(f"invalid file type {file_type!r}", ctx, ctx_params(ctx)["file_type"])
 
         with ExceptionManager(BaseException) as exception:
-            while files := list(query_table(table, query, [("lower(relative_path)", "asc")], 100)):
-                for file in files:
-                    event = Event.from_command(
-                        ctx,
-                        "delete" if delete else "remove",
-                        (file.uuid, file_type),
-                        file.model_dump(mode="json"),
-                        reason,
-                    )
+            remove_files(
+                ctx,
+                avid,
+                database,
+                database.original_files,
+                query,
+                "original",
+                reason,
+                delete,
+                False,
+                dry_run,
+                log_stdout,
+            )
 
-                    event.log(INFO, log_stdout, show_args=["uuid"], path=file.relative_path)
+        end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
-                    if dry_run:
-                        continue
 
-                    table.delete(file)
-                    database.log.insert(event)
+@command("remove", no_args_is_help=True, short_help="Remove files.")
+@argument("file_type", type=Choice(["original", "master", "access", "statutory"]), required=True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed"])
+@argument("reason", nargs=1, type=str, required=True)
+@option_dry_run()
+@pass_context
+def cmd_remove_master(
+    ctx: Context,
+    reason: str,
+    query: TQuery,
+    reset_processed: bool,
+    dry_run: bool,
+):
+    """
+    Remove one or more master files in the files' database for the ROOT folder to EXTENSION.
 
-                    if delete:
-                        file.root = avid.path
-                        file.get_absolute_path().unlink(missing_ok=True)
-                        remove_empty_dir(avid.path, file.get_absolute_path().parent)
+    Files are delete from the database and the disk.
 
-                    remove_children(ctx, avid, database, file)
+    To see the changes without committing them, use the --dry-run option.
 
-                    if reset_processed:
-                        reset_parent_processed(database, file)
+    For details on the QUERY argument, see the edit command.
+    """
+    avid = get_avid(ctx)
+
+    with open_database(ctx, avid) as database:
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            remove_files(
+                ctx,
+                avid,
+                database,
+                database.master_files,
+                query,
+                "master",
+                reason,
+                True,
+                reset_processed,
+                dry_run,
+                log_stdout,
+            )
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
