@@ -5,6 +5,7 @@ from PIL import Image
 
 from .__version__ import __version__
 from .commands.completions import cmd_completions
+from .commands.edit.edit import grp_edit
 from .commands.extract.extract import cmd_extract
 from .commands.help import cmd_help
 from .commands.identify import grp_identify
@@ -24,6 +25,7 @@ def app():
 app.add_command(cmd_init, cmd_init.name)
 app.add_command(grp_identify, grp_identify.name)
 app.add_command(cmd_extract, cmd_extract.name)
+app.add_command(grp_edit, grp_edit.name)
 app.add_command(cmd_upgrade, cmd_upgrade.name)
 app.add_command(cmd_help, cmd_help.name)
 app.add_command(cmd_completions, cmd_completions.name)
