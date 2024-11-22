@@ -18,7 +18,7 @@ from .common import edit_file_value
 
 
 # noinspection DuplicatedCode
-@command("original", no_args_is_help=True, short_help="Set original files as processed.")
+@command("processed", no_args_is_help=True, short_help="Set original files as processed.")
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option(
@@ -62,7 +62,7 @@ def cmd_processed_original(ctx: Context, query: TQuery, reason: str, processed: 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@command("master", no_args_is_help=True, short_help="Set master files as processed.")
+@command("processed", no_args_is_help=True, short_help="Set master files as processed.")
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed"])
 @argument("reason", nargs=1, type=str, required=True)
 @option(
