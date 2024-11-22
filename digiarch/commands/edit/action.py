@@ -3,9 +3,9 @@ from logging import Logger
 from pathlib import Path
 from typing import Any
 
-from acacore.database import FileDB
-from acacore.models.file import File
-from acacore.models.history import HistoryEntry
+from acacore.database import FilesDB
+from acacore.models.event import Event
+from acacore.models.file import OriginalFile
 from acacore.models.reference_files import ActionData
 from acacore.models.reference_files import ConvertAction
 from acacore.models.reference_files import ExtractAction
@@ -14,7 +14,6 @@ from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import TActionType
 from acacore.models.reference_files import TemplateTypeEnum
 from acacore.models.reference_files import TTemplateType
-from acacore.utils.click import check_database_version
 from acacore.utils.click import end_program
 from acacore.utils.click import param_callback_regex
 from acacore.utils.click import start_program
@@ -32,38 +31,38 @@ from click import Path as ClickPath
 from pydantic import BaseModel
 
 from digiarch.__version__ import __version__
-from digiarch.common import argument_root
 from digiarch.common import ctx_params
 from digiarch.common import fetch_actions
+from digiarch.common import get_avid
+from digiarch.common import open_database
 from digiarch.common import option_dry_run
-
-from .common import argument_query
-from .common import find_files
-from .common import TQuery
+from digiarch.query import argument_query
+from digiarch.query import query_table
+from digiarch.query import TQuery
 
 
 def set_lock(
     ctx: Context,
-    database: FileDB,
-    file: File,
+    database: FilesDB,
+    file: OriginalFile,
     reason: str,
     dry_run: bool,
     *loggers: Logger,
 ):
     if file.lock is True:
         return
-    event = HistoryEntry.command_history(ctx, "lock", file.uuid, [file.lock, True], reason)
+    event = Event.from_command(ctx, "lock", (file.uuid, "original"), [file.lock, True], reason)
     file.lock = True
     if not dry_run:
-        database.files.update(file, {"uuid": file.uuid})
-        database.history.insert(event)
-    event.log(INFO, *loggers)
+        database.original_files.update(file)
+        database.log.insert(event)
+    event.log(INFO, *loggers, show_args=["uuid", "data"])
 
 
 def set_action(
     ctx: Context,
-    database: FileDB,
-    file: File,
+    database: FilesDB,
+    file: OriginalFile,
     action: TActionType,
     action_data: BaseModel | dict,
     reason: str,
@@ -73,26 +72,35 @@ def set_action(
     if not isinstance(action_data, dict):
         action_data = action_data.model_dump()
     if file.action == action and file.action_data.model_dump().get(action) == action_data:
-        HistoryEntry.command_history(ctx, "skip", file.uuid, None, "No changes").log(*loggers)
+        Event.from_command(ctx, "skip", (file.uuid, "original"), [file.action, action], "No changes").log(
+            INFO,
+            *loggers,
+            show_args=["uuid", "data"],
+        )
         return
     old_action: dict[TActionType, dict | None] = {action: file.action_data.model_dump().get(action)}
     new_action: dict[TActionType, dict] = {action: action_data}
-    event = HistoryEntry.command_history(ctx, "edit", file.uuid, [file.action, action, old_action, new_action], reason)
+    event = Event.from_command(
+        ctx,
+        "edit",
+        (file.uuid, "original"),
+        [file.action, action, old_action, new_action],
+        reason,
+    )
     file.action = action
     file.action_data = ActionData.model_validate(file.action_data.model_dump() | new_action)
     if not dry_run:
-        database.files.update(file, {"uuid": file.uuid})
-        database.history.insert(event)
-    event.log(INFO, *loggers)
+        database.original_files.update(file, {"uuid": file.uuid})
+        database.log.insert(event)
+    event.log(INFO, *loggers, show_args=["uuid", "data"])
 
 
 @group("action")
-def group_action():
+def grp_action_original():
     """Change file actions."""
 
 
-@group_action.command("convert", no_args_is_help=True, short_help="Set convert action.")
-@argument_root(True)
+@grp_action_original.command("convert", no_args_is_help=True, short_help="Set convert action.")
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--tool", type=str, required=True, help="The tool to use for conversion.")
@@ -106,11 +114,10 @@ def group_action():
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
-def action_convert(
+def cmd_action_original_convert(
     ctx: Context,
-    root: Path,
-    reason: str,
     query: TQuery,
+    reason: str,
     tool: str,
     output: str | None,
     lock: bool,
@@ -132,13 +139,13 @@ def action_convert(
 
     data = ConvertAction(tool=tool, output=output)
 
-    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
+    avid = get_avid(ctx)
 
-    with FileDB(db_path) as database:
+    with open_database(ctx, avid) as database:
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, query):
+            for file in query_table(database.original_files, query, [("lower(relative_path)", "asc")]):
                 set_action(ctx, database, file, "convert", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -146,8 +153,7 @@ def action_convert(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@group_action.command("extract", no_args_is_help=True, short_help="Set extract action.")
-@argument_root(True)
+@grp_action_original.command("extract", no_args_is_help=True, short_help="Set extract action.")
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--tool", type=str, required=True, help="The tool to use for extraction.")
@@ -160,11 +166,10 @@ def action_convert(
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
-def action_extract(
+def cmd_action_original_extract(
     ctx: Context,
-    root: Path,
-    reason: str,
     query: TQuery,
+    reason: str,
     tool: str,
     extension: str | None,
     lock: bool,
@@ -181,13 +186,13 @@ def action_extract(
     """
     data = ExtractAction(tool=tool, extension=extension)
 
-    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
+    avid = get_avid(ctx)
 
-    with FileDB(db_path) as database:
+    with open_database(ctx, avid) as database:
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, query):
+            for file in query_table(database.original_files, query, [("lower(relative_path)", "asc")]):
                 set_action(ctx, database, file, "extract", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -195,8 +200,7 @@ def action_extract(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@group_action.command("manual", no_args_is_help=True, short_help="Set manual action.")
-@argument_root(True)
+@grp_action_original.command("manual", no_args_is_help=True, short_help="Set manual action.")
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option(
@@ -217,11 +221,10 @@ def action_extract(
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
-def action_manual(
+def cmd_action_original_manual(
     ctx: Context,
-    root: Path,
-    reason: str,
     query: TQuery,
+    reason: str,
     data_reason: str | None,
     process: str,
     lock: bool,
@@ -238,13 +241,13 @@ def action_manual(
     """
     data = ManualAction(reason=data_reason, process=process)
 
-    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
+    avid = get_avid(ctx)
 
-    with FileDB(db_path) as database:
+    with open_database(ctx, avid) as database:
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, query):
+            for file in query_table(database.original_files, query, [("lower(relative_path)", "asc")]):
                 set_action(ctx, database, file, "manual", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -252,8 +255,7 @@ def action_manual(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@group_action.command("ignore", no_args_is_help=True, short_help="Set ignore action.")
-@argument_root(True)
+@grp_action_original.command("ignore", no_args_is_help=True, short_help="Set ignore action.")
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option(
@@ -274,11 +276,10 @@ def action_manual(
 @option_dry_run()
 @pass_context
 @docstring_format(templates="\n".join(f"    * {t}" for t in TemplateTypeEnum).strip())
-def action_ignore(
+def cmd_action_original_ignore(
     ctx: Context,
-    root: Path,
-    reason: str,
     query: TQuery,
+    reason: str,
     template: TTemplateType,
     data_reason: str | None,
     lock: bool,
@@ -304,13 +305,13 @@ def action_ignore(
 
     data = IgnoreAction(template=template, reason=data_reason)
 
-    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
+    avid = get_avid(ctx)
 
-    with FileDB(db_path) as database:
+    with open_database(ctx, avid) as database:
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, query):
+            for file in query_table(database.original_files, query, [("lower(relative_path)", "asc")]):
                 set_action(ctx, database, file, "ignore", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -318,8 +319,7 @@ def action_ignore(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@group_action.command("copy", no_args_is_help=True, short_help="Copy action from a format.")
-@argument_root(True)
+@grp_action_original.command("copy", no_args_is_help=True, short_help="Copy action from a format.")
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("puid", nargs=1, type=str, required=True)
 @argument("action", type=Choice(["convert", "extract", "manual", "ignore"]))
@@ -337,9 +337,8 @@ def action_ignore(
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
-def command_copy(
+def cmd_action_original_copy(
     ctx: Context,
-    root: Path,
     puid: str,
     action: TActionType,
     reason: str,
@@ -366,23 +365,23 @@ def command_copy(
 
     For details on the QUERY argument, see the edit command.
     """  # noqa: D301
-    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
+    avid = get_avid(ctx)
 
-    actions = fetch_actions(ctx, "actions_file", actions_file)
+    with open_database(ctx, avid) as database:
+        actions = fetch_actions(ctx, "actions_file", actions_file)
 
-    if not (action_model := actions.get(puid)):
-        raise BadParameter(f"Format {puid} not found.", ctx, ctx_params(ctx)["puid"])
+        if not (action_model := actions.get(puid)):
+            raise BadParameter(f"Format {puid} not found.", ctx, ctx_params(ctx)["puid"])
 
-    action_data: dict[str, Any] = action_model.action_data.model_dump()
+        action_data: dict[str, Any] = action_model.action_data.model_dump()
 
-    if not (data := action_data.get(action)):
-        raise BadParameter(f"Action {action} not found in {puid}.", ctx, ctx_params(ctx)["puid"])
+        if not (data := action_data.get(action)):
+            raise BadParameter(f"Action {action} not found in {puid}.", ctx, ctx_params(ctx)["puid"])
 
-    with FileDB(db_path) as database:
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, query):
+            for file in query_table(database.original_files, query, [("lower(relative_path)", "asc")]):
                 set_action(ctx, database, file, action, data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
@@ -390,4 +389,4 @@ def command_copy(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-group_action.list_commands = lambda _ctx: list(group_action.commands)
+grp_action_original.list_commands = lambda _ctx: list(grp_action_original.commands)

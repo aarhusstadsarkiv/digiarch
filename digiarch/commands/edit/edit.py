@@ -1,5 +1,6 @@
 from click import group
 
+from .action import grp_action_original
 from .lock import cmd_lock_original
 from .processed import cmd_processed_master
 from .processed import cmd_processed_original
@@ -56,6 +57,7 @@ def grp_edit_master():
 
 
 # noinspection DuplicatedCode
+grp_edit_original.add_command(grp_action_original, grp_action_original.name)
 grp_edit_original.add_command(cmd_processed_original, cmd_processed_original.name)
 grp_edit_original.add_command(cmd_lock_original, cmd_lock_original.name)
 grp_edit_original.add_command(cmd_rename_original, cmd_rename_original.name)
