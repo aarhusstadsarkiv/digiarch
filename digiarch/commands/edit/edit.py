@@ -5,6 +5,7 @@ from .processed import cmd_processed_master
 from .processed import cmd_processed_original
 from .remove import cmd_remove_master
 from .remove import cmd_remove_original
+from .rename import cmd_rename_original
 
 
 @group("edit", no_args_is_help=True, short_help="Edit the database.")
@@ -57,6 +58,7 @@ def grp_edit_master():
 # noinspection DuplicatedCode
 grp_edit_original.add_command(cmd_processed_original, cmd_processed_original.name)
 grp_edit_original.add_command(cmd_lock_original, cmd_lock_original.name)
+grp_edit_original.add_command(cmd_rename_original, cmd_rename_original.name)
 grp_edit_original.add_command(cmd_remove_original, cmd_remove_original.name)
 
 grp_edit_master.add_command(cmd_processed_master, cmd_processed_master.name)
