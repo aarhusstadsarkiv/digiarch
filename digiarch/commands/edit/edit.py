@@ -1,15 +1,11 @@
 from click import group
 
-from .action import group_action
-from .lock import command_lock
-from .processed import command_processed
-from .remove import command_remove
-from .rename import command_rename
-from .rollback import command_rollback
+from .processed import cmd_processed_master
+from .processed import cmd_processed_original
 
 
 @group("edit", no_args_is_help=True, short_help="Edit the database.")
-def group_edit():
+def grp_edit():
     """
     Edit the files' database.
 
@@ -45,13 +41,20 @@ def group_edit():
     """  # noqa: D301
 
 
-# noinspection DuplicatedCode
-group_edit.add_command(group_action, group_action.name)
-group_edit.add_command(command_rename, command_rename.name)
-group_edit.add_command(command_lock, command_lock.name)
-group_edit.add_command(command_processed, command_processed.name)
-group_edit.add_command(command_remove, command_remove.name)
-group_edit.add_command(command_rollback, command_rollback.name)
+@grp_edit.group("original", no_args_is_help=True, short_help="Edit original files.")
+def grp_edit_original():
+    """Edit original files."""
 
 
-group_edit.list_commands = lambda _ctx: list(group_edit.commands)
+@grp_edit.group("master", no_args_is_help=True, short_help="Edit master files.")
+def grp_edit_master():
+    """Edit master files."""
+
+
+grp_edit_original.add_command(cmd_processed_original, cmd_processed_original.name)
+
+grp_edit_master.add_command(cmd_processed_master, cmd_processed_master.name)
+
+grp_edit.list_commands = lambda _ctx: list(grp_edit.commands)
+grp_edit_original.list_commands = lambda _ctx: list(grp_edit_original.commands)
+grp_edit_master.list_commands = lambda _ctx: list(grp_edit_master.commands)
