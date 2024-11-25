@@ -2,9 +2,11 @@ from logging import INFO
 from logging import Logger
 from pathlib import Path
 from typing import Any
+from typing import Literal
 
 from acacore.database import FilesDB
 from acacore.models.event import Event
+from acacore.models.file import MasterFile
 from acacore.models.file import OriginalFile
 from acacore.models.reference_files import ActionData
 from acacore.models.reference_files import ConvertAction
@@ -22,6 +24,7 @@ from acacore.utils.helpers import ExceptionManager
 from click import argument
 from click import BadParameter
 from click import Choice
+from click import command
 from click import Context
 from click import group
 from click import MissingParameter
@@ -91,6 +94,44 @@ def set_action(
     file.action_data = ActionData.model_validate(file.action_data.model_dump() | new_action)
     if not dry_run:
         database.original_files.update(file, {"uuid": file.uuid})
+        database.log.insert(event)
+    event.log(INFO, *loggers, show_args=["uuid", "data"])
+
+
+def set_master_convert(
+    ctx: Context,
+    database: FilesDB,
+    file: MasterFile,
+    action: ConvertAction,
+    action_type: Literal["access", "statutory"],
+    reason: str,
+    dry_run: bool,
+    *loggers: Logger,
+):
+    if action_type == "access" and file.convert_access.model_dump() == action:
+        Event.from_command(ctx, "skip", (file.uuid, "master")).log(INFO, *loggers, show_args=["uuid"])
+        return
+    if action_type == "statutory" and file.convert_statutory.model_dump() == action:
+        Event.from_command(ctx, "skip", (file.uuid, "master")).log(INFO, *loggers, show_args=["uuid"])
+        return
+    old_action: ConvertAction | None
+    if action_type == "access":
+        old_action = file.convert_access
+        file.convert_access = action
+    elif action_type == "statutory":
+        old_action = file.convert_statutory
+        file.convert_statutory = action
+    else:
+        return
+    event = Event.from_command(
+        ctx,
+        "edit",
+        (file.uuid, "master"),
+        [action_type, old_action, action],
+        reason,
+    )
+    if not dry_run:
+        database.master_files.update(file)
         database.log.insert(event)
     event.log(INFO, *loggers, show_args=["uuid", "data"])
 
@@ -385,6 +426,58 @@ def cmd_action_original_copy(
                 set_action(ctx, database, file, action, data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
+
+        end_program(ctx, database, exception, dry_run, log_file, log_stdout)
+
+
+@command("convert", no_args_is_help=True, short_help="Set access convert action.")
+@argument("action_type", type=Choice(["access", "statutory"]), required=True)
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed"])
+@argument("reason", nargs=1, type=str, required=True)
+@option("--tool", type=str, required=True, help="The tool to use for conversion.")
+@option(
+    "--output",
+    type=str,
+    default=None,
+    callback=param_callback_regex("^[a-zA-Z0-9-]+$"),
+    help='The output of the converter.  [required for tools other than "copy"]',
+)
+@option("--lock", is_flag=True, default=False, help="Lock the edited files.")
+@option_dry_run()
+@pass_context
+def cmd_action_master_convert(
+    ctx: Context,
+    action_type: Literal["access", "statutory"],
+    query: TQuery,
+    reason: str,
+    tool: str,
+    output: str | None,
+    dry_run: bool,
+):
+    """
+    Set master files' convert action.
+
+    The --output option may be omitted when using the "copy" tool.
+
+    To lock the file(s) after editing them, use the --lock option.
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the QUERY argument, see the edit command.
+    """
+    if tool not in ("copy",) and not output:
+        raise MissingParameter(f"Required for tool {tool!r}.", ctx, ctx_params(ctx)["output"])
+
+    data = ConvertAction(tool=tool, output=output)
+
+    avid = get_avid(ctx)
+
+    with open_database(ctx, avid) as database:
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            for file in query_table(database.master_files, query, [("lower(relative_path)", "asc")]):
+                set_master_convert(ctx, database, file, data, action_type, reason, dry_run)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
