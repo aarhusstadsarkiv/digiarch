@@ -281,7 +281,7 @@ def grp_identify():
     pass
 
 
-@grp_identify.command("original", short_help="Identify files in OriginalDocuments.")
+@grp_identify.command("original", short_help="Identify original files.")
 @argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @option(
     "--siegfried-path",
