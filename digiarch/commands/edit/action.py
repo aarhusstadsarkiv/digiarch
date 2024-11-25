@@ -1,6 +1,5 @@
 from logging import INFO
 from logging import Logger
-from pathlib import Path
 from typing import Any
 from typing import Literal
 
@@ -372,7 +371,6 @@ def cmd_action_original_ignore(
     envvar="DIGIARCH_ACTIONS",
     show_envvar=True,
     default=None,
-    callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing file format actions.",
 )
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
@@ -384,7 +382,7 @@ def cmd_action_original_copy(
     action: TActionType,
     reason: str,
     query: TQuery,
-    actions_file: Path | None,
+    actions_file: str | None,
     lock: bool,
     dry_run: bool,
 ):
