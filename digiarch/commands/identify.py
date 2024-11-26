@@ -106,6 +106,7 @@ def identify_requirements(
         actions = fetch_actions_master(ctx, "actions_file", actions_file)
     else:
         raise UsageError("Unknown target", ctx)
+
     custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
     return siegfried, actions, custom_signatures
