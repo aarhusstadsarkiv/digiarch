@@ -175,6 +175,7 @@ def cmd_extract(
     """
     avid = get_avid(ctx)
     siegfried, actions, custom_signatures = identify_requirements(
+        "original",
         ctx,
         siegfried_path,
         siegfried_signature,
