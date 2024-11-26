@@ -1,7 +1,6 @@
 from logging import INFO
 from shutil import copy2
 
-from acacore.__version__ import __version__ as __acacore_version__
 from acacore.database import FilesDB
 from acacore.database.upgrade import is_latest
 from acacore.models.event import Event
@@ -52,20 +51,18 @@ def cmd_upgrade(ctx: Context, backup: bool):
                             ctx_params(ctx)["backup"],
                         )
                     copy2(database.path, backup_path)
-                event = Event.command_history(
-                    ctx,
-                    "update",
-                    None,
-                    [database.metadata.get().version, __acacore_version__],
-                )
+                current_version = database.metadata.get().version
+                event = Event.from_command(ctx, "update")
                 database.upgrade()
                 database.init()
+                database.commit()
+                event.data = [current_version, database.metadata.get().version]
                 database.log.insert(start_event)
                 database.log.insert(event)
-                event.log(INFO, log_stdout)
+                event.log(INFO, log_stdout, show_args=False, old=event.data[0], new=event.data[1])
                 updated = True
             else:
-                Event.command_history(
+                Event.from_command(
                     ctx,
                     "skip",
                     reason="Database is already at the latest version",
