@@ -181,7 +181,9 @@ def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
                     Event.from_command(ctx, "rename", data=["Documents", "OriginalDocuments"]).log(INFO, log_stdout)
 
                 initialized = True
-                Event.from_command(ctx, "initialized", data=db.version()).log(INFO, log_stdout)
+                event = Event.from_command(ctx, "initialized", data=(v := db.version()))
+                db.log.insert(event)
+                event.log(INFO, log_stdout, show_args=False, version=v)
 
             if initialized and import_db_path:
                 import_db(ctx, avid, db, import_db_path, log_stdout)
