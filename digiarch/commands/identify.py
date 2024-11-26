@@ -7,6 +7,8 @@ from pathlib import Path
 from traceback import format_tb
 from typing import Generator
 from typing import get_args as get_type_args
+from typing import Literal
+from typing import overload
 from uuid import UUID
 
 from acacore.database import FilesDB
@@ -37,6 +39,7 @@ from click import IntRange
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+from click import UsageError
 from PIL import UnidentifiedImageError
 
 from digiarch.__version__ import __version__
@@ -52,14 +55,39 @@ from digiarch.query import query_to_where
 from digiarch.query import TQuery
 
 
+@overload
 def identify_requirements(
+    target: Literal["original"],
     ctx: Context,
     siegfried_path: str | None,
     siegfried_signature: str,
     siegfried_home: str | None,
     actions_file: str | None,
     custom_signatures_file: str | None,
-) -> tuple[Siegfried, dict[str, Action], list[CustomSignature]]:
+) -> tuple[Siegfried, dict[str, Action], list[CustomSignature]]: ...
+
+
+@overload
+def identify_requirements(
+    target: Literal["master"],
+    ctx: Context,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    actions_file: str | None,
+    custom_signatures_file: str | None,
+) -> tuple[Siegfried, dict[str, MasterConvertAction], list[CustomSignature]]: ...
+
+
+def identify_requirements(
+    target: Literal["original", "master"],
+    ctx: Context,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    actions_file: str | None,
+    custom_signatures_file: str | None,
+) -> tuple[Siegfried, dict[str, Action] | dict[str, MasterConvertAction], list[CustomSignature]]:
     siegfried = Siegfried(
         siegfried_path or "sf",
         f"{siegfried_signature}.sig",
@@ -72,33 +100,12 @@ def identify_requirements(
         print(err)
         raise BadParameter("Invalid binary or signature file.", ctx, ctx_params(ctx)["siegfried_path"])
 
-    actions = fetch_actions(ctx, "actions_file", actions_file)
-    custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
-
-    return siegfried, actions, custom_signatures
-
-
-def identify_master_requirements(
-    ctx: Context,
-    siegfried_path: str | None,
-    siegfried_signature: str,
-    siegfried_home: str | None,
-    actions_file: str | None,
-    custom_signatures_file: str | None,
-) -> tuple[Siegfried, dict[str, MasterConvertAction], list[CustomSignature]]:
-    siegfried = Siegfried(
-        siegfried_path or "sf",
-        f"{siegfried_signature}.sig",
-        siegfried_home,
-    )
-
-    try:
-        siegfried.run("-version", "-sig", siegfried.signature)
-    except IdentificationError as err:
-        print(err)
-        raise BadParameter("Invalid binary or signature file.", ctx, ctx_params(ctx)["siegfried_path"])
-
-    actions = fetch_actions_master(ctx, "actions_file", actions_file)
+    if target == "original":
+        actions = fetch_actions(ctx, "actions_file", actions_file)
+    elif target == "master":
+        actions = fetch_actions_master(ctx, "actions_file", actions_file)
+    else:
+        raise UsageError("Unknown target", ctx)
     custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
     return siegfried, actions, custom_signatures
@@ -343,6 +350,7 @@ def cmd_identify_original(
 ):
     avid = get_avid(ctx)
     siegfried, actions, custom_signatures = identify_requirements(
+        "original",
         ctx,
         siegfried_path,
         siegfried_signature,
@@ -440,7 +448,8 @@ def cmd_identify_master(
     dry_run: bool,
 ):
     avid = get_avid(ctx)
-    siegfried, actions, custom_signatures = identify_master_requirements(
+    siegfried, actions, custom_signatures = identify_requirements(
+        "master",
         ctx,
         siegfried_path,
         siegfried_signature,
