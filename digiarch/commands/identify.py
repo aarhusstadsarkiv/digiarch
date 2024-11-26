@@ -367,7 +367,7 @@ def cmd_identify_original(
             if query:
                 files = find_files_query(avid, db.original_files, query, batch_size)
             else:
-                files = find_files(avid.dirs.original_documents)
+                files = find_files(avid.dirs.original_documents, exclude=[avid.dirs.original_documents / "_metadata"])
 
             while batch := list(islice(files, batch_size)):
                 if exclude:
