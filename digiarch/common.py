@@ -164,6 +164,9 @@ class AVID:
         self.path: Path = Path(directory).resolve()
         self.dirs: AVIDDirs = AVIDDirs(self.path)
 
+    def __str__(self) -> str:
+        return str(self.path)
+
     @classmethod
     def is_avid_dir(cls, directory: str | PathLike[str]) -> bool:
         directory = Path(directory)
