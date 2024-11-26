@@ -87,13 +87,15 @@ jobs:
       - uses: actions/checkout@v4
       - name: Test database version
         run: |
-          acacore_database="$(sqlite3 tests/files/_metadata/files.db "select value from Metadata where key = 'version'")"
+          acacore_database="$(sqlite3 tests/AVID/_metadata/avid.db "select value from Metadata where key = 'version'")"
+          acacore_database="${acacore_database#*\"}"
+          acacore_database="${acacore_database#v}"
+          acacore_database="${acacore_database%\"}"
           acacore_package="$(grep 'acacore =' pyproject.toml | grep -oE 'tag[ ]*=[ ]*"[^"]+"')"
           acacore_package="${acacore_package#*\"}"
           acacore_package="${acacore_package#v}"
           acacore_package="${acacore_package%\"}"
           test "$acacore_database" = "$acacore_package"
-  
 
   pytest:
     name: pytest
