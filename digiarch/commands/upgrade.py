@@ -20,7 +20,7 @@ from digiarch.common import ctx_params
 from digiarch.common import get_avid
 
 
-@command("upgrade", no_args_is_help=True, short_help="Upgrade the database.")
+@command("upgrade", short_help="Upgrade the database.")
 @option(
     "--backup/--no-backup",
     is_flag=True,
