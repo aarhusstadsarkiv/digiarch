@@ -215,7 +215,7 @@ aca-fmt/28:
     reason: Unable to convert automatically.
     process: Open in Bentley View, save as pdf.
 aca-fmt/29:
-  name: XML Schema Definition (Custom XSD)
+  name: XML Schema Definition (Aarhus Stadsarkivs custom XSD)
   action: convert
   convert:
     tool: copy
