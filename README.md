@@ -7,25 +7,29 @@ pipx install git+https://github.com/aarhusstadsarkiv/digiarch.git
 # Commands
 
 * [digiarch](#digiarch)
+    * [init](#digiarch-init)
     * [identify](#digiarch-identify)
-    * [reidentify](#digiarch-reidentify)
+        * [original](#digiarch-identify-original)
+        * [master](#digiarch-identify-master)
     * [extract](#digiarch-extract)
     * [edit](#digiarch-edit)
-        * [action](#digiarch-edit-action)
-            * [convert](#digiarch-edit-action-convert)
-            * [extract](#digiarch-edit-action-extract)
-            * [manual](#digiarch-edit-action-manual)
-            * [ignore](#digiarch-edit-action-ignore)
-            * [copy](#digiarch-edit-action-copy)
-        * [rename](#digiarch-edit-rename)
-        * [lock](#digiarch-edit-lock)
-        * [processed](#digiarch-edit-processed)
-        * [remove](#digiarch-edit-remove)
-        * [rollback](#digiarch-edit-rollback)
-    * [search](#digiarch-search)
-    * [history](#digiarch-history)
-    * [doctor](#digiarch-doctor)
+        * [original](#digiarch-edit-original)
+            * [action](#digiarch-edit-original-action)
+                * [convert](#digiarch-edit-original-action-convert)
+                * [extract](#digiarch-edit-original-action-extract)
+                * [manual](#digiarch-edit-original-action-manual)
+                * [ignore](#digiarch-edit-original-action-ignore)
+                * [copy](#digiarch-edit-original-action-copy)
+            * [processed](#digiarch-edit-original-processed)
+            * [lock](#digiarch-edit-original-lock)
+            * [rename](#digiarch-edit-original-rename)
+            * [remove](#digiarch-edit-original-remove)
+        * [master](#digiarch-edit-master)
+            * [convert](#digiarch-edit-master-convert)
+            * [processed](#digiarch-edit-master-processed)
+            * [remove](#digiarch-edit-master-remove)
     * [upgrade](#digiarch-upgrade)
+    * [help](#digiarch-help)
     * [completions](#digiarch-completions)
 
 ## digiarch
@@ -41,33 +45,46 @@ Options:
   --help     Show this message and exit.
 
 Commands:
+  init         Initialize the database.
   identify     Identify files.
-  reidentify   Reidentify files.
   extract      Unpack archives.
   edit         Edit the database.
-  search       Search the database.
-  history      View events log.
-  doctor       Inspect the database.
   upgrade      Upgrade the database.
+  help         Show the help for a command.
   completions  Generate shell completions.
+```
+
+### digiarch init
+
+```
+Usage: digiarch init [OPTIONS] AVID_DIR
+
+Options:
+  --import FILE  Import an existing files.db
+  --help         Show this message and exit.
 ```
 
 ### digiarch identify
 
 ```
-Usage: digiarch identify [OPTIONS] ROOT
+Usage: digiarch identify [OPTIONS] COMMAND [ARGS]...
 
-  Process a folder (ROOT) recursively and populate a files' database.
+Options:
+  --help  Show this message and exit.
 
-  Each file is identified with Siegfried and an action is assigned to it.
-  Files that need re-identification, renaming, or ignoring are processed
-  accordingly.
+Commands:
+  master    Identify master files.
+  original  Identify original files.
+```
 
-  Files that are already in the database are not processed.
+#### digiarch identify original
+
+```
+Usage: digiarch identify original [OPTIONS] [QUERY]
 
 Options:
   --siegfried-path FILE           The path to the Siegfried executable.  [env
-                                  var: SIEGFRIED_PATH; required]
+                                  var: SIEGFRIED_PATH]
   --siegfried-home DIRECTORY      The path to the Siegfried home folder.  [env
                                   var: SIEGFRIED_HOME; required]
   --siegfried-signature [pronom|loc|tika|freedesktop|pronom-tika-loc|deluxe|archivematica]
@@ -78,50 +95,43 @@ Options:
   --custom-signatures FILE        Path to a YAML file containing custom
                                   signature specifications.  [env var:
                                   DIGIARCH_CUSTOM_SIGNATURES]
-  --exclude TEXT                  Glob pattern for file and folder names to
-                                  exclude.  [multiple]
-  --batch-size INTEGER RANGE      [x>=1]
+  --exclude TEXT                  File and folder names to exclude.
+                                  [multiple]
+  --batch-size INTEGER RANGE      Amount of files to identify at a time.
+                                  [default: 100; x>=1]
+  --dry-run                       Show changes without committing them.
   --help                          Show this message and exit.
 ```
 
-### digiarch reidentify
+#### digiarch identify master
 
 ```
-Usage: digiarch reidentify [OPTIONS] ROOT [QUERY]
-
-  Re-indentify specific files in the ROOT folder.
-
-  Each file is re-identified with Siegfried and an action is assigned to it.
-  Files that need re-identification with custom signatures, renaming, or
-  ignoring are processed accordingly.
-
-  For details on the QUERY argument, see the edit command.
-
-  If there is no query, then all files with identification warnings or have no
-  PUID or have no action, and that are neither locked nor processed will be
-  re-identified.
+Usage: digiarch identify master [OPTIONS] [QUERY]
 
 Options:
   --siegfried-path FILE           The path to the Siegfried executable.  [env
-                                  var: SIEGFRIED_PATH; required]
+                                  var: SIEGFRIED_PATH]
   --siegfried-home DIRECTORY      The path to the Siegfried home folder.  [env
                                   var: SIEGFRIED_HOME; required]
   --siegfried-signature [pronom|loc|tika|freedesktop|pronom-tika-loc|deluxe|archivematica]
                                   The signature file to use with Siegfried.
                                   [default: pronom]
-  --actions FILE                  Path to a YAML file containing file format
-                                  actions.  [env var: DIGIARCH_ACTIONS]
+  --actions FILE                  Path to a YAML file containing master files
+                                  convert actions.  [env var:
+                                  DIGIARCH_MASTER_ACTIONS]
   --custom-signatures FILE        Path to a YAML file containing custom
                                   signature specifications.  [env var:
                                   DIGIARCH_CUSTOM_SIGNATURES]
-  --batch-size INTEGER RANGE      [x>=1]
+  --batch-size INTEGER RANGE      Amount of files to identify at a time.
+                                  [default: 100; x>=1]
+  --dry-run                       Show changes without committing them.
   --help                          Show this message and exit.
 ```
 
 ### digiarch extract
 
 ```
-Usage: digiarch extract [OPTIONS] ROOT
+Usage: digiarch extract [OPTIONS] [QUERY]
 
   Unpack archives and identify files therein.
 
@@ -135,7 +145,7 @@ Usage: digiarch extract [OPTIONS] ROOT
 
 Options:
   --siegfried-path FILE           The path to the Siegfried executable.  [env
-                                  var: SIEGFRIED_PATH; required]
+                                  var: SIEGFRIED_PATH]
   --siegfried-home DIRECTORY      The path to the Siegfried home folder.  [env
                                   var: SIEGFRIED_HOME; required]
   --siegfried-signature [pronom|loc|tika|freedesktop|pronom-tika-loc|deluxe|archivematica]
@@ -192,18 +202,32 @@ Options:
   --help  Show this message and exit.
 
 Commands:
+  original  Edit original files.
+  master    Edit master files.
+```
+
+#### digiarch edit original
+
+```
+Usage: digiarch edit original [OPTIONS] COMMAND [ARGS]...
+
+  Edit original files.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
   action     Change file actions.
-  rename     Change file extensions.
+  processed  Set original files as processed.
   lock       Lock files.
-  processed  Set files as processed.
+  rename     Change file extensions.
   remove     Remove files.
-  rollback   Roll back edits.
 ```
 
-#### digiarch edit action
+##### digiarch edit original action
 
 ```
-Usage: digiarch edit action [OPTIONS] COMMAND [ARGS]...
+Usage: digiarch edit original action [OPTIONS] COMMAND [ARGS]...
 
   Change file actions.
 
@@ -218,10 +242,10 @@ Commands:
   copy     Copy action from a format.
 ```
 
-##### digiarch edit action convert
+###### digiarch edit original action convert
 
 ```
-Usage: digiarch edit action convert [OPTIONS] ROOT QUERY REASON
+Usage: digiarch edit original action convert [OPTIONS] QUERY REASON
 
   Set files' action to "convert".
 
@@ -242,10 +266,10 @@ Options:
   --help         Show this message and exit.
 ```
 
-##### digiarch edit action extract
+###### digiarch edit original action extract
 
 ```
-Usage: digiarch edit action extract [OPTIONS] ROOT QUERY REASON
+Usage: digiarch edit original action extract [OPTIONS] QUERY REASON
 
   Set files' action to "extract".
 
@@ -264,10 +288,10 @@ Options:
   --help            Show this message and exit.
 ```
 
-##### digiarch edit action manual
+###### digiarch edit original action manual
 
 ```
-Usage: digiarch edit action manual [OPTIONS] ROOT QUERY REASON
+Usage: digiarch edit original action manual [OPTIONS] QUERY REASON
 
   Set files' action to "manual".
 
@@ -286,23 +310,23 @@ Options:
   --help          Show this message and exit.
 ```
 
-##### digiarch edit action ignore
+###### digiarch edit original action ignore
 
 ```
-Usage: digiarch edit action ignore [OPTIONS] ROOT QUERY REASON
+Usage: digiarch edit original action ignore [OPTIONS] QUERY REASON
 
   Set files' action to "ignore".
 
   Template must be one of:
   * text
-  * empty
-  * password-protected
-  * corrupted
-  * duplicate
-  * not-preservable
-  * not-convertable
-  * extracted-archive
-  * temporary-file
+      * empty
+      * password-protected
+      * corrupted
+      * duplicate
+      * not-preservable
+      * not-convertable
+      * extracted-archive
+      * temporary-file
 
   The --reason option may be omitted when using a template other than "text".
 
@@ -321,11 +345,12 @@ Options:
   --help               Show this message and exit.
 ```
 
-##### digiarch edit action copy
+###### digiarch edit original action copy
 
 ```
-Usage: digiarch edit action copy [OPTIONS] ROOT QUERY PUID
-                                 {convert|extract|manual|ignore} REASON
+Usage: digiarch edit original action copy [OPTIONS] QUERY PUID
+                                          {convert|extract|manual|ignore}
+                                          REASON
 
   Set files' action by copying it from an existing format.
 
@@ -352,10 +377,49 @@ Options:
   --help          Show this message and exit.
 ```
 
-#### digiarch edit rename
+##### digiarch edit original processed
 
 ```
-Usage: digiarch edit rename [OPTIONS] ROOT QUERY EXTENSION REASON
+Usage: digiarch edit original processed [OPTIONS] QUERY REASON
+
+  Set original files as processed.
+
+  To set files as unprocessed, use the --unprocessed option.
+
+  To see the changes without committing them, use the --dry-run option.
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --processed / --unprocessed  Set files as processed or unprocessed.
+                               [default: processed]
+  --dry-run                    Show changes without committing them.
+  --help                       Show this message and exit.
+```
+
+##### digiarch edit original lock
+
+```
+Usage: digiarch edit original lock [OPTIONS] QUERY REASON
+
+  Lock original files from being edited by reidentify.
+
+  To unlock files, use the --unlock option.
+
+  To see the changes without committing them, use the --dry-run option.
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --lock / --unlock  Lock or unlock files.  [default: lock]
+  --dry-run          Show changes without committing them.
+  --help             Show this message and exit.
+```
+
+##### digiarch edit original rename
+
+```
+Usage: digiarch edit original rename [OPTIONS] QUERY EXTENSION REASON
 
   Change the extension of one or more files in the files' database for the
   ROOT folder to EXTENSION.
@@ -375,31 +439,72 @@ Options:
   --help         Show this message and exit.
 ```
 
-#### digiarch edit lock
+##### digiarch edit original remove
 
 ```
-Usage: digiarch edit lock [OPTIONS] ROOT QUERY REASON
+Usage: digiarch edit original remove [OPTIONS] QUERY REASON
 
-  Lock files from being edited by reidentify.
+  Remove one or more original files in the files' database for the ROOT folder
+  to EXTENSION.
 
-  To unlock files, use the --unlock option.
+  Using the --delete option removes the files from the disk.
 
   To see the changes without committing them, use the --dry-run option.
 
   For details on the QUERY argument, see the edit command.
 
 Options:
-  --lock / --unlock  Lock or unlock files.  [default: lock]
-  --dry-run          Show changes without committing them.
-  --help             Show this message and exit.
+  --delete   Remove selected files from the disk.
+  --dry-run  Show changes without committing them.
+  --help     Show this message and exit.
 ```
 
-#### digiarch edit processed
+#### digiarch edit master
 
 ```
-Usage: digiarch edit processed [OPTIONS] ROOT QUERY REASON
+Usage: digiarch edit master [OPTIONS] COMMAND [ARGS]...
 
-  Set files as processed.
+  Edit master files.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  convert    Set access convert action.
+  processed  Set master files as processed.
+  remove     Remove files.
+```
+
+##### digiarch edit master convert
+
+```
+Usage: digiarch edit master convert [OPTIONS] {access|statutory} QUERY REASON
+
+  Set master files' convert action.
+
+  The --output option may be omitted when using the "copy" tool.
+
+  To lock the file(s) after editing them, use the --lock option.
+
+  To see the changes without committing them, use the --dry-run option.
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --tool TEXT    The tool to use for conversion.  [required]
+  --output TEXT  The output of the converter.  [required for tools other than
+                 "copy"]
+  --lock         Lock the edited files.
+  --dry-run      Show changes without committing them.
+  --help         Show this message and exit.
+```
+
+##### digiarch edit master processed
+
+```
+Usage: digiarch edit master processed [OPTIONS] QUERY REASON
+
+  Set master files as processed.
 
   To set files as unprocessed, use the --unprocessed option.
 
@@ -414,137 +519,51 @@ Options:
   --help                       Show this message and exit.
 ```
 
-#### digiarch edit remove
+##### digiarch edit master remove
 
 ```
-Usage: digiarch edit remove [OPTIONS] ROOT QUERY REASON
+Usage: digiarch edit master remove [OPTIONS] QUERY REASON
 
-  Remove one or more files in the files' database for the ROOT folder to
-  EXTENSION.
+  Remove one or more master files in the files' database for the ROOT folder
+  to EXTENSION.
 
-  Using the --delete option removes the files from the disk.
+  Files are delete from the database and the disk.
 
   To see the changes without committing them, use the --dry-run option.
 
   For details on the QUERY argument, see the edit command.
 
 Options:
-  --delete   Remove selected files from the disk.
-  --dry-run  Show changes without committing them.
-  --help     Show this message and exit.
-```
-
-#### digiarch edit rollback
-
-```
-Usage: digiarch edit rollback [OPTIONS] ROOT FROM TO REASON
-
-  Roll back edits between two timestamps.
-
-  FROM and TO timestamps must be in the format '%Y-%m-%dT%H:%M:%S' or
-  '%Y-%m-%dT%H:%M:%S.%f'.
-
-  Using the --command option allows to restrict rollbacks to specific events
-  with the given commands if the timestamps are not precise enough. E.g.,
-  "digiarch.edit.rename" to roll back changes performed by the "edit rename"
-  command.
-
-  To see the changes without committing them, use the --dry-run option.
-
-Options:
-  --command TEXT  Specify commands to roll back.  [multiple]
-  --dry-run       Show changes without committing them.
-  --help          Show this message and exit.
-```
-
-### digiarch search
-
-```
-Usage: digiarch search [OPTIONS] ROOT [QUERY]
-
-  Search for specific files in the database.
-
-  Files are displayed in YAML format.
-
-  For details on the QUERY argument, see the edit command.
-
-  If there is no query, then the limit is automatically set to 100 if not set
-  with the --limit option.
-
-Options:
-  --order-by [relative_path|size|action]
-                                  Set sorting field.  [default: relative_path]
-  --sort [asc|desc]               Set sorting direction.  [default: asc]
-  --limit INTEGER RANGE           Limit the number of results.  [x>=1]
-  --help                          Show this message and exit.
-```
-
-### digiarch history
-
-```
-Usage: digiarch history [OPTIONS] ROOT
-
-  View and search events log.
-
-  The --operation and --reason options supports LIKE syntax with the %
-  operator.
-
-  If multiple --uuid, --operation, or --reason options are used, the query
-  will match any of them.
-
-  If no query option is given, then the limit is automatically set to 100 if
-  not set with the --limit option.
-
-Options:
-  --from [%Y-%m-%d|%Y-%m-%dT%H:%M:%S|%Y-%m-%dT%H:%M:%S.%f]
-                                  Minimum date of events.
-  --to [%Y-%m-%d|%Y-%m-%dT%H:%M:%S|%Y-%m-%dT%H:%M:%S.%f]
-                                  Maximum date of events.
-  --operation TEXT                Operation and sub-operation.  [multiple]
-  --uuid TEXT                     File UUID.  [multiple]
-  --reason TEXT                   Event reason.
-  --ascending / --descending      Sort by ascending or descending order.
-                                  [default: ascending]
-  --limit INTEGER RANGE           Limit the number of results.  [x>=1]
-  --help                          Show this message and exit.
-```
-
-### digiarch doctor
-
-```
-Usage: digiarch doctor [OPTIONS] ROOT
-
-  Inspect the database for common issues.
-
-  The current fixes will be applied:
-  * Path sanitizing (paths): paths containing any invalid characters (\?%*|"<>,:;=+[]!@) will be renamed with those
-      characters removed
-  * Duplicated extensions (extensions): paths ending with duplicated extensions will be rewritten to remove
-      duplicated extensions and leave only one
-  * Check files (files): ensure that all files in the database exist, if not they are removed
-
-  To see the changes without committing them, use the --dry-run option.
-
-Options:
-  --fix [paths|extensions|files]  Specify which fixes to apply.
-  --dry-run                       Show changes without committing them.
-  --help                          Show this message and exit.
+  --reset-processed  Reset processed status of parent files.
+  --dry-run          Show changes without committing them.
+  --help             Show this message and exit.
 ```
 
 ### digiarch upgrade
 
 ```
-Usage: digiarch upgrade [OPTIONS] ROOT
+Usage: digiarch upgrade [OPTIONS]
 
   Upgrade the files' database to the latest version of acacore.
 
   When using --backup, a copy of the current database version will be created
-  in the same folder with the name "files-{version}.db". The copy will not be
+  in the same folder with the name "avid-{version}.db". The copy will not be
   created if the database is already at the latest version.
 
 Options:
   --backup / --no-backup  Backup current version.  [default: backup]
   --help                  Show this message and exit.
+```
+
+### digiarch help
+
+```
+Usage: digiarch help [OPTIONS] [COMMANDS]...
+
+  Show the help for a command.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ### digiarch completions
@@ -558,11 +577,10 @@ Usage: digiarch completions [OPTIONS] {bash|fish|zsh}
   recognized and used by the shell.
 
   Supported shells are:
-  * bash      Bourne Again Shell
-  * fish      Friendly Interactive Shell
-  * zsh       Z shell
+  * bash  Bourne Again Shell
+      * fish      Friendly Interactive Shell
+      * zsh       Z shell
 
 Options:
   --help  Show this message and exit.
 ```
-
