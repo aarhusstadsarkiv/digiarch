@@ -155,18 +155,12 @@ def identify_original_file(
     if existing_file and not update:
         return
 
+    file = OriginalFile.from_file(siegfried_file.filename, avid.path, parent=parent)
+
     with ExceptionManager(Exception, UnidentifiedImageError, allow=[OSError, IOError]) as error:
-        file = OriginalFile.from_file(
-            siegfried_file.filename,
-            avid.path,
-            siegfried_file,
-            custom_signatures,
-            actions,
-            parent=parent,
-        )
+        file.identify(siegfried_file, custom_signatures, actions)
 
     if error.exception:
-        file = OriginalFile.from_file(siegfried_file.filename, avid.path, siegfried_file, parent=parent)
         file.action = "manual"
         file.action_data = ActionData(manual=ManualAction(reason=repr(error.exception), process=""))
         errors.append(
