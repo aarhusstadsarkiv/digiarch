@@ -148,6 +148,12 @@ def identify_original_file(
     *loggers: Logger,
 ):
     errors: list[Event] = []
+    existing_file: OriginalFile | None = db.original_files[
+        {"relative_path": str(siegfried_file.filename.relative_to(avid.path))}
+    ]
+
+    if existing_file and not update:
+        return
 
     with ExceptionManager(Exception, UnidentifiedImageError, allow=[OSError, IOError]) as error:
         file = OriginalFile.from_file(
@@ -176,7 +182,7 @@ def identify_original_file(
     file.original_path = Path(original_path).relative_to(file.root) if original_path else file.relative_path
     existing_file: OriginalFile | None = db.original_files[file]
 
-    if existing_file and update:
+    if existing_file:
         file.uuid = existing_file.uuid
         file.original_path = existing_file.original_path
         file.parent = file.parent or existing_file.parent
@@ -187,8 +193,13 @@ def identify_original_file(
         )
         file.lock = existing_file.lock
 
-    if not dry_run and (update or not existing_file):
-        db.original_files.insert(file, on_exists="replace" if update else "error")
+    if dry_run:
+        pass
+    elif existing_file:
+        db.original_files.update(file)
+        db.log.insert(*errors)
+    else:
+        db.original_files.insert(file)
         db.log.insert(*errors)
 
     if update or not existing_file:
