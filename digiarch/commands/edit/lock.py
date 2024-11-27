@@ -53,7 +53,7 @@ def cmd_lock_original(
                 query,
                 reason,
                 "original",
-                "processed",
+                "lock",
                 lock,
                 dry_run,
                 log_stdout,
