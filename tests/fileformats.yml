@@ -904,10 +904,6 @@ fmt/189:
     output: ods
 fmt/199:
   name: MPEG-4 Media File
-  rename:
-    extension: .mp4
-    append: true
-    on_extension_mismatch: true
   action: convert
   convert:
     tool: video
