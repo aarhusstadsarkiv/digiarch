@@ -22,7 +22,7 @@ pyyaml = "^6.0.2"
 type = "git"
 url = "https://github.com/aarhusstadsarkiv/acacore.git"
 reference = "v4"
-resolved_reference = "725f57fa448c9234a56a3411d53bbd20aed29db9"
+resolved_reference = "76ba244abf2bd0ef6f9407800cfaa4cf2aac6234"
 
 [[package]]
 name = "annotated-types"
