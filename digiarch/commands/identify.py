@@ -483,3 +483,6 @@ def cmd_identify_master(
                     )
 
         end_program(ctx, db, exception, dry_run, log_file, log_stdout)
+
+
+grp_identify.list_commands = lambda _ctx: list(grp_identify.commands)
