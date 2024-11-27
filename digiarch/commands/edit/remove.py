@@ -13,7 +13,6 @@ from acacore.utils.click import end_program
 from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
 from click import argument
-from click import Choice
 from click import command
 from click import Context
 from click import option
@@ -132,7 +131,6 @@ def remove_files(
 
 
 @command("remove", no_args_is_help=True, short_help="Remove files.")
-@argument("file_type", type=Choice(["original", "master", "access", "statutory"]), required=True)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--delete", is_flag=True, default=False, help="Remove selected files from the disk.")
@@ -178,7 +176,6 @@ def cmd_remove_original(
 
 
 @command("remove", no_args_is_help=True, short_help="Remove files.")
-@argument("file_type", type=Choice(["original", "master", "access", "statutory"]), required=True)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--reset-processed", is_flag=True, default=False, help="Reset processed status of parent files.")
