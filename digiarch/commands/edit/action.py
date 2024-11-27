@@ -92,7 +92,7 @@ def set_action(
     file.action = action
     file.action_data = ActionData.model_validate(file.action_data.model_dump() | new_action)
     if not dry_run:
-        database.original_files.update(file, {"uuid": file.uuid})
+        database.original_files.update(file, {"uuid": str(file.uuid)})
         database.log.insert(event)
     event.log(INFO, *loggers, show_args=["uuid", "data"])
 
