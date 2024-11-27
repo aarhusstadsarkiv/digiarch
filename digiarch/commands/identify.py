@@ -468,15 +468,7 @@ def cmd_identify_master(
 
             while batch := list(islice(files, batch_size)):
                 for sf_file in siegfried.identify(*batch).files:
-                    identify_master_file(
-                        ctx,
-                        avid,
-                        db,
-                        sf_file,
-                        custom_signatures,
-                        actions,
-                        dry_run,
-                    )
+                    identify_master_file(ctx, avid, db, sf_file, custom_signatures, actions, dry_run, log_stdout)
 
         end_program(ctx, db, exception, dry_run, log_file, log_stdout)
 
