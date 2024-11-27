@@ -275,16 +275,12 @@ def identify_master_file(
         ctx,
         "file",
         (file.uuid, "master"),
-        data={
-            "access": new_file.convert_access.model_dump(mode="json"),
-            "statutory": new_file.convert_statutory.model_dump(mode="json"),
-        },
     ).log(
         INFO,
         *loggers,
         puid=str(file.puid).ljust(10),
-        access=file.convert_access,
-        statutory=file.convert_statutory,
+        access=new_file.convert_access.tool if new_file.convert_access else None,
+        statutory=new_file.convert_statutory.tool if new_file.convert_statutory else None,
         path=file.relative_path,
     )
 
