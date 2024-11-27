@@ -160,8 +160,8 @@ def identify_original_file(
             siegfried_file.filename,
             avid.path,
             siegfried_file,
-            actions,
             custom_signatures,
+            actions,
             parent=parent,
         )
 
