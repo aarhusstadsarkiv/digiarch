@@ -226,7 +226,7 @@ def open_database(ctx: Context, avid: AVID) -> FilesDB:
     try:
         return FilesDB(avid.database_path, check_initialisation=True, check_version=True)
     except DatabaseError as e:
-        raise BadParameter(e.args[0], ctx, ctx_params(ctx)["avid"])
+        raise UsageError(e.args[0], ctx)
 
 
 def sanitize_filename(name: str) -> str:
