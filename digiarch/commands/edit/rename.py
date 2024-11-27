@@ -97,9 +97,10 @@ def cmd_rename_original(
                 file.relative_path = file.relative_path.with_name(new_name)
 
                 try:
-                    database.original_files.update(file, {"uuid": file.uuid})
+                    database.original_files.update(file, {"uuid": str(file.uuid)})
                 except SQLiteError:
                     file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
+                    raise
 
                 event.log(INFO, log_stdout, show_args=["uuid", "data"])
                 database.log.insert(event)
