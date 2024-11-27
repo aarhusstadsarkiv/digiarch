@@ -1,21 +1,21 @@
 from functools import reduce
-from http.client import HTTPResponse
 from os import PathLike
 from pathlib import Path
 from re import match
 from sqlite3 import DatabaseError
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Callable
 from typing import Type
 from typing import TypeVar
-from urllib.error import HTTPError
-from urllib.request import urlopen
 
 import yaml
 from acacore.database import FilesDB
 from acacore.models.reference_files import Action
 from acacore.models.reference_files import CustomSignature
 from acacore.models.reference_files import MasterConvertAction
+from acacore.reference_files import get_actions
+from acacore.reference_files import get_custom_signatures
+from acacore.reference_files import get_master_actions
 from acacore.utils.click import ctx_params
 from click import BadParameter
 from click import Context
@@ -237,24 +237,23 @@ def sanitize_path(path: str | PathLike) -> Path:
     return Path(*[sanitize_filename(p) for p in Path(path).parts])
 
 
-def get_yaml(url: str) -> Any:  # noqa: ANN401
-    response: HTTPResponse = urlopen(url)
-    if response.getcode() != 200:
-        raise HTTPError(url, response.getcode(), "", response.headers, response)
-    return yaml.load(response.read(), yaml.Loader)
-
-
-def fetch_reference_files(ctx: Context, adapter: Type[T], file: str | PathLike | None, url: str, parameter: str) -> T:
+def fetch_reference_files(
+    ctx: Context,
+    adapter: Type[T],
+    file: str | PathLike | None,
+    fetcher: Callable[[], T],
+    parameter: str,
+) -> T:
     if file:
         try:
             data = yaml.load(Path(file).read_text(), yaml.Loader)
         except BaseException:
-            raise BadParameter(f"Cannot load file {file}", ctx, ctx_params(ctx)[parameter])
+            raise BadParameter(f"Cannot load file {file}.", ctx, ctx_params(ctx)[parameter])
     else:
         try:
-            data = get_yaml(url)
+            data = fetcher()
         except BaseException:
-            raise BadParameter(f"Cannot download file from url {url!r}", ctx, ctx_params(ctx)[parameter])
+            raise BadParameter("Cannot fetch file.", ctx, ctx_params(ctx)[parameter])
 
     try:
         return TypeAdapter(adapter).validate_python(data)
@@ -263,30 +262,12 @@ def fetch_reference_files(ctx: Context, adapter: Type[T], file: str | PathLike |
 
 
 def fetch_actions(ctx: Context, parameter: str, file: str | PathLike | None) -> dict[str, Action]:
-    return fetch_reference_files(
-        ctx,
-        dict[str, Action],
-        file,
-        "https://github.com/aarhusstadsarkiv/reference-files/releases/latest/download/fileformats.yml",
-        parameter,
-    )
+    return fetch_reference_files(ctx, dict[str, Action], file, get_actions, parameter)
 
 
 def fetch_actions_master(ctx: Context, parameter: str, file: str | PathLike | None) -> dict[str, MasterConvertAction]:
-    return fetch_reference_files(
-        ctx,
-        dict[str, MasterConvertAction],
-        file,
-        "https://github.com/aarhusstadsarkiv/reference-files/releases/latest/download/fileformats_master.yml",
-        parameter,
-    )
+    return fetch_reference_files(ctx, dict[str, MasterConvertAction], file, get_master_actions, parameter)
 
 
 def fetch_custom_signatures(ctx: Context, parameter: str, file: str | PathLike | None) -> list[CustomSignature]:
-    return fetch_reference_files(
-        ctx,
-        list[CustomSignature],
-        file,
-        "https://github.com/aarhusstadsarkiv/reference-files/releases/latest/download/custom_signatures.yml",
-        parameter,
-    )
+    return fetch_reference_files(ctx, list[CustomSignature], file, get_custom_signatures, parameter)
