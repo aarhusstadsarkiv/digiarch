@@ -81,7 +81,7 @@ jobs:
           test "$acacore_remote" = "$acacore_package"
 
   version-database:
-    name: Test database version
+    name: Test Database version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
