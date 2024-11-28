@@ -16,6 +16,7 @@ from acacore.database.table import Table
 from acacore.exceptions.files import IdentificationError
 from acacore.models.event import Event
 from acacore.models.file import BaseFile
+from acacore.models.file import ConvertedFile
 from acacore.models.file import MasterFile
 from acacore.models.file import OriginalFile
 from acacore.models.reference_files import Action
@@ -285,6 +286,35 @@ def identify_master_file(
     )
 
 
+def identify_converted_file(
+    ctx: Context,
+    avid: AVID,
+    table: Table[ConvertedFile],
+    file_type: Literal["access", "statutory"],
+    siegfried_file: SiegfriedFile,
+    dry_run: bool,
+    *loggers: Logger,
+):
+    file: ConvertedFile | None = table[{"relative_path": str(siegfried_file.filename.relative_to(avid.path))}]
+    if not file:
+        return
+
+    new_file = ConvertedFile.from_file(siegfried_file.filename, avid.path, file.original_uuid, siegfried_file)
+
+    if file.relative_path != new_file.relative_path:
+        return
+
+    if not dry_run:
+        table.update(new_file)
+
+    Event.from_command(ctx, "file", (file.uuid, file_type)).log(
+        INFO,
+        *loggers,
+        puid=str(new_file.puid).ljust(10),
+        path=file.relative_path,
+    )
+
+
 @group("identify", no_args_is_help=True, short_help="Identify files.")
 def grp_identify():
     """Identify files in the archive."""
@@ -469,6 +499,136 @@ def cmd_identify_master(
             while batch := list(islice(files, batch_size)):
                 for sf_file in siegfried.identify(*batch).files:
                     identify_master_file(ctx, avid, db, sf_file, custom_signatures, actions, dry_run, log_stdout)
+
+        end_program(ctx, db, exception, dry_run, log_file, log_stdout)
+
+
+# noinspection DuplicatedCode
+@grp_identify.command("access", short_help="Identify access files.")
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning"])
+@option(
+    "--siegfried-path",
+    type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_PATH",
+    default=None,
+    required=False,
+    show_envvar=True,
+    help="The path to the Siegfried executable.",
+)
+@option(
+    "--siegfried-home",
+    type=ClickPath(exists=True, file_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_HOME",
+    required=True,
+    show_envvar=True,
+    help="The path to the Siegfried home folder.",
+)
+@option(
+    "--siegfried-signature",
+    type=Choice(get_type_args(TSignaturesProvider)),
+    default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
+)
+@option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identify at a time.")
+@option_dry_run()
+@pass_context
+def cmd_identify_access(
+    ctx: Context,
+    query: TQuery,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    batch_size: int | None,
+    dry_run: bool,
+):
+    avid = get_avid(ctx)
+    siegfried = Siegfried(
+        siegfried_path or "sf",
+        f"{siegfried_signature}.sig",
+        siegfried_home,
+    )
+
+    try:
+        siegfried.run("-version", "-sig", siegfried.signature)
+    except IdentificationError as err:
+        print(err)
+        raise BadParameter("Invalid binary or signature file.", ctx, ctx_params(ctx)["siegfried_path"])
+
+    with open_database(ctx, avid) as db:
+        log_file, log_stdout, _ = start_program(ctx, db, __version__, None, not dry_run, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            files = find_files_query(avid, db.access_files, query, batch_size)
+
+            while batch := list(islice(files, batch_size)):
+                for sf_file in siegfried.identify(*batch).files:
+                    identify_converted_file(ctx, avid, db.access_files, "access", sf_file, dry_run, log_stdout)
+
+        end_program(ctx, db, exception, dry_run, log_file, log_stdout)
+
+
+# noinspection DuplicatedCode
+@grp_identify.command("statutory", short_help="Identify statutory files.")
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning"])
+@option(
+    "--siegfried-path",
+    type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_PATH",
+    default=None,
+    required=False,
+    show_envvar=True,
+    help="The path to the Siegfried executable.",
+)
+@option(
+    "--siegfried-home",
+    type=ClickPath(exists=True, file_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_HOME",
+    required=True,
+    show_envvar=True,
+    help="The path to the Siegfried home folder.",
+)
+@option(
+    "--siegfried-signature",
+    type=Choice(get_type_args(TSignaturesProvider)),
+    default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
+)
+@option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identify at a time.")
+@option_dry_run()
+@pass_context
+def cmd_identify_statutory(
+    ctx: Context,
+    query: TQuery,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    batch_size: int | None,
+    dry_run: bool,
+):
+    avid = get_avid(ctx)
+    siegfried = Siegfried(
+        siegfried_path or "sf",
+        f"{siegfried_signature}.sig",
+        siegfried_home,
+    )
+
+    try:
+        siegfried.run("-version", "-sig", siegfried.signature)
+    except IdentificationError as err:
+        print(err)
+        raise BadParameter("Invalid binary or signature file.", ctx, ctx_params(ctx)["siegfried_path"])
+
+    with open_database(ctx, avid) as db:
+        log_file, log_stdout, _ = start_program(ctx, db, __version__, None, not dry_run, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            files = find_files_query(avid, db.statutory_files, query, batch_size)
+
+            while batch := list(islice(files, batch_size)):
+                for sf_file in siegfried.identify(*batch).files:
+                    identify_converted_file(ctx, avid, db.statutory_files, "statutory", sf_file, dry_run, log_stdout)
 
         end_program(ctx, db, exception, dry_run, log_file, log_stdout)
 
