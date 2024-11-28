@@ -380,6 +380,16 @@ def cmd_identify_original(
     batch_size: int | None,
     dry_run: bool,
 ):
+    """
+    Identify files in the OriginalDocuments directory.
+
+    Each file is identified with Siegfried and an action is assigned to it.
+    Files that are already in the database are not processed.
+
+    If the QUERY argument is given, then files in the database matching the query will be re-identified.
+
+    For details on the QUERY argument, see the edit command.
+    """
     avid = get_avid(ctx)
     siegfried, actions, custom_signatures = identify_requirements(
         "original",
@@ -479,6 +489,16 @@ def cmd_identify_master(
     batch_size: int | None,
     dry_run: bool,
 ):
+    """
+    Identify files in the MasterDocuments directory.
+
+    Files are taken from the database, any other file existing in the MasterDocuments directory will be ignored.
+    Each file is identified with Siegfried and convert actions for access and statutory files are assigned to it.
+
+    If the QUERY argument is given, then only the files matching the query will be identified or re-identified.
+
+    For details on the QUERY argument, see the edit command.
+    """
     avid = get_avid(ctx)
     siegfried, actions, custom_signatures = identify_requirements(
         "master",
@@ -542,6 +562,16 @@ def cmd_identify_access(
     batch_size: int | None,
     dry_run: bool,
 ):
+    """
+    Identify files in the AccessDocuments directory.
+
+    Files are taken from the database, any other file existing in the AccessDocuments directory will be ignored.
+    Each file is identified with Siegfried.
+
+    If the QUERY argument is given, then only the files matching the query will be identified or re-identified.
+
+    For details on the QUERY argument, see the edit command.
+    """
     avid = get_avid(ctx)
     siegfried = Siegfried(
         siegfried_path or "sf",
@@ -607,6 +637,16 @@ def cmd_identify_statutory(
     batch_size: int | None,
     dry_run: bool,
 ):
+    """
+    Identify files in the Documents directory.
+
+    Files are taken from the database, any other file existing in the Documents directory will be ignored.
+    Each file is identified with Siegfried.
+
+    If the QUERY argument is given, then only the files matching the query will be identified or re-identified.
+
+    For details on the QUERY argument, see the edit command.
+    """
     avid = get_avid(ctx)
     siegfried = Siegfried(
         siegfried_path or "sf",
