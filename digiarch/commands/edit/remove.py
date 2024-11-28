@@ -144,9 +144,11 @@ def cmd_remove_original(
     dry_run: bool,
 ):
     """
-    Remove one or more original files in the files' database for the ROOT folder to EXTENSION.
+    Remove one or more files in OriginalDocuments matching the QUERY argument.
 
     Using the --delete option removes the files from the disk.
+
+    All children files (master, access, and statutory) are removed recursively from both the database and the disk regardless of the --delete option.
 
     To see the changes without committing them, use the --dry-run option.
 
@@ -189,9 +191,11 @@ def cmd_remove_master(
     dry_run: bool,
 ):
     """
-    Remove one or more master files in the files' database for the ROOT folder to EXTENSION.
+    Remove one or more files in MasterDocuments matching the QUERY argument.
 
-    Files are delete from the database and the disk.
+    All matching files and their children (access, and statutory) are removed recursively from both the database and the disk.
+
+    To set the parent files in OriginalDocuments to unprocessed, use the --reset-processed option.
 
     To see the changes without committing them, use the --dry-run option.
 
