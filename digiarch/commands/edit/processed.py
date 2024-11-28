@@ -32,7 +32,7 @@ from .common import edit_file_value
 @pass_context
 def cmd_processed_original(ctx: Context, query: TQuery, reason: str, processed: bool, dry_run: bool):
     """
-    Set original files as processed.
+    Set original files matching the QUERY argument as processed.
 
     To set files as unprocessed, use the --unprocessed option.
 
@@ -76,7 +76,7 @@ def cmd_processed_original(ctx: Context, query: TQuery, reason: str, processed: 
 @pass_context
 def cmd_processed_master(ctx: Context, query: TQuery, reason: str, processed: bool, dry_run: bool):
     """
-    Set master files as processed.
+    Set master files matching the QUERY argument as processed.
 
     To set files as unprocessed, use the --unprocessed option.
 
