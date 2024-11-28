@@ -155,6 +155,8 @@ def identify_original_file(
 
     if existing_file and not update:
         return
+    if existing_file and existing_file.lock:
+        return
 
     file = OriginalFile.from_file(siegfried_file.filename, avid.path, parent=parent)
 
