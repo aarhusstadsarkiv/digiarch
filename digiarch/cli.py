@@ -18,7 +18,7 @@ Image.MAX_IMAGE_PIXELS = int(50e3**2)
 @group("digiarch", no_args_is_help=True)
 @version_option(__version__, message=f"%(prog)s, version %(version)s\nacacore, version {__acacore_version__}")
 def app():
-    """Identify files and generate the database used by other Aarhus City Archives tools."""
+    """Indentify files and process AVID archives."""
 
 
 # noinspection DuplicatedCode
