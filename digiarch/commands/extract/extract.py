@@ -165,13 +165,15 @@ def cmd_extract(
     dry_run: bool,
 ):
     """
-    Unpack archives and identify files therein.
+    Unpack archives in OriginalDocuments and identify files therein.
 
     Files are unpacked recursively, i.e., if an archive contains another archive, this will be unpacked as well.
 
     Archives with unrecognized extraction tools will be set to manual mode.
 
     To see the which files will be unpacked (but not their contents) without unpacking them, use the --dry-run option.
+
+    Use the QUERY argument to specify which files should be unpacked. For details on the QUERY argument, see the edit command.
     """
     avid = get_avid(ctx)
     siegfried, actions, custom_signatures = identify_requirements(
