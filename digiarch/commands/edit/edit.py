@@ -15,10 +15,7 @@ from .rename import cmd_rename_original
 @group("edit", no_args_is_help=True, short_help="Edit the database.")
 def grp_edit():
     """
-    Edit the files' database.
-
-    The ROOT argument in the edit subcommands is a folder that contains a _metadata/files.db database, not the
-    _metadata folder itself.
+    Edit the files in the database.
 
     \b
     The QUERY argument uses a simple search syntax.
