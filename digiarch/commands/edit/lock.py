@@ -32,7 +32,7 @@ def cmd_lock_original(
     dry_run: bool,
 ):
     """
-    Lock original files from being edited by reidentify.
+    Lock original files matching the QUERY argument from being edited by reidentify.
 
     To unlock files, use the --unlock option.
 
