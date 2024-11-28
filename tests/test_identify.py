@@ -11,13 +11,13 @@ from tests.conftest import run_click
 
 
 # noinspection DuplicatedCode
-def test_identify_original(tests_folder: Path, avid_folder: Path, avid_folder_copy: Path):
+def test_identify_original(reference_files: Path, avid_folder: Path, avid_folder_copy: Path):
     avid = AVID(avid_folder)
     avid_copy = AVID(avid_folder_copy)
     avid_copy.database_path.unlink(missing_ok=True)
 
     run_click(avid_copy.path, app, "init", avid_copy.path)
-    run_click(avid_copy.path, app, "identify", "original")
+    run_click(avid_copy.path, app, "identify", "original", "--siegfried-home", reference_files)
 
     with (
         FilesDB(avid.database_path) as base_db,
@@ -38,11 +38,11 @@ def test_identify_original(tests_folder: Path, avid_folder: Path, avid_folder_co
 
 
 # noinspection DuplicatedCode
-def test_identify_master(tests_folder: Path, avid_folder: Path, avid_folder_copy: Path):
+def test_identify_master(reference_files: Path, avid_folder: Path, avid_folder_copy: Path):
     avid = AVID(avid_folder)
     avid_copy = AVID(avid_folder_copy)
 
-    run_click(avid_copy.path, app, "identify", "master")
+    run_click(avid_copy.path, app, "identify", "master", "--siegfried-home", reference_files)
 
     with (
         FilesDB(avid.database_path) as base_db,
@@ -62,7 +62,7 @@ def test_identify_master(tests_folder: Path, avid_folder: Path, avid_folder_copy
             assert base_file.original_uuid == test_file.original_uuid
 
 
-def test_reidentify_original(tests_folder: Path, avid_folder: Path, avid_folder_copy: Path):
+def test_reidentify_original(reference_files: Path, avid_folder: Path, avid_folder_copy: Path):
     avid = AVID(avid_folder)
     avid_copy = AVID(avid_folder_copy)
 
@@ -82,6 +82,8 @@ def test_reidentify_original(tests_folder: Path, avid_folder: Path, avid_folder_
         "identify",
         "original",
         f"@uuid {' '.join(map(str, (f.uuid for f in files)))}",
+        "--siegfried-home",
+        reference_files,
     )
 
     with (

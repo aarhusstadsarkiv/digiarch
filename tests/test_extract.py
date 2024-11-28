@@ -8,13 +8,13 @@ from digiarch.common import AVID
 from tests.conftest import run_click
 
 
-def test_extract(avid_folder_copy: Path):
+def test_extract(reference_files: Path, avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     with FilesDB(avid.database_path) as database:
         base_files: list[OriginalFile] = database.original_files.select("action = 'extract'").fetchall()
 
-    run_click(avid_folder_copy, app, "extract")
+    run_click(avid_folder_copy, app, "extract", "--siegfried-home", reference_files)
 
     with FilesDB(avid.database_path) as database:
         for base_file in base_files:
