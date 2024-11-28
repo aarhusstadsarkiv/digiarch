@@ -414,14 +414,14 @@ Usage: digiarch edit original action ignore [OPTIONS] QUERY REASON
 
   Template must be one of:
   * text
-      * empty
-      * password-protected
-      * corrupted
-      * duplicate
-      * not-preservable
-      * not-convertable
-      * extracted-archive
-      * temporary-file
+  * empty
+  * password-protected
+  * corrupted
+  * duplicate
+  * not-preservable
+  * not-convertable
+  * extracted-archive
+  * temporary-file
 
   The --reason option may be omitted when using a template other than "text".
 
