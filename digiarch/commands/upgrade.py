@@ -30,7 +30,7 @@ from digiarch.common import get_avid
 @pass_context
 def cmd_upgrade(ctx: Context, backup: bool):
     """
-    Upgrade the files' database to the latest version of acacore.
+    Upgrade the database.
 
     When using --backup, a copy of the current database version will be created in the same folder with the name
     "avid-{version}.db". The copy will not be created if the database is already at the latest version.
