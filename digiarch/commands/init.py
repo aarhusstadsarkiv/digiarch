@@ -12,6 +12,7 @@ from acacore.database.upgrade import is_latest
 from acacore.models.event import Event
 from acacore.models.file import MasterFile
 from acacore.models.file import OriginalFile
+from acacore.utils.click import ctx_params
 from acacore.utils.click import end_program
 from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
@@ -142,6 +143,26 @@ def import_db(
     db.commit()
 
 
+def check_import_db(ctx: Context, import_db_path: str | PathLike, import_param_name: str):
+    db_old: Connection | None = None
+
+    try:
+        db_old = connect(import_db_path)
+
+        tables: list[str] = [t.lower() for [t] in db_old.execute("select name from sqlite_master where type = 'table'")]
+        if "files" not in tables or "metadata" not in tables:
+            raise BadParameter("Invalid database schema.", ctx, ctx_params(ctx)[import_param_name])
+
+        version = db_old.execute("select value from Metadata where key = 'version'").fetchone()
+        if not version:
+            raise BadParameter("No version information.", ctx, ctx_params(ctx)[import_param_name])
+        if version[0] != "3.3.3":
+            raise BadParameter(f"Invalid version {version[0]}, must be 3.3.3.", ctx, ctx_params(ctx)[import_param_name])
+    finally:
+        if db_old:
+            db_old.close()
+
+
 @command("init", no_args_is_help=True, short_help="Initialize the database.")
 @argument(
     "avid",
@@ -162,6 +183,9 @@ def import_db(
 @pass_context
 def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
     avid.database_path.parent.mkdir(parents=True, exist_ok=True)
+
+    if import_db_path:
+        check_import_db(ctx, import_db_path, "import_db_path")
 
     with FilesDB(avid.database_path, check_initialisation=False, check_version=False) as db:
         _, log_stdout, event_start = start_program(ctx, db, __version__, None, False, True, True)
