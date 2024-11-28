@@ -46,12 +46,11 @@ def cmd_rename_original(
     dry_run: bool,
 ):
     r"""
-    Change the extension of one or more files in the files' database for the ROOT folder to EXTENSION.
+    Change the extension of one or more files in OriginalDocuments matching the QUERY argument to EXTENSION.
 
     To see the changes without committing them, use the --dry-run option.
 
-    The --replace and --replace-all options will only replace valid suffixes (i.e., matching the expression
-    \.[a-zA-Z0-9]+).
+    The --replace and --replace-all options will only replace valid suffixes (i.e., matching the expression \.[a-zA-Z0-9]+).
 
     The --append option will not add the new extension if it is already present.
     """
