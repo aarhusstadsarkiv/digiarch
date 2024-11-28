@@ -287,7 +287,7 @@ def identify_master_file(
 
 @group("identify", no_args_is_help=True, short_help="Identify files.")
 def grp_identify():
-    pass
+    """Identify files in the archive."""
 
 
 @grp_identify.command("original", short_help="Identify original files.")
