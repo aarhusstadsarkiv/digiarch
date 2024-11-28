@@ -5,8 +5,10 @@ from .action import grp_action_original
 from .lock import cmd_lock_original
 from .processed import cmd_processed_master
 from .processed import cmd_processed_original
+from .remove import cmd_remove_access
 from .remove import cmd_remove_master
 from .remove import cmd_remove_original
+from .remove import cmd_remove_statutory
 from .rename import cmd_rename_original
 
 
@@ -57,6 +59,16 @@ def grp_edit_master():
     """Edit master files."""
 
 
+@grp_edit.group("access", no_args_is_help=True, short_help="Edit access files.")
+def grp_edit_access():
+    """Edit access files."""
+
+
+@grp_edit.group("statutory", no_args_is_help=True, short_help="Edit statutory files.")
+def grp_edit_statutory():
+    """Edit statutory files."""
+
+
 # noinspection DuplicatedCode
 grp_edit_original.add_command(grp_action_original, grp_action_original.name)
 grp_edit_original.add_command(cmd_processed_original, cmd_processed_original.name)
@@ -68,6 +80,12 @@ grp_edit_master.add_command(cmd_action_master_convert, cmd_action_master_convert
 grp_edit_master.add_command(cmd_processed_master, cmd_processed_master.name)
 grp_edit_master.add_command(cmd_remove_master, cmd_remove_master.name)
 
+grp_edit_access.add_command(cmd_remove_access, cmd_remove_access.name)
+
+grp_edit_statutory.add_command(cmd_remove_statutory, cmd_remove_statutory.name)
+
 grp_edit.list_commands = lambda _ctx: list(grp_edit.commands)
 grp_edit_original.list_commands = lambda _ctx: list(grp_edit_original.commands)
 grp_edit_master.list_commands = lambda _ctx: list(grp_edit_master.commands)
+grp_edit_access.list_commands = lambda _ctx: list(grp_edit_access.commands)
+grp_edit_statutory.list_commands = lambda _ctx: list(grp_edit_statutory.commands)
