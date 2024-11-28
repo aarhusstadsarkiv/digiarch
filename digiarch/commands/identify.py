@@ -278,7 +278,7 @@ def identify_master_file(
     ).log(
         INFO,
         *loggers,
-        puid=str(file.puid).ljust(10),
+        puid=str(new_file.puid).ljust(10),
         access=new_file.convert_access.tool if new_file.convert_access else None,
         statutory=new_file.convert_statutory.tool if new_file.convert_statutory else None,
         path=file.relative_path,
