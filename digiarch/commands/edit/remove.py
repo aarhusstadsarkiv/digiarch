@@ -222,3 +222,97 @@ def cmd_remove_master(
             )
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
+
+
+@command("remove", no_args_is_help=True, short_help="Remove files.")
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning"])
+@argument("reason", nargs=1, type=str, required=True)
+@option("--reset-processed", is_flag=True, default=False, help="Reset processed status of parent files.")
+@option_dry_run()
+@pass_context
+def cmd_remove_access(
+    ctx: Context,
+    reason: str,
+    query: TQuery,
+    reset_processed: bool,
+    dry_run: bool,
+):
+    """
+    Remove one or more files in AccessDocuments matching the QUERY argument.
+
+    All matching files are removed from both the database and the disk.
+
+    To set the parent files in MasterDocuments to unprocessed, use the --reset-processed option.
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the QUERY argument, see the edit command.
+    """
+    avid = get_avid(ctx)
+
+    with open_database(ctx, avid) as database:
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            remove_files(
+                ctx,
+                avid,
+                database,
+                database.access_files,
+                query,
+                "access",
+                reason,
+                True,
+                reset_processed,
+                dry_run,
+                log_stdout,
+            )
+
+        end_program(ctx, database, exception, dry_run, log_file, log_stdout)
+
+
+@command("remove", no_args_is_help=True, short_help="Remove files.")
+@argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning"])
+@argument("reason", nargs=1, type=str, required=True)
+@option("--reset-processed", is_flag=True, default=False, help="Reset processed status of parent files.")
+@option_dry_run()
+@pass_context
+def cmd_remove_statutory(
+    ctx: Context,
+    reason: str,
+    query: TQuery,
+    reset_processed: bool,
+    dry_run: bool,
+):
+    """
+    Remove one or more files in Documents matching the QUERY argument.
+
+    All matching files are removed from both the database and the disk.
+
+    To set the parent files in MasterDocuments to unprocessed, use the --reset-processed option.
+
+    To see the changes without committing them, use the --dry-run option.
+
+    For details on the QUERY argument, see the edit command.
+    """
+    avid = get_avid(ctx)
+
+    with open_database(ctx, avid) as database:
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            remove_files(
+                ctx,
+                avid,
+                database,
+                database.statutory_files,
+                query,
+                "statutory",
+                reason,
+                True,
+                reset_processed,
+                dry_run,
+                log_stdout,
+            )
+
+        end_program(ctx, database, exception, dry_run, log_file, log_stdout)
