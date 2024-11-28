@@ -36,6 +36,11 @@ def avid_folder_copy(avid_folder: Path, tests_folder: Path) -> Path:
     return new_avid_folder
 
 
+@pytest.fixture(scope="session")
+def reference_files(tests_folder: Path) -> Path:
+    return tests_folder / "reference_files"
+
+
 def run_click(folder: Path, cmd: Command, *args: str | PathLike | int | float):
     with chdir(folder):
         return cmd.main(list(map(str, args)), standalone_mode=False)
