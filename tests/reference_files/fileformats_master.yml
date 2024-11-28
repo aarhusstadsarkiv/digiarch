@@ -112,6 +112,14 @@ fmt/353:
     tool: image
     output: tif
 
+x-fmt/111:
+  access:
+    tool: copy
+  statutory:
+    tool: text
+    output: tif
+
+
 # Custom puids
 aca-fmt/29:
   # should just be copied to statutory along the .gml file
