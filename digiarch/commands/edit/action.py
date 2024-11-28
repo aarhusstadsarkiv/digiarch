@@ -315,7 +315,7 @@ def cmd_action_original_manual(
 @option("--lock", is_flag=True, default=False, help="Lock the edited files.")
 @option_dry_run()
 @pass_context
-@docstring_format(templates="\n".join(f"    * {t}" for t in TemplateTypeEnum).strip())
+@docstring_format(templates="\n".join(f"* {t}" for t in TemplateTypeEnum))
 def cmd_action_original_ignore(
     ctx: Context,
     query: TQuery,
