@@ -137,7 +137,7 @@ def set_master_convert(
 
 @group("action")
 def grp_action_original():
-    """Change file actions."""
+    """Change actions of original files."""
 
 
 @grp_action_original.command("convert", no_args_is_help=True, short_help="Set convert action.")
@@ -164,7 +164,7 @@ def cmd_action_original_convert(
     dry_run: bool,
 ):
     """
-    Set files' action to "convert".
+    Set the action of original files matching the QUERY argument to "convert".
 
     The --output option may be omitted when using the "copy" tool.
 
@@ -216,7 +216,7 @@ def cmd_action_original_extract(
     dry_run: bool,
 ):
     """
-    Set files' action to "extract".
+    Set the action of original files matching the QUERY argument to "extract".
 
     To lock the file(s) after editing them, use the --lock option.
 
@@ -271,7 +271,7 @@ def cmd_action_original_manual(
     dry_run: bool,
 ):
     """
-    Set files' action to "manual".
+    Set the action of original files matching the QUERY argument to "manual".
 
     To lock the file(s) after editing them, use the --lock option.
 
@@ -326,7 +326,7 @@ def cmd_action_original_ignore(
     dry_run: bool,
 ):
     """
-    Set files' action to "ignore".
+    Set the action of original files matching the QUERY argument to "ignore".
 
     \b
     Template must be one of:
@@ -387,7 +387,7 @@ def cmd_action_original_copy(
     dry_run: bool,
 ):
     """
-    Set files' action by copying it from an existing format.
+    Set the action of original files matching the QUERY argument by copying it from an existing format.
 
     \b
     Supported actions are:
@@ -453,7 +453,7 @@ def cmd_action_master_convert(
     dry_run: bool,
 ):
     """
-    Set master files' convert action.
+    Set the convert actions of master files matching the QUERY argument.
 
     The --output option may be omitted when using the "copy" tool.
 
