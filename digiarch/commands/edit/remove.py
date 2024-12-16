@@ -91,8 +91,8 @@ def remove_children(
 ) -> None:
     if isinstance(file, OriginalFile):
         for child in db.master_files.select({"original_uuid": str(file.uuid)}):
-            remove_child(ctx, avid, db, db.master_files, child, "master", *loggers, log_removal=log_removal)
             remove_children(ctx, avid, db, child, *loggers, log_removal=log_removal)
+            remove_child(ctx, avid, db, db.master_files, child, "master", *loggers, log_removal=log_removal)
     elif isinstance(file, MasterFile):
         for child in db.access_files.select({"original_uuid": str(file.uuid)}):
             remove_child(ctx, avid, db, db.access_files, child, "access", *loggers, log_removal=log_removal)
