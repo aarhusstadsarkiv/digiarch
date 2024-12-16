@@ -70,25 +70,34 @@ def remove_child(
     file: BaseFile,
     file_type: Literal["original", "master", "access", "statutory"],
     *loggers: Logger,
+    log_removal: bool = True,
 ):
     file.get_absolute_path(avid.path).unlink(missing_ok=True)
     remove_empty_dir(avid.path, file.get_absolute_path(avid.path).parent)
     table.delete(file)
-    event = Event.from_command(ctx, "delete", (file.uuid, file_type), file.model_dump(mode="json"))
-    db.log.insert(event)
-    event.log(INFO, *loggers, show_args=["uuid"], path=file.relative_path)
+    if log_removal:
+        event = Event.from_command(ctx, "delete", (file.uuid, file_type), file.model_dump(mode="json"))
+        db.log.insert(event)
+        event.log(INFO, *loggers, show_args=["uuid"], path=file.relative_path)
 
 
-def remove_children(ctx: Context, avid: AVID, db: FilesDB, file: BaseFile, *loggers: Logger) -> None:
+def remove_children(
+    ctx: Context,
+    avid: AVID,
+    db: FilesDB,
+    file: BaseFile,
+    *loggers: Logger,
+    log_removal: bool = True,
+) -> None:
     if isinstance(file, OriginalFile):
         for child in db.master_files.select({"original_uuid": str(file.uuid)}):
-            remove_child(ctx, avid, db, db.master_files, child, "master", *loggers)
-            remove_children(ctx, avid, db, child)
+            remove_child(ctx, avid, db, db.master_files, child, "master", *loggers, log_removal=log_removal)
+            remove_children(ctx, avid, db, child, log_removal=log_removal)
     elif isinstance(file, MasterFile):
         for child in db.access_files.select({"original_uuid": str(file.uuid)}):
-            remove_child(ctx, avid, db, db.access_files, child, "access", *loggers)
+            remove_child(ctx, avid, db, db.access_files, child, "access", *loggers, log_removal=log_removal)
         for child in db.statutory_files.select({"original_uuid": str(file.uuid)}):
-            remove_child(ctx, avid, db, db.statutory_files, child, "statutory", *loggers)
+            remove_child(ctx, avid, db, db.statutory_files, child, "statutory", *loggers, log_removal=log_removal)
 
 
 def remove_files(
