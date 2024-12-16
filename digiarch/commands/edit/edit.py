@@ -10,6 +10,7 @@ from .remove import cmd_remove_master
 from .remove import cmd_remove_original
 from .remove import cmd_remove_statutory
 from .rename import cmd_rename_original
+from .rollback import cmd_rollback
 
 
 @group("edit", no_args_is_help=True, short_help="Edit the database.")
@@ -67,6 +68,8 @@ def grp_edit_statutory():
 
 
 # noinspection DuplicatedCode
+grp_edit.add_command(cmd_rollback, cmd_rollback.name)
+
 grp_edit_original.add_command(grp_action_original, grp_action_original.name)
 grp_edit_original.add_command(cmd_processed_original, cmd_processed_original.name)
 grp_edit_original.add_command(cmd_lock_original, cmd_lock_original.name)

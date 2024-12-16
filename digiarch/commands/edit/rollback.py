@@ -1,283 +1,228 @@
 from datetime import datetime
-from logging import ERROR
 from logging import INFO
-from logging import WARNING
-from pathlib import Path
+from logging import Logger
+from logging import WARN
+from re import fullmatch
+from sqlite3 import DatabaseError
+from typing import Literal
+from uuid import UUID
 
-from acacore.database import FileDB
-from acacore.models.file import File
-from acacore.models.history import HistoryEntry
-from acacore.models.reference_files import ActionData
-from acacore.models.reference_files import TActionType
-from acacore.utils.click import check_database_version
+from acacore.database import FilesDB
+from acacore.models.event import Event
+from acacore.models.file import BaseFile
 from acacore.utils.click import end_program
-from acacore.utils.click import param_callback_regex
 from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
 from click import argument
+from click import BadParameter
 from click import command
 from click import Context
 from click import DateTime
 from click import option
+from click import Parameter
 from click import pass_context
 
 from digiarch.__version__ import __version__
-from digiarch.common import argument_root
-from digiarch.common import ctx_params
+from digiarch.common import _RH
+from digiarch.common import AVID
+from digiarch.common import find_rollback_handlers
+from digiarch.common import get_avid
+from digiarch.common import open_database
 from digiarch.common import option_dry_run
 
 
-def rollback_edit_action(database: FileDB, event: HistoryEntry, dry_run: bool) -> tuple[File | None, str | None]:
-    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
-    if file and not dry_run:
-        # noinspection PyUnresolvedReferences
-        old_action: TActionType | None = event.data[0]
-        # noinspection PyUnresolvedReferences
-        old_action_data: dict[TActionType, dict | None] = event.data[2]
-        file.action = old_action
-        file.action_data = ActionData.model_validate(file.action_data.model_dump() | old_action_data)
-        database.files.update(file, {"uuid": file.uuid})
-    return file, None
+def callback_arg_run(ctx: Context, param: Parameter, value: str) -> tuple[int, int | None] | datetime:
+    if fullmatch(r"\d+(:\d+)?", value):
+        start, _, end = value.partition(":")
+        start_index, end_index = int(start), int(end or start)
+        if start_index < 1 or end_index < 1:
+            raise BadParameter("index must be a positive non-zero integer.")
+        if start_index > end_index:
+            start_index, end_index = end_index, start_index
+        if start_index == end_index:
+            end_index = None
+        return start_index, end_index
+
+    return DateTime(["%Y-%m-%dT%H:%M:%S.%f", "%Y-%m-%dT%H:%M:%S"]).convert(value, param, ctx)
 
 
-# noinspection DuplicatedCode
-def rollback_edit_lock(database: FileDB, event: HistoryEntry, dry_run: bool) -> tuple[File | None, str | None]:
-    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
-    if file and not dry_run:
-        # noinspection PyUnresolvedReferences
-        file.lock = event.data[0]
-        database.files.update(file, {"uuid": file.uuid})
-    return file, None
+def fetch_runs(database: FilesDB, run: tuple[int, int | None] | datetime, exclude_op: str) -> list[tuple[Event, Event]]:
+    runs_start: list[Event]
+    runs: list[tuple[Event, Event]]
 
-
-# noinspection DuplicatedCode
-def rollback_edit_processed(database: FileDB, event: HistoryEntry, dry_run: bool) -> tuple[File | None, str | None]:
-    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
-    if file and not dry_run:
-        # noinspection PyUnresolvedReferences
-        file.processed = event.data[0]
-        database.files.update(file, {"uuid": file.uuid})
-    return file, None
-
-
-# noinspection DuplicatedCode
-def rollback_edit_rename(
-    database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
-) -> tuple[File | None, str | None]:
-    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
-    if file and not dry_run:
-        file.root = root
-        # noinspection PyUnresolvedReferences
-        old_name: str = event.data[0]
-        if (old_path := file.get_absolute_path().with_name(old_name)).is_file():
-            return None, "file already exists"
-        file.get_absolute_path().rename(old_path)
-        file.name = old_name
-        database.files.update(file, {"uuid": file.uuid})
-    return file, None
-
-
-def rollback_edit_remove(
-    database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
-) -> tuple[File | None, str | None]:
-    file = File.model_validate(event.data)
-    if not file.get_absolute_path(root).is_file():
-        return None, "file does not exist"
-    elif file and not dry_run:
-        database.files.insert(file)
-    return file, None
-
-
-def rollback_extract_unpacked(database: FileDB, event: HistoryEntry, dry_run: bool) -> tuple[File | None, str | None]:
-    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
-    if file and dry_run:
-        return file, None
-    elif not file:
-        return None, None
-    elif not file.action_data.extract:
-        return None, "file does not contain extract data"
-    elif file.action_data.extract.on_success:
-        file.action = "extract"
-        database.files.update(file, {"uuid": file.uuid})
+    if isinstance(run, tuple):
+        runs_start = database.log.select(
+            "operation like '%:start' and operation != ?",
+            [exclude_op],
+            order_by=[("time", "desc")],
+            offset=run[0] - 1,
+            limit=(run[1] - run[0] + 1) if run[1] else 1,
+        ).fetchall()
     else:
-        file.action = "extract"
-        file.action_data.ignore = None
-        file.processed = False
-        database.files.update(file, {"uuid": file.uuid})
-    return file, None
+        runs_start = database.log.select(
+            "time <= ? and operation like '%:start' and operation != ?",
+            [run.isoformat(), exclude_op],
+            limit=1,
+        ).fetchall()
+
+    runs = [
+        (r, e)
+        for r in runs_start
+        if (
+            e := database.log.select(
+                "time >= ? and operation = ?",
+                [r.time.isoformat(), r.operation.split(":")[0] + ":end"],
+                order_by=[("time", "desc")],
+                limit=1,
+            ).fetchone()
+        )
+    ]
+
+    return runs
 
 
-def rollback_extract_new(
-    database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
-) -> tuple[File | None, str | None]:
-    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
-    if file and not dry_run:
-        database.execute(f"delete from {database.files.name} where uuid = ?", [str(file.uuid)])
-        file.get_absolute_path(root).unlink(missing_ok=True)
-    return file, None
+def get_file(
+    database: FilesDB,
+    file_type: Literal["original", "master", "access", "statutory"] | None,
+    file_uuid: UUID | None,
+) -> BaseFile | None:
+    if not file_type or not file_uuid:
+        return None
+    if file_type == "original":
+        return database.original_files.select("uuid = ?", [str(file_uuid)], limit=1).fetchone()
+    if file_type == "master":
+        return database.master_files.select("uuid = ?", [str(file_uuid)], limit=1).fetchone()
+    if file_type == "access":
+        return database.access_files.select("uuid = ?", [str(file_uuid)], limit=1).fetchone()
+    if file_type == "statutory":
+        return database.statutory_files.select("uuid = ?", [str(file_uuid)], limit=1).fetchone()
+    return None
 
 
-# noinspection DuplicatedCode
-def rollback_doctor_rename(
-    database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
-) -> tuple[File | None, str | None]:
-    file = database.files.select(where="uuid = ?", parameters=[str(event.uuid)]).fetchone()
-    if file and not dry_run:
-        file.root = root
-        # noinspection PyUnresolvedReferences
-        old_name: str = event.data[0]
-        if (old_path := file.get_absolute_path().with_name(old_name)).is_file():
-            return None, "file already exists"
-        file.get_absolute_path().rename(old_path)
-        file.name = old_name
-        database.files.update(file, {"uuid": file.uuid})
-    return file, None
+def rollback(
+    ctx: Context,
+    avid: AVID,
+    database: FilesDB,
+    handlers: dict[str, _RH],
+    runs: list[tuple[Event, Event]],
+    rolled_runs: set[datetime],
+    dry_run: bool,
+    *loggers: Logger,
+):
+    runs.sort(key=lambda r: -r[0].time.timestamp())
 
+    for run_start, run_end in runs:
+        if run_start.time in rolled_runs:
+            Event.from_command(ctx, "skip").log(
+                INFO,
+                *loggers,
+                run=f"{run_start.time:%Y-%m-%dT%T}",
+                reason="Already rolled back",
+            )
+            continue
 
-def rollback_doctor_files(
-    database: FileDB, root: Path, event: HistoryEntry, dry_run: bool
-) -> tuple[File | None, str | None]:
-    file = File.model_validate(event.data)
-    if not file.get_absolute_path(root).is_file():
-        return None, "file does not exist"
-    elif file and not dry_run:
-        database.files.insert(file)
-    return file, None
+        partial: bool = False
+
+        try:
+            for event in database.log.select(
+                "time >= ? and time <= ? and operation not in (?, ?)",
+                [run_start.time.isoformat(), run_end.time.isoformat(), run_start.operation, run_end.operation],
+            ):
+                if not event.file_uuid:
+                    continue
+                if not event.file_type:
+                    continue
+                if not (handler := handlers.get(event.operation)):
+                    Event.from_command(ctx, "skip", (event.file_uuid, event.file_type)).log(
+                        INFO,
+                        *loggers,
+                        run=f"{run_start.time:%Y-%m-%dT%T}",
+                        event=f"{event.time:%Y-%m-%dT%T} {event.operation}",
+                        reason="No handler found",
+                    )
+                    break
+
+                file = get_file(database, event.file_type, event.file_uuid)
+
+                with ExceptionManager(BaseException, allow=[KeyboardInterrupt, DatabaseError]) as exception:
+                    if not dry_run:
+                        handler(ctx, avid, database, event, file)
+                        database.commit()
+                    partial = True
+
+                Event.from_command(
+                    ctx,
+                    "error" if exception.exception else "event",
+                    (event.file_uuid, event.file_type),
+                ).log(
+                    INFO,
+                    *loggers,
+                    run=f"{run_start.time:%Y-%m-%dT%T}",
+                    event=f"{event.time:%Y-%m-%dT%T} {event.operation}",
+                    reason=repr(exception.exception) if exception.exception else None,
+                )
+
+            if not dry_run:
+                database.log.insert(Event.from_command(ctx, "run", None, run_start))
+        except BaseException as err:
+            if partial:
+                event = Event.from_command(ctx, "run:partial", None, run_start, repr(err))
+                if not dry_run:
+                    database.log.insert(event)
+                event.log(WARN, *loggers, show_args=False, run=f"{run_start.time:%Y-%m-%dT%T}", reason=repr(err))
+            raise
 
 
 @command("rollback", no_args_is_help=True, short_help="Roll back edits.")
-@argument_root(True)
-@argument(
-    "time_from",
-    metavar="FROM",
-    nargs=1,
-    type=DateTime(["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]),
-    required=True,
-)
-@argument(
-    "time_to",
-    metavar="TO",
-    nargs=1,
-    type=DateTime(["%Y-%m-%dT%H:%M:%S", "%Y-%m-%dT%H:%M:%S.%f"]),
-    required=True,
-)
-@argument("reason", nargs=1, type=str, required=True)
-@option(
-    "--command",
-    "commands",
-    type=str,
-    multiple=True,
-    callback=param_callback_regex(r"^[a-z-]+(.[a-z-]+)*$"),
-    help="Specify commands to roll back.  [multiple]",
-)
+@argument("run", nargs=1, type=str, required=True, callback=callback_arg_run)
+@option("--ignore-partial", is_flag=True, default=False, help="Ignore partially rolled back runs.")
 @option_dry_run()
 @pass_context
-def command_rollback(
-    ctx: Context,
-    root: Path,
-    reason: str,
-    time_from: datetime,
-    time_to: datetime,
-    commands: tuple[str, ...],
-    dry_run: bool,
-):
+def cmd_rollback(ctx: Context, run: tuple[int, int | None] | datetime, ignore_partial: bool, dry_run: bool):
     """
-    Roll back edits between two timestamps.
+    Roll back changes.
 
-    FROM and TO timestamps must be in the format '%Y-%m-%dT%H:%M:%S' or '%Y-%m-%dT%H:%M:%S.%f'.
+    RUN can be a run index (1 for the previous run, 2 for the run before that, and so on), an index slice
+    (e.g., 2:4 to roll back the second to last through the fourth to last run) or the timestamp of a run in the format
+    '%Y-%m-%dT%H:%M:%S' or '%Y-%m-%dT%H:%M:%S.%f'.
 
-    Using the --command option allows to restrict rollbacks to specific events with the given commands if the
-    timestamps are not precise enough. E.g., "digiarch.edit.rename" to roll back changes performed by the "edit rename"
-    command.
+    Runs that have already been rolled back (even if just partially) are ignored. To include partially rolled-back runs
+    use the --ignore-partial option.
 
     To see the changes without committing them, use the --dry-run option.
     """
-    from digiarch.commands.doctor import command_doctor
-    from digiarch.commands.extract.extract import command_extract
+    handlers = find_rollback_handlers(ctx.find_root().command)
 
-    from .edit import command_lock
-    from .edit import command_processed
-    from .edit import command_remove
-    from .edit import command_rename
-    from .edit import group_action
-    from .edit import group_edit
+    avid = get_avid(ctx)
 
-    program_name: str = ctx.find_root().command.name
-
-    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
-
-    with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
+    with open_database(ctx, avid) as database:
+        _, log_stdout, start_event = start_program(ctx, database, __version__, None, False, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            where = "uuid is not null and time >= ? and time <= ?"
-            parameters = [time_from.isoformat(), time_to.isoformat()]
-            if commands := tuple(c.strip() for c in commands if c.strip()):
-                where += " and operation like ? || ':%'" * len(commands)
-                parameters.extend(commands)
-            events: list[HistoryEntry] = list(
-                database.history.select(where=where, parameters=parameters, order_by=[("time", "desc")])
-            )
-            for event in events:
-                name, _, operation = event.operation.partition(":")
-                file: File | None
+            runs = fetch_runs(database, run, start_event.operation)
+            rolled_runs: set[tuple[datetime, bool]] = {
+                (Event.model_validate(r.data).time, r.operation.endswith(":run:partial"))
+                for r in database.log.select(
+                    "operation in (?, ?)",
+                    [
+                        f"{start_event.operation.split(':')[0]}:run",
+                        f"{start_event.operation.split(':')[0]}:run:partial",
+                    ],
+                ).fetchall()
+            }
 
-                if name.startswith(f"{program_name}.{group_edit.name}.{group_action.name}"):
-                    if operation != "edit":
-                        continue
-                    file, error = rollback_edit_action(database, event, dry_run)
-                elif name == f"{program_name}.{group_edit.name}.{command_lock.name}":
-                    if operation != "edit":
-                        continue
-                    file, error = rollback_edit_lock(database, event, dry_run)
-                elif name == f"{program_name}.{group_edit.name}.{command_processed.name}":
-                    if operation != "edit":
-                        continue
-                    file, error = rollback_edit_processed(database, event, dry_run)
-                elif name == f"{program_name}.{group_edit.name}.{command_rename.name}":
-                    if operation != "edit":
-                        continue
-                    file, error = rollback_edit_rename(database, root, event, dry_run)
-                elif name == f"{program_name}.{group_edit.name}.{command_remove.name}":
-                    if operation != "remove":
-                        continue
-                    file, error = rollback_edit_remove(database, root, event, dry_run)
-                elif name == f"{program_name}.{command_extract.name}":
-                    if operation == "unpacked":
-                        file, error = rollback_extract_unpacked(database, event, dry_run)
-                    elif operation == "new":
-                        file, error = rollback_extract_new(database, root, event, dry_run)
-                    else:
-                        continue
-                elif name == f"{program_name}.{command_doctor.name}":
-                    if operation in ("sanitize-paths.rename", "deduplicate-extensions.rename"):
-                        file, error = rollback_doctor_rename(database, root, event, dry_run)
-                    elif operation == "files.remove":
-                        file, error = rollback_doctor_files(database, root, event, dry_run)
-                    else:
-                        continue
-                else:
-                    HistoryEntry.command_history(ctx, "warning", None, event.operation, "Unknown event").log(
-                        WARNING, log_stdout
-                    )
-                    continue
-
-                if not file:
-                    error_reason = "File cannot be restored"
-                    error_reason += f": {error}" if error else ""
-                    HistoryEntry.command_history(
-                        ctx, "error", event.uuid, [event.time.isoformat(), event.operation], error_reason
-                    ).log(ERROR, log_file, log_stdout)
-                    continue
-
-                rollback_event = HistoryEntry.command_history(
-                    ctx, "rollback", event.uuid, event.model_dump(mode="json"), reason
+            if runs:
+                rollback(
+                    ctx,
+                    avid,
+                    database,
+                    handlers,
+                    runs,
+                    {t for t, p in rolled_runs if not ignore_partial or not p},
+                    dry_run,
+                    log_stdout,
                 )
+            else:
+                Event.from_command(ctx, "skip", reason="No matching runs found").log(INFO, log_stdout)
 
-                if not dry_run:
-                    database.history.insert(rollback_event)
-
-                rollback_event.data = event.operation
-                rollback_event.log(INFO, log_stdout)
-
-        end_program(ctx, database, exception, dry_run, log_file, log_stdout)
+        end_program(ctx, database, exception, dry_run, log_stdout)
