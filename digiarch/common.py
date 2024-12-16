@@ -10,6 +10,8 @@ from typing import TypeVar
 
 import yaml
 from acacore.database import FilesDB
+from acacore.models.event import Event
+from acacore.models.file import BaseFile
 from acacore.models.reference_files import Action
 from acacore.models.reference_files import CustomSignature
 from acacore.models.reference_files import MasterConvertAction
@@ -18,7 +20,9 @@ from acacore.reference_files import get_custom_signatures
 from acacore.reference_files import get_master_actions
 from acacore.utils.click import ctx_params
 from click import BadParameter
+from click import Command
 from click import Context
+from click import Group
 from click import option
 from click import UsageError
 from pydantic import TypeAdapter
@@ -206,6 +210,35 @@ class TempDir(TemporaryDirectory):
 
     def __enter__(self) -> Path:
         return Path(self.name)
+
+
+_RH = Callable[[Context, AVID, FilesDB, Event, BaseFile | None], list[Event] | None]
+
+
+class CommandWithRollback(Command):
+    def __init__(self, *args, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        self.rollback: dict[str, _RH] = {}
+
+
+def rollback(operation: str, handler: _RH) -> Callable[[CommandWithRollback], CommandWithRollback]:
+    def inner(cmd: CommandWithRollback) -> CommandWithRollback:
+        cmd.rollback[operation] = handler
+        return cmd
+
+    return inner
+
+
+def find_rollback_handlers(app: Command) -> dict[str, Callable]:
+    handlers: dict[str, _RH] = {}
+
+    if isinstance(app, Group):
+        for name, cmd in app.commands.items():
+            handlers |= {f"{app.name}.{n}": h for n, h in find_rollback_handlers(cmd).items()}
+    elif isinstance(app, CommandWithRollback):
+        handlers |= {f"{app.name}:{op}": h for op, h in app.rollback.items()}
+
+    return handlers
 
 
 def get_avid(ctx: Context, path: str | PathLike[str] | None = None) -> AVID:
