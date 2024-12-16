@@ -115,6 +115,6 @@ jobs:
       - name: Unit test
         env:
           GOPATH: /home/runner/go
-        run: |
-          poetry run coverage run -m pytest
-          poetry run coverage report -m --fail-under=80 --skip-empty --skip-covered
+        run: poetry run coverage run -m pytest
+      - name: Coverage
+        run: poetry run coverage report -m --fail-under=80 --skip-empty --skip-covered
