@@ -1,8 +1,11 @@
 from logging import INFO
+from pathlib import Path
 from re import match
 from sqlite3 import Error as SQLiteError
 
+from acacore.database import FilesDB
 from acacore.models.event import Event
+from acacore.models.file import BaseFile
 from acacore.utils.click import end_program
 from acacore.utils.click import param_callback_regex
 from acacore.utils.click import start_program
@@ -14,15 +17,43 @@ from click import option
 from click import pass_context
 
 from digiarch.__version__ import __version__
+from digiarch.common import AVID
+from digiarch.common import CommandWithRollback
 from digiarch.common import get_avid
 from digiarch.common import open_database
 from digiarch.common import option_dry_run
+from digiarch.common import rollback
 from digiarch.query import argument_query
 from digiarch.query import query_table
 from digiarch.query import TQuery
 
 
-@command("rename", no_args_is_help=True, short_help="Change file extensions.")
+def rollback_rename_original(_ctx: Context, avid: AVID, database: FilesDB, event: Event, file: BaseFile | None):
+    if not file:
+        raise FileNotFoundError(f"No file with UUID {event.file_uuid}")
+
+    file.root = avid.path
+    current_path: Path = file.relative_path
+    prev_name: str
+    prev_name, _ = event.data
+
+    if file.relative_path == file.relative_path.with_name(prev_name):
+        return
+    if file.get_absolute_path().with_name(prev_name).is_file():
+        raise FileExistsError(f"File with name {prev_name!r} already exists")
+
+    file.get_absolute_path().rename(file.get_absolute_path().with_name(prev_name))
+    file.relative_path = file.relative_path.with_name(prev_name)
+
+    try:
+        database.original_files.update(file, {"relative_path": str(current_path)})
+    except:
+        file.get_absolute_path().rename(file.get_absolute_path().with_name(current_path.name))
+        raise
+
+
+@rollback("edit", rollback_rename_original)
+@command("rename", no_args_is_help=True, short_help="Change file extensions.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument(
     "extension",
