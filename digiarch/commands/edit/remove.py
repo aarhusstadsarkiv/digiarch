@@ -1,6 +1,7 @@
 from logging import INFO
 from logging import Logger
 from pathlib import Path
+from sqlite3 import DatabaseError
 from typing import Literal
 
 from acacore.database import FilesDB
@@ -20,9 +21,11 @@ from click import pass_context
 
 from digiarch.__version__ import __version__
 from digiarch.common import AVID
+from digiarch.common import CommandWithRollback
 from digiarch.common import get_avid
 from digiarch.common import open_database
 from digiarch.common import option_dry_run
+from digiarch.common import rollback
 from digiarch.query import argument_query
 from digiarch.query import query_table
 from digiarch.query import TQuery
@@ -130,7 +133,21 @@ def remove_files(
                 reset_parent_processed(database, file)
 
 
-@command("remove", no_args_is_help=True, short_help="Remove files.")
+def rollback_remove_original(_ctx: Context, avid: AVID, database: FilesDB, event: Event, file: BaseFile | None):
+    old_file = OriginalFile.model_validate(event.data)
+    old_file.root = avid.path
+
+    if file and file.relative_path != old_file.relative_path:
+        # File exists in database but the path is different
+        raise DatabaseError(f"Duplicated file UUID {file.uuid}")
+    if not old_file.get_absolute_path().is_file():
+        raise FileNotFoundError(old_file.relative_path)
+
+    database.original_files.insert(old_file)
+
+
+@rollback("remove", rollback_remove_original)
+@command("remove", no_args_is_help=True, short_help="Remove files.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--delete", is_flag=True, default=False, help="Remove selected files from the disk.")
