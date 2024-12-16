@@ -28,6 +28,7 @@ from digiarch.commands.edit.remove import remove_children
 from digiarch.commands.identify import identify_original_file
 from digiarch.commands.identify import identify_requirements
 from digiarch.common import AVID
+from digiarch.common import CommandWithRollback
 from digiarch.common import get_avid
 from digiarch.common import open_database
 from digiarch.common import option_dry_run
@@ -128,7 +129,7 @@ def rollback_extract(ctx: Context, avid: AVID, database: FilesDB, _event: Event,
 
 
 @rollback("unpacked", rollback_extract)
-@command("extract", short_help="Unpack archives.")
+@command("extract", short_help="Unpack archives.", cls=CommandWithRollback)
 @argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @option(
     "--siegfried-path",
