@@ -192,6 +192,15 @@ def cmd_extract(
 
         with ExceptionManager(BaseException) as exception:
             while archive_file := next_archive_file(db, query, offset):
+                if archive_file.action != "extract":
+                    Event.from_command(
+                        ctx,
+                        "skip",
+                        (archive_file.uuid, "original"),
+                        reason="Does not have extract action",
+                    ).log(INFO, log_stdout, path=archive_file.relative_path)
+                    offset += 1
+                    continue
                 archive_file.root = avid.path
                 extractor_cls, extractor_tool = find_extractor(archive_file)
 
