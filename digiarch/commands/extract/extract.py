@@ -230,13 +230,13 @@ def cmd_extract(
                     handle_extract_error(ctx, db, archive_file, err, log_stdout)
                     continue
                 except Exception as err:
-                    Event.from_command(ctx, "error", archive_file.uuid, None, repr(err)).log(
-                        ERROR,
-                        log_stdout,
-                        show_args=["uuid"],
-                        error=repr(err),
-                        path=archive_file.relative_path,
-                    )
+                    Event.from_command(
+                        ctx,
+                        "error",
+                        (archive_file.uuid, "original"),
+                        None,
+                        repr(err),
+                    ).log(ERROR, log_stdout, show_args=["uuid"], error=repr(err), path=archive_file.relative_path)
                     raise
                 finally:
                     if (folder := extractor.extract_folder).is_dir() and not next(folder.iterdir(), None):
