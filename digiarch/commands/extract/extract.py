@@ -7,6 +7,7 @@ from typing import Type
 
 from acacore.database import FilesDB
 from acacore.models.event import Event
+from acacore.models.file import BaseFile
 from acacore.models.file import OriginalFile
 from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
@@ -23,11 +24,14 @@ from click import pass_context
 from click import Path as ClickPath
 
 from digiarch.__version__ import __version__
+from digiarch.commands.edit.remove import remove_children
 from digiarch.commands.identify import identify_original_file
 from digiarch.commands.identify import identify_requirements
+from digiarch.common import AVID
 from digiarch.common import get_avid
 from digiarch.common import open_database
 from digiarch.common import option_dry_run
+from digiarch.common import rollback
 from digiarch.query import argument_query
 from digiarch.query import query_to_where
 from digiarch.query import TQuery
@@ -108,6 +112,22 @@ def handle_extract_error(
         event.log(ERROR, *loggers, show_args=["uuid"], error=repr(err), path=file.relative_path)
 
 
+def rollback_extract(ctx: Context, avid: AVID, database: FilesDB, _event: Event, file: BaseFile | None):
+    if not file:
+        return
+
+    for child in database.original_files.select("parent = ?", [str(file.uuid)]).fetchall():
+        remove_children(ctx, avid, database, child, log_removal=False)
+        child.get_absolute_path(avid.path).unlink(missing_ok=True)
+        database.original_files.delete(child)
+
+    if file.action_data.extract:
+        file.action = "extract"
+    else:
+        file.action = None
+
+
+@rollback("unpacked", rollback_extract)
 @command("extract", short_help="Unpack archives.")
 @argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @option(
