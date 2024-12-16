@@ -8,17 +8,21 @@ from click import option
 from click import pass_context
 
 from digiarch.__version__ import __version__
+from digiarch.common import CommandWithRollback
 from digiarch.common import get_avid
 from digiarch.common import open_database
 from digiarch.common import option_dry_run
+from digiarch.common import rollback
 from digiarch.query import argument_query
 from digiarch.query import TQuery
 
 from .common import edit_file_value
+from .common import rollback_file_value
 
 
 # noinspection DuplicatedCode
-@command("lock", no_args_is_help=True, short_help="Lock files.")
+@rollback("edit", rollback_file_value("lock"))
+@command("lock", no_args_is_help=True, short_help="Lock files.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--lock/--unlock", is_flag=True, default=True, show_default=True, help="Lock or unlock files.")
