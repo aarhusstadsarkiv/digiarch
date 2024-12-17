@@ -21,7 +21,7 @@ from .common import rollback_file_value
 
 
 # noinspection DuplicatedCode
-@rollback("edit", rollback_file_value("lock"))
+@rollback("edit", rollback_file_value("processed"))
 @command("processed", no_args_is_help=True, short_help="Set original files as processed.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
