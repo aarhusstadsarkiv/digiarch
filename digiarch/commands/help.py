@@ -5,7 +5,6 @@ from click import command
 from click import Context
 from click import Group
 from click import Option
-from click import option
 from click import pass_context
 from click import UsageError
 from click.shell_completion import CompletionItem
@@ -26,7 +25,6 @@ def commands_completion(ctx: Context, param: Option, incomplete: str) -> list[Co
 
 @command("help", context_settings={"ignore_unknown_options": True})
 @argument("commands", nargs=-1, required=False, type=str, shell_complete=commands_completion)
-@option("--database", expose_value=False, required=False, hidden=True)
 @pass_context
 def cmd_help(ctx: Context, commands: tuple[str, ...]):
     """Show the help for a command."""
