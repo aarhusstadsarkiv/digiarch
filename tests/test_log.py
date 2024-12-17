@@ -9,4 +9,4 @@ def test_log(avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     run_click(avid.path, app, "log", "--order", "desc")
-    run_click(avid.path, app, "log", "--run-only")
+    run_click(avid.path, app, "log", "--runs-only")
