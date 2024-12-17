@@ -34,6 +34,7 @@ EXCLUDED_ATTACHMENTS: list[str] = [
 def validate_msg(file: BaseFile) -> Message | MessageSigned:
     try:
         msg: MSGFile = openMsg(file.get_absolute_path(), delayAttachments=True)
+        _ = msg.attachments
     except ExMsgBaseException as e:
         raise UnrecognizedFileError(file, e.args[0] if e.args else "File cannot be opened as msg")
 
