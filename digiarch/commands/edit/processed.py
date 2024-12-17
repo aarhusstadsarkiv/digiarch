@@ -66,7 +66,7 @@ def cmd_processed_original(ctx: Context, query: TQuery, reason: str, processed: 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@rollback("edit", rollback_file_value("lock"))
+@rollback("edit", rollback_file_value("processed"))
 @command("processed", no_args_is_help=True, short_help="Set master files as processed.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed"])
 @argument("reason", nargs=1, type=str, required=True)
