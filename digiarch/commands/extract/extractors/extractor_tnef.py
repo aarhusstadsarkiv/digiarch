@@ -25,7 +25,7 @@ class TNEFExtractor(ExtractorBase):
         with TempDir(self.file.root) as tmp_dir:
             for attachment in tnef.attachments:
                 name: str = attachment.long_filename() or attachment.name
-                path: Path = tmp_dir.joinpath(sanitize_filename(name))
+                path: Path = tmp_dir.joinpath(sanitize_filename(name, 20, True))
                 with path.open("wb") as oh:
                     oh.write(attachment.data)
                 files.append((path.name, name))

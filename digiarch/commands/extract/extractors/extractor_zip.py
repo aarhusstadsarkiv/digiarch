@@ -4,6 +4,7 @@ from zipfile import BadZipFile
 from zipfile import LargeZipFile
 from zipfile import ZipFile
 
+from digiarch.common import sanitize_filename
 from digiarch.common import sanitize_path
 from digiarch.common import TempDir
 
@@ -37,6 +38,7 @@ class ZipExtractor(ExtractorBase):
 
                         path_original: Path = Path(zf.extract(member, tmp_extract))
                         path_final: Path = tmp_final.joinpath(sanitize_path(path_original.relative_to(tmp_extract)))
+                        path_final = path_final.with_name(sanitize_filename(path_final.name, 20, True))
                         while path_final.exists():
                             path_final = path_final.with_name("_" + path_final.name)
 

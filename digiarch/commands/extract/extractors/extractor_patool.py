@@ -5,6 +5,7 @@ from acacore.utils.functions import find_files
 from patoolib import extract_archive
 from patoolib.util import PatoolError
 
+from digiarch.common import sanitize_filename
 from digiarch.common import sanitize_path
 from digiarch.common import TempDir
 
@@ -62,6 +63,7 @@ class PatoolExtractor(ExtractorBase):
 
                 for path in find_files(tmp_dir):
                     path_sanitized: Path = extract_folder / sanitize_path(path.relative_to(tmp_dir))
+                    path_sanitized = path_sanitized.with_name(sanitize_filename(path_sanitized.name, 20, True))
                     while path_sanitized.exists():
                         path_sanitized = path_sanitized.with_name("_" + path_sanitized.name)
                     path_sanitized.parent.mkdir(parents=True, exist_ok=True)

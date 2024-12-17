@@ -123,7 +123,7 @@ class MsgExtractor(ExtractorBase):
                 if isinstance(attachment, (Message, MessageSigned)):
                     name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
                     name = name.strip() or f"attachment-{n}"
-                    name_sanitized: str = sanitize_filename(name).strip("_") or f"attachment-{n}"
+                    name_sanitized: str = sanitize_filename(name, 20, True).strip("_") or f"attachment-{n}"
                     attachment.export(tmp_dir / name_sanitized)
                     files.append((name_sanitized, name))
                 elif isinstance(attachment.data, bytes):
@@ -133,7 +133,7 @@ class MsgExtractor(ExtractorBase):
                         else attachment.longFilename or ""
                     )
                     name = name.strip() or f"attachment-{n}"
-                    name_sanitized: str = sanitize_filename(name).strip("_") or f"attachment-{n}"
+                    name_sanitized: str = sanitize_filename(name, 20, True).strip("_") or f"attachment-{n}"
                     with tmp_dir.joinpath(name_sanitized).open("wb") as fh:
                         fh.write(attachment.data or b"")
                     files.append((name_sanitized, name))
