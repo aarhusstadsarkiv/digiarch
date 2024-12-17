@@ -736,7 +736,7 @@ Usage: digiarch edit rollback [OPTIONS] RUN
   '%Y-%m-%dT%H:%M:%S' or '%Y-%m-%dT%H:%M:%S.%f'.
 
   Runs that have already been rolled back (even if just partially) are
-  ignored. To include partially rolled-back runs use the --ignore-partial
+  ignored. To include partially rolled-back runs use the --resume-partial
   option.
 
   To see the changes without committing them, use the --dry-run option.
@@ -745,7 +745,7 @@ Usage: digiarch edit rollback [OPTIONS] RUN
   option.
 
 Options:
-  --ignore-partial  Ignore partially rolled back runs.
+  --resume-partial  Ignore partially rolled back runs.
   --list-commands   List commands that can be rolled back.
   --dry-run         Show changes without committing them.
   --help            Show this message and exit.
