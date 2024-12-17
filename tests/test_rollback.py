@@ -9,13 +9,13 @@ from .conftest import run_click
 
 
 # noinspection DuplicatedCode
-def test_rollback_extract(avid_folder_copy: Path):
+def test_rollback_extract(reference_files: Path, avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     with FilesDB(avid.database_path) as database:
         files = database.original_files.select("action = 'extract'").fetchall()
 
-    run_click(avid.path, app, "extract")
+    run_click(avid.path, app, "extract", "--siegfried-home", reference_files)
 
     with FilesDB(avid.database_path) as database:
         extracted_files = database.original_files.select("parent is not null").fetchall()
