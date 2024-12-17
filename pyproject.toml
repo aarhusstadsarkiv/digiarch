@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "4.1.12"
+version = "5.0.0"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -12,8 +12,8 @@ include = ["pyproject.toml"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v3.3.3"}
-patool = "^3.0.3"
+acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v4.0.0"}
+patool = "^3.1.0"
 tnefparse = "^1.4.0"
 extract-msg = "^0.52.0"
 chardet = "^5.2.0"
@@ -95,6 +95,7 @@ ignore = [
     "D212",    # multi-line docstring summary should start at the first line,
     "D213",    # multi-line docstring summary should start at the second line,
     "D300",    # use triple docstring
+    "D400",    # First line should end with a period
     "D401",    # first line of docstring should be in imperative mood
     "DTZ005",  # datetime.datetime.now() called without a tz argument
     "DTZ006",  # datetime.datetime.fromtimestamp() called without a tz argument

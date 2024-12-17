@@ -2,10 +2,9 @@ from contextlib import suppress
 from pathlib import Path
 from re import match
 from typing import ClassVar
-from typing import Generator
 
 import chardet
-from acacore.models.file import File
+from acacore.models.file import BaseFile
 from extract_msg import Attachment
 from extract_msg import AttachmentBase
 from extract_msg import Message
@@ -15,7 +14,8 @@ from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
 from extract_msg.msg_classes import MessageSigned
 
-from digiarch.commands.doctor import sanitize_filename
+from digiarch.common import sanitize_filename
+from digiarch.common import TempDir
 
 from .base import ExtractError
 from .base import ExtractorBase
@@ -31,9 +31,10 @@ EXCLUDED_ATTACHMENTS: list[str] = [
 ]
 
 
-def validate_msg(file: File) -> Message | MessageSigned:
+def validate_msg(file: BaseFile) -> Message | MessageSigned:
     try:
         msg: MSGFile = openMsg(file.get_absolute_path(), delayAttachments=True)
+        _ = msg.attachments
     except ExMsgBaseException as e:
         raise UnrecognizedFileError(file, e.args[0] if e.args else "File cannot be opened as msg")
 
@@ -110,32 +111,42 @@ def msg_attachments(
 class MsgExtractor(ExtractorBase):
     tool_names: ClassVar[list[str]] = ["msg"]
 
-    def extract(self) -> Generator[tuple[Path, Path], None, None]:
+    def extract(self) -> list[tuple[Path, Path]]:
         extract_folder: Path = self.extract_folder
-        extract_folder.mkdir(parents=True, exist_ok=True)
+        files: list[tuple[str, str]] = []
 
         msg: Message | MessageSigned = validate_msg(self.file)
         _, body_html, body_rtf = msg_body(msg)
         inline_attachments, attachments = msg_attachments(msg, body_html, body_rtf)
 
-        for n, attachment in enumerate(inline_attachments + attachments):
-            if isinstance(attachment, (Message, MessageSigned)):
-                name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
-                name = name.strip() or f"attachment-{n}"
-                path: Path = extract_folder.joinpath(sanitize_filename(name).strip("_") or f"attachment-{n}")
-                attachment.export(path)
-                yield path, extract_folder.joinpath(name)
-            elif attachment.data is not None and not isinstance(attachment.data, bytes):
-                raise ExtractError(self.file, f"Cannot extract attachment with data of type {type(attachment.data)}")
-            else:
-                name: str = (
-                    attachment.getFilename() if isinstance(attachment, Attachment) else attachment.longFilename or ""
-                )
-                name = name.strip() or f"attachment-{n}"
-                path: Path = extract_folder.joinpath(sanitize_filename(name).strip("_") or f"attachment-{n}")
-                with path.open("wb") as fh:
-                    # noinspection PyTypeChecker
-                    fh.write(attachment.data or b"")
-                yield path, extract_folder.joinpath(name)
+        with TempDir(self.file.root) as tmp_dir:
+            for n, attachment in enumerate(inline_attachments + attachments):
+                if isinstance(attachment, (Message, MessageSigned)):
+                    name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
+                    name = name.strip() or f"attachment-{n}"
+                    name_sanitized: str = sanitize_filename(name, 20, True).strip("_") or f"attachment-{n}"
+                    attachment.export(tmp_dir / name_sanitized)
+                    files.append((name_sanitized, name))
+                elif isinstance(attachment.data, bytes):
+                    name: str = (
+                        attachment.getFilename()
+                        if isinstance(attachment, Attachment)
+                        else attachment.longFilename or ""
+                    )
+                    name = name.strip() or f"attachment-{n}"
+                    name_sanitized: str = sanitize_filename(name, 20, True).strip("_") or f"attachment-{n}"
+                    with tmp_dir.joinpath(name_sanitized).open("wb") as fh:
+                        fh.write(attachment.data or b"")
+                    files.append((name_sanitized, name))
+                elif attachment.data is not None:
+                    raise ExtractError(self.file, f"Cannot extract attachment of type {type(attachment.data)}")
 
-        yield from ()
+            if not files:
+                return []
+
+            extract_folder.mkdir(parents=True, exist_ok=True)
+
+            return [
+                (tmp_dir.joinpath(name).replace(extract_folder.joinpath(name)), extract_folder.joinpath(name_original))
+                for name, name_original in files
+            ]

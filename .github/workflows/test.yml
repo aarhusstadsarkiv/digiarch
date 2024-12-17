@@ -81,19 +81,21 @@ jobs:
           test "$acacore_remote" = "$acacore_package"
 
   version-database:
-    name: Test database version
+    name: Test Database version
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - name: Test database version
         run: |
-          acacore_database="$(sqlite3 tests/files/_metadata/files.db "select value from Metadata where key = 'version'")"
+          acacore_database="$(sqlite3 tests/AVID/_metadata/avid.db "select value from Metadata where key = 'version'")"
+          acacore_database="${acacore_database#*\"}"
+          acacore_database="${acacore_database#v}"
+          acacore_database="${acacore_database%\"}"
           acacore_package="$(grep 'acacore =' pyproject.toml | grep -oE 'tag[ ]*=[ ]*"[^"]+"')"
           acacore_package="${acacore_package#*\"}"
           acacore_package="${acacore_package#v}"
           acacore_package="${acacore_package%\"}"
           test "$acacore_database" = "$acacore_package"
-  
 
   pytest:
     name: pytest
@@ -113,6 +115,6 @@ jobs:
       - name: Unit test
         env:
           GOPATH: /home/runner/go
-        run: |
-          poetry run coverage run -m pytest
-          poetry run coverage report -m --fail-under=80 --skip-empty --skip-covered
+        run: poetry run coverage run -m pytest
+      - name: Coverage
+        run: poetry run coverage report -m --fail-under=80 --skip-empty --skip-covered

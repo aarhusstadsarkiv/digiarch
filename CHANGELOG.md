@@ -1,5 +1,32 @@
 # Changelog
 
+## v5.0.0
+
+Complete overhaul of digiarch to work with the entire AVID folder and handle files across document types (original,
+master, access, and statutory).
+
+General structure is the same but some commands have been update to support the different document types.
+
+### New Features
+
+* Handle original, master, access, and statutory documents
+* Automatically detect root AVID folder
+* Import a database created with v4 of digiarch
+* New `edit master` commands to handle master files
+
+### Changes
+
+* Removed duplicated functions like `reidentify`, query arguments are used instead to run/rerun a command on specific
+  files
+* Improved file identification and extraction to be faster and more resilient
+* Overhauled and safer rollback command
+* Improved filename sanitization when extracting files
+
+### Fixes
+
+* Fix file name length error when running extract on some MSG files whose attached files had extra-long
+  names [#748](https://github.com/aarhusstadsarkiv/digiarch/issues/748)
+
 ## v4.1.12
 
 ### Changes

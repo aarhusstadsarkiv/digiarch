@@ -3,9 +3,9 @@ from pathlib import Path
 from re import match
 from sqlite3 import Error as SQLiteError
 
-from acacore.database import FileDB
-from acacore.models.history import HistoryEntry
-from acacore.utils.click import check_database_version
+from acacore.database import FilesDB
+from acacore.models.event import Event
+from acacore.models.file import BaseFile
 from acacore.utils.click import end_program
 from acacore.utils.click import param_callback_regex
 from acacore.utils.click import start_program
@@ -17,17 +17,43 @@ from click import option
 from click import pass_context
 
 from digiarch.__version__ import __version__
-from digiarch.common import argument_root
-from digiarch.common import ctx_params
+from digiarch.common import AVID
+from digiarch.common import CommandWithRollback
+from digiarch.common import get_avid
+from digiarch.common import open_database
 from digiarch.common import option_dry_run
+from digiarch.common import rollback
+from digiarch.query import argument_query
+from digiarch.query import query_table
+from digiarch.query import TQuery
 
-from .common import argument_query
-from .common import find_files
-from .common import TQuery
+
+def rollback_rename_original(_ctx: Context, avid: AVID, database: FilesDB, event: Event, file: BaseFile | None):
+    if not file:
+        raise FileNotFoundError(f"No file with UUID {event.file_uuid}")
+
+    file.root = avid.path
+    current_path: Path = file.relative_path
+    prev_name: str
+    prev_name, _ = event.data
+
+    if file.relative_path == file.relative_path.with_name(prev_name):
+        return
+    if file.get_absolute_path().with_name(prev_name).is_file():
+        raise FileExistsError(f"File with name {prev_name!r} already exists")
+
+    file.get_absolute_path().rename(file.get_absolute_path().with_name(prev_name))
+    file.relative_path = file.relative_path.with_name(prev_name)
+
+    try:
+        database.original_files.update(file, {"relative_path": str(current_path)})
+    except:
+        file.get_absolute_path().rename(file.get_absolute_path().with_name(current_path.name))
+        raise
 
 
-@command("rename", no_args_is_help=True, short_help="Change file extensions.")
-@argument_root(True)
+@rollback("edit", rollback_rename_original)
+@command("rename", no_args_is_help=True, short_help="Change file extensions.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument(
     "extension",
@@ -42,34 +68,32 @@ from .common import TQuery
 @option("--replace-all", "replace_mode", flag_value="all", help="Replace all extensions.")
 @option_dry_run()
 @pass_context
-def command_rename(
+def cmd_rename_original(
     ctx: Context,
-    root: Path,
-    reason: str,
     query: TQuery,
+    reason: str,
     extension: str,
     replace_mode: str,
     dry_run: bool,
 ):
     r"""
-    Change the extension of one or more files in the files' database for the ROOT folder to EXTENSION.
+    Change the extension of one or more files in OriginalDocuments matching the QUERY argument to EXTENSION.
 
     To see the changes without committing them, use the --dry-run option.
 
-    The --replace and --replace-all options will only replace valid suffixes (i.e., matching the expression
-    \.[a-zA-Z0-9]+).
+    The --replace and --replace-all options will only replace valid suffixes (i.e., matching the expression \.[a-zA-Z0-9]+).
 
     The --append option will not add the new extension if it is already present.
     """
     extension = extension.strip()
 
-    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
+    avid = get_avid(ctx)
 
-    with FileDB(db_path) as database:
-        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, not dry_run, True, dry_run)
+    with open_database(ctx, avid) as database:
+        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            for file in find_files(database, query):
+            for file in query_table(database.original_files, query, [("lower(relative_path)", "asc")]):
                 old_name: str = file.name
                 new_name: str = old_name
 
@@ -85,27 +109,30 @@ def command_rename(
                     new_name = file.name.removesuffix(file.suffixes) + extension
 
                 if new_name.lower() == old_name.lower():
-                    HistoryEntry.command_history(
-                        ctx, "skip", file.uuid, [str(old_name), str(new_name)], "No Changes"
-                    ).log(INFO, log_stdout)
+                    Event.from_command(ctx, "skip", (file.uuid, "original"), [str(old_name), str(new_name)]).log(
+                        INFO,
+                        log_stdout,
+                        show_args=["uuid", "data"],
+                    )
                     continue
 
-                event = HistoryEntry.command_history(ctx, "edit", file.uuid, [str(old_name), str(new_name)], reason)
+                event = Event.from_command(ctx, "edit", (file.uuid, "original"), [str(old_name), str(new_name)], reason)
 
                 if dry_run:
-                    event.log(INFO, log_stdout)
+                    event.log(INFO, log_stdout, show_args=["uuid", "data"])
                     continue
 
-                file.root = root
+                file.root = avid.path
                 file.get_absolute_path().rename(file.get_absolute_path().with_name(new_name))
                 file.relative_path = file.relative_path.with_name(new_name)
 
                 try:
-                    database.files.update(file, {"uuid": file.uuid})
+                    database.original_files.update(file, {"uuid": str(file.uuid)})
                 except SQLiteError:
                     file.get_absolute_path().rename(file.get_absolute_path().with_name(old_name))
+                    raise
 
-                event.log(INFO, log_stdout)
-                database.history.insert(event)
+                event.log(INFO, log_stdout, show_args=["uuid", "data"])
+                database.log.insert(event)
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)

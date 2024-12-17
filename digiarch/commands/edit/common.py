@@ -1,126 +1,72 @@
-from re import compile as re_compile
+from logging import INFO
+from logging import Logger
 from typing import Any
-from typing import Callable
-from typing import Generator
-from typing import Type
-from typing import TypeVar
+from typing import Literal
 
-from acacore.database import FileDB
-from acacore.models.file import File
-from click import argument
-from click import BadParameter
-from click import ClickException
+from acacore.database import FilesDB
+from acacore.database.table import Table
+from acacore.models.event import Event
+from acacore.models.file import BaseFile
 from click import Context
-from click import MissingParameter
-from click import Parameter
 
-FC = TypeVar("FC", bound=Callable[..., Any])
-TQuery = list[tuple[str, str | bool | Type[Ellipsis] | None, bool]]
-
-
-token_quotes = re_compile(r'(?<!\\)"((?:[^"]|(?<=\\)")*)"')
-# noinspection RegExpUnnecessaryNonCapturingGroup
-token_expr = re_compile(r"(?:\0([^\0]+)\0|(?<!\\)\s+)")
+from digiarch.common import _RH
+from digiarch.common import AVID
+from digiarch.query import query_table
+from digiarch.query import TQuery
 
 
-def tokenize_query(query_string: str, default_field: str, allowed_fields: list[str]) -> TQuery:
-    query_string = token_quotes.sub(r"\0\1\0", query_string)
-    tokens: list[str] = [t for t in token_expr.split(query_string) if t]
-    field: str = default_field
-    like: bool = False
-    from_file: bool = False
-
-    query_tokens: TQuery = []
-
-    for token in tokens:
-        if token == "@null":
-            query_tokens.append((field, None, False))
-        elif token == "@notnull":
-            query_tokens.append((field, ..., True))
-        elif token == "@true":
-            query_tokens.append((field, True, False))
-        elif token == "@false":
-            query_tokens.append((field, False, False))
-        elif token == "@like":
-            like = True
-        elif token == "@file":
-            from_file = True
-        elif token.startswith("@"):
-            if (field := token.removeprefix("@")) not in allowed_fields:
-                raise ValueError(f"Invalid field name {field}")
-            like = False
-            from_file = False
-        elif from_file:
-            with open(token) as fh:
-                query_tokens.extend([(field, line_, like) for line in fh.readlines() if (line_ := line.strip())])
-        else:
-            query_tokens.append((field, token, like))
-
-    return query_tokens
-
-
-def argument_query(required: bool, default: str, allowed_fields: list[str] | None = None) -> Callable[[FC], FC]:
-    def callback(ctx: Context, param: Parameter, value: str | None) -> list[tuple[str, str, bool]]:
-        if not (value := value or "").strip() and required:
-            raise MissingParameter(None, ctx, param)
-        if not value:
-            return []
-
-        try:
-            query = tokenize_query(value, default, allowed_fields or [])
-            if not query and required:
-                raise BadParameter("no values in query.", ctx, param)
-            return query
-        except ClickException:
-            raise
-        except FileNotFoundError as err:
-            raise BadParameter(f"{err.filename} file not found", ctx, param)
-        except ValueError as err:
-            raise BadParameter(err.args[0], ctx, param)
-        except Exception as err:
-            raise BadParameter(repr(err), ctx, param)
-
-    return argument("QUERY", nargs=1, required=required, callback=callback)
-
-
-def query_to_where(query: TQuery) -> tuple[str, list[str]]:
-    query_fields: dict[str, list[tuple[str, bool]]] = {}
-    where: list[str] = []
-    parameters: list[str] = []
-
-    for field, value, like in query:
-        query_fields[field] = [*query_fields.get(field, []), (value, like)]
-
-    for field, values in query_fields.items():
-        where_field: list[str] = []
-
-        for value, like in values:
-            if value is None:
-                where_field.append(f"{field} is null")
-            elif value is Ellipsis:
-                where_field.append(f"{field} is not null")
-            elif value is True:
-                where_field.append(f"{field} is true")
-            elif value is False:
-                where_field.append(f"{field} is false")
-            elif like:
-                where_field.append(f"{field} like ?")
-                parameters.append(value)
-            else:
-                where_field.append(f"{field} = ?")
-                parameters.append(value)
-
-        where.append(f"({' or '.join(where_field)})")
-
-    return " and ".join(where), parameters
-
-
-def find_files(
-    database: FileDB,
+def edit_file_value(
+    ctx: Context,
+    database: FilesDB,
+    table: Table[BaseFile],
     query: TQuery,
-    order_by: list[tuple[str, str]] | None = None,
-    limit: int | None = None,
-) -> Generator[File, None, None]:
-    where, parameters = query_to_where(query)
+    reason: str,
+    file_type: Literal["original", "master", "access", "statutory"],
+    property_name: str,
+    property_value: Any,  # noqa: ANN401
+    dry_run: bool,
+    *loggers: Logger,
+):
+    for file in query_table(table, query, [("lower(relative_path)", "asc")]):
+        if getattr(file, property_name) == property_value:
+            Event.from_command(ctx, "skip", (file.uuid, file_type), reason="No Changes").log(
+                INFO,
+                *loggers,
+                path=file.relative_path,
+            )
+            continue
+        event = Event.from_command(
+            ctx,
+            "edit",
+            (file.uuid, file_type),
+            [getattr(file, property_name), property_value],
+            reason,
+        )
+        if not dry_run:
+            setattr(file, property_name, property_value)
+            table.update(file)
+            database.log.insert(event)
+        event.log(INFO, *loggers, show_args=["uuid", "data"], path=file.relative_path)
 
-    yield from database.files.select(where=where, parameters=parameters, order_by=order_by, limit=limit)
+
+def rollback_file_value(property_name: str) -> _RH:
+    def _handler(_ctx: Context, _avid: AVID, database: FilesDB, event: Event, file: BaseFile | None):
+        if not file:
+            return
+        if not event.file_type:
+            return
+        if event.file_type == "original":
+            table = database.original_files
+        elif event.file_type == "master":
+            table = database.master_files
+        elif event.file_type == "access":
+            table = database.access_files
+        elif event.file_type == "statutory":
+            table = database.statutory_files
+        else:
+            return
+        prev_value, next_value = event.data
+        setattr(file, property_name, prev_value)
+        table.update(file)
+
+    return _handler

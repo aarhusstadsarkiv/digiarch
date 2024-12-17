@@ -1,0 +1,130 @@
+'!image (raster)':
+  name: Image files
+  access:
+    tool: image
+    output: jpg
+  statutory:
+    tool: image
+    output: tif
+'!image (vector)':
+  name: Svg files
+  access:
+    tool: copy
+  statutory:
+    tool: vector
+    output: tif
+'!page description':
+  name: PDF files
+  access:
+    tool: copy
+  statutory:
+    tool: pdf
+    output: tif
+'!word processor':
+  name: odt
+  access:
+    tool: document
+    output: pdf
+  statutory:
+    tool: document
+    output: tif
+'!spreadsheet':
+  name: Open Document Spreadsheet
+  access:
+    tool: document
+    output: html
+  statutory:
+    tool: document
+    output: tif
+'!audio':
+  name: .mp3 and .wav files
+  access:
+    tool: copy
+  statutory:
+    tool: copy
+'!video':
+  access:
+    tool: video
+    output: h264
+  statutory:
+    tool: video
+    output: h264-mpg
+'!dataset':
+  access:
+    tool: document
+    output: html
+  statutory:
+    tool: document
+    output: tif
+'!email':
+  access:
+    tool: msg
+    output: html
+  statutory:
+    tool: msg
+    output: tif
+'!gis':
+  access:
+    tool: copy  # GeoJson - one day :)
+  statutory:
+    tool: copy
+'!model':
+  access:
+    tool: cad
+    output: svg
+  statutory:
+    tool: cad
+    output: tif
+'!presentation':
+  access:
+    tool: document
+    output: pdf
+  statutory:
+    tool: document
+    output: tif
+'!text (mark-up)':
+  access:
+    tool: copy
+  statutory:
+    tool: text
+    output: tif
+'!text (structured)':
+  access:
+    tool: copy
+  statutory:
+    tool: text
+    output: tif
+'!text (unstructured)':
+  access:
+    tool: copy
+  statutory:
+    tool: text
+    output: tif
+
+
+# Global puids
+fmt/353:
+  name: Tagged Image File Format (tif)
+  access:
+    tool: image
+    output: pdf
+  statutory:
+    tool: image
+    output: tif
+
+x-fmt/111:
+  access:
+    tool: copy
+  statutory:
+    tool: text
+    output: tif
+
+
+# Custom puids
+aca-fmt/29:
+  # should just be copied to statutory along the .gml file
+  name: XML Schema Definition (Aarhus Stadsarkivs custom XSD)
+  access:
+    tool: copy
+  statutory:
+    tool: copy

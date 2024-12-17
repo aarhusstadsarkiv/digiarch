@@ -1,201 +1,336 @@
 from itertools import islice
+from logging import ERROR
 from logging import INFO
-from os import environ
+from logging import Logger
+from os import PathLike
 from pathlib import Path
-from re import compile as re_compile
-from re import error as re_error
-from re import IGNORECASE
 from traceback import format_tb
 from typing import Generator
 from typing import get_args as get_type_args
-from typing import Pattern
-from typing import Sequence
+from typing import Literal
+from typing import overload
 from uuid import UUID
-from uuid import uuid4
 
-from acacore.database import FileDB
+from acacore.database import FilesDB
+from acacore.database.table import Table
 from acacore.exceptions.files import IdentificationError
-from acacore.models.file import File
-from acacore.models.history import HistoryEntry
+from acacore.models.event import Event
+from acacore.models.file import BaseFile
+from acacore.models.file import ConvertedFile
+from acacore.models.file import MasterFile
+from acacore.models.file import OriginalFile
 from acacore.models.reference_files import Action
 from acacore.models.reference_files import ActionData
 from acacore.models.reference_files import CustomSignature
 from acacore.models.reference_files import ManualAction
-from acacore.models.reference_files import RenameAction
+from acacore.models.reference_files import MasterConvertAction
 from acacore.siegfried import Siegfried
 from acacore.siegfried.siegfried import SiegfriedFile
 from acacore.siegfried.siegfried import TSignaturesProvider
-from acacore.utils.click import check_database_version
+from acacore.utils.click import ctx_params
 from acacore.utils.click import end_program
 from acacore.utils.click import start_program
 from acacore.utils.functions import find_files
 from acacore.utils.helpers import ExceptionManager
-from click import Argument
 from click import BadParameter
 from click import Choice
-from click import command
 from click import Context
+from click import group
 from click import IntRange
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+from click import UsageError
 from PIL import UnidentifiedImageError
 
 from digiarch.__version__ import __version__
-from digiarch.commands.edit.common import argument_query
-from digiarch.commands.edit.common import query_to_where
-from digiarch.commands.edit.common import TQuery
-from digiarch.common import argument_root
-from digiarch.common import ctx_params
+from digiarch.common import AVID
 from digiarch.common import fetch_actions
+from digiarch.common import fetch_actions_master
 from digiarch.common import fetch_custom_signatures
+from digiarch.common import get_avid
+from digiarch.common import open_database
+from digiarch.common import option_dry_run
+from digiarch.query import argument_query
+from digiarch.query import query_to_where
+from digiarch.query import TQuery
 
 
-def handle_rename_action(file: File, action: RenameAction) -> tuple[Path, Path] | tuple[None, None]:
-    old_name: str = file.name
-    new_name: str = old_name
-
-    if action.on_extension_mismatch and "extension mismatch" not in (file.warning or []):
-        return None, None
-
-    if not action.append:
-        new_name = old_name.removesuffix(file.suffixes)
-
-    new_name += "." + action.extension.removeprefix(".")
-
-    old_path: Path = file.get_absolute_path()
-    new_path: Path = old_path.with_name(new_name)
-    if old_path == new_path:
-        return None, None
-    old_path.rename(new_path)
-    return old_path, new_path
-
-
-def identify_file(
+@overload
+def identify_requirements(
+    target: Literal["original"],
     ctx: Context,
-    root: Path,
-    path: Path,
-    database: FileDB,
-    siegfried: Siegfried,
-    siegfried_result: SiegfriedFile | None,
-    actions: dict[str, Action],
-    custom_signatures: list[CustomSignature],
-    *,
-    update: bool = False,
-    parent: UUID | None = None,
-    existing_file: File | None = None,
-) -> tuple[File | None, list[HistoryEntry]]:
-    uuid: UUID
-    lock: bool
-    processed: bool
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    actions_file: str | None,
+    custom_signatures_file: str | None,
+) -> tuple[Siegfried, dict[str, Action], list[CustomSignature]]: ...
 
-    existing_file = (
-        existing_file
-        or database.files.select(
-            where="relative_path = ?",
-            limit=1,
-            parameters=[str(path.relative_to(root))],
-        ).fetchone()
+
+@overload
+def identify_requirements(
+    target: Literal["master"],
+    ctx: Context,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    actions_file: str | None,
+    custom_signatures_file: str | None,
+) -> tuple[Siegfried, dict[str, MasterConvertAction], list[CustomSignature]]: ...
+
+
+def identify_requirements(
+    target: Literal["original", "master"],
+    ctx: Context,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    actions_file: str | None,
+    custom_signatures_file: str | None,
+) -> tuple[Siegfried, dict[str, Action] | dict[str, MasterConvertAction], list[CustomSignature]]:
+    siegfried = Siegfried(
+        siegfried_path or "sf",
+        f"{siegfried_signature}.sig",
+        siegfried_home,
     )
 
-    if existing_file and update:
-        uuid = existing_file.uuid
-        lock = existing_file.lock
-        processed = existing_file.processed
-        parent = parent or existing_file.parent
-    elif existing_file:
-        return None, []
+    try:
+        siegfried.run("-version", "-sig", siegfried.signature)
+    except IdentificationError as err:
+        print(err)
+        raise BadParameter("Invalid binary or signature file.", ctx, ctx_params(ctx)["siegfried_path"])
+
+    if target == "original":
+        actions = fetch_actions(ctx, "actions_file", actions_file)
+    elif target == "master":
+        actions = fetch_actions_master(ctx, "actions_file", actions_file)
     else:
-        uuid = uuid4()
-        lock = False
-        processed = False
-        update = False
+        raise UsageError("Unknown target", ctx)
 
-    file_history: list[HistoryEntry] = []
+    custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
 
-    with ExceptionManager(
-        Exception,
-        UnidentifiedImageError,
-        allow=[OSError, IOError],
-    ) as identify_error:
-        file: File = File.from_file(
-            path,
-            root,
-            siegfried_result or siegfried,
-            actions,
-            custom_signatures,
-            uuid=uuid,
-        )
+    return siegfried, actions, custom_signatures
 
-    if identify_error.exception:
-        file = File.from_file(path, root, siegfried_result or siegfried, uuid=uuid)
+
+def find_files_query(
+    avid: AVID,
+    table: Table[BaseFile],
+    query: TQuery,
+    batch_size: int,
+) -> Generator[Path, None, None]:
+    where, parameters = query_to_where(query)
+    offset: int = 0
+
+    while batch := table.select(
+        where,
+        parameters,
+        order_by=[("lower(relative_path)", "asc")],
+        limit=batch_size,
+        offset=offset,
+    ).fetchall():
+        offset += len(batch)
+        yield from (avid.path / f.relative_path for f in batch)
+
+    yield from ()
+
+
+def identify_original_file(
+    ctx: Context,
+    avid: AVID,
+    db: FilesDB,
+    siegfried_file: SiegfriedFile,
+    actions: dict[str, Action],
+    custom_signatures: list[CustomSignature],
+    dry_run: bool,
+    update: bool,
+    parent: UUID | None,
+    original_path: str | PathLike | None,
+    *loggers: Logger,
+):
+    errors: list[Event] = []
+    existing_file: OriginalFile | None = db.original_files[
+        {"relative_path": str(siegfried_file.filename.relative_to(avid.path))}
+    ]
+
+    if existing_file and not update:
+        return
+    if existing_file and existing_file.lock:
+        return
+
+    file = OriginalFile.from_file(siegfried_file.filename, avid.path, parent=parent)
+
+    with ExceptionManager(Exception, UnidentifiedImageError, allow=[OSError, IOError]) as error:
+        file.identify(siegfried_file, custom_signatures, actions)
+
+    if error.exception:
         file.action = "manual"
-        file.action_data = ActionData(
-            manual=ManualAction(
-                reason=identify_error.exception.__class__.__name__,
-                process="Identify and fix error.",
-            ),
-        )
-        file_history.append(
-            HistoryEntry.command_history(
+        file.action_data = ActionData(manual=ManualAction(reason=repr(error.exception), process=""))
+        errors.append(
+            Event.from_command(
                 ctx,
                 "error",
-                file.uuid,
-                repr(identify_error.exception),
-                "".join(format_tb(identify_error.traceback)) if identify_error.traceback else None,
-            ),
+                (file.uuid, "original"),
+                repr(error.exception),
+                "".join(format_tb(error.traceback)).strip() or None,
+            )
         )
-    elif file.action_data.rename:
-        old_path, new_path = handle_rename_action(file, file.action_data.rename)
-        if new_path:
-            file, file_history = identify_file(
-                ctx,
-                root,
-                new_path,
-                database,
-                siegfried,
-                None,
-                actions,
-                custom_signatures,
-                update=update,
-                parent=parent,
-                existing_file=existing_file,
-            )
-            if not file:
-                return None, []
-            file_history.insert(
-                0,
-                HistoryEntry.command_history(
-                    ctx,
-                    "rename",
-                    file.uuid,
-                    [str(old_path.relative_to(root)), str(new_path.relative_to(root))],
-                ),
-            )
-            return file, file_history
 
-    file.parent = parent
-    file.lock = lock
-    file.processed = processed
+    file.original_path = Path(original_path).relative_to(file.root) if original_path else file.relative_path
+    existing_file: OriginalFile | None = db.original_files[file]
 
-    if update:
-        database.files.update(file, {"uuid": file.uuid})
+    if existing_file:
+        file.uuid = existing_file.uuid
+        file.original_path = existing_file.original_path
+        file.parent = file.parent or existing_file.parent
+        file.processed = (
+            False
+            if file.action != existing_file.action or file.action_data != existing_file.action_data
+            else existing_file.processed
+        )
+        file.lock = existing_file.lock
+
+    if dry_run:
+        pass
+    elif existing_file:
+        db.original_files.update(file)
+        db.log.insert(*errors)
     else:
-        database.files.insert(file, exist_ok=True)
+        db.original_files.insert(file)
+        db.log.insert(*errors)
 
-    return file, file_history
+    if update or not existing_file:
+        Event.from_command(ctx, "file", (file.uuid, "original")).log(
+            INFO,
+            *loggers,
+            puid=str(file.puid).ljust(10),
+            action=str(file.action).ljust(7),
+            path=file.relative_path,
+        )
+
+        for error in errors:
+            error.log(ERROR, show_args=["uuid", "data"])
 
 
-@command("identify", no_args_is_help=True, short_help="Identify files.")
-@argument_root(False)
+def identify_original_files(
+    ctx: Context,
+    avid: AVID,
+    db: FilesDB,
+    siegfried: Siegfried,
+    paths: list[Path],
+    actions: dict[str, Action],
+    custom_signatures: list[CustomSignature],
+    dry_run: bool,
+    update: bool,
+    parent: UUID | None,
+    *loggers: Logger,
+):
+    if not paths:
+        return
+    for sf_file in siegfried.identify(*paths).files:
+        identify_original_file(
+            ctx,
+            avid,
+            db,
+            sf_file,
+            actions,
+            custom_signatures,
+            dry_run,
+            update,
+            parent,
+            None,
+            *loggers,
+        )
+
+
+def identify_master_file(
+    ctx: Context,
+    avid: AVID,
+    db: FilesDB,
+    siegfried_file: SiegfriedFile,
+    custom_signatures: list[CustomSignature],
+    actions: dict[str, MasterConvertAction],
+    dry_run: bool,
+    *loggers: Logger,
+):
+    file: MasterFile | None = db.master_files[{"relative_path": str(siegfried_file.filename.relative_to(avid.path))}]
+    if not file:
+        return
+
+    new_file = MasterFile.from_file(
+        siegfried_file.filename,
+        avid.path,
+        file.original_uuid,
+        siegfried_file,
+        custom_signatures,
+        actions,
+        file.uuid,
+        file.processed,
+    )
+
+    if file.relative_path != new_file.relative_path:
+        return
+
+    if not dry_run:
+        db.master_files.update(new_file)
+
+    Event.from_command(
+        ctx,
+        "file",
+        (file.uuid, "master"),
+    ).log(
+        INFO,
+        *loggers,
+        puid=str(new_file.puid).ljust(10),
+        access=new_file.convert_access.tool if new_file.convert_access else None,
+        statutory=new_file.convert_statutory.tool if new_file.convert_statutory else None,
+        path=file.relative_path,
+    )
+
+
+def identify_converted_file(
+    ctx: Context,
+    avid: AVID,
+    table: Table[ConvertedFile],
+    file_type: Literal["access", "statutory"],
+    siegfried_file: SiegfriedFile,
+    dry_run: bool,
+    *loggers: Logger,
+):
+    file: ConvertedFile | None = table[{"relative_path": str(siegfried_file.filename.relative_to(avid.path))}]
+    if not file:
+        return
+
+    new_file = ConvertedFile.from_file(siegfried_file.filename, avid.path, file.original_uuid, siegfried_file)
+
+    if file.relative_path != new_file.relative_path:
+        return
+
+    if not dry_run:
+        table.update(new_file)
+
+    Event.from_command(ctx, "file", (file.uuid, file_type)).log(
+        INFO,
+        *loggers,
+        puid=str(new_file.puid).ljust(10),
+        path=file.relative_path,
+    )
+
+
+@group("identify", no_args_is_help=True, short_help="Identify files.")
+def grp_identify():
+    """Identify files in the archive."""
+
+
+@grp_identify.command("original", short_help="Identify original files.")
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @option(
     "--siegfried-path",
     type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
     envvar="SIEGFRIED_PATH",
-    default=Path(environ.get("GOPATH", "go"), "bin", "sf"),
-    required=True,
+    default=None,
+    required=False,
     show_envvar=True,
-    callback=lambda _ctx, _param, value: Path(value),
     help="The path to the Siegfried executable.",
 )
 @option(
@@ -204,7 +339,6 @@ def identify_file(
     envvar="SIEGFRIED_HOME",
     required=True,
     show_envvar=True,
-    callback=lambda _ctx, _param, value: Path(value),
     help="The path to the Siegfried home folder.",
 )
 @option(
@@ -221,7 +355,6 @@ def identify_file(
     envvar="DIGIARCH_ACTIONS",
     show_envvar=True,
     default=None,
-    callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing file format actions.",
 )
 @option(
@@ -231,50 +364,219 @@ def identify_file(
     envvar="DIGIARCH_CUSTOM_SIGNATURES",
     show_envvar=True,
     default=None,
-    callback=lambda _ctx, _param, value: Path(value) if value else None,
     help="Path to a YAML file containing custom signature specifications.",
 )
-@option(
-    "--exclude",
-    type=str,
-    multiple=True,
-    help="Glob pattern for file and folder names to exclude.  [multiple]",
-)
-@option("--batch-size", type=IntRange(1), default=100)
+@option("--exclude", type=str, multiple=True, help="File and folder names to exclude.  [multiple]")
+@option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identify at a time.")
+@option_dry_run()
 @pass_context
-def command_identify(
+def cmd_identify_original(
     ctx: Context,
-    root: Path,
-    siegfried_path: Path,
-    siegfried_home: Path,
-    siegfried_signature: TSignaturesProvider,
-    actions_file: Path | None,
-    custom_signatures_file: Path | None,
+    query: TQuery,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    actions_file: str | None,
+    custom_signatures_file: str | None,
     exclude: tuple[str, ...],
-    batch_size: int,
-    *,
-    update_where: list[tuple[str, Sequence[str]]] | None = None,
+    batch_size: int | None,
+    dry_run: bool,
 ):
     """
-    Process a folder (ROOT) recursively and populate a files' database.
+    Identify files in the OriginalDocuments directory.
 
     Each file is identified with Siegfried and an action is assigned to it.
-    Files that need re-identification, renaming, or ignoring are processed accordingly.
-
     Files that are already in the database are not processed.
+
+    If the QUERY argument is given, then files in the database matching the query will be re-identified.
+
+    For details on the QUERY argument, see the edit command.
     """
-    try:
-        exclude_patterns: list[Pattern[str]] = [
-            re_compile(ex.strip().replace(".", "\\.").replace("*", ".*"), IGNORECASE) for ex in exclude if ex.strip()
-        ]
-    except re_error as err:
-        raise BadParameter(f"{err.args[0] if err.args else err.msg} {err.pattern}", ctx, ctx_params(ctx)["exclude"])
+    avid = get_avid(ctx)
+    siegfried, actions, custom_signatures = identify_requirements(
+        "original",
+        ctx,
+        siegfried_path,
+        siegfried_signature,
+        siegfried_home,
+        actions_file,
+        custom_signatures_file,
+    )
 
-    # noinspection DuplicatedCode
-    check_database_version(ctx, ctx_params(ctx)["root"], (db_path := root / "_metadata" / "files.db"))
+    with open_database(ctx, avid) as db:
+        log_file, log_stdout, _ = start_program(ctx, db, __version__, None, not dry_run, True, dry_run)
 
+        with ExceptionManager(BaseException) as exception:
+            if query:
+                files = find_files_query(avid, db.original_files, query, batch_size)
+            else:
+                files = find_files(avid.dirs.original_documents, exclude=[avid.dirs.original_documents / "_metadata"])
+
+            while batch := list(islice(files, batch_size)):
+                if exclude:
+                    batch = [f for f in batch if not any(p in exclude for p in f.parts)]
+
+                identify_original_files(
+                    ctx,
+                    avid,
+                    db,
+                    siegfried,
+                    batch,
+                    actions,
+                    custom_signatures,
+                    dry_run,
+                    bool(query),
+                    None,
+                    log_stdout,
+                )
+
+        end_program(ctx, db, exception, dry_run, log_file, log_stdout)
+
+
+@grp_identify.command("master", short_help="Identify master files.")
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
+@option(
+    "--siegfried-path",
+    type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_PATH",
+    default=None,
+    required=False,
+    show_envvar=True,
+    help="The path to the Siegfried executable.",
+)
+@option(
+    "--siegfried-home",
+    type=ClickPath(exists=True, file_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_HOME",
+    required=True,
+    show_envvar=True,
+    help="The path to the Siegfried home folder.",
+)
+@option(
+    "--siegfried-signature",
+    type=Choice(get_type_args(TSignaturesProvider)),
+    default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
+)
+@option(
+    "--actions",
+    "actions_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_MASTER_ACTIONS",
+    show_envvar=True,
+    default=None,
+    help="Path to a YAML file containing master files convert actions.",
+)
+@option(
+    "--custom-signatures",
+    "custom_signatures_file",
+    type=ClickPath(exists=True, dir_okay=False, file_okay=True, resolve_path=True),
+    envvar="DIGIARCH_CUSTOM_SIGNATURES",
+    show_envvar=True,
+    default=None,
+    help="Path to a YAML file containing custom signature specifications.",
+)
+@option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identify at a time.")
+@option_dry_run()
+@pass_context
+def cmd_identify_master(
+    ctx: Context,
+    query: TQuery,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    actions_file: str | None,
+    custom_signatures_file: str | None,
+    batch_size: int | None,
+    dry_run: bool,
+):
+    """
+    Identify files in the MasterDocuments directory.
+
+    Files are taken from the database, any other file existing in the MasterDocuments directory will be ignored.
+    Each file is identified with Siegfried and convert actions for access and statutory files are assigned to it.
+
+    If the QUERY argument is given, then only the files matching the query will be identified or re-identified.
+
+    For details on the QUERY argument, see the edit command.
+    """
+    avid = get_avid(ctx)
+    siegfried, actions, custom_signatures = identify_requirements(
+        "master",
+        ctx,
+        siegfried_path,
+        siegfried_signature,
+        siegfried_home,
+        actions_file,
+        custom_signatures_file,
+    )
+
+    with open_database(ctx, avid) as db:
+        log_file, log_stdout, _ = start_program(ctx, db, __version__, None, not dry_run, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            files = find_files_query(avid, db.master_files, query, batch_size)
+
+            while batch := list(islice(files, batch_size)):
+                for sf_file in siegfried.identify(*batch).files:
+                    identify_master_file(ctx, avid, db, sf_file, custom_signatures, actions, dry_run, log_stdout)
+
+        end_program(ctx, db, exception, dry_run, log_file, log_stdout)
+
+
+# noinspection DuplicatedCode
+@grp_identify.command("access", short_help="Identify access files.")
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning"])
+@option(
+    "--siegfried-path",
+    type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_PATH",
+    default=None,
+    required=False,
+    show_envvar=True,
+    help="The path to the Siegfried executable.",
+)
+@option(
+    "--siegfried-home",
+    type=ClickPath(exists=True, file_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_HOME",
+    required=True,
+    show_envvar=True,
+    help="The path to the Siegfried home folder.",
+)
+@option(
+    "--siegfried-signature",
+    type=Choice(get_type_args(TSignaturesProvider)),
+    default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
+)
+@option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identify at a time.")
+@option_dry_run()
+@pass_context
+def cmd_identify_access(
+    ctx: Context,
+    query: TQuery,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    batch_size: int | None,
+    dry_run: bool,
+):
+    """
+    Identify files in the AccessDocuments directory.
+
+    Files are taken from the database, any other file existing in the AccessDocuments directory will be ignored.
+    Each file is identified with Siegfried.
+
+    If the QUERY argument is given, then only the files matching the query will be identified or re-identified.
+
+    For details on the QUERY argument, see the edit command.
+    """
+    avid = get_avid(ctx)
     siegfried = Siegfried(
-        siegfried_path or Path(environ["GOPATH"], "bin", "sf"),
+        siegfried_path or "sf",
         f"{siegfried_signature}.sig",
         siegfried_home,
     )
@@ -285,118 +587,92 @@ def command_identify(
         print(err)
         raise BadParameter("Invalid binary or signature file.", ctx, ctx_params(ctx)["siegfried_path"])
 
-    actions = fetch_actions(ctx, "actions_file", actions_file)
-    custom_signatures = fetch_custom_signatures(ctx, "custom_signatures_file", custom_signatures_file)
-
-    db_path.parent.mkdir(parents=True, exist_ok=True)
-
-    with FileDB(db_path) as database:
-        if not database.is_initialised():
-            database.init()
-        log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, False)
-        database.init()
+    with open_database(ctx, avid) as db:
+        log_file, log_stdout, _ = start_program(ctx, db, __version__, None, not dry_run, True, dry_run)
 
         with ExceptionManager(BaseException) as exception:
-            files: Generator[Path, None, None]
-
-            if update_where:
-                files = (
-                    f.get_absolute_path(root)
-                    for w, p in update_where
-                    for f in database.files.select(where=w, parameters=p)
-                )
-            else:
-                files = find_files(root, exclude=[database.path.parent])
+            files = find_files_query(avid, db.access_files, query, batch_size)
 
             while batch := list(islice(files, batch_size)):
-                if exclude_patterns and not update_where:
-                    batch = [
-                        p
-                        for p in batch
-                        if not any(
-                            any(exp.match(part) for exp in exclude_patterns) for part in p.relative_to(root).parts
-                        )
-                    ]
-                for path, result in siegfried.identify(*batch).files_dict.items():
-                    file, file_history = identify_file(
-                        ctx,
-                        root,
-                        path,
-                        database,
-                        siegfried,
-                        result,
-                        actions,
-                        custom_signatures,
-                        update=update_where is not None,
-                    )
+                for sf_file in siegfried.identify(*batch).files:
+                    identify_converted_file(ctx, avid, db.access_files, "access", sf_file, dry_run, log_stdout)
 
-                    if file:
-                        HistoryEntry.command_history(
-                            ctx,
-                            "update" if update_where else "new",
-                            file.uuid,
-                        ).log(
-                            INFO,
-                            log_stdout,
-                            puid=file.puid,
-                            action=file.action,
-                            path=file.relative_path,
-                        )
-
-                    for event in file_history:
-                        event.log(INFO, log_stdout)
-                        database.history.insert(event)
-
-        end_program(ctx, database, exception, False, log_file, log_stdout)
+        end_program(ctx, db, exception, dry_run, log_file, log_stdout)
 
 
-@command("reidentify", no_args_is_help=True, short_help="Reidentify files.")
-@argument_root(True)
-@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
+# noinspection DuplicatedCode
+@grp_identify.command("statutory", short_help="Identify statutory files.")
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning"])
+@option(
+    "--siegfried-path",
+    type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_PATH",
+    default=None,
+    required=False,
+    show_envvar=True,
+    help="The path to the Siegfried executable.",
+)
+@option(
+    "--siegfried-home",
+    type=ClickPath(exists=True, file_okay=False, resolve_path=True),
+    envvar="SIEGFRIED_HOME",
+    required=True,
+    show_envvar=True,
+    help="The path to the Siegfried home folder.",
+)
+@option(
+    "--siegfried-signature",
+    type=Choice(get_type_args(TSignaturesProvider)),
+    default="pronom",
+    show_default=True,
+    help="The signature file to use with Siegfried.",
+)
+@option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identify at a time.")
+@option_dry_run()
 @pass_context
-def command_reidentify(
-    _ctx: Context,
-    root: str | Path,
-    siegfried_path: Path,
-    siegfried_home: Path,
-    siegfried_signature: TSignaturesProvider,
-    actions_file: Path | None,
-    custom_signatures_file: Path | None,
-    batch_size: int,
+def cmd_identify_statutory(
+    ctx: Context,
     query: TQuery,
+    siegfried_path: str | None,
+    siegfried_signature: str,
+    siegfried_home: str | None,
+    batch_size: int | None,
+    dry_run: bool,
 ):
     """
-    Re-indentify specific files in the ROOT folder.
+    Identify files in the Documents directory.
 
-    Each file is re-identified with Siegfried and an action is assigned to it.
-    Files that need re-identification with custom signatures, renaming, or ignoring are processed accordingly.
+    Files are taken from the database, any other file existing in the Documents directory will be ignored.
+    Each file is identified with Siegfried.
+
+    If the QUERY argument is given, then only the files matching the query will be identified or re-identified.
 
     For details on the QUERY argument, see the edit command.
-
-    If there is no query, then all files with identification warnings or have no PUID or have no action, and that are
-    neither locked nor processed will be re-identified.
     """
-    if query:
-        where, params = query_to_where(query)
-    else:
-        where, params = "(warning is not null or puid is null or action is null) and not lock and not processed", []
-
-    command_identify.callback(
-        root,
-        siegfried_path,
+    avid = get_avid(ctx)
+    siegfried = Siegfried(
+        siegfried_path or "sf",
+        f"{siegfried_signature}.sig",
         siegfried_home,
-        siegfried_signature,
-        actions_file,
-        custom_signatures_file,
-        (),
-        batch_size,
-        update_where=[(where, params)],
     )
 
+    try:
+        siegfried.run("-version", "-sig", siegfried.signature)
+    except IdentificationError as err:
+        print(err)
+        raise BadParameter("Invalid binary or signature file.", ctx, ctx_params(ctx)["siegfried_path"])
 
-command_reidentify.params = [p for p in command_identify.params if p.name != "root"] + command_reidentify.params
-command_reidentify.params = [
-    *(p for p in command_reidentify.params if isinstance(p, Argument)),
-    *(p for p in command_identify.params if p.name not in [p_.name for p_ in command_reidentify.params]),
-    *(p for p in command_reidentify.params if not isinstance(p, Argument) and p.name != "exclude"),
-]
+    with open_database(ctx, avid) as db:
+        log_file, log_stdout, _ = start_program(ctx, db, __version__, None, not dry_run, True, dry_run)
+
+        with ExceptionManager(BaseException) as exception:
+            files = find_files_query(avid, db.statutory_files, query, batch_size)
+
+            while batch := list(islice(files, batch_size)):
+                for sf_file in siegfried.identify(*batch).files:
+                    identify_converted_file(ctx, avid, db.statutory_files, "statutory", sf_file, dry_run, log_stdout)
+
+        end_program(ctx, db, exception, dry_run, log_file, log_stdout)
+
+
+grp_identify.list_commands = lambda _ctx: list(grp_identify.commands)

@@ -215,7 +215,7 @@ aca-fmt/28:
     reason: Unable to convert automatically.
     process: Open in Bentley View, save as pdf.
 aca-fmt/29:
-  name: XML Schema Definition (Custom XSD)
+  name: XML Schema Definition (Aarhus Stadsarkivs custom XSD)
   action: convert
   convert:
     tool: copy
@@ -904,10 +904,6 @@ fmt/189:
     output: ods
 fmt/199:
   name: MPEG-4 Media File
-  rename:
-    extension: .mp4
-    append: true
-    on_extension_mismatch: true
   action: convert
   convert:
     tool: video
