@@ -183,7 +183,7 @@ def opt_list_commands(ctx: Context, _param: Parameter, value: bool):
 
 @command("rollback", no_args_is_help=True, short_help="Roll back edits.")
 @argument("run", nargs=1, type=str, required=True, callback=callback_arg_run)
-@option("--ignore-partial", is_flag=True, default=False, help="Ignore partially rolled back runs.")
+@option("--resume-partial", is_flag=True, default=False, help="Ignore partially rolled back runs.")
 @option(
     "--list-commands",
     is_flag=True,
@@ -194,7 +194,7 @@ def opt_list_commands(ctx: Context, _param: Parameter, value: bool):
 )
 @option_dry_run()
 @pass_context
-def cmd_rollback(ctx: Context, run: tuple[int, int | None] | datetime, ignore_partial: bool, dry_run: bool):
+def cmd_rollback(ctx: Context, run: tuple[int, int | None] | datetime, resume_partial: bool, dry_run: bool):
     """
     Roll back changes.
 
@@ -203,7 +203,7 @@ def cmd_rollback(ctx: Context, run: tuple[int, int | None] | datetime, ignore_pa
     '%Y-%m-%dT%H:%M:%S' or '%Y-%m-%dT%H:%M:%S.%f'.
 
     Runs that have already been rolled back (even if just partially) are ignored. To include partially rolled-back runs
-    use the --ignore-partial option.
+    use the --resume-partial option.
 
     To see the changes without committing them, use the --dry-run option.
 
@@ -236,7 +236,7 @@ def cmd_rollback(ctx: Context, run: tuple[int, int | None] | datetime, ignore_pa
                     database,
                     handlers,
                     runs,
-                    {t for t, p in rolled_runs if not ignore_partial or not p},
+                    {t for t, p in rolled_runs if not resume_partial or not p},
                     dry_run,
                     log_stdout,
                 )
