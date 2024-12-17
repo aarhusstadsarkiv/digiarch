@@ -203,6 +203,8 @@ def cmd_extract(
 
     To see the which files will be unpacked (but not their contents) without unpacking them, use the --dry-run option.
 
+    Extracted filenames longer than 20 characters will be trimmed and partially prefixed with a unique hash based on the original name.
+
     Use the QUERY argument to specify which files should be unpacked. For details on the QUERY argument, see the edit command.
     """
     avid = get_avid(ctx)
