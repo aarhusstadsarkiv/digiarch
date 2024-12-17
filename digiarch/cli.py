@@ -10,6 +10,7 @@ from .commands.extract.extract import cmd_extract
 from .commands.help import cmd_help
 from .commands.identify import grp_identify
 from .commands.init import cmd_init
+from .commands.search import grp_search
 from .commands.upgrade import cmd_upgrade
 
 Image.MAX_IMAGE_PIXELS = int(50e3**2)
@@ -26,6 +27,7 @@ app.add_command(cmd_init, cmd_init.name)
 app.add_command(grp_identify, grp_identify.name)
 app.add_command(cmd_extract, cmd_extract.name)
 app.add_command(grp_edit, grp_edit.name)
+app.add_command(grp_search, grp_search.name)
 app.add_command(cmd_upgrade, cmd_upgrade.name)
 app.add_command(cmd_help, cmd_help.name)
 app.add_command(cmd_completions, cmd_completions.name)
