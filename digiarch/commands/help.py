@@ -24,7 +24,7 @@ def commands_completion(ctx: Context, param: Option, incomplete: str) -> list[Co
         return []
 
 
-@command("help", no_args_is_help=True, context_settings={"ignore_unknown_options": True})
+@command("help", context_settings={"ignore_unknown_options": True})
 @argument(
     "commands",
     nargs=-1,
