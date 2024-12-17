@@ -33,11 +33,14 @@ from click import Path as ClickPath
 from pydantic import BaseModel
 
 from digiarch.__version__ import __version__
+from digiarch.common import AVID
+from digiarch.common import CommandWithRollback
 from digiarch.common import ctx_params
 from digiarch.common import fetch_actions
 from digiarch.common import get_avid
 from digiarch.common import open_database
 from digiarch.common import option_dry_run
+from digiarch.common import rollback
 from digiarch.query import argument_query
 from digiarch.query import query_table
 from digiarch.query import TQuery
@@ -97,6 +100,20 @@ def set_action(
     event.log(INFO, *loggers, show_args=["uuid", "data"])
 
 
+def rollback_set_action(_ctx: Context, _avid: AVID, database: FilesDB, event: Event, file: OriginalFile | None):
+    if not file:
+        return
+
+    prev_action: TActionType | None
+    prev_action_data: dict[TActionType, dict | None]
+    prev_action, _, prev_action_data, _ = event.data
+
+    file.action = prev_action
+    file.action_data = ActionData.model_validate(file.action_data.model_dump(mode="json") | prev_action_data)
+
+    database.original_files.update(file)
+
+
 def set_master_convert(
     ctx: Context,
     database: FilesDB,
@@ -135,12 +152,29 @@ def set_master_convert(
     event.log(INFO, *loggers, show_args=["uuid", "data"])
 
 
+def rollback_set_master_convert(_ctx: Context, _avid: AVID, database: FilesDB, event: Event, file: MasterFile | None):
+    if not file:
+        return
+
+    action_type: Literal["access", "statutory"]
+    prev_action: ConvertAction | None
+    action_type, prev_action, _ = event.data
+
+    if action_type == "access":
+        file.convert_access = prev_action
+    elif action_type == "statutory":
+        file.convert_statutory = prev_action
+
+    database.master_files.update(file)
+
+
 @group("action")
 def grp_action_original():
     """Change actions of original files."""
 
 
-@grp_action_original.command("convert", no_args_is_help=True, short_help="Set convert action.")
+@rollback("edit", rollback_set_action)
+@grp_action_original.command("convert", no_args_is_help=True, short_help="Set convert action.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--tool", type=str, required=True, help="The tool to use for conversion.")
@@ -193,7 +227,8 @@ def cmd_action_original_convert(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@grp_action_original.command("extract", no_args_is_help=True, short_help="Set extract action.")
+@rollback("edit", rollback_set_action)
+@grp_action_original.command("extract", no_args_is_help=True, short_help="Set extract action.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option("--tool", type=str, required=True, help="The tool to use for extraction.")
@@ -240,7 +275,8 @@ def cmd_action_original_extract(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@grp_action_original.command("manual", no_args_is_help=True, short_help="Set manual action.")
+@rollback("edit", rollback_set_action)
+@grp_action_original.command("manual", no_args_is_help=True, short_help="Set manual action.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option(
@@ -295,7 +331,8 @@ def cmd_action_original_manual(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@grp_action_original.command("ignore", no_args_is_help=True, short_help="Set ignore action.")
+@rollback("edit", rollback_set_action)
+@grp_action_original.command("ignore", no_args_is_help=True, short_help="Set ignore action.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("reason", nargs=1, type=str, required=True)
 @option(
@@ -359,7 +396,13 @@ def cmd_action_original_ignore(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@grp_action_original.command("copy", no_args_is_help=True, short_help="Copy action from a format.")
+@rollback("edit", rollback_set_action)
+@grp_action_original.command(
+    "copy",
+    no_args_is_help=True,
+    short_help="Copy action from a format.",
+    cls=CommandWithRollback,
+)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
 @argument("puid", nargs=1, type=str, required=True)
 @argument("action", type=Choice(["convert", "extract", "manual", "ignore"]))
@@ -428,7 +471,8 @@ def cmd_action_original_copy(
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
 
-@command("convert", no_args_is_help=True, short_help="Set access convert action.")
+@rollback("edit", rollback_set_master_convert)
+@command("convert", no_args_is_help=True, short_help="Set access convert action.", cls=CommandWithRollback)
 @argument("action_type", type=Choice(["access", "statutory"]), required=True)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed"])
 @argument("reason", nargs=1, type=str, required=True)
