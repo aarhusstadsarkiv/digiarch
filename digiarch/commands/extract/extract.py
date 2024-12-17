@@ -127,6 +127,8 @@ def rollback_extract(ctx: Context, avid: AVID, database: FilesDB, _event: Event,
     else:
         file.action = None
 
+    database.original_files.update(file)
+
 
 @rollback("unpacked", rollback_extract)
 @command("extract", short_help="Unpack archives.", cls=CommandWithRollback)
