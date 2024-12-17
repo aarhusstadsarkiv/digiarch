@@ -113,14 +113,20 @@ def handle_extract_error(
         event.log(ERROR, *loggers, show_args=["uuid"], error=repr(err), path=file.relative_path)
 
 
+def rollback_extract_remove_child(ctx: Context, avid: AVID, database: FilesDB, file: OriginalFile):
+    for child in database.original_files.select("parent = ?", [str(file.uuid)]).fetchall():
+        rollback_extract_remove_child(ctx, avid, database, child)
+    remove_children(ctx, avid, database, file, log_removal=False)
+    file.get_absolute_path(avid.path).unlink(missing_ok=True)
+    database.original_files.delete(file)
+
+
 def rollback_extract(ctx: Context, avid: AVID, database: FilesDB, _event: Event, file: BaseFile | None):
     if not file:
         return
 
     for child in database.original_files.select("parent = ?", [str(file.uuid)]).fetchall():
-        remove_children(ctx, avid, database, child, log_removal=False)
-        child.get_absolute_path(avid.path).unlink(missing_ok=True)
-        database.original_files.delete(child)
+        rollback_extract_remove_child(ctx, avid, database, child)
 
     if file.action_data.extract:
         file.action = "extract"
