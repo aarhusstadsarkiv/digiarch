@@ -104,7 +104,7 @@ def handle_extract_error(
         db.log.insert(event)
         event.log(ERROR, *loggers, show_args=["uuid"], error="not-preservable", path=file.relative_path)
     else:
-        event = Event.from_command(ctx, "error", file.uuid, err.__class__.__name__, err.msg)
+        event = Event.from_command(ctx, "error", (file.uuid, "original"), err.__class__.__name__, err.msg)
         file.lock = True
         file.action = "manual"
         file.action_data.manual = ManualAction(reason=err.msg, process="")
