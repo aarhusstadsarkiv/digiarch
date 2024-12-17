@@ -176,8 +176,8 @@ def rollback(
 
 def opt_list_commands(ctx: Context, _param: Parameter, value: bool):
     if value:
-        handlers = find_rollback_handlers(ctx.find_root().command)
-        print(*(" ".join(h.split(":")[0].split(".")) for h in handlers), sep="\n")
+        handlers = [" ".join(h.split(":")[0].split(".")) for h in find_rollback_handlers(ctx.find_root().command)]
+        print(*sorted(set(handlers), key=handlers.index), sep="\n")
         ctx.exit(0)
 
 
