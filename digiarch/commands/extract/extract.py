@@ -130,6 +130,7 @@ def rollback_extract(ctx: Context, avid: AVID, database: FilesDB, _event: Event,
     database.original_files.update(file)
 
 
+@rollback("error", rollback_extract)
 @rollback("unpacked", rollback_extract)
 @command("extract", short_help="Unpack archives.", cls=CommandWithRollback)
 @argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
