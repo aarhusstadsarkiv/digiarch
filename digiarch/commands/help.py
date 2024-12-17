@@ -25,13 +25,7 @@ def commands_completion(ctx: Context, param: Option, incomplete: str) -> list[Co
 
 
 @command("help", context_settings={"ignore_unknown_options": True})
-@argument(
-    "commands",
-    nargs=-1,
-    required=False,
-    type=str,
-    shell_complete=commands_completion,
-)
+@argument("commands", nargs=-1, required=False, type=str, shell_complete=commands_completion)
 @option("--database", expose_value=False, required=False, hidden=True)
 @pass_context
 def cmd_help(ctx: Context, commands: tuple[str, ...]):
