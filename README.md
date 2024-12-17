@@ -29,6 +29,12 @@
         * [statutory](#digiarch-edit-statutory)
             * [remove](#digiarch-edit-statutory-remove)
         * [rollback](#digiarch-edit-rollback)
+    * [search](#digiarch-search)
+        * [original](#digiarch-search-original)
+        * [master](#digiarch-search-master)
+        * [access](#digiarch-search-access)
+        * [statutory](#digiarch-search-statutory)
+    * [log](#digiarch-log)
     * [upgrade](#digiarch-upgrade)
     * [help](#digiarch-help)
     * [completions](#digiarch-completions)
@@ -49,6 +55,8 @@ Commands:
   identify     Identify files.
   extract      Unpack archives.
   edit         Edit the database.
+  search       Search the database.
+  log          Display the event log.
   upgrade      Upgrade the database.
   help         Show the help for a command.
   completions  Generate shell completions.
@@ -741,6 +749,164 @@ Options:
   --list-commands   List commands that can be rolled back.
   --dry-run         Show changes without committing them.
   --help            Show this message and exit.
+```
+
+### digiarch search
+
+```
+Usage: digiarch search [OPTIONS] COMMAND [ARGS]...
+
+  Search files in the database.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  access     Search access files.
+  master     Search master files.
+  original   Search original files.
+  statutory  Search statutory files.
+```
+
+#### digiarch search original
+
+```
+Usage: digiarch search original [OPTIONS] [QUERY]
+
+  Search among the original files in the database.
+
+  The wollowing query fields are supported:
+  * uuid
+  * checksum
+  * puid
+  * relative_path
+  * action
+  * warning
+  * is_binary
+  * processed
+  * lock
+  * original_path
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --sort [relative_path|puid|checksum|action]
+                                  Choose sorting column,  [default:
+                                  relative_path]
+  --order [asc|desc]              Choose sorting order.  [default: asc]
+  --limit INTEGER                 Limit number of results.  [default: 100;
+                                  x>=1]
+  --offset INTEGER                Offset number of results.  [default: 0;
+                                  x>=0]
+  --help                          Show this message and exit.
+```
+
+#### digiarch search master
+
+```
+Usage: digiarch search master [OPTIONS] [QUERY]
+
+  Search among the master files in the database.
+
+  The wollowing query fields are supported:
+  * uuid
+  * checksum
+  * puid
+  * relative_path
+  * warning
+  * is_binary
+  * processed
+  * original_uuid
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --sort [relative_path|puid|checksum]
+                                  Choose sorting column,  [default:
+                                  relative_path]
+  --order [asc|desc]              Choose sorting order.  [default: asc]
+  --limit INTEGER                 Limit number of results.  [default: 100;
+                                  x>=1]
+  --offset INTEGER                Offset number of results.  [default: 0;
+                                  x>=0]
+  --help                          Show this message and exit.
+```
+
+#### digiarch search access
+
+```
+Usage: digiarch search access [OPTIONS] [QUERY]
+
+  Search among the access files in the database.
+
+  The wollowing query fields are supported:
+  * uuid
+  * checksum
+  * puid
+  * relative_path
+  * warning
+  * is_binary
+  * original_uuid
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --sort [relative_path|puid|checksum]
+                                  Choose sorting column,  [default:
+                                  relative_path]
+  --order [asc|desc]              Choose sorting order.  [default: asc]
+  --limit INTEGER                 Limit number of results.  [default: 100;
+                                  x>=1]
+  --offset INTEGER                Offset number of results.  [default: 0;
+                                  x>=0]
+  --help                          Show this message and exit.
+```
+
+#### digiarch search statutory
+
+```
+Usage: digiarch search statutory [OPTIONS] [QUERY]
+
+  Search among the statutory files in the database.
+
+  The wollowing query fields are supported:
+  * uuid
+  * checksum
+  * puid
+  * relative_path
+  * warning
+  * is_binary
+  * original_uuid
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --sort [relative_path|puid|checksum]
+                                  Choose sorting column,  [default:
+                                  relative_path]
+  --order [asc|desc]              Choose sorting order.  [default: asc]
+  --limit INTEGER                 Limit number of results.  [default: 100;
+                                  x>=1]
+  --offset INTEGER                Offset number of results.  [default: 0;
+                                  x>=0]
+  --help                          Show this message and exit.
+```
+
+### digiarch log
+
+```
+Usage: digiarch log [OPTIONS]
+
+  Display the event log.
+
+  Start events will display the index to be used to roll back the of that
+  command.
+
+Options:
+  --runs-only         Only show start/end events.
+  --order [asc|desc]  Choose sorting order.  [default: asc]
+  --limit INTEGER     Limit number of results.  [default: 100; x>=1]
+  --help              Show this message and exit.
 ```
 
 ### digiarch upgrade
