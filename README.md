@@ -28,6 +28,7 @@
             * [remove](#digiarch-edit-access-remove)
         * [statutory](#digiarch-edit-statutory)
             * [remove](#digiarch-edit-statutory-remove)
+        * [rollback](#digiarch-edit-rollback)
     * [upgrade](#digiarch-upgrade)
     * [help](#digiarch-help)
     * [completions](#digiarch-completions)
@@ -299,6 +300,7 @@ Commands:
   master     Edit master files.
   access     Edit access files.
   statutory  Edit statutory files.
+  rollback   Roll back edits.
 ```
 
 #### digiarch edit original
@@ -711,6 +713,34 @@ Options:
   --reset-processed  Reset processed status of parent files.
   --dry-run          Show changes without committing them.
   --help             Show this message and exit.
+```
+
+#### digiarch edit rollback
+
+```
+Usage: digiarch edit rollback [OPTIONS] RUN
+
+  Roll back changes.
+
+  RUN can be a run index (1 for the previous run, 2 for the run before that,
+  and so on), an index slice (e.g., 2:4 to roll back the second to last
+  through the fourth to last run) or the timestamp of a run in the format
+  '%Y-%m-%dT%H:%M:%S' or '%Y-%m-%dT%H:%M:%S.%f'.
+
+  Runs that have already been rolled back (even if just partially) are
+  ignored. To include partially rolled-back runs use the --ignore-partial
+  option.
+
+  To see the changes without committing them, use the --dry-run option.
+
+  To see a list of commands that can be rolled back, use the --list-commands
+  option.
+
+Options:
+  --ignore-partial  Ignore partially rolled back runs.
+  --list-commands   List commands that can be rolled back.
+  --dry-run         Show changes without committing them.
+  --help            Show this message and exit.
 ```
 
 ### digiarch upgrade
