@@ -1,4 +1,5 @@
 from datetime import datetime
+from logging import ERROR
 from logging import INFO
 from logging import Logger
 from logging import WARN
@@ -155,7 +156,7 @@ def rollback(
                     "error" if exception.exception else "event",
                     (event.file_uuid, event.file_type),
                 ).log(
-                    INFO,
+                    ERROR if exception.exception else INFO,
                     *loggers,
                     run=f"{run_start.time:%Y-%m-%dT%T}",
                     event=f"{event.time:%Y-%m-%dT%T} {event.operation}",
