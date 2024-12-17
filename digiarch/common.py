@@ -1,4 +1,5 @@
 from functools import reduce
+from hashlib import sha256
 from os import PathLike
 from pathlib import Path
 from re import match
@@ -19,6 +20,7 @@ from acacore.reference_files import get_actions
 from acacore.reference_files import get_custom_signatures
 from acacore.reference_files import get_master_actions
 from acacore.utils.click import ctx_params
+from acacore.utils.functions import is_valid_suffix
 from click import BadParameter
 from click import Command
 from click import Context
@@ -262,8 +264,30 @@ def open_database(ctx: Context, avid: AVID) -> FilesDB:
         raise UsageError(e.args[0], ctx)
 
 
-def sanitize_filename(name: str) -> str:
-    return reduce(lambda acc, cur: acc.replace(cur, "_"), _invalid_characters, name.strip().replace("/", "_"))
+def trim_stem(name: str, length: int):
+    name_path: Path = Path(name)
+    suffixes: str = ""
+    for suffix in name_path.suffixes[::-1]:
+        if is_valid_suffix(suffix):
+            suffixes = suffix + suffixes
+        else:
+            break
+    new_stem: str = name.removesuffix(suffixes)
+    trim_length: int = length - len(new_stem)
+    return (new_stem[: length - len(suffixes)] if trim_length > 0 else "_") + suffixes
+
+
+def sanitize_filename(name: str, max_length: int | None = None, unique_trim_prefix: bool = False) -> str:
+    new_name: str = reduce(lambda acc, cur: acc.replace(cur, "_"), _invalid_characters, name.strip().replace("/", "_"))
+    if max_length and 0 < max_length < len(new_name):
+        if unique_trim_prefix:
+            new_name = trim_stem(new_name, max_length - 7)
+            new_name = sha256(name.encode()).hexdigest()[:7] + (
+                new_name if not new_name.startswith("_.") else new_name[1:]
+            )
+        else:
+            new_name = trim_stem(new_name, max_length)
+    return new_name
 
 
 def sanitize_path(path: str | PathLike) -> Path:
