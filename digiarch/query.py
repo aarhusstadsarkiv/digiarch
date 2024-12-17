@@ -120,6 +120,7 @@ def query_table(
     query: TQuery,
     order_by: list[tuple[str, str]] | None = None,
     limit: int | None = None,
+    offset: int | None = None,
 ) -> Generator[M, None, None]:
     where, parameters = query_to_where(query)
-    yield from table.select(where, parameters, order_by, limit)
+    yield from table.select(where, parameters, order_by, limit, offset)
