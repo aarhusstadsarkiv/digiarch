@@ -159,7 +159,7 @@ def rollback(
                     *loggers,
                     run=f"{run_start.time:%Y-%m-%dT%T}",
                     event=f"{event.time:%Y-%m-%dT%T} {event.operation}",
-                    reason=repr(exception.exception) if exception.exception else None,
+                    **({"reason": repr(exception.exception)} if exception.exception else {}),
                 )
 
             if not dry_run:
