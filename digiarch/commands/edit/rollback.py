@@ -173,9 +173,24 @@ def rollback(
             raise
 
 
+def opt_list_commands(ctx: Context, _param: Parameter, value: bool):
+    if value:
+        handlers = find_rollback_handlers(ctx.find_root().command)
+        print(*(" ".join(h.split(":")[0].split(".")) for h in handlers), sep="\n")
+        ctx.exit(0)
+
+
 @command("rollback", no_args_is_help=True, short_help="Roll back edits.")
 @argument("run", nargs=1, type=str, required=True, callback=callback_arg_run)
 @option("--ignore-partial", is_flag=True, default=False, help="Ignore partially rolled back runs.")
+@option(
+    "--list-commands",
+    is_flag=True,
+    is_eager=True,
+    help="List commands that can be rolled back.",
+    callback=opt_list_commands,
+    expose_value=False,
+)
 @option_dry_run()
 @pass_context
 def cmd_rollback(ctx: Context, run: tuple[int, int | None] | datetime, ignore_partial: bool, dry_run: bool):
@@ -190,6 +205,8 @@ def cmd_rollback(ctx: Context, run: tuple[int, int | None] | datetime, ignore_pa
     use the --ignore-partial option.
 
     To see the changes without committing them, use the --dry-run option.
+
+    To see a list of commands that can be rolled back, use the --list-commands option.
     """
     handlers = find_rollback_handlers(ctx.find_root().command)
 
