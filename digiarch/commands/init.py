@@ -225,7 +225,9 @@ def check_import_db(
         tables: list[str] = [t.lower() for [t] in db_old.execute("select name from sqlite_master where type = 'table'")]
         if "files" not in tables:
             raise BadParameter("Invalid database schema.", ctx, ctx_params(ctx)[import_param_name])
-        if "metadata" not in tables:
+        if "metadata" not in tables or (
+            {c.lower() for [_, c, *_] in db_old.execute("pragma table_info(metadata)")} != {"key", "value"}
+        ):
             return "files"
 
         version = db_old.execute("select value from Metadata where key = 'version'").fetchone()
