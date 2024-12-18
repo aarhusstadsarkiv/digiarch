@@ -122,6 +122,12 @@ def import_files(ctx: Context, avid: AVID, db: FilesDB, db_old: Connection, *log
     for [path_str] in paths_cursor:
         path = Path(path_str)
         if "originaldocuments" not in (path_parts := [p.lower() for p in path.parts]):
+            Event.from_command(ctx, "skip").log(
+                WARNING,
+                *loggers,
+                path=path,
+                reason="File is not in OriginalDocuments",
+            )
             continue
         path = avid.dirs.original_documents.joinpath(*path_parts[path_parts.index("originaldocuments") + 1 :])
         if not path.is_file():
