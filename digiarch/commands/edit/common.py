@@ -1,6 +1,7 @@
 from logging import INFO
 from logging import Logger
 from typing import Any
+from typing import Callable
 from typing import Literal
 
 from acacore.database import FilesDB
@@ -23,12 +24,13 @@ def edit_file_value(
     reason: str,
     file_type: Literal["original", "master", "access", "statutory"],
     property_name: str,
-    property_value: Any,  # noqa: ANN401
+    property_value: Callable[[Any], Any] | Any,  # noqa: ANN401
     dry_run: bool,
     *loggers: Logger,
 ):
     for file in query_table(table, query, [("lower(relative_path)", "asc")]):
-        if getattr(file, property_name) == property_value:
+        value = property_value(getattr(file, property_name)) if callable(property_value) else property_value
+        if getattr(file, property_name) == value:
             Event.from_command(ctx, "skip", (file.uuid, file_type), reason="No Changes").log(
                 INFO,
                 *loggers,
@@ -39,11 +41,11 @@ def edit_file_value(
             ctx,
             "edit",
             (file.uuid, file_type),
-            [getattr(file, property_name), property_value],
+            [getattr(file, property_name), value],
             reason,
         )
         if not dry_run:
-            setattr(file, property_name, property_value)
+            setattr(file, property_name, value)
             table.update(file)
             database.log.insert(event)
         event.log(INFO, *loggers, show_args=["uuid", "data"], path=file.relative_path)
