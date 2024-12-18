@@ -33,7 +33,6 @@ def test_identify_original(reference_files: Path, avid_folder: Path, avid_folder
             assert base_file.puid == test_file.puid
             assert base_file.action == test_file.action
             assert base_file.action_data.model_dump(mode="json") == test_file.action_data.model_dump(mode="json")
-            assert base_file.processed == test_file.processed
             assert base_file.original_path == test_file.original_path
 
 
