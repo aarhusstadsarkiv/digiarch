@@ -202,7 +202,7 @@ def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
         with ExceptionManager(BaseException) as exception:
             if db.is_initialised():
                 is_latest(db.connection, raise_on_difference=True)
-                Event.from_command(ctx, "initialized", data=db.version()).log(INFO, log_stdout)
+                Event.from_command(ctx, "initialized").log(INFO, log_stdout, version=db.version())
             else:
                 db.init()
                 db.log.insert(event_start)
@@ -210,7 +210,9 @@ def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
 
                 if avid.dirs.documents.exists() and not avid.dirs.original_documents.exists():
                     avid.dirs.documents.rename(avid.dirs.original_documents)
-                    Event.from_command(ctx, "rename", data=["Documents", "OriginalDocuments"]).log(INFO, log_stdout)
+                    event = Event.from_command(ctx, "rename", data=["Documents", "OriginalDocuments"])
+                    db.log.insert(event)
+                    event.log(INFO, log_stdout)
 
                 initialized = True
                 event = Event.from_command(ctx, "initialized", data=(v := db.version()))
