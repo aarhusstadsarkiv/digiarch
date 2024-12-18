@@ -615,9 +615,11 @@ Options:
 ##### digiarch edit master processed
 
 ```
-Usage: digiarch edit master processed [OPTIONS] QUERY REASON
+Usage: digiarch edit master processed [OPTIONS] QUERY {access|statutory}
+                                      REASON
 
-  Set master files matching the QUERY argument as processed.
+  Set master files matching the QUERY argument as processed for the relevant
+  target (access or statutory).
 
   To set files as unprocessed, use the --unprocessed option.
 
