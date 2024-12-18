@@ -55,9 +55,8 @@ def test_identify_master(reference_files: Path, avid_folder: Path, avid_folder_c
             assert base_file.checksum == test_file.checksum
             assert base_file.size == test_file.size
             assert base_file.puid == test_file.puid
-            assert base_file.action == test_file.action
-            assert base_file.action_data.model_dump(mode="json") == test_file.action_data.model_dump(mode="json")
-            assert base_file.processed == test_file.processed
+            assert base_file.convert_access == test_file.convert_access
+            assert base_file.convert_statutory == test_file.convert_statutory
             assert base_file.original_uuid == test_file.original_uuid
 
 
