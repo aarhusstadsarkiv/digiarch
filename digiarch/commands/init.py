@@ -4,6 +4,7 @@ from logging import Logger
 from logging import WARNING
 from os import PathLike
 from pathlib import Path
+from pathlib import PureWindowsPath
 from sqlite3 import connect
 from sqlite3 import Connection
 from sqlite3 import Row
@@ -120,7 +121,7 @@ def import_files(ctx: Context, avid: AVID, db: FilesDB, db_old: Connection, *log
 
     path_str: str
     for [path_str] in paths_cursor:
-        path = Path(path_str)
+        path = Path(PureWindowsPath(path_str.replace("\\", "\\\\"))) if "\\" in path_str else Path(path_str)
         if "originaldocuments" not in (path_parts := [p.lower() for p in path.parts]):
             Event.from_command(ctx, "skip").log(
                 WARNING,
