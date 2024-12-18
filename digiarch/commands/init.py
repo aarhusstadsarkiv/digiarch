@@ -130,7 +130,7 @@ def import_files(ctx: Context, avid: AVID, db: FilesDB, db_old: Connection, *log
                 reason="File is not in OriginalDocuments",
             )
             continue
-        path = avid.dirs.original_documents.joinpath(*path_parts[path_parts.index("originaldocuments") + 1 :])
+        path = avid.dirs.original_documents.joinpath(*path.parts[path_parts.index("originaldocuments") + 1 :])
         if not path.is_file():
             Event.from_command(ctx, "skip").log(
                 WARNING,
