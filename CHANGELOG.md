@@ -7,6 +7,10 @@
 * Use acacore 4.1.1
 * `edit master processed` can now set processed status of access and statutory targets separately
 
+### Fixes
+
+* Fix issue with rollback getting interrupted before finishing if a run contained unhandled events
+
 ## v5.0.0
 
 Complete overhaul of digiarch to work with the entire AVID folder and handle files across document types (original,
