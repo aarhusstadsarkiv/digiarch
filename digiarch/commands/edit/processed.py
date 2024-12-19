@@ -2,6 +2,7 @@ from acacore.utils.click import end_program
 from acacore.utils.click import start_program
 from acacore.utils.helpers import ExceptionManager
 from click import argument
+from click import Choice
 from click import command
 from click import Context
 from click import option
@@ -69,6 +70,7 @@ def cmd_processed_original(ctx: Context, query: TQuery, reason: str, processed: 
 @rollback("edit", rollback_file_value("processed"))
 @command("processed", no_args_is_help=True, short_help="Set master files as processed.", cls=CommandWithRollback)
 @argument_query(True, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed"])
+@argument("processed_type", type=Choice(["access", "statutory"]), nargs=1, required=True)
 @argument("reason", nargs=1, type=str, required=True)
 @option(
     "--processed/--unprocessed",
@@ -79,9 +81,16 @@ def cmd_processed_original(ctx: Context, query: TQuery, reason: str, processed: 
 )
 @option_dry_run()
 @pass_context
-def cmd_processed_master(ctx: Context, query: TQuery, reason: str, processed: bool, dry_run: bool):
+def cmd_processed_master(
+    ctx: Context,
+    query: TQuery,
+    processed_type: tuple[str, ...],
+    reason: str,
+    processed: bool,
+    dry_run: bool,
+):
     """
-    Set master files matching the QUERY argument as processed.
+    Set master files matching the QUERY argument as processed for the relevant target (access or statutory).
 
     To set files as unprocessed, use the --unprocessed option.
 
@@ -90,6 +99,16 @@ def cmd_processed_master(ctx: Context, query: TQuery, reason: str, processed: bo
     For details on the QUERY argument, see the edit command.
     """
     avid = get_avid(ctx)
+
+    mask: int = 0
+
+    if processed_type == "access":
+        mask += 0b01
+    if processed_type == "statutory":
+        mask += 0b10
+
+    if not processed:
+        mask ^= 0b11
 
     with open_database(ctx, avid) as database:
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
@@ -103,7 +122,7 @@ def cmd_processed_master(ctx: Context, query: TQuery, reason: str, processed: bo
                 reason,
                 "master",
                 "processed",
-                processed,
+                (lambda p: p | mask) if processed else (lambda p: p & mask),
                 dry_run,
                 log_stdout,
             )

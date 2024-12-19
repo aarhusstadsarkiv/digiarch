@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "digiarch"
-version = "5.0.0"
+version = "5.0.1"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = ["Aarhus Stadsarkiv <stadsarkiv@aarhus.dk>"]
 license = "GPL-3.0"
@@ -12,7 +12,7 @@ include = ["pyproject.toml"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v4.0.0"}
+acacore = {git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v4.1.1"}
 patool = "^3.1.0"
 tnefparse = "^1.4.0"
 extract-msg = "^0.52.0"

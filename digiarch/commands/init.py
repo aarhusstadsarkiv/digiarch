@@ -1,11 +1,14 @@
 from logging import ERROR
 from logging import INFO
 from logging import Logger
+from logging import WARNING
 from os import PathLike
 from pathlib import Path
+from pathlib import PureWindowsPath
 from sqlite3 import connect
 from sqlite3 import Connection
 from sqlite3 import Row
+from typing import Literal
 
 from acacore.database import FilesDB
 from acacore.database.upgrade import is_latest
@@ -36,7 +39,7 @@ def root_callback(ctx: Context, param: Parameter, value: str) -> AVID:
     return AVID(value)
 
 
-def import_original_file(avid: AVID, file: Row) -> tuple[OriginalFile, list[MasterFile], list[str]]:
+def import_acacore_original_file(avid: AVID, file: Row) -> tuple[OriginalFile, list[MasterFile], list[str]]:
     original_file: OriginalFile = OriginalFile.from_file(
         avid.dirs.original_documents.joinpath(file["relative_path"]),
         avid.path,
@@ -66,7 +69,7 @@ def import_original_file(avid: AVID, file: Row) -> tuple[OriginalFile, list[Mast
     return original_file, master_files, missing_master_files
 
 
-def import_original_files(
+def import_acacore_files(
     ctx: Context,
     avid: AVID,
     db: FilesDB,
@@ -81,7 +84,7 @@ def import_original_files(
     total_missing_master_files: int = 0
 
     for original_file_row in original_files_cur:
-        original_file, master_files, missing_master_files = import_original_file(avid, original_file_row)
+        original_file, master_files, missing_master_files = import_acacore_original_file(avid, original_file_row)
         db.original_files.insert(original_file)
         if master_files:
             db.master_files.insert(*master_files)
@@ -109,17 +112,89 @@ def import_original_files(
     return total_imported_original_files, total_imported_master_files, total_missing_master_files
 
 
+def import_files(ctx: Context, avid: AVID, db: FilesDB, db_old: Connection, *loggers: Logger) -> tuple[int, int, int]:
+    # noinspection SqlResolve
+    paths_cursor = db_old.execute("select path from Files")
+
+    total_imported_original_files: int = 0
+    total_imported_master_files: int = 0
+
+    path_str: str
+    for [path_str] in paths_cursor:
+        path = Path(PureWindowsPath(path_str)) if "\\" in path_str else Path(path_str)
+        if "originaldocuments" not in (path_parts := [p.lower() for p in path.parts]):
+            Event.from_command(ctx, "skip").log(
+                WARNING,
+                *loggers,
+                path=path,
+                reason="File is not in OriginalDocuments",
+            )
+            continue
+        path = avid.dirs.original_documents.joinpath(*path.parts[path_parts.index("originaldocuments") + 1 :])
+        if not path.is_file():
+            Event.from_command(ctx, "skip").log(
+                WARNING,
+                *loggers,
+                path=path.relative_to(avid.path),
+                reason="File not found",
+            )
+            continue
+
+        original_file = OriginalFile.from_file(path, avid.path)
+        db.original_files.insert(original_file)
+        Event.from_command(ctx, "imported", (original_file.uuid, "original")).log(
+            INFO,
+            *loggers,
+            path=original_file.relative_path,
+        )
+        total_imported_original_files += 1
+
+        master_files_dir: Path = avid.dirs.master_documents.joinpath(
+            path.parent.relative_to(avid.dirs.original_documents)
+        )
+        master_files: list[MasterFile] = [
+            MasterFile.from_file(f, avid.path, original_file.uuid)
+            for f in master_files_dir.iterdir()
+            if f.is_file() and f.stem == path.stem
+        ]
+        db.master_files.insert(*master_files)
+        for master_file in master_files:
+            Event.from_command(ctx, "imported", (master_file.uuid, "master")).log(
+                INFO,
+                *loggers,
+                path=master_file.relative_path,
+            )
+        total_imported_master_files += len(master_files)
+
+    return total_imported_original_files, total_imported_master_files, 0
+
+
 def import_db(
     ctx: Context,
     avid: AVID,
     db: FilesDB,
     import_db_path: str | PathLike,
+    import_mode: Literal["acacore", "files"],
     *loggers: Logger,
 ):
     db_old = connect(import_db_path)
+    new_original_files: int = 0
+    new_master_files: int = 0
+    missing_master_files: int = 0
 
-    Event.from_command(ctx, "import:start").log(INFO, *loggers)
-    new_original_files, new_master_files, missing_master_files = import_original_files(ctx, avid, db, db_old, *loggers)
+    Event.from_command(ctx, "import:start").log(INFO, *loggers, type=import_mode)
+
+    if import_mode == "acacore":
+        new_original_files, new_master_files, missing_master_files = import_acacore_files(
+            ctx,
+            avid,
+            db,
+            db_old,
+            *loggers,
+        )
+    elif import_mode == "files":
+        new_original_files, new_master_files, missing_master_files = import_files(ctx, avid, db, db_old, *loggers)
+
     Event.from_command(ctx, "import:end").log(
         INFO,
         *loggers,
@@ -134,6 +209,7 @@ def import_db(
             "import",
             None,
             {
+                "mode": import_mode,
                 "original_files": new_original_files,
                 "master_files": new_master_files,
                 "missing_master_files": missing_master_files,
@@ -143,21 +219,31 @@ def import_db(
     db.commit()
 
 
-def check_import_db(ctx: Context, import_db_path: str | PathLike, import_param_name: str):
+def check_import_db(
+    ctx: Context,
+    import_db_path: str | PathLike,
+    import_param_name: str,
+) -> Literal["acacore", "files"]:
     db_old: Connection | None = None
 
     try:
         db_old = connect(import_db_path)
 
         tables: list[str] = [t.lower() for [t] in db_old.execute("select name from sqlite_master where type = 'table'")]
-        if "files" not in tables or "metadata" not in tables:
+        if "files" not in tables:
             raise BadParameter("Invalid database schema.", ctx, ctx_params(ctx)[import_param_name])
+        if "metadata" not in tables or (
+            {c.lower() for [_, c, *_] in db_old.execute("pragma table_info(metadata)")} != {"key", "value"}
+        ):
+            return "files"
 
         version = db_old.execute("select value from Metadata where key = 'version'").fetchone()
         if not version:
             raise BadParameter("No version information.", ctx, ctx_params(ctx)[import_param_name])
         if version[0] != "3.3.3":
             raise BadParameter(f"Invalid version {version[0]}, must be 3.3.3.", ctx, ctx_params(ctx)[import_param_name])
+
+        return "acacore"
     finally:
         if db_old:
             db_old.close()
@@ -187,13 +273,15 @@ def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
 
     The directory is checked to make sure it has the structure expected of an AVID archive.
 
-    The --import option allows to import OriginalFiles from a files.db database generated by version v4.1.12 of
-    digiarch (acacore v3.3.3). MasterFiles are added as well, if present in the database.
+    The --import option allows to import original and master files from a files.db database generated by version
+    v4.1.12 of digiarch (acacore v3.3.3). A pre-acacore version of the database can also be used if it contains a
+    'Files' table with a 'path' column, but some master files may be missing.
     """
     avid.database_path.parent.mkdir(parents=True, exist_ok=True)
+    import_mode: Literal["acacore", "files"] | None = None
 
     if import_db_path:
-        check_import_db(ctx, import_db_path, "import_db_path")
+        import_mode = check_import_db(ctx, import_db_path, "import_db_path")
 
     with FilesDB(avid.database_path, check_initialisation=False, check_version=False) as db:
         _, log_stdout, event_start = start_program(ctx, db, __version__, None, False, True, True)
@@ -202,7 +290,7 @@ def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
         with ExceptionManager(BaseException) as exception:
             if db.is_initialised():
                 is_latest(db.connection, raise_on_difference=True)
-                Event.from_command(ctx, "initialized", data=db.version()).log(INFO, log_stdout)
+                Event.from_command(ctx, "initialized").log(INFO, log_stdout, version=db.version())
             else:
                 db.init()
                 db.log.insert(event_start)
@@ -210,15 +298,17 @@ def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
 
                 if avid.dirs.documents.exists() and not avid.dirs.original_documents.exists():
                     avid.dirs.documents.rename(avid.dirs.original_documents)
-                    Event.from_command(ctx, "rename", data=["Documents", "OriginalDocuments"]).log(INFO, log_stdout)
+                    event = Event.from_command(ctx, "rename", data=["Documents", "OriginalDocuments"])
+                    db.log.insert(event)
+                    event.log(INFO, log_stdout)
 
                 initialized = True
                 event = Event.from_command(ctx, "initialized", data=(v := db.version()))
                 db.log.insert(event)
                 event.log(INFO, log_stdout, show_args=False, version=v)
 
-            if initialized and import_db_path:
-                import_db(ctx, avid, db, import_db_path, log_stdout)
+            if initialized and import_db_path and import_mode is not None:
+                import_db(ctx, avid, db, import_db_path, import_mode, log_stdout)
 
         end_program(ctx, db, exception, not initialized, log_stdout)
 

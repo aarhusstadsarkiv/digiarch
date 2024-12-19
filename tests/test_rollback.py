@@ -39,7 +39,7 @@ def test_rollback_edit_original_action_convert(avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     with FilesDB(avid.database_path) as database:
-        files = database.original_files.select("action != 'convert'", order_by=[("random()", "asc")]).fetchmany(2)
+        files = database.original_files.select("action != 'convert'").fetchall()
 
     run_click(
         avid.path,
@@ -78,7 +78,7 @@ def test_rollback_edit_original_processed(avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     with FilesDB(avid.database_path) as database:
-        files = database.original_files.select("not processed", order_by=[("random()", "asc")]).fetchmany(2)
+        files = database.original_files.select("not processed").fetchall()
 
     run_click(
         avid.path,
@@ -107,7 +107,7 @@ def test_rollback_edit_original_lock(avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     with FilesDB(avid.database_path) as database:
-        files = database.original_files.select("not lock", order_by=[("random()", "asc")]).fetchmany(2)
+        files = database.original_files.select("not lock").fetchall()
 
     run_click(
         avid.path, app, "edit", "original", "lock", f"@uuid {' '.join(str(f.uuid) for f in files)}", "--lock", "test"
@@ -129,7 +129,7 @@ def test_rollback_edit_original_rename(avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     with FilesDB(avid.database_path) as database:
-        files = database.original_files.select(order_by=[("random()", "asc")]).fetchmany(2)
+        files = database.original_files.select().fetchmany(2)
 
     run_click(
         avid.path,
@@ -163,7 +163,7 @@ def test_rollback_edit_original_remove(avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     with FilesDB(avid.database_path) as database:
-        files = database.original_files.select(order_by=[("random()", "asc")]).fetchmany(2)
+        files = database.original_files.select().fetchmany(2)
 
     run_click(avid.path, app, "edit", "original", "remove", f"@uuid {' '.join(str(f.uuid) for f in files)}", "test")
 
@@ -185,7 +185,7 @@ def test_rollback_edit_original_remove_delete(avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
     with FilesDB(avid.database_path) as database:
-        files = database.original_files.select(order_by=[("random()", "asc")]).fetchmany(2)
+        files = database.original_files.select().fetchmany(2)
 
     run_click(
         avid.path,
