@@ -284,6 +284,21 @@ def test_edit_original_processed(avid_folder_copy: Path):
         assert event.reason == reason
         assert event.data == [False, True]
 
+    run_click(avid.path, app, "edit", "original", "processed", f"@uuid {base_file.uuid}", reason)
+
+    with FilesDB(avid.database_path) as database:
+        test_file = database.original_files[{"uuid": str(base_file.uuid)}]
+        assert test_file is not None
+        assert test_file.processed
+
+        assert (
+            database.log.select(
+                "file_uuid = ? and operation = ? and time > ?",
+                [str(base_file.uuid), f"{app.name}.edit.original.processed:edit", event.time.isoformat()],
+            ).fetchone()
+            is None
+        )
+
     run_click(avid.path, app, "edit", "original", "processed", f"@uuid {base_file.uuid}", reason, "--unprocessed")
 
     with FilesDB(avid.database_path) as database:
