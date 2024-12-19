@@ -134,14 +134,7 @@ def rollback(
                 if not event.file_type:
                     continue
                 if not (handler := handlers.get(event.operation)):
-                    Event.from_command(ctx, "skip", (event.file_uuid, event.file_type)).log(
-                        INFO,
-                        *loggers,
-                        run=f"{run_start.time:%Y-%m-%dT%T}",
-                        event=f"{event.time:%Y-%m-%dT%T} {event.operation}",
-                        reason="No handler found",
-                    )
-                    break
+                    continue
 
                 file = get_file(database, event.file_type, event.file_uuid)
 
