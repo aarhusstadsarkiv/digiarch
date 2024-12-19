@@ -266,7 +266,7 @@ def test_edit_original_processed(avid_folder_copy: Path):
     reason: str = "process file"
 
     with FilesDB(avid.database_path) as database:
-        base_file = database.original_files.select(order_by=[("random()", "asc")], limit=1).fetchone()
+        base_file = database.original_files.select("not processed", order_by=[("random()", "asc")], limit=1).fetchone()
         assert base_file is not None
 
     run_click(avid.path, app, "edit", "original", "processed", f"@uuid {base_file.uuid}", reason, "--processed")
@@ -282,4 +282,20 @@ def test_edit_original_processed(avid_folder_copy: Path):
         ).fetchone()
         assert event is not None
         assert event.reason == reason
-        assert event.data == [base_file.processed, test_file.processed]
+        assert event.data == [False, True]
+
+    run_click(avid.path, app, "edit", "original", "processed", f"@uuid {base_file.uuid}", reason, "--unprocessed")
+
+    with FilesDB(avid.database_path) as database:
+        test_file = database.original_files[{"uuid": str(base_file.uuid)}]
+        assert test_file is not None
+        assert not test_file.processed
+
+        event = database.log.select(
+            "file_uuid = ? and operation = ?",
+            [str(base_file.uuid), f"{app.name}.edit.original.processed:edit"],
+            order_by=[("time", "desc")],
+        ).fetchone()
+        assert event is not None
+        assert event.reason == reason
+        assert event.data == [True, False]
