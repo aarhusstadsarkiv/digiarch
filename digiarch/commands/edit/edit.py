@@ -27,7 +27,7 @@ def grp_edit():
     @like toggles LIKE syntax for the values following it in the same column.
     @file toggles file reading for the values following it in the same column: each
     value will be considered as a file path and values will be read from the lines
-    in the given file (@null, @notnull, @true, and @false in files are not supported).
+    in the given file (@null, @notnull, @true, @false, and @like are not supported when using @file).
     Changing to a new @<field> resets like and file toggles. Values for the same
     column will be matched with OR logic, while values from different columns will
     be matched with AND logic.
