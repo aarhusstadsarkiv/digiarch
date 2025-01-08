@@ -3,10 +3,10 @@ from typing import ClassVar
 
 from tnefparse import TNEF
 
-from digiarch.common import sanitize_filename
 from digiarch.common import TempDir
 
 from .base import ExtractorBase
+from .extractor_msg import prepare_attachment_name
 
 
 class TNEFExtractor(ExtractorBase):
@@ -23,12 +23,13 @@ class TNEFExtractor(ExtractorBase):
             tnef = TNEF(fh.read())
 
         with TempDir(self.file.root) as tmp_dir:
-            for attachment in tnef.attachments:
+            names: list[str] = []
+            for n, attachment in enumerate(tnef.attachments):
                 name: str = attachment.long_filename() or attachment.name
-                path: Path = tmp_dir.joinpath(sanitize_filename(name, 20, True))
-                with path.open("wb") as oh:
+                names, name, name_sanitized = prepare_attachment_name(names, name, n)
+                with tmp_dir.joinpath(name_sanitized).open("wb") as oh:
                     oh.write(attachment.data)
-                files.append((path.name, name))
+                files.append((name_sanitized, name))
 
             if not files:
                 return []

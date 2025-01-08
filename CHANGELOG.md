@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.0.3
+
+### Fixes
+
+* Fix files being overwritten causing an error when MSG and TNEF files contained more than one attachment with the same
+  name.
+
 ## v5.0.2
 
 ### Changes

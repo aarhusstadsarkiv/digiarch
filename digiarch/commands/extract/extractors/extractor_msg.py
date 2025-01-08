@@ -108,6 +108,16 @@ def msg_attachments(
     return inline_attachments, attachments
 
 
+def prepare_attachment_name(names: list[str], name: str, n: int) -> [tuple[str], str, str]:
+    """Deduplicate attachment name by attaching a prefix to the sanitized name with the index of that name if it has already been extracted."""
+    name = name.strip() or f"attachment-{n}"
+    name_sanitized: str = sanitize_filename(name, 20, True).strip("_") or f"attachment-{n}"
+    names.append(name_sanitized.lower())
+    if (count := names.count(name_sanitized.lower())) > 1:
+        name_sanitized = f"{count - 1}_{name_sanitized}"
+    return names, name, name_sanitized
+
+
 class MsgExtractor(ExtractorBase):
     tool_names: ClassVar[list[str]] = ["msg"]
 
@@ -120,11 +130,11 @@ class MsgExtractor(ExtractorBase):
         inline_attachments, attachments = msg_attachments(msg, body_html, body_rtf)
 
         with TempDir(self.file.root) as tmp_dir:
+            names: list[str] = []
             for n, attachment in enumerate(inline_attachments + attachments):
                 if isinstance(attachment, (Message, MessageSigned)):
                     name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
-                    name = name.strip() or f"attachment-{n}"
-                    name_sanitized: str = sanitize_filename(name, 20, True).strip("_") or f"attachment-{n}"
+                    names, name, name_sanitized = prepare_attachment_name(names, name, n)
                     attachment.export(tmp_dir / name_sanitized)
                     files.append((name_sanitized, name))
                 elif isinstance(attachment.data, bytes):
@@ -133,8 +143,7 @@ class MsgExtractor(ExtractorBase):
                         if isinstance(attachment, Attachment)
                         else attachment.longFilename or ""
                     )
-                    name = name.strip() or f"attachment-{n}"
-                    name_sanitized: str = sanitize_filename(name, 20, True).strip("_") or f"attachment-{n}"
+                    names, name, name_sanitized = prepare_attachment_name(names, name, n)
                     with tmp_dir.joinpath(name_sanitized).open("wb") as fh:
                         fh.write(attachment.data or b"")
                     files.append((name_sanitized, name))
