@@ -95,7 +95,7 @@ def tokenize_query(query_string: str, default_field: str, allowed_fields: list[s
             from_file = False
         elif from_file:
             with open(token) as fh:
-                query_tokens.extend([(field, line_, "=") for line in fh.readlines() if (line_ := line.strip())])
+                query_tokens.append((field, [line for l in fh.readlines() if (line := l.rstrip("\r\n"))], "in"))
         else:
             query_tokens.append((field, token, "like" if like else "="))
 
