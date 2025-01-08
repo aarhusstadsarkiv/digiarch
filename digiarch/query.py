@@ -16,11 +16,11 @@ from pydantic import BaseModel
 
 M = TypeVar("M", bound=BaseModel)
 FC = TypeVar("FC", bound=Callable[..., Any])
-TQuery = list[tuple[str, str | bool | Type[Ellipsis] | None, bool]]
+TQuery = list[tuple[str, str | bool | Type[Ellipsis] | list[str] | None, str]]  # field name, value(s), operation
 
 token_quotes = re_compile(r'(?<!\\)"((?:[^"]|(?<=\\)")*)"')
 # noinspection RegExpUnnecessaryNonCapturingGroup
-token_expr = re_compile(r"(?:\0([^\0]+)\0|(?<!\\)\s+)")
+token_expr = re_compile(r"(?:\x00([^\x00]+)\x00|(?<!\\)\s+)")
 
 
 def query_to_where(query: TQuery) -> tuple[str, list[str]]:
@@ -34,21 +34,26 @@ def query_to_where(query: TQuery) -> tuple[str, list[str]]:
     for field, values in query_fields.items():
         where_field: list[str] = []
 
-        for value, like in values:
-            if value is None:
-                where_field.append(f"{field} is null")
-            elif value is Ellipsis:
-                where_field.append(f"{field} is not null")
-            elif value is True:
-                where_field.append(f"{field} is true")
-            elif value is False:
-                where_field.append(f"{field} is false")
-            elif like:
-                where_field.append(f"{field} like ?")
-                parameters.append(value)
-            else:
-                where_field.append(f"{field} = ?")
-                parameters.append(value)
+        for value, op in values:
+            match (value, op):
+                case None, "is":
+                    where_field.append(f"{field} is null")
+                case None, "is not":
+                    where_field.append(f"{field} is not null")
+                case True, "is":
+                    where_field.append(f"{field} is true")
+                case True, "is not":
+                    where_field.append(f"{field} is false")
+                case False, "is":
+                    where_field.append(f"{field} is false")
+                case False, "is not":
+                    where_field.append(f"{field} is true")
+                case _, "=":
+                    where_field.append(f"{field} = ?")
+                    parameters.append(value)
+                case _, "like":
+                    where_field.append(f"{field} like ?")
+                    parameters.append(value)
 
         where.append(f"({' or '.join(where_field)})")
 
@@ -66,13 +71,13 @@ def tokenize_query(query_string: str, default_field: str, allowed_fields: list[s
 
     for token in tokens:
         if token == "@null":
-            query_tokens.append((field, None, False))
+            query_tokens.append((field, None, "is"))
         elif token == "@notnull":
-            query_tokens.append((field, ..., True))
+            query_tokens.append((field, None, "is not"))
         elif token == "@true":
-            query_tokens.append((field, True, False))
+            query_tokens.append((field, True, "is"))
         elif token == "@false":
-            query_tokens.append((field, False, False))
+            query_tokens.append((field, True, "is not"))
         elif token == "@like":
             like = True
         elif token == "@file":
@@ -84,15 +89,15 @@ def tokenize_query(query_string: str, default_field: str, allowed_fields: list[s
             from_file = False
         elif from_file:
             with open(token) as fh:
-                query_tokens.extend([(field, line_, like) for line in fh.readlines() if (line_ := line.strip())])
+                query_tokens.extend([(field, line_, "=") for line in fh.readlines() if (line_ := line.strip())])
         else:
-            query_tokens.append((field, token, like))
+            query_tokens.append((field, token, "like" if like else "="))
 
     return query_tokens
 
 
 def argument_query(required: bool, default: str, allowed_fields: list[str] | None = None) -> Callable[[FC], FC]:
-    def callback(ctx: Context, param: Parameter, value: str | None) -> list[tuple[str, str, bool]]:
+    def callback(ctx: Context, param: Parameter, value: str | None) -> TQuery:
         if not (value := value or "").strip() and required:
             raise MissingParameter(None, ctx, param)
         if not value:
