@@ -48,6 +48,12 @@ def query_to_where(query: TQuery) -> tuple[str, list[str]]:
                     where_field.append(f"{field} is false")
                 case False, "is not":
                     where_field.append(f"{field} is true")
+                case _, "in" if isinstance(value, list):
+                    where_field.append(f"{field} in ({','.join(['?'] * len(value))})")
+                    parameters.extend(value)
+                case _, "in" if isinstance(value, str):
+                    where_field.append(f"instr({field}, ?) != 0")
+                    parameters.append(value)
                 case _, "=":
                     where_field.append(f"{field} = ?")
                     parameters.append(value)
