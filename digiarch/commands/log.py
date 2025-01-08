@@ -39,7 +39,7 @@ def cmd_log(ctx: Context, runs_only: bool, order: str, limit: int):
     query: TQuery = []
 
     if runs_only:
-        query = [("operation", "%:start", True), ("operation", "%:end", True)]
+        query = [("operation", "%:start", "like"), ("operation", "%:end", "like")]
 
     with open_database(ctx, get_avid(ctx)) as database:
         events: list[Event] = list(query_table(database.log, query, [("time", order)], limit))
