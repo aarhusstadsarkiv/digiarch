@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.0.2
+
+### Changes
+
+* When using the `@file` operator in queries, the values are matched exactly with the [SQL `IN` operator](https://sqlite.org/src/doc/tip/src/in-operator.md).
+  * The `@like` operator no longer has any effect when use in conjunction with `@file` 
+
 ## v5.0.1
 
 ### Changes
