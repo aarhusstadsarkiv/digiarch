@@ -261,6 +261,34 @@ def test_edit_original_lock(avid_folder_copy: Path):
 
 
 # noinspection DuplicatedCode
+def test_edit_original_lock_file_query(avid_folder_copy: Path):
+    avid = AVID(avid_folder_copy)
+    reason: str = "lock file"
+
+    with FilesDB(avid.database_path) as database:
+        base_files = database.original_files.select(order_by=[("random()", "asc")], limit=2).fetchmany(2)
+        assert base_files
+
+    avid.path.joinpath("uuids.txt").write_text("\n".join(str(f.uuid) for f in base_files))
+
+    run_click(avid.path, app, "edit", "original", "lock", "@uuid @file uuids.txt", reason, "--lock")
+
+    with FilesDB(avid.database_path) as database:
+        for base_file in base_files:
+            test_file = database.original_files[{"uuid": str(base_file.uuid)}]
+            assert test_file is not None
+            assert test_file.lock
+
+            event = database.log.select(
+                "file_uuid = ? and operation = ?",
+                [str(base_file.uuid), f"{app.name}.edit.original.lock:edit"],
+            ).fetchone()
+            assert event is not None
+            assert event.reason == reason
+            assert event.data == [base_file.lock, test_file.lock]
+
+
+# noinspection DuplicatedCode
 def test_edit_original_processed(avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
     reason: str = "process file"
