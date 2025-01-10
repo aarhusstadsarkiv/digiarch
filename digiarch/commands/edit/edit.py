@@ -5,6 +5,8 @@ from .action import grp_action_original
 from .lock import cmd_lock_original
 from .processed import cmd_processed_master
 from .processed import cmd_processed_original
+from .puid import cmd_puid_master
+from .puid import cmd_puid_original
 from .remove import cmd_remove_access
 from .remove import cmd_remove_master
 from .remove import cmd_remove_original
@@ -70,12 +72,14 @@ def grp_edit_statutory():
 # noinspection DuplicatedCode
 grp_edit.add_command(cmd_rollback, cmd_rollback.name)
 
+grp_edit_original.add_command(cmd_puid_original, cmd_puid_original.name)
 grp_edit_original.add_command(grp_action_original, grp_action_original.name)
 grp_edit_original.add_command(cmd_processed_original, cmd_processed_original.name)
 grp_edit_original.add_command(cmd_lock_original, cmd_lock_original.name)
 grp_edit_original.add_command(cmd_rename_original, cmd_rename_original.name)
 grp_edit_original.add_command(cmd_remove_original, cmd_remove_original.name)
 
+grp_edit_master.add_command(cmd_puid_master, cmd_puid_master.name)
 grp_edit_master.add_command(cmd_action_master_convert, cmd_action_master_convert.name)
 grp_edit_master.add_command(cmd_processed_master, cmd_processed_master.name)
 grp_edit_master.add_command(cmd_remove_master, cmd_remove_master.name)

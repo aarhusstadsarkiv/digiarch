@@ -1,7 +1,7 @@
-from asyncio import Event
 from pathlib import Path
 
 from acacore.database import FilesDB
+from acacore.models.event import Event
 from acacore.models.file import OriginalFile
 from acacore.models.reference_files import ConvertAction
 from acacore.models.reference_files import ExtractAction
@@ -12,6 +12,63 @@ from pydantic import BaseModel
 from digiarch.cli import app
 from digiarch.common import AVID
 from tests.conftest import run_click
+
+
+# noinspection DuplicatedCode
+def test_edit_original_puid(avid_folder_copy: Path):
+    avid = AVID(avid_folder_copy)
+    puid: str = "fmt/test"
+    reason: str = "lock file"
+
+    with FilesDB(avid.database_path) as database:
+        base_file = database.original_files.select(order_by=[("random()", "asc")], limit=1).fetchone()
+        assert base_file
+
+    run_click(avid.path, app, "edit", "original", "puid", puid, f"@uuid {base_file.uuid}", reason, "--lock")
+
+    with FilesDB(avid.database_path) as database:
+        test_file = database.original_files.select({"uuid": str(base_file.uuid)}, limit=1).fetchone()
+        assert test_file
+        assert test_file.puid == puid
+
+        event = database.log.select(
+            "file_uuid = ? and operation = ?",
+            [str(base_file.uuid), f"{app.name}.edit.original.puid:edit"],
+        ).fetchone()
+        assert event is not None
+        assert event.data == [base_file.puid, puid]
+
+    run_click(avid.path, app, "edit", "rollback", 1)
+
+    with FilesDB(avid.database_path) as database:
+        test_file = database.original_files.select({"uuid": str(base_file.uuid)}, limit=1).fetchone()
+        assert test_file
+        assert test_file.puid == base_file.puid
+
+
+# noinspection DuplicatedCode
+def test_edit_master_puid(avid_folder_copy: Path):
+    avid = AVID(avid_folder_copy)
+    puid: str = "fmt/test"
+    reason: str = "lock file"
+
+    with FilesDB(avid.database_path) as database:
+        base_file = database.master_files.select(order_by=[("random()", "asc")], limit=1).fetchone()
+        assert base_file
+
+    run_click(avid.path, app, "edit", "master", "puid", puid, f"@uuid {base_file.uuid}", reason)
+
+    with FilesDB(avid.database_path) as database:
+        test_file = database.master_files.select({"uuid": str(base_file.uuid)}, limit=1).fetchone()
+        assert test_file
+        assert test_file.puid == puid
+
+        event = database.log.select(
+            "file_uuid = ? and operation = ?",
+            [str(base_file.uuid), f"{app.name}.edit.master.puid:edit"],
+        ).fetchone()
+        assert event is not None
+        assert event.data == [base_file.puid, puid]
 
 
 # noinspection DuplicatedCode
@@ -258,6 +315,34 @@ def test_edit_original_lock(avid_folder_copy: Path):
         assert event is not None
         assert event.reason == reason
         assert event.data == [base_file.lock, test_file.lock]
+
+
+# noinspection DuplicatedCode
+def test_edit_original_lock_file_query(avid_folder_copy: Path):
+    avid = AVID(avid_folder_copy)
+    reason: str = "lock file"
+
+    with FilesDB(avid.database_path) as database:
+        base_files = database.original_files.select(order_by=[("random()", "asc")], limit=2).fetchmany(2)
+        assert base_files
+
+    avid.path.joinpath("uuids.txt").write_text("\n".join(str(f.uuid) for f in base_files))
+
+    run_click(avid.path, app, "edit", "original", "lock", "@uuid @file uuids.txt", reason, "--lock")
+
+    with FilesDB(avid.database_path) as database:
+        for base_file in base_files:
+            test_file = database.original_files[{"uuid": str(base_file.uuid)}]
+            assert test_file is not None
+            assert test_file.lock
+
+            event = database.log.select(
+                "file_uuid = ? and operation = ?",
+                [str(base_file.uuid), f"{app.name}.edit.original.lock:edit"],
+            ).fetchone()
+            assert event is not None
+            assert event.reason == reason
+            assert event.data == [base_file.lock, test_file.lock]
 
 
 # noinspection DuplicatedCode

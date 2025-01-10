@@ -27,6 +27,7 @@ def edit_file_value(
     property_value: Callable[[Any], Any] | Any,  # noqa: ANN401
     dry_run: bool,
     *loggers: Logger,
+    lock: bool = False,
 ):
     for file in query_table(table, query, [("lower(relative_path)", "asc")]):
         value = property_value(getattr(file, property_name)) if callable(property_value) else property_value
@@ -46,6 +47,8 @@ def edit_file_value(
         )
         if not dry_run:
             setattr(file, property_name, value)
+            if lock and hasattr(file, "lock"):
+                setattr(file, "lock", True)
             table.update(file)
             database.log.insert(event)
         event.log(INFO, *loggers, show_args=["uuid", "data"], path=file.relative_path)
