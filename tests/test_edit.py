@@ -15,6 +15,63 @@ from tests.conftest import run_click
 
 
 # noinspection DuplicatedCode
+def test_edit_original_puid(avid_folder_copy: Path):
+    avid = AVID(avid_folder_copy)
+    puid: str = "fmt/test"
+    reason: str = "lock file"
+
+    with FilesDB(avid.database_path) as database:
+        base_file = database.original_files.select(order_by=[("random()", "asc")], limit=1).fetchone()
+        assert base_file
+
+    run_click(avid.path, app, "edit", "original", "puid", puid, f"@uuid {base_file.uuid}", reason, "--lock")
+
+    with FilesDB(avid.database_path) as database:
+        test_file = database.original_files.select({"uuid": str(base_file.uuid)}, limit=1).fetchone()
+        assert test_file
+        assert test_file.puid == puid
+
+        event = database.log.select(
+            "file_uuid = ? and operation = ?",
+            [str(base_file.uuid), f"{app.name}.edit.original.puid:edit"],
+        ).fetchone()
+        assert event is not None
+        assert event.data == [base_file.puid, puid]
+
+    run_click(avid.path, app, "edit", "rollback", 1)
+
+    with FilesDB(avid.database_path) as database:
+        test_file = database.original_files.select({"uuid": str(base_file.uuid)}, limit=1).fetchone()
+        assert test_file
+        assert test_file.puid == base_file.puid
+
+
+# noinspection DuplicatedCode
+def test_edit_master_puid(avid_folder_copy: Path):
+    avid = AVID(avid_folder_copy)
+    puid: str = "fmt/test"
+    reason: str = "lock file"
+
+    with FilesDB(avid.database_path) as database:
+        base_file = database.master_files.select(order_by=[("random()", "asc")], limit=1).fetchone()
+        assert base_file
+
+    run_click(avid.path, app, "edit", "master", "puid", puid, f"@uuid {base_file.uuid}", reason)
+
+    with FilesDB(avid.database_path) as database:
+        test_file = database.master_files.select({"uuid": str(base_file.uuid)}, limit=1).fetchone()
+        assert test_file
+        assert test_file.puid == puid
+
+        event = database.log.select(
+            "file_uuid = ? and operation = ?",
+            [str(base_file.uuid), f"{app.name}.edit.master.puid:edit"],
+        ).fetchone()
+        assert event is not None
+        assert event.data == [base_file.puid, puid]
+
+
+# noinspection DuplicatedCode
 def test_edit_original_action(tests_folder: Path, avid_folder_copy: Path):
     avid = AVID(avid_folder_copy)
 
