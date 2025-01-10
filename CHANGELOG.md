@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.1.0
+
+### New Features
+
+* `edit original puid` and `edit master puid` commands to set the PUID of original and master files respectively
+* `manual extract` command to add manually extracted files
+* `manual convert` command to add manually converted files
+
 ## v5.0.3
 
 ### Fixes
