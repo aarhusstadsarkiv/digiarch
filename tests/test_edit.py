@@ -1,7 +1,7 @@
-from asyncio import Event
 from pathlib import Path
 
 from acacore.database import FilesDB
+from acacore.models.event import Event
 from acacore.models.file import OriginalFile
 from acacore.models.reference_files import ConvertAction
 from acacore.models.reference_files import ExtractAction
