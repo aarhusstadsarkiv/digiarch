@@ -10,6 +10,7 @@
     * [extract](#digiarch-extract)
     * [edit](#digiarch-edit)
         * [original](#digiarch-edit-original)
+            * [puid](#digiarch-edit-original-puid)
             * [action](#digiarch-edit-original-action)
                 * [convert](#digiarch-edit-original-action-convert)
                 * [extract](#digiarch-edit-original-action-extract)
@@ -21,6 +22,7 @@
             * [rename](#digiarch-edit-original-rename)
             * [remove](#digiarch-edit-original-remove)
         * [master](#digiarch-edit-master)
+            * [puid](#digiarch-edit-master-puid)
             * [convert](#digiarch-edit-master-convert)
             * [processed](#digiarch-edit-master-processed)
             * [remove](#digiarch-edit-master-remove)
@@ -29,6 +31,9 @@
         * [statutory](#digiarch-edit-statutory)
             * [remove](#digiarch-edit-statutory-remove)
         * [rollback](#digiarch-edit-rollback)
+    * [manual](#digiarch-manual)
+        * [extract](#digiarch-manual-extract)
+        * [convert](#digiarch-manual-convert)
     * [search](#digiarch-search)
         * [original](#digiarch-search-original)
         * [master](#digiarch-search-master)
@@ -55,6 +60,7 @@ Commands:
   identify     Identify files.
   extract      Unpack archives.
   edit         Edit the database.
+  manual       Perform actions manually.
   search       Search the database.
   log          Display the event log.
   upgrade      Upgrade the database.
@@ -326,11 +332,31 @@ Options:
   --help  Show this message and exit.
 
 Commands:
+  puid       Change PUID.
   action     Change actions of original files.
   processed  Set original files as processed.
   lock       Lock files.
   rename     Change file extensions.
   remove     Remove files.
+```
+
+##### digiarch edit original puid
+
+```
+Usage: digiarch edit original puid [OPTIONS] PUID QUERY REASON
+
+  Change PUID of original files.
+
+  To lock the files after editing them, use the --lock option.
+
+  To see the changes without committing them, use the --dry-run option.
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --lock     Lock the edited files.
+  --dry-run  Show changes without committing them.
+  --help     Show this message and exit.
 ```
 
 ##### digiarch edit original action
@@ -583,9 +609,26 @@ Options:
   --help  Show this message and exit.
 
 Commands:
+  puid       Change PUID.
   convert    Set access convert action.
   processed  Set master files as processed.
   remove     Remove files.
+```
+
+##### digiarch edit master puid
+
+```
+Usage: digiarch edit master puid [OPTIONS] PUID QUERY REASON
+
+  Change PUID of master files.
+
+  To see the changes without committing them, use the --dry-run option.
+
+  For details on the QUERY argument, see the edit command.
+
+Options:
+  --dry-run  Show changes without committing them.
+  --help     Show this message and exit.
 ```
 
 ##### digiarch edit master convert
@@ -755,6 +798,77 @@ Options:
   --list-commands   List commands that can be rolled back.
   --dry-run         Show changes without committing them.
   --help            Show this message and exit.
+```
+
+### digiarch manual
+
+```
+Usage: digiarch manual [OPTIONS] COMMAND [ARGS]...
+
+  Perform complex actions manually when the automated tools fail or when one
+  is not available.
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  convert  Add converted files.
+  extract  Add extracted files.
+```
+
+#### digiarch manual extract
+
+```
+Usage: digiarch manual extract [OPTIONS] PARENT FILE...
+
+  Manually add files extracted from an archive, and assign them the PARENT
+  UUID.
+
+  The given FILEs can be single files or folders and must be located inside
+  OriginalDocuments.
+
+  To exclude children files when using a folder as target, use the --exclude
+  option.
+
+  If the files are not already in the database they will be added without
+  identification. Run the identify command to assign them a PUID and action.
+
+  If the files are in the database their parent value will be set to ORIGINAL
+  unless they already have one assigned, in which case they will be ignored.
+  Run the identify command to assign a PUID and action to newly-added files.
+
+  To see the changes without committing them, use the --dry-run option.
+
+Options:
+  --exclude TEXT  File and folder names to exclude.  [multiple]
+  --dry-run       Show changes without committing them.
+  --help          Show this message and exit.
+```
+
+#### digiarch manual convert
+
+```
+Usage: digiarch manual convert [OPTIONS] ORIGINAL {master|access|statutory}
+                               FILE...
+
+  Manually add converted files with ORIGINAL UUID as their parent.
+
+  \b Depending on the TARGET, a different type of ORIGINAL file will be
+  needed: * "master": original file parent * "access": master file parent *
+  "statutory": master file parent
+
+  The given FILEs must be located inside the MasterDocuments, AccessDocuments,
+  or Documents folder depending on the TARGET.
+
+  If the files are already in the database they will be ignored. Run the
+  identify command to assign a PUID (and action where applicable) to newly-
+  added files.
+
+  To see the changes without committing them, use the --dry-run option.
+
+Options:
+  --dry-run  Show changes without committing them.
+  --help     Show this message and exit.
 ```
 
 ### digiarch search
