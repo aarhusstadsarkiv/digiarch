@@ -134,5 +134,6 @@ def cmd_rename_original(
 
                 event.log(INFO, log_stdout, show_args=["uuid", "data"])
                 database.log.insert(event)
+                database.commit()
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)

@@ -223,6 +223,8 @@ def cmd_action_original_convert(
                 set_action(ctx, database, file, "convert", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
+                if not dry_run:
+                    database.commit()
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -271,6 +273,8 @@ def cmd_action_original_extract(
                 set_action(ctx, database, file, "extract", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
+                if not dry_run:
+                    database.commit()
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -327,6 +331,8 @@ def cmd_action_original_manual(
                 set_action(ctx, database, file, "manual", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
+                if not dry_run:
+                    database.commit()
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -392,6 +398,8 @@ def cmd_action_original_ignore(
                 set_action(ctx, database, file, "ignore", data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
+                if not dry_run:
+                    database.commit()
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -467,6 +475,8 @@ def cmd_action_original_copy(
                 set_action(ctx, database, file, action, data, reason, dry_run, log_stdout)
                 if lock:
                     set_lock(ctx, database, file, reason, dry_run, log_stdout)
+                if not dry_run:
+                    database.commit()
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
@@ -520,6 +530,8 @@ def cmd_action_master_convert(
         with ExceptionManager(BaseException) as exception:
             for file in query_table(database.master_files, query, [("lower(relative_path)", "asc")]):
                 set_master_convert(ctx, database, file, data, action_type, reason, dry_run)
+                if not dry_run:
+                    database.commit()
 
         end_program(ctx, database, exception, dry_run, log_file, log_stdout)
 
