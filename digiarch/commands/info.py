@@ -72,7 +72,9 @@ def cmd_info(ctx: Context):
     avid = get_avid(ctx)
 
     with open_database(ctx, avid) as database:
-        print("files:")
+        lazy_print("initialized: ", lambda: database.log.select(order_by=[("time", "asc")], limit=1).fetchone().time)
+
+        print("\nfiles:")
         lazy_print("  original: ", lambda: len(database.original_files))
         lazy_print("  master: ", lambda: len(database.master_files))
         lazy_print("  access: ", lambda: len(database.access_files))
