@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.2.0
+
+### New Features
+
+* `finalize doc-collections` command to rearrange files in Documents into docCollection directories.
+
 ## v5.1.0
 
 ### New Features
