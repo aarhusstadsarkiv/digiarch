@@ -7,6 +7,7 @@ from .__version__ import __version__
 from .commands.completions import cmd_completions
 from .commands.edit.edit import grp_edit
 from .commands.extract.extract import cmd_extract
+from .commands.finalize.finalize import grp_finalize
 from .commands.help import cmd_help
 from .commands.identify import grp_identify
 from .commands.info import cmd_info
@@ -31,6 +32,7 @@ app.add_command(grp_identify, grp_identify.name)
 app.add_command(cmd_extract, cmd_extract.name)
 app.add_command(grp_edit, grp_edit.name)
 app.add_command(grp_manual, grp_manual.name)
+app.add_command(grp_finalize, grp_finalize.name)
 app.add_command(grp_search, grp_search.name)
 app.add_command(cmd_info, cmd_info.name)
 app.add_command(cmd_log, cmd_log.name)
