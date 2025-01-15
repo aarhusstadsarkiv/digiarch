@@ -5,6 +5,7 @@
 ### New Features
 
 * `finalize doc-collections` command to rearrange files in Documents into docCollection directories.
+* `info` command to print general information about the database
 
 ## v5.1.0
 
