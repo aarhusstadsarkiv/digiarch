@@ -34,11 +34,14 @@
     * [manual](#digiarch-manual)
         * [extract](#digiarch-manual-extract)
         * [convert](#digiarch-manual-convert)
+    * [finalize](#digiarch-finalize)
+        * [doc-collections](#digiarch-finalize-doc-collections)
     * [search](#digiarch-search)
         * [original](#digiarch-search-original)
         * [master](#digiarch-search-master)
         * [access](#digiarch-search-access)
         * [statutory](#digiarch-search-statutory)
+    * [info](#digiarch-info)
     * [log](#digiarch-log)
     * [upgrade](#digiarch-upgrade)
     * [help](#digiarch-help)
@@ -61,7 +64,9 @@ Commands:
   extract      Unpack archives.
   edit         Edit the database.
   manual       Perform actions manually.
+  finalize     Finalize for delivery.
   search       Search the database.
+  info         Database information.
   log          Display the event log.
   upgrade      Upgrade the database.
   help         Show the help for a command.
@@ -853,9 +858,10 @@ Usage: digiarch manual convert [OPTIONS] ORIGINAL {master|access|statutory}
 
   Manually add converted files with ORIGINAL UUID as their parent.
 
-  \b Depending on the TARGET, a different type of ORIGINAL file will be
-  needed: * "master": original file parent * "access": master file parent *
-  "statutory": master file parent
+  Depending on the TARGET, a different type of ORIGINAL file will be needed:
+  * "master": original file parent
+  * "access": master file parent
+  * "statutory": master file parent
 
   The given FILEs must be located inside the MasterDocuments, AccessDocuments,
   or Documents folder depending on the TARGET.
@@ -869,6 +875,53 @@ Usage: digiarch manual convert [OPTIONS] ORIGINAL {master|access|statutory}
 Options:
   --dry-run  Show changes without committing them.
   --help     Show this message and exit.
+```
+
+### digiarch finalize
+
+```
+Usage: digiarch finalize [OPTIONS] COMMAND [ARGS]...
+
+  Perform the necessary opration to ready the AVID directory for delivery.
+
+  The changes should be performed in the following order:
+  * doc-collections
+  * doc-index (TBA)
+  * av-db (TBA)
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  doc-collections  Create docCollections.
+```
+
+#### digiarch finalize doc-collections
+
+```
+Usage: digiarch finalize doc-collections [OPTIONS]
+
+  Rearrange files in Documents using docCollections.
+
+  If the process is interrupted, all changes are rolled back, but the newly
+  named files can be recovered using the --resume option when the command is
+  run next. The option should only ever be used if NO other changes have
+  occured to the files or the database. The default behaviour is to remove any
+  leftover files and start the process anew.
+
+  To change the number of documents in each docCollection directory, use the
+  --docs-in-collection option.
+
+  To see the changes without committing them, use the --dry-run option.
+
+Options:
+  --docs-in-collection INTEGER RANGE
+                                  The maximum number of documents to put in
+                                  each docCollection.  [default: 10000; x>=1]
+  --resume / --no-resume          Resume a previously interrupted
+                                  rearrangement.
+  --dry-run                       Show changes without committing them.
+  --help                          Show this message and exit.
 ```
 
 ### digiarch search
@@ -1010,6 +1063,17 @@ Options:
   --offset INTEGER                Offset number of results.  [default: 0;
                                   x>=0]
   --help                          Show this message and exit.
+```
+
+### digiarch info
+
+```
+Usage: digiarch info [OPTIONS]
+
+  Display information about the database.
+
+Options:
+  --help  Show this message and exit.
 ```
 
 ### digiarch log
