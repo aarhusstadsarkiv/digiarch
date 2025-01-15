@@ -3,7 +3,9 @@ from math import ceil
 from pathlib import Path
 from shutil import copy2
 
+from acacore.database import FilesDB
 from acacore.models.event import Event
+from acacore.models.file import ConvertedFile
 from acacore.utils.click import end_program
 from acacore.utils.click import start_program
 from acacore.utils.functions import rm_tree
@@ -30,7 +32,13 @@ def safe_copy(src: Path, dst: Path):
         raise
 
 
-# TODO: handle GIS files
+def gis_xsd(database: FilesDB, file: ConvertedFile) -> ConvertedFile:
+    xsd: ConvertedFile | None = database.statutory_files[{"relative_path": str(file.relative_path.with_suffix(".xsd"))}]
+    if not xsd:
+        raise FileNotFoundError(f"Could not find xsd file for {file.relative_path}")
+    return xsd
+
+
 @command("doc-collections", short_help="Create docCollections.")
 @option(
     "--docs-in-collection",
@@ -79,20 +87,39 @@ def cmd_doc_collections(ctx: Context, docs_in_collection: int, resume: bool, dry
                 statutory_files_temp.create()
                 database.commit()
 
-            for doc_id, file in enumerate(database.statutory_files.select(order_by=[("relative_path", "asc")]), 1):
+            for doc_id, file in enumerate(
+                database.statutory_files.select(
+                    "relative_path not like '%.xsd'",
+                    order_by=[("relative_path", "asc")],
+                ),
+                1,
+            ):
                 collection_id: int = ceil(doc_id / docs_in_collection)
-                new_path: Path = temp_dir.joinpath(f"docCollection{collection_id}", str(doc_id), f"1{file.suffix}")
-                Event.from_command(ctx, "copy", (file.uuid, "statutory")).log(
-                    INFO,
-                    log_stdout,
-                    path=file.relative_path,
-                    new_path=new_path.relative_to(temp_dir),
-                )
+                new_path = temp_dir.joinpath(f"docCollection{collection_id}", str(doc_id), f"1{file.suffix}")
+                paths: list[tuple[ConvertedFile, Path]] = [(file, new_path)]
+
+                if file.suffix == ".gml":
+                    paths.append(
+                        (
+                            xsd := gis_xsd(database, file),
+                            new_path.with_suffix(xsd.suffix),
+                        )
+                    )
+
+                for f, p in paths:
+                    Event.from_command(ctx, "copy", (f.uuid, "statutory")).log(
+                        INFO,
+                        log_stdout,
+                        path=f.relative_path,
+                        new_path=p.relative_to(temp_dir),
+                    )
+
                 if not dry_run:
-                    if not new_path.is_file():
-                        safe_copy(file.get_absolute_path(avid.path), new_path)
-                    file.relative_path = Path(avid.dirs.documents.name, new_path.relative_to(temp_dir))
-                    statutory_files_temp.insert(file)
+                    for f, p in paths:
+                        if not p.is_file():
+                            safe_copy(file.get_absolute_path(avid.path), p)
+                        f.relative_path = Path(avid.dirs.documents.name, p.relative_to(temp_dir))
+                        statutory_files_temp.insert(f)
                     if doc_id % docs_in_collection == 0:
                         database.commit()
 
