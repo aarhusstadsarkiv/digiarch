@@ -1,5 +1,7 @@
 from click import group
 
+from .doc_collections import cmd_doc_collections
+
 
 @group("finalize", no_args_is_help=True, short_help="Finalize for delivery.")
 def grp_finalize():
@@ -13,5 +15,7 @@ def grp_finalize():
     * av-db (TBA)
     """  # noqa: D301
 
+
+grp_finalize.add_command(cmd_doc_collections, cmd_doc_collections.name)
 
 grp_finalize.list_commands = lambda _ctx: list(grp_finalize.commands)
