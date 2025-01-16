@@ -79,6 +79,7 @@ def cmd_doc_collections(ctx: Context, docs_in_collection: int, resume: bool, dry
             statutory_files_temp = database.create_table(
                 database.statutory_files.model,
                 database.statutory_files.name + "_temp",
+                indices={"uuid": ["uuid"]},
             )
 
             if not dry_run:
