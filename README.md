@@ -142,6 +142,7 @@ Options:
                                   [multiple]
   --batch-size INTEGER RANGE      Amount of files to identify at a time.
                                   [default: 100; x>=1]
+  --ignore-lock                   Re-identify locked files.
   --dry-run                       Show changes without committing them.
   --help                          Show this message and exit.
 ```
