@@ -177,7 +177,6 @@ def identify_original_file(
         )
 
     file.original_path = Path(original_path).relative_to(file.root) if original_path else file.relative_path
-    existing_file: OriginalFile | None = db.original_files[file]
 
     if existing_file:
         file.uuid = existing_file.uuid
