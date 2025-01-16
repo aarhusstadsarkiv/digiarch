@@ -157,6 +157,12 @@ def identify_original_file(
     if existing_file and not update:
         return
     if existing_file and existing_file.lock and not ignore_lock:
+        Event.from_command(ctx, "skip", (existing_file.uuid, "original")).log(
+            INFO,
+            *loggers,
+            locked=True,
+            path=existing_file.relative_path,
+        )
         return
 
     file = OriginalFile.from_file(siegfried_file.filename, avid.path, parent=parent)
