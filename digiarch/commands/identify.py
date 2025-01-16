@@ -147,6 +147,7 @@ def identify_original_file(
     parent: UUID | None,
     original_path: str | PathLike | None,
     *loggers: Logger,
+    ignore_lock: bool = False,
 ):
     errors: list[Event] = []
     existing_file: OriginalFile | None = db.original_files[
@@ -155,7 +156,7 @@ def identify_original_file(
 
     if existing_file and not update:
         return
-    if existing_file and existing_file.lock:
+    if existing_file and existing_file.lock and not ignore_lock:
         return
 
     file = OriginalFile.from_file(siegfried_file.filename, avid.path, parent=parent)
@@ -223,6 +224,7 @@ def identify_original_files(
     update: bool,
     parent: UUID | None,
     *loggers: Logger,
+    ignore_lock: bool = False,
 ):
     if not paths:
         return
@@ -239,6 +241,7 @@ def identify_original_files(
             parent,
             None,
             *loggers,
+            ignore_lock=ignore_lock,
         )
 
 
@@ -367,6 +370,7 @@ def grp_identify():
 )
 @option("--exclude", type=str, multiple=True, help="File and folder names to exclude.  [multiple]")
 @option("--batch-size", type=IntRange(1), default=100, show_default=True, help="Amount of files to identify at a time.")
+@option("--ignore-lock", is_flag=True, default=False, show_default=True, help="Re-identify locked files.")
 @option_dry_run()
 @pass_context
 def cmd_identify_original(
@@ -379,6 +383,7 @@ def cmd_identify_original(
     custom_signatures_file: str | None,
     exclude: tuple[str, ...],
     batch_size: int | None,
+    ignore_lock: bool,
     dry_run: bool,
 ):
     """
@@ -427,6 +432,7 @@ def cmd_identify_original(
                     bool(query),
                     None,
                     log_stdout,
+                    ignore_lock=ignore_lock,
                 )
                 if not dry_run:
                     db.commit()
