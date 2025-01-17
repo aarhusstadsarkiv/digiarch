@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.2.1
+
+### Fixes
+
+* Ignore meeting-related attachments when extracting MSG files instead of raising a `TypeError`
+
 ## v5.2.0
 
 ### New Features
