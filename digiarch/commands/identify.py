@@ -210,7 +210,7 @@ def identify_original_file(
         db.log.insert(*errors)
 
     if update or not existing_file:
-        Event.from_command(ctx, "file", (file.uuid, "original")).log(
+        Event.from_command(ctx, "update" if existing_file else "new", (file.uuid, "original")).log(
             INFO,
             *loggers,
             puid=str(file.puid).ljust(10),
