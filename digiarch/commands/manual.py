@@ -154,7 +154,7 @@ def cmd_manual_convert(
     files: tuple[str | Path, ...],
     dry_run: bool,
 ):
-    r"""
+    """
     Manually add converted files with ORIGINAL UUID as their parent.
 
     \b
@@ -170,7 +170,7 @@ def cmd_manual_convert(
     Run the identify command to assign a PUID (and action where applicable) to newly-added files.
 
     To see the changes without committing them, use the --dry-run option.
-    """
+    """  # noqa: D301
     avid = get_avid(ctx)
 
     target_dir: Path

@@ -305,7 +305,7 @@ def cmd_init(ctx: Context, avid: AVID, import_db_path: str | None):
                 initialized = True
                 event = Event.from_command(ctx, "initialized", data=(v := db.version()))
                 db.log.insert(event)
-                event.log(INFO, log_stdout, show_args=False, version=v)
+                event.log(INFO, log_stdout, show_args=False, digiarch=__version__, acacore=v)
 
             if initialized and import_db_path and import_mode is not None:
                 import_db(ctx, avid, db, import_db_path, import_mode, log_stdout)

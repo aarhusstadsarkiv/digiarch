@@ -141,6 +141,8 @@ def remove_files(
             if reset_processed:
                 reset_parent_processed(database, file)
 
+            database.commit()
+
 
 def rollback_remove_original(_ctx: Context, avid: AVID, database: FilesDB, event: Event, file: BaseFile | None):
     old_file = OriginalFile.model_validate(event.data)
@@ -153,6 +155,7 @@ def rollback_remove_original(_ctx: Context, avid: AVID, database: FilesDB, event
         raise FileNotFoundError(old_file.relative_path)
 
     database.original_files.insert(old_file)
+    database.commit()
 
 
 @rollback("remove", rollback_remove_original)

@@ -1465,6 +1465,14 @@ fmt/564:
   convert:
     tool: pdf
     output: pdfa-3
+fmt/568:
+  name: webP
+  ignore_if:
+    image_pixels_min: 20000
+  action: convert
+  convert:
+    tool: image
+    output: png
 fmt/573:
   name: WebM video
   action: convert
@@ -1713,6 +1721,12 @@ fmt/950:
   action: convert
   convert:
     tool: copy
+fmt/968:
+  name: AppleSingle 2.0
+  action: convert
+  convert:
+    tool: pdf
+    output: pdfa-3
 fmt/979:
   name: XML Property List
   alternatives:
@@ -2632,8 +2646,7 @@ x-fmt/430:
     extension: .msg
     on_success: convert
   convert:
-    tool: msg
-    output: eml
+    tool: copy
 x-fmt/441:
   name: AutoCAD Database File Locking Information
   action: ignore
