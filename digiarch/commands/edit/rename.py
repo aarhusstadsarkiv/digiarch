@@ -6,6 +6,7 @@ from sqlite3 import Error as SQLiteError
 from acacore.database import FilesDB
 from acacore.models.event import Event
 from acacore.models.file import BaseFile
+from acacore.models.file import OriginalFile
 from acacore.utils.click import end_program
 from acacore.utils.click import param_callback_regex
 from acacore.utils.click import start_program
@@ -31,6 +32,8 @@ from digiarch.query import TQuery
 def rollback_rename_original(_ctx: Context, avid: AVID, database: FilesDB, event: Event, file: BaseFile | None):
     if not file:
         raise FileNotFoundError(f"No file with UUID {event.file_uuid}")
+    if not isinstance(file, OriginalFile):
+        raise TypeError(f"{type(file)} is not OriginalFile")
 
     file.root = avid.path
     current_path: Path = file.relative_path

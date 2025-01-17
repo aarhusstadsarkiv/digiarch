@@ -124,6 +124,8 @@ def rollback_extract_remove_child(ctx: Context, avid: AVID, database: FilesDB, f
 def rollback_extract(ctx: Context, avid: AVID, database: FilesDB, _event: Event, file: BaseFile | None):
     if not file:
         return
+    if not isinstance(file, OriginalFile):
+        raise TypeError(f"{type(file)} is not OriginalFile")
 
     for child in database.original_files.select("parent = ?", [str(file.uuid)]).fetchall():
         rollback_extract_remove_child(ctx, avid, database, child)

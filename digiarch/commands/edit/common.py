@@ -71,6 +71,8 @@ def rollback_file_value(property_name: str) -> _RH:
             table = database.statutory_files
         else:
             return
+        if not isinstance(file, table.model):
+            raise TypeError(f"{type(file)} is not {table.model.__name__}")
         prev_value, next_value = event.data
         setattr(file, property_name, prev_value)
         table.update(file)
