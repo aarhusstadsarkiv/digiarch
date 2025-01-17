@@ -17,9 +17,7 @@ def count_size(table: Table[BaseFile]) -> int:
 
 
 def count_warnings(table: Table[BaseFile]) -> int:
-    return table.database.execute(
-        f"select count(*) from {table.name} where (warning is not null or puid is null) and size != 0"
-    ).fetchone()[0]
+    return table.count("(warning is not null or puid is null) and size != 0")
 
 
 def count_unique(table: Table[BaseFile]) -> int:
@@ -27,23 +25,23 @@ def count_unique(table: Table[BaseFile]) -> int:
 
 
 def count_processed_original(database: FilesDB) -> int:
-    return database.execute(f"select count(*) from {database.original_files.name} where processed").fetchone()[0]
+    return database.original_files.count("processed")
 
 
 def count_processed_master_access(database: FilesDB) -> int:
-    return database.execute(f"select count(*) from {database.master_files.name} where processed & 1 > 0").fetchone()[0]
+    return database.master_files.count("processed & 1 > 0")
 
 
 def count_processed_master_statutory(database: FilesDB) -> int:
-    return database.execute(f"select count(*) from {database.master_files.name} where processed & 2 > 0").fetchone()[0]
+    return database.master_files.count("processed & 2 > 0")
 
 
 def count_runs(database: FilesDB) -> int:
-    return database.execute(f"select count(*) from {database.log.name} where operation like '%:start'").fetchone()[0]
+    return database.log.count("operation like '%:start'")
 
 
 def count_errors(database: FilesDB) -> int:
-    return database.execute(f"select count(*) from {database.log.name} where operation like '%:error'").fetchone()[0]
+    return database.log.count("operation like '%:error'")
 
 
 def lazy_print(*msgs: str | Callable[[], Any]):
