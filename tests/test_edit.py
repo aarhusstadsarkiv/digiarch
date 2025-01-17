@@ -7,6 +7,7 @@ from acacore.models.reference_files import ConvertAction
 from acacore.models.reference_files import ExtractAction
 from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
+from acacore.models.reference_files import TActionType
 from pydantic import BaseModel
 
 from digiarch.cli import app
@@ -83,7 +84,9 @@ def test_edit_original_action(tests_folder: Path, avid_folder_copy: Path):
         ).fetchone()
         assert isinstance(base_file, OriginalFile)
 
-    for action in ("convert", "extract", "manual", "ignore"):
+    actions: list[TActionType] = ["convert", "extract", "manual", "ignore"]
+
+    for action in actions:
         previous_action = base_file.action
         base_file.action = action
         action_data: BaseModel
