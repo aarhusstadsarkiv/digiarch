@@ -7,6 +7,10 @@
 * `finalize doc-collections` command to rearrange files in Documents into docCollection directories.
 * `info` command to print general information about the database
 
+### Changes
+
+* Improve log output of `identify` commands
+
 ### Fixes
 
 * Fix MSG extraction failing sometimes when attachments were incorrectly parsed as MSG files
