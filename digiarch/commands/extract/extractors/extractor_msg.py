@@ -12,6 +12,7 @@ from extract_msg import MSGFile
 from extract_msg import openMsg
 from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
+from extract_msg.msg_classes import MeetingRelated
 from extract_msg.msg_classes import MessageSigned
 
 from digiarch.common import sanitize_filename
@@ -72,7 +73,7 @@ def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
     try:
         if not attachment.data:
             return None
-        elif isinstance(attachment.data, (Message, MessageSigned)):
+        elif isinstance(attachment.data, (Message, MessageSigned, MeetingRelated)):
             attachment_msg = attachment.data
         elif isinstance(attachment.data, bytes):
             attachment_msg = openMsg(attachment.data, delayAttachments=True)
