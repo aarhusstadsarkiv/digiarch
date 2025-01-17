@@ -2,7 +2,7 @@
 
 [[package]]
 name = "acacore"
-version = "4.1.1"
+version = "4.1.2"
 description = ""
 optional = false
 python-versions = "^3.11"
@@ -22,8 +22,8 @@ pyyaml = "^6.0.2"
 [package.source]
 type = "git"
 url = "https://github.com/aarhusstadsarkiv/acacore.git"
-reference = "v4.1.1"
-resolved_reference = "436db146ece5abe8b2fa6247cb655f98aee75fdd"
+reference = "v4.1.2"
+resolved_reference = "32308be837c72657a3c4fe70a3c16ed39b6daf3b"
 
 [[package]]
 name = "annotated-types"
@@ -1111,4 +1111,4 @@ files = [
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.11"
-content-hash = "748ceb100795e1c05242f730deaa4ae53c362648bbd1c05769cdcb4e151e1274"
+content-hash = "c272bc55321282f3af9f361045d177f957569d320450ccae24e947cd5146967f"
