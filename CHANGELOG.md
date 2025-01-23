@@ -1,5 +1,18 @@
 # Changelog
 
+## v5.2.2
+
+### Fixes
+
+* Fix occasional error occurring when unpacking an MSG file and one of the attachment was smaller than 1536 bytes and
+  greater than 255 bytes
+    * extract-msg tried to interpret it as a file name, causing an `OSError(36, 'File name too long')` exception to be
+      raised
+* Fix occasional error occurring when unpacking an MSG file with no HTML body a slightly malformed RTF body
+    * extract-msg would try to use the RTF body to generate the HTML, causing a
+      `RTFDE.exceptions.MalformedEncapsulatedRtf` exception to be raised
+* Fix extract sometimes repeating files in log with the message "Does not have extract action" when given a query
+
 ## v5.2.1
 
 ### Fixes
