@@ -14,6 +14,7 @@ from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
 from extract_msg.msg_classes import MeetingRelated
 from extract_msg.msg_classes import MessageSigned
+from olefile import MINIMAL_OLEFILE_SIZE
 
 from digiarch.common import sanitize_filename
 from digiarch.common import TempDir
@@ -76,6 +77,9 @@ def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
         elif isinstance(attachment.data, (Message, MessageSigned, MeetingRelated)):
             attachment_msg = attachment.data
         elif isinstance(attachment.data, bytes):
+            # noinspection PyTypeChecker
+            if len(attachment.data) < MINIMAL_OLEFILE_SIZE:
+                return None
             attachment_msg = openMsg(attachment.data, delayAttachments=True)
         else:
             raise TypeError(f"Unsupported attachment data type {type(attachment.data)}")
