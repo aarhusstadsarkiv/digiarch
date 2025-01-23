@@ -831,13 +831,16 @@ Usage: digiarch manual extract [OPTIONS] PARENT FILE...
   UUID.
 
   The given FILEs can be single files or folders and must be located inside
-  OriginalDocuments.
+  OriginalDocuments. All of them will be interpreted as direct children of the
+  PARENT file, so archive files should be left unextracted for further
+  processing with either extract or manual extract.
 
   To exclude children files when using a folder as target, use the --exclude
   option.
 
   If the files are not already in the database they will be added without
-  identification. Run the identify command to assign them a PUID and action.
+  identification. Run the identify original command to assign them a PUID and
+  action.
 
   If the files are in the database their parent value will be set to ORIGINAL
   unless they already have one assigned, in which case they will be ignored.

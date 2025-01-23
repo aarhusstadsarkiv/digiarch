@@ -74,9 +74,7 @@ def find_extractor(file: OriginalFile) -> tuple[Type[ExtractorBase] | None, str 
     return None, file.action_data.extract.tool
 
 
-def next_archive_file(db: FilesDB, query: TQuery, offset: int = 0) -> OriginalFile | None:
-    where, params = query_to_where(query)
-    where = where or "action = 'extract'"
+def next_archive_file(db: FilesDB, where: str, params: list[str], offset: int = 0) -> OriginalFile | None:
     return db.original_files.select(where, params, [("lower(relative_path)", "asc")], 1, offset).fetchone()
 
 
@@ -141,7 +139,7 @@ def rollback_extract(ctx: Context, avid: AVID, database: FilesDB, _event: Event,
 @rollback("error", rollback_extract)
 @rollback("unpacked", rollback_extract)
 @command("extract", short_help="Unpack archives.", cls=CommandWithRollback)
-@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "action", "warning", "processed", "lock"])
+@argument_query(False, "uuid", ["uuid", "checksum", "puid", "relative_path", "warning", "processed", "lock"])
 @option(
     "--siegfried-path",
     type=ClickPath(exists=True, dir_okay=False, resolve_path=True),
@@ -225,7 +223,8 @@ def cmd_extract(
         offset: int = 0
 
         with ExceptionManager(BaseException) as exception:
-            while archive_file := next_archive_file(db, query, offset):
+            where, params = query_to_where([("action", "extract", "="), *query])
+            while archive_file := next_archive_file(db, where, params, offset):
                 if archive_file.action != "extract":
                     Event.from_command(
                         ctx,
