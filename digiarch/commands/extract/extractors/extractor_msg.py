@@ -15,6 +15,7 @@ from extract_msg.exceptions import ExMsgBaseException
 from extract_msg.msg_classes import MeetingRelated
 from extract_msg.msg_classes import MessageSigned
 from olefile import MINIMAL_OLEFILE_SIZE
+from RTFDE.exceptions import MalformedEncapsulatedRtf
 
 from digiarch.common import sanitize_filename
 from digiarch.common import TempDir
@@ -55,7 +56,7 @@ def msg_body(msg: Message) -> tuple[str | None, str | None, str | None]:
     with suppress(AttributeError, UnicodeDecodeError):
         body_txt = (msg.body or "").strip()
 
-    with suppress(AttributeError, UnicodeDecodeError):
+    with suppress(AttributeError, UnicodeDecodeError, MalformedEncapsulatedRtf):
         body_html_bytes: bytes | None = msg.htmlBody
         if body_html_bytes is not None:
             encoding: str | None = chardet.detect(body_html_bytes).get("encoding") or "utf-8"
