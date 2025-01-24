@@ -4,7 +4,7 @@
 
 ### Fixes
 
-* `extract` supports all built-in email/appointment types in extract-msg for attachments and does not raise a
+* `extract` supports attachments with any of the built-in email/appointment types from extract-msg and does not raise a
   `TypeError` exception when encountering them
     * Attachment data types that are not emails, appointments, or bytes still raise an exception
 
