@@ -1,5 +1,6 @@
 from contextlib import suppress
 from pathlib import Path
+from re import IGNORECASE
 from re import match
 from typing import ClassVar
 
@@ -12,7 +13,7 @@ from extract_msg import MSGFile
 from extract_msg import openMsg
 from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
-from extract_msg.msg_classes import MeetingRelated
+from extract_msg.msg_classes import MessageBase
 from extract_msg.msg_classes import MessageSigned
 from olefile import MINIMAL_OLEFILE_SIZE
 from RTFDE.exceptions import MalformedEncapsulatedRtf
@@ -71,23 +72,26 @@ def msg_body(msg: Message) -> tuple[str | None, str | None, str | None]:
     return body_txt, body_html, body_rtf
 
 
-def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
-    try:
-        if not attachment.data:
-            return None
-        elif isinstance(attachment.data, (Message, MessageSigned, MeetingRelated)):
-            attachment_msg = attachment.data
-        elif isinstance(attachment.data, bytes):
-            # noinspection PyTypeChecker
-            if len(attachment.data) < MINIMAL_OLEFILE_SIZE:
-                return None
-            attachment_msg = openMsg(attachment.data, delayAttachments=True)
-        else:
-            raise TypeError(f"Unsupported attachment data type {type(attachment.data)}")
-    except (ExMsgBaseException, FileNotFoundError, ValueError):
+def msg_attachment(attachment: AttachmentBase) -> MessageBase | None:
+    if not attachment.data:
         return None
 
-    return attachment_msg if isinstance(attachment_msg, (Message, MessageSigned)) else False
+    if isinstance(attachment.data, MessageBase):
+        return attachment.data
+
+    if isinstance(attachment.data, bytes):
+        # noinspection PyTypeChecker
+        if len(attachment.data) < MINIMAL_OLEFILE_SIZE:
+            return None
+
+        try:
+            msg = openMsg(attachment.data, delayAttachments=True)
+        except (ExMsgBaseException, FileNotFoundError, ValueError):
+            return None
+
+        return msg if isinstance(msg, MessageBase) else None
+
+    raise TypeError(f"Unsupported attachment data type {type(attachment.data)}")
 
 
 def msg_attachments(
@@ -99,15 +103,17 @@ def msg_attachments(
     attachments: list[AttachmentBase | SignedAttachment | Message | MessageSigned] = []
 
     for attachment in msg.attachments:
+        if attachment.data is None:
+            continue
         if (cid := getattr(attachment, "cid", None)) and cid in (body_html or body_rtf or ""):
             inline_attachments.append(attachment)
-        elif (attachment_msg := msg_attachment(attachment)) is False:
-            continue
-        elif attachment_msg is not None:
-            attachments.append(attachment_msg)
+        elif attachment_msg := msg_attachment(attachment):
+            if isinstance(attachment_msg, (Message, MessageSigned)):
+                # noinspection PyTypeChecker
+                attachments.append(attachment_msg)
         else:
             name = attachment.longFilename if isinstance(attachment, SignedAttachment) else attachment.getFilename()
-            if any(match(pattern, name.lower()) for pattern in EXCLUDED_ATTACHMENTS):
+            if name and any(match(pattern, name, flags=IGNORECASE) for pattern in EXCLUDED_ATTACHMENTS):
                 continue
             attachments.append(attachment)
 

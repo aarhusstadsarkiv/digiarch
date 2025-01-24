@@ -1,5 +1,15 @@
 # Changelog
 
+## v5.2.3
+
+### Fixes
+
+* `extract` supports attachments with any of the built-in email/appointment types from extract-msg and does not raise a
+  `TypeError` exception when encountering them
+    * Attachment data types that are not emails, appointments, or bytes still raise an exception
+* `extract` "unpacked" log output no longer contains a duplicate "data" field containing the number of files extracted
+    * The data field is still filled out when saved to the log table
+
 ## v5.2.2
 
 ### Fixes

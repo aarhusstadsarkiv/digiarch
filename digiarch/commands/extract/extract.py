@@ -266,7 +266,13 @@ def cmd_extract(
                         (archive_file.uuid, "original"),
                         len(extracted_files_paths),
                     )
-                    event.log(INFO, log_stdout, files=len(extracted_files_paths), path=archive_file.relative_path)
+                    event.log(
+                        INFO,
+                        log_stdout,
+                        show_args=["uuid"],
+                        files=len(extracted_files_paths),
+                        path=archive_file.relative_path,
+                    )
                     db.log.insert(event)
                 except ExtractError as err:
                     handle_extract_error(ctx, db, archive_file, err, log_stdout)
