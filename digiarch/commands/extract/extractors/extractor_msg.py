@@ -12,7 +12,7 @@ from extract_msg import MSGFile
 from extract_msg import openMsg
 from extract_msg import SignedAttachment
 from extract_msg.exceptions import ExMsgBaseException
-from extract_msg.msg_classes import MeetingRelated
+from extract_msg.msg_classes import MessageBase
 from extract_msg.msg_classes import MessageSigned
 from olefile import MINIMAL_OLEFILE_SIZE
 from RTFDE.exceptions import MalformedEncapsulatedRtf
@@ -75,7 +75,7 @@ def msg_attachment(attachment: AttachmentBase) -> Message | bool | None:
     try:
         if not attachment.data:
             return None
-        elif isinstance(attachment.data, (Message, MessageSigned, MeetingRelated)):
+        elif isinstance(attachment.data, MessageBase):
             attachment_msg = attachment.data
         elif isinstance(attachment.data, bytes):
             # noinspection PyTypeChecker
