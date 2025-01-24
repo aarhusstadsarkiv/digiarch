@@ -1,5 +1,13 @@
 # Changelog
 
+## v5.2.3
+
+### Fixes
+
+* `extract` supports all built-in email/appointment types in extract-msg for attachments and does not raise aa
+  `TypeError` exception when encountering them
+    * Attachment data types that are not emails, appointments, or bytes still raise an exception
+
 ## v5.2.2
 
 ### Fixes
