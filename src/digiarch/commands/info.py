@@ -7,7 +7,6 @@ from acacore.models.file import BaseFile
 from click import command
 from click import Context
 from click import pass_context
-
 from digiarch.common import get_avid
 from digiarch.common import open_database
 

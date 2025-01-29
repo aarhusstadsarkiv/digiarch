@@ -2,12 +2,11 @@ from pathlib import Path
 from typing import ClassVar
 
 from acacore.utils.functions import find_files
-from patoolib import extract_archive
-from patoolib.util import PatoolError
-
 from digiarch.common import sanitize_filename
 from digiarch.common import sanitize_path
 from digiarch.common import TempDir
+from patoolib import extract_archive
+from patoolib.util import PatoolError
 
 from .base import ExtractError
 from .base import ExtractorBase

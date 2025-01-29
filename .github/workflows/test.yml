@@ -3,34 +3,28 @@ name: Linting & Test
 on:
   push:
     paths:
-      - digiarch/**
+      - src/**
       - tests/**
       - pyproject.toml
-      - poetry.lock
+      - uv.lock
       - CHANGELOG.md
       - .github/workflows/test.yml
 
-env:
-  PYTHON_VERSION: 3.11.9
-  POETRY_VERSION: 2.0.1
-
 jobs:
   linting:
-    name: Check Linting & Types
+    name: Linting
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v4
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - run: poetry install
+          python-version-file: "pyproject.toml"
+      - run: uv sync --all-extras --dev
       - name: ruff check
-        run: poetry run ruff check digiarch
+        run: uv run ruff check src
       - name: ruff format
-        run: poetry run ruff format --check digiarch
+        run: uv run ruff format --check src
 
   version:
     name: Test Version
@@ -67,9 +61,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
+          python-version-file: "pyproject.toml"
       - name: Fetch Acacore Version
         run: |
           acacore_remote="$(python -c 'import urllib.request,json;print(json.loads(urllib.request.urlopen("https://api.github.com/repos/aarhusstadsarkiv/acacore/tags").read())[0]["name"])')"
@@ -103,18 +97,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v4
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - uses: actions/setup-go@v4
-      - run: poetry install
+          python-version-file: "pyproject.toml"
+      - uses: actions/setup-go@v5
+      - run: uv sync --all-extras --dev
       - run: go install github.com/richardlehane/siegfried/cmd/sf@latest
       - name: Unit test
         env:
           GOPATH: /home/runner/go
-        run: poetry run coverage run -m pytest
+        run: uv run coverage run -m pytest
       - name: Coverage
-        run: poetry run coverage report -m --fail-under=80 --skip-empty --skip-covered
+        run: uv run coverage report -m --fail-under=80 --skip-empty --skip-covered

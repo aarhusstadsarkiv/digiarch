@@ -6,6 +6,8 @@ from typing import ClassVar
 
 import chardet
 from acacore.models.file import BaseFile
+from digiarch.common import sanitize_filename
+from digiarch.common import TempDir
 from extract_msg import Attachment
 from extract_msg import AttachmentBase
 from extract_msg import Message
@@ -17,9 +19,6 @@ from extract_msg.msg_classes import MessageBase
 from extract_msg.msg_classes import MessageSigned
 from olefile import MINIMAL_OLEFILE_SIZE
 from RTFDE.exceptions import MalformedEncapsulatedRtf
-
-from digiarch.common import sanitize_filename
-from digiarch.common import TempDir
 
 from .base import ExtractError
 from .base import ExtractorBase

@@ -13,7 +13,6 @@ from click import command
 from click import Context
 from click import option
 from click import pass_context
-
 from digiarch.__version__ import __version__
 from digiarch.common import ctx_params
 from digiarch.common import get_avid

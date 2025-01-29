@@ -9,7 +9,6 @@ from click import Context
 from click import IntRange
 from click import option
 from click import pass_context
-
 from digiarch.common import get_avid
 from digiarch.common import open_database
 from digiarch.query import query_table

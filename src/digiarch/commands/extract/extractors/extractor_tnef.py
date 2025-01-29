@@ -1,9 +1,8 @@
 from pathlib import Path
 from typing import ClassVar
 
-from tnefparse import TNEF
-
 from digiarch.common import TempDir
+from tnefparse import TNEF
 
 from .base import ExtractorBase
 from .extractor_msg import prepare_attachment_name

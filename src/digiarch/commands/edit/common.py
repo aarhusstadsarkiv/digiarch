@@ -9,7 +9,6 @@ from acacore.database.table import Table
 from acacore.models.event import Event
 from acacore.models.file import BaseFile
 from click import Context
-
 from digiarch.common import _RH
 from digiarch.common import AVID
 from digiarch.query import query_table
