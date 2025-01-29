@@ -4,9 +4,9 @@ from uuid import UUID
 from acacore.database import FilesDB
 from acacore.models.file import OriginalFile
 from acacore.models.reference_files import ActionData
+
 from digiarch.cli import app
 from digiarch.common import AVID
-
 from tests.conftest import run_click
 
 

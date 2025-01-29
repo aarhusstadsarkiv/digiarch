@@ -2,7 +2,6 @@ from pathlib import Path
 
 from digiarch.cli import app
 from digiarch.common import AVID
-
 from tests.conftest import run_click
 
 

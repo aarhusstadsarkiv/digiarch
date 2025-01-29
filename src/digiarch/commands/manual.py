@@ -24,6 +24,7 @@ from click import option
 from click import Parameter
 from click import pass_context
 from click import Path as ClickPath
+
 from digiarch.__version__ import __version__
 from digiarch.common import get_avid
 from digiarch.common import open_database

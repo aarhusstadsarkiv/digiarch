@@ -30,6 +30,8 @@ from click import MissingParameter
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+from pydantic import BaseModel
+
 from digiarch.__version__ import __version__
 from digiarch.common import AVID
 from digiarch.common import CommandWithRollback
@@ -42,7 +44,6 @@ from digiarch.common import rollback
 from digiarch.query import argument_query
 from digiarch.query import query_table
 from digiarch.query import TQuery
-from pydantic import BaseModel
 
 
 def set_lock(

@@ -27,9 +27,10 @@ from click import option
 from click import Parameter
 from click import pass_context
 from click import Path as ClickPath
+from orjson import loads
+
 from digiarch.__version__ import __version__
 from digiarch.common import AVID
-from orjson import loads
 
 
 def root_callback(ctx: Context, param: Parameter, value: str) -> AVID:

@@ -14,6 +14,7 @@ from click.shell_completion import FishComplete
 from click.shell_completion import get_completion_class
 from click.shell_completion import ShellComplete
 from click.shell_completion import ZshComplete
+
 from digiarch.common import ctx_params
 
 

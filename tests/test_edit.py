@@ -8,10 +8,10 @@ from acacore.models.reference_files import ExtractAction
 from acacore.models.reference_files import IgnoreAction
 from acacore.models.reference_files import ManualAction
 from acacore.models.reference_files import TActionType
-from digiarch.cli import app
-from digiarch.common import AVID
 from pydantic import BaseModel
 
+from digiarch.cli import app
+from digiarch.common import AVID
 from tests.conftest import run_click
 
 

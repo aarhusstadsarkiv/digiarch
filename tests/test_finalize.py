@@ -3,9 +3,9 @@ from pathlib import Path
 
 from acacore.database import FilesDB
 from acacore.models.file import ConvertedFile
+
 from digiarch.cli import app
 from digiarch.common import AVID
-
 from tests.conftest import run_click
 
 

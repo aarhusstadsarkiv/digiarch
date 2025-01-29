@@ -6,6 +6,7 @@ from click import command
 from click import Context
 from click import option
 from click import pass_context
+
 from digiarch.__version__ import __version__
 from digiarch.commands.edit.common import edit_file_value
 from digiarch.commands.edit.common import rollback_file_value

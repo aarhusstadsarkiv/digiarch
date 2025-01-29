@@ -3,8 +3,8 @@ from pathlib import Path
 from click.shell_completion import BashComplete
 from click.shell_completion import FishComplete
 from click.shell_completion import ZshComplete
-from digiarch.cli import app
 
+from digiarch.cli import app
 from tests.conftest import run_click
 
 

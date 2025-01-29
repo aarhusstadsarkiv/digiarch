@@ -15,6 +15,7 @@ from click import Context
 from click import IntRange
 from click import option
 from click import pass_context
+
 from digiarch.__version__ import __version__
 from digiarch.common import get_avid
 from digiarch.common import open_database

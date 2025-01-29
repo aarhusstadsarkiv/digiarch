@@ -19,7 +19,7 @@ def avid_folder(tests_folder: Path) -> Path:
     return tests_folder / "AVID"
 
 
-@pytest.fixture()
+@pytest.fixture
 def avid_folder_copy(avid_folder: Path, tests_folder: Path) -> Path:
     new_avid_folder: Path = tests_folder / f"_{avid_folder.name}"
 

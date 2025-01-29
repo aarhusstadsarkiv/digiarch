@@ -4,6 +4,7 @@ from typing import ClassVar
 from urllib.parse import urlparse
 
 from acacore.utils.functions import find_files
+
 from digiarch.commands.extract.extractors.base import ExtractError
 from digiarch.commands.extract.extractors.base import ExtractorBase
 from digiarch.common import TempDir

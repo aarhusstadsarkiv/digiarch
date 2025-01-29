@@ -21,6 +21,7 @@ from click import Context
 from click import option
 from click import pass_context
 from click import Path as ClickPath
+
 from digiarch.__version__ import __version__
 from digiarch.commands.edit.remove import remove_children
 from digiarch.commands.identify import identify_original_file
