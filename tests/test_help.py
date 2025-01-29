@@ -1,12 +1,12 @@
+from collections.abc import Generator
 from pathlib import Path
-from typing import Generator
 
 import pytest
 from click import Group
 from click import UsageError
-
 from digiarch.cli import app
 from digiarch.common import AVID
+
 from tests.conftest import run_click
 
 

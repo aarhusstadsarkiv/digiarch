@@ -3,7 +3,6 @@ from logging import INFO
 from logging import Logger
 from logging import WARNING
 from typing import get_args as get_type_args
-from typing import Type
 
 from acacore.database import FilesDB
 from acacore.models.event import Event
@@ -47,7 +46,7 @@ from .extractors.extractor_webarchive import WebarchiveExtractor
 from .extractors.extractor_zip import ZipExtractor
 
 
-def find_extractor(file: OriginalFile) -> tuple[Type[ExtractorBase] | None, str | None]:
+def find_extractor(file: OriginalFile) -> tuple[type[ExtractorBase] | None, str | None]:
     """
     Match an extractor class to a file.
 

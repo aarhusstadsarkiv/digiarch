@@ -2,7 +2,6 @@ from logging import INFO
 from logging import WARNING
 from pathlib import Path
 from typing import Literal
-from typing import Type
 from uuid import UUID
 
 from acacore.database.table import Table
@@ -192,7 +191,7 @@ def cmd_manual_convert(
         log_file, log_stdout, _ = start_program(ctx, database, __version__, None, True, True, dry_run)
         parent_table: Table[BaseFile]
         target_table: Table[ConvertedFile]
-        target_class: Type[ConvertedFile]
+        target_class: type[ConvertedFile]
 
         if target == "master":
             parent_table = database.original_files

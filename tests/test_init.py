@@ -9,7 +9,6 @@ from acacore.__version__ import __version__ as acacore_version
 from acacore.database import FilesDB
 from acacore.models.file import OriginalFile
 from click import UsageError
-
 from digiarch.__version__ import __version__ as digiarch_version
 from digiarch.cli import app
 from digiarch.common import AVID

@@ -1,7 +1,7 @@
+from collections.abc import Callable
 from logging import INFO
 from logging import Logger
 from typing import Any
-from typing import Callable
 from typing import Literal
 
 from acacore.database import FilesDB
