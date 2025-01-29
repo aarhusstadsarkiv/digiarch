@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.2.5
+
+### Fixes
+
+* Fix issue with MSG files caused by attachments whose name is an absolute path
+  * Would raise `ValueError` with message "A is not in the subpath of B"
+
 ## v5.2.4
 
 ### Fixes

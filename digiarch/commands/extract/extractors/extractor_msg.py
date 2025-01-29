@@ -150,6 +150,10 @@ class MsgExtractor(ExtractorBase):
                 if isinstance(attachment, (Message, MessageSigned)):
                     name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
                     names, name, name_sanitized = prepare_attachment_name(names, name, n)
+                    if name.startswith("/"):
+                        name = name.lstrip("/")
+                    elif match(r"^[A-Za-z]:/.*", name):
+                        name = name.split("/", 1)[1].lstrip("/")
                     attachment.export(tmp_dir / name_sanitized)
                     files.append((name_sanitized, name))
                 elif isinstance(attachment.data, bytes):
@@ -159,6 +163,10 @@ class MsgExtractor(ExtractorBase):
                         else attachment.longFilename or ""
                     )
                     names, name, name_sanitized = prepare_attachment_name(names, name, n)
+                    if name.startswith("/"):
+                        name = name.lstrip("/")
+                    elif match("^[A-Za-z]:/.*", name):
+                        name = name.split("/", 1)[1].lstrip("/")
                     with tmp_dir.joinpath(name_sanitized).open("wb") as fh:
                         fh.write(attachment.data or b"")
                     files.append((name_sanitized, name))
