@@ -1,5 +1,12 @@
 # Changelog
 
+## v5.2.4
+
+### Fixes
+
+* Support extracting MSG files containing web attachments
+    * extract-msg raises `NotImplementedError` when trying to fetch the data of a web attachment
+
 ## v5.2.3
 
 ### Fixes

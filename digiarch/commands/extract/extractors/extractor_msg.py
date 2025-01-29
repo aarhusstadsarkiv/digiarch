@@ -103,19 +103,22 @@ def msg_attachments(
     attachments: list[AttachmentBase | SignedAttachment | Message | MessageSigned] = []
 
     for attachment in msg.attachments:
-        if attachment.data is None:
-            continue
-        if (cid := getattr(attachment, "cid", None)) and cid in (body_html or body_rtf or ""):
-            inline_attachments.append(attachment)
-        elif attachment_msg := msg_attachment(attachment):
-            if isinstance(attachment_msg, (Message, MessageSigned)):
-                # noinspection PyTypeChecker
-                attachments.append(attachment_msg)
-        else:
-            name = attachment.longFilename if isinstance(attachment, SignedAttachment) else attachment.getFilename()
-            if name and any(match(pattern, name, flags=IGNORECASE) for pattern in EXCLUDED_ATTACHMENTS):
+        try:
+            if attachment.data is None:
                 continue
-            attachments.append(attachment)
+            if (cid := getattr(attachment, "cid", None)) and cid in (body_html or body_rtf or ""):
+                inline_attachments.append(attachment)
+            elif attachment_msg := msg_attachment(attachment):
+                if isinstance(attachment_msg, (Message, MessageSigned)):
+                    # noinspection PyTypeChecker
+                    attachments.append(attachment_msg)
+            else:
+                name = attachment.longFilename if isinstance(attachment, SignedAttachment) else attachment.getFilename()
+                if name and any(match(pattern, name, flags=IGNORECASE) for pattern in EXCLUDED_ATTACHMENTS):
+                    continue
+                attachments.append(attachment)
+        except NotImplementedError:
+            continue
 
     return inline_attachments, attachments
 
