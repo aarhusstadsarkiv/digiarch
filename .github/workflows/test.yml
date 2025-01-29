@@ -39,10 +39,7 @@ jobs:
           version_project="${version_project#*\"}"
           echo "version_project=$version_project" >> "$GITHUB_OUTPUT"
           
-          project_name="$(grep --color=never 'name *= *".*"' pyproject.toml)"
-          project_name="${project_name%\"}"
-          project_name="${project_name#*\"}"
-          version_package="$(grep --color=never '__version__ *= *".*"' "$project_name"/__version__.py)"
+          version_package="$(grep --color=never '__version__ *= *".*"' src/*/__version__.py)"
           version_package="${version_package%\"}"
           version_package="${version_package#*\"}"
           echo "version_package=$version_package" >> "$GITHUB_OUTPUT"
