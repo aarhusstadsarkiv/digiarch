@@ -3,7 +3,7 @@ name = "digiarch"
 version = "5.2.5"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = [{ name = "Aarhus Stadsarkiv", email = "stadsarkiv@aarhus.dk" }]
-requires-python = "~=3.11"
+requires-python = ">=3.12"
 readme = "README.md"
 license = "GPL-3.0"
 keywords = [
