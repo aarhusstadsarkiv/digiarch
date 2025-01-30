@@ -34,23 +34,27 @@ jobs:
       - name: Get Versions
         id: version
         run: |
-          version_project="$(grep --color=never 'version *= *".*"' pyproject.toml)"
+          version_project="$(grep --color=never '^version *= *".*"' pyproject.toml)"
           version_project="${version_project%\"}"
           version_project="${version_project#*\"}"
-          echo "version_project=$version_project" >> "$GITHUB_OUTPUT"
+          echo "project=$version_project" >> "$GITHUB_OUTPUT"
           
-          version_package="$(grep --color=never '__version__ *= *".*"' src/*/__version__.py)"
+          project_name="$(grep --color=never '^name *= *".*"' pyproject.toml)"
+          project_name="${project_name%\"}"
+          project_name="${project_name#*\"}"
+          
+          version_package="$(grep --color=never '__version__ *= *".*"' "src/$project_name/__version__.py")"
           version_package="${version_package%\"}"
           version_package="${version_package#*\"}"
-          echo "version_package=$version_package" >> "$GITHUB_OUTPUT"
+          echo "package=$version_package" >> "$GITHUB_OUTPUT"
       - name: Test Package and Project Version Match
         env:
-          version_project: ${{ steps.version.outputs.version_project }}
-          version_package: ${{ steps.version.outputs.version_package }}
+          version_project: ${{ steps.version.outputs.project }}
+          version_package: ${{ steps.version.outputs.package }}
         run: test "$version_project" = "$version_package" || exit $?
       - name: Test Version in CHANGELOG.md
         env:
-          version_project: ${{ steps.version.outputs.version_project }}
+          version_project: ${{ steps.version.outputs.project }}
         run: grep -E "## v$version_project"'( .*)?$' CHANGELOG.md || exit $?
 
   version-acacore:
