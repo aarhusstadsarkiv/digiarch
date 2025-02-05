@@ -310,8 +310,8 @@ def cmd_extract(
                     archive_file.action = "ignore"
                     archive_file.action_data.ignore = IgnoreAction(template="extracted-archive")
 
-                db.original_files.update(archive_file)
                 if not dry_run:
+                    db.original_files.update(archive_file)
                     db.commit()
 
         end_program(ctx, db, exception, dry_run, log_file, log_stdout)
