@@ -3,8 +3,8 @@ requires-python = ">=3.12"
 
 [[package]]
 name = "acacore"
-version = "4.1.2"
-source = { git = "https://github.com/aarhusstadsarkiv/acacore.git?tag=v4.1.2#32308be837c72657a3c4fe70a3c16ed39b6daf3b" }
+version = "5.0.0"
+source = { git = "https://github.com/aarhusstadsarkiv/acacore.git?tag=v5.0.0#85a85e7dc450b399e9376e9a1c2d1d8396d8ceaa" }
 dependencies = [
     { name = "click" },
     { name = "imagesize" },
@@ -205,7 +205,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "acacore", git = "https://github.com/aarhusstadsarkiv/acacore.git?tag=v4.1.2" },
+    { name = "acacore", git = "https://github.com/aarhusstadsarkiv/acacore.git?tag=v5.0.0" },
     { name = "chardet", specifier = ">=5.2.0,<6" },
     { name = "extract-msg", specifier = ">=0.52.0,<0.53" },
     { name = "patool", specifier = ">=3.1.0,<4" },
