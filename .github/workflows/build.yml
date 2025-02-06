@@ -25,7 +25,7 @@ jobs:
       - name: Get Changelog
         run: python .github/workflows/get_changelog.py CHANGELOG.md "${{ steps.tag.outputs.tag }}" > release.md
       - name: Build
-        run: uv run build --wheel
+        run: uv build --wheel
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
