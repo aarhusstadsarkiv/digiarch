@@ -1,4 +1,4 @@
-name: Build Wheels
+name: Release
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - 'v*.*.*'
 
 jobs:
-  wheel:
-    name: Build Wheels
+  release:
+    name: Release
     runs-on: ubuntu-latest
     if: ${{ github.ref_name }} == "master"
     outputs:
