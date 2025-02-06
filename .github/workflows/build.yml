@@ -19,13 +19,13 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
       - run: uv sync --all-extras --dev
+      - name: Build
+        run: uv build --wheel
       - name: Get Tag
         id: tag
         run: echo "tag=$(git tag -l --sort=-version:refname | head -1)" >> "$GITHUB_OUTPUT"
       - name: Get Changelog
         run: python .github/workflows/get_changelog.py CHANGELOG.md "${{ steps.tag.outputs.tag }}" > release.md
-      - name: Build
-        run: uv build --wheel
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
