@@ -3,11 +3,11 @@ from abc import abstractmethod
 from pathlib import Path
 from typing import ClassVar
 
-from acacore.exceptions.base import ACAException
+from acacore.exceptions.base import AcacoreError
 from acacore.models.file import BaseFile
 
 
-class ExtractError(ACAException):
+class ExtractError(AcacoreError):
     """Base class for unarchiver exceptions."""
 
     def __init__(self, file: BaseFile, msg: str = "Extraction error", *args: object) -> None:
