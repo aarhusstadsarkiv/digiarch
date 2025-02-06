@@ -1,52 +1,35 @@
-name: Build Wheels
+name: Release
 
 on:
   push:
     tags:
       - 'v*.*.*'
 
-env:
-  PYTHON_VERSION: 3.11.9
-  POETRY_VERSION: 1.8.3
-
 jobs:
-  wheel:
-    name: Build Wheels
+  release:
+    name: Release
     runs-on: ubuntu-latest
     if: ${{ github.ref_name }} == "master"
     outputs:
       tag: ${{ steps.tag.outputs.tag }}
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v4
+      - uses: astral-sh/setup-uv@v5
+      - uses: actions/setup-python@v5
         with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - uses: abatilo/actions-poetry@v2
-        with:
-          poetry-version: ${{ env.POETRY_VERSION }}
-      - name: Build Dependencies Wheels
-        run: python -m pip wheel -w dist .
-      - name: Build Package Wheel
-        run: |
-          acacore="$(grep 'acacore =' pyproject.toml | grep -oE 'tag[ ]*=[ ]*"[^"]+"')"
-          acacore="${acacore#*\"}"
-          acacore="${acacore#v}"
-          acacore="${acacore%\"}"
-          sed -ie "s/acacore *=.*/acacore = \"$acacore\"/g" pyproject.toml
-          poetry build
-      - name: Create Wheels ZIP
-        run: zip -j wheels.zip dist/*.whl
+          python-version-file: "pyproject.toml"
+      - run: uv sync --all-extras --dev
+      - name: Build
+        run: uv build --wheel
       - name: Get Tag
         id: tag
         run: echo "tag=$(git tag -l --sort=-version:refname | head -1)" >> "$GITHUB_OUTPUT"
       - name: Get Changelog
         run: python .github/workflows/get_changelog.py CHANGELOG.md "${{ steps.tag.outputs.tag }}" > release.md
       - name: Create Release
-        uses: softprops/action-gh-release@v1
+        uses: softprops/action-gh-release@v2
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
           body_path: release.md
-          files: |
-            wheels.zip
+          files: dist/*.whl

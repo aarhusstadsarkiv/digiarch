@@ -1,5 +1,13 @@
 # Changelog
 
+## v6.0.0
+
+### Changes
+
+* Use acacore 5.0.0
+* Require Python 3.12 or above
+* Migrate from poetry to uv
+
 ## v5.2.5
 
 ### Fixes

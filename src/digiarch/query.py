@@ -1,8 +1,7 @@
+from collections.abc import Callable
+from collections.abc import Generator
 from re import compile as re_compile
 from typing import Any
-from typing import Callable
-from typing import Generator
-from typing import Type
 from typing import TypeVar
 
 from acacore.database.table import Table
@@ -16,7 +15,7 @@ from pydantic import BaseModel
 
 M = TypeVar("M", bound=BaseModel)
 FC = TypeVar("FC", bound=Callable[..., Any])
-TQuery = list[tuple[str, str | bool | Type[Ellipsis] | list[str] | None, str]]  # field name, value(s), operation
+TQuery = list[tuple[str, str | bool | type[Ellipsis] | list[str] | None, str]]  # field name, value(s), operation
 
 token_quotes = re_compile(r'(?<!\\)"((?:[^"]|(?<=\\)")*)"')
 # noinspection RegExpUnnecessaryNonCapturingGroup

@@ -1,3 +1,4 @@
+from collections.abc import Callable
 from functools import reduce
 from hashlib import sha256
 from os import PathLike
@@ -5,8 +6,6 @@ from pathlib import Path
 from re import match
 from sqlite3 import DatabaseError
 from tempfile import TemporaryDirectory
-from typing import Callable
-from typing import Type
 from typing import TypeVar
 
 import yaml
@@ -296,7 +295,7 @@ def sanitize_path(path: str | PathLike) -> Path:
 
 def fetch_reference_files(
     ctx: Context,
-    adapter: Type[T],
+    adapter: type[T],
     file: str | PathLike | None,
     fetcher: Callable[[], T],
     parameter: str,

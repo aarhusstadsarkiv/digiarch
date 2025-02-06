@@ -3,7 +3,6 @@ from logging import INFO
 from logging import Logger
 from logging import WARNING
 from typing import get_args as get_type_args
-from typing import Type
 
 from acacore.database import FilesDB
 from acacore.models.event import Event
@@ -48,7 +47,7 @@ from .extractors.extractor_webarchive import WebarchiveExtractor
 from .extractors.extractor_zip import ZipExtractor
 
 
-def find_extractor(file: OriginalFile) -> tuple[Type[ExtractorBase] | None, str | None]:
+def find_extractor(file: OriginalFile) -> tuple[type[ExtractorBase] | None, str | None]:
     """
     Match an extractor class to a file.
 
@@ -312,7 +311,6 @@ def cmd_extract(
                     archive_file.action_data.ignore = IgnoreAction(template="extracted-archive")
 
                 db.original_files.update(archive_file)
-                if not dry_run:
-                    db.commit()
+                db.commit()
 
         end_program(ctx, db, exception, dry_run, log_file, log_stdout)

@@ -1,3 +1,4 @@
+from collections.abc import Generator
 from itertools import islice
 from logging import ERROR
 from logging import INFO
@@ -5,7 +6,6 @@ from logging import Logger
 from os import PathLike
 from pathlib import Path
 from traceback import format_tb
-from typing import Generator
 from typing import get_args as get_type_args
 from typing import Literal
 from typing import overload

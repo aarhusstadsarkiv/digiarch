@@ -42,7 +42,7 @@ def validate_msg(file: BaseFile) -> Message | MessageSigned:
     except ExMsgBaseException as e:
         raise UnrecognizedFileError(file, e.args[0] if e.args else "File cannot be opened as msg")
 
-    if not isinstance(msg, (Message, MessageSigned)):
+    if not isinstance(msg, Message | Message):
         raise NotPreservableFileError(file, f"Is of type {msg.__class__.__name__}")
 
     return msg
@@ -109,7 +109,7 @@ def msg_attachments(
             if (cid := getattr(attachment, "cid", None)) and cid in (body_html or body_rtf or ""):
                 inline_attachments.append(attachment)
             elif attachment_msg := msg_attachment(attachment):
-                if isinstance(attachment_msg, (Message, MessageSigned)):
+                if isinstance(attachment_msg, Message | Message):
                     # noinspection PyTypeChecker
                     attachments.append(attachment_msg)
             else:
@@ -147,7 +147,7 @@ class MsgExtractor(ExtractorBase):
         with TempDir(self.file.root) as tmp_dir:
             names: list[str] = []
             for n, attachment in enumerate(inline_attachments + attachments):
-                if isinstance(attachment, (Message, MessageSigned)):
+                if isinstance(attachment, Message | Message):
                     name: str = (attachment.filename or "").strip() or (attachment.subject or "").strip()
                     names, name, name_sanitized = prepare_attachment_name(names, name, n)
                     if name.startswith("/"):
