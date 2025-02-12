@@ -48,6 +48,15 @@ class DocIndexFile(BaseModel):
 )
 @pass_context
 def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, docs_in_media: int | None):
+    """
+    Create docIndex from statutory files.
+
+    To change the number of documents in each docCollection directory, use the --docs-in-collection option, ensuring
+    the same number has been used to rearrange statutory files with the finalize doc-collections command.
+
+    To change the number of documents in each mediaID collection, use the --docs-in-media option, ensuring that it is
+    a multiple of the --docs-in-collection value to avoid splitting docCollections across multiple mediaIDs.
+    """
     avid = get_avid(ctx)
     media_id = media_id or avid.path.name
 
