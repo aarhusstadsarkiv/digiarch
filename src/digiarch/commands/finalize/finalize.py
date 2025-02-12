@@ -7,7 +7,7 @@ from .doc_index import cmd_doc_index
 @group("finalize", no_args_is_help=True, short_help="Finalize for delivery.")
 def grp_finalize():
     """
-    Perform the necessary opration to ready the AVID directory for delivery.
+    Perform the necessary operation to ready the AVID directory for delivery.
 
     \b
     The changes should be performed in the following order:
