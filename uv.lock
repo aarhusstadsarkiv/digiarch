@@ -185,7 +185,7 @@ wheels = [
 
 [[package]]
 name = "digiarch"
-version = "5.2.5"
+version = "6.0.0"
 source = { editable = "." }
 dependencies = [
     { name = "acacore" },
@@ -207,7 +207,7 @@ dev = [
 requires-dist = [
     { name = "acacore", git = "https://github.com/aarhusstadsarkiv/acacore.git?tag=v5.0.0" },
     { name = "chardet", specifier = ">=5.2.0,<6" },
-    { name = "extract-msg", specifier = ">=0.52.0,<0.53" },
+    { name = "extract-msg", specifier = ">=0.53.0" },
     { name = "patool", specifier = ">=3.1.0,<4" },
     { name = "tnefparse", specifier = ">=1.4.0,<2" },
 ]
@@ -239,7 +239,7 @@ wheels = [
 
 [[package]]
 name = "extract-msg"
-version = "0.52.0"
+version = "0.53.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -250,9 +250,9 @@ dependencies = [
     { name = "rtfde" },
     { name = "tzlocal" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/1f/eb/e2ac47dcc951818f7185fafc5eff2dea76adcce4d468064ffc7680d7ac4b/extract_msg-0.52.0.tar.gz", hash = "sha256:c21c548c43e1f0cdce5616102d33e590e2b46fbdc9d04f21af4eb62dcbf296dd", size = 328420 }
+sdist = { url = "https://files.pythonhosted.org/packages/34/45/a7a40853d4e78540dbc4447f7f18a652f9a4cd91def953245bbe5056d5c0/extract_msg-0.53.1.tar.gz", hash = "sha256:c581ead5731e0fc2fa06ff690ce253a199ecb71305f15ccf0611322829f787de", size = 328946 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/44/c2/ceb6eb951fa62140c80624517f1ee57cdf4495fc1cc91080ea33f192b757/extract_msg-0.52.0-py3-none-any.whl", hash = "sha256:93c919846bac2a6034cf7d0dcf8e825d640b6ddb8539e42f7f1817869cd1eeaf", size = 334568 },
+    { url = "https://files.pythonhosted.org/packages/c7/f5/0955fb7ed5fbb6bf5e8eb12177331d4b10eb20c3fc5270b6c7fca4933367/extract_msg-0.53.1-py3-none-any.whl", hash = "sha256:e13be03e70ea53f8486dbf773beb7871446a475e928292218d31a7d3caf8752f", size = 334489 },
 ]
 
 [[package]]

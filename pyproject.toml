@@ -15,7 +15,7 @@ dependencies = [
     "acacore",
     "patool>=3.1.0,<4",
     "tnefparse>=1.4.0,<2",
-    "extract-msg>=0.52.0,<0.53",
+    "extract-msg>=0.53.0",
     "chardet>=5.2.0,<6",
 ]
 
