@@ -1,6 +1,6 @@
 [project]
 name = "digiarch"
-version = "6.0.0"
+version = "6.1.0"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = [{ name = "Aarhus Stadsarkiv", email = "stadsarkiv@aarhus.dk" }]
 requires-python = ">=3.12"
@@ -15,7 +15,7 @@ dependencies = [
     "acacore",
     "patool>=3.1.0,<4",
     "tnefparse>=1.4.0,<2",
-    "extract-msg>=0.52.0,<0.53",
+    "extract-msg>=0.53.0,<1",
     "chardet>=5.2.0,<6",
 ]
 
@@ -28,10 +28,10 @@ digiarch = "digiarch.cli:app"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.4",
-    "ruff>=0.9.3",
-    "coverage>=7.6.10",
-    "types-click>=7.1.8",
+    "pytest>=8.3.4,<9",
+    "ruff>=0.9.3,<1",
+    "coverage>=7.6.12,<8",
+    "types-click>=7.1.8,<8",
 ]
 
 [build-system]
@@ -39,7 +39,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.uv.sources]
-acacore = { git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v5.0.0" }
+acacore = { git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v5.0.1" }
 
 [tool.ruff]
 line-length = 120

@@ -1,5 +1,16 @@
 # Changelog
 
+## v6.1.0
+
+### New Features
+
+* `finalize doc-index` command to generate docIndex.xml file from statutory files table
+
+### Fixes
+
+* Fix `OleFileError` exceptions raised when attempting to extract corrupted MSG files
+
+
 ## v6.0.0
 
 ### Changes
