@@ -23,7 +23,7 @@ from digiarch.common import open_database
 ARCHIVE_FORMAT: dict[str, str] = {
     ".tiff": "TIFF",
     ".tif": "TIFF",
-    ".jp2000": "JPEG-2000",
+    ".jp2": "JPEG-2000",
     ".mp3": "MP3",
     ".wav": "WAV",
     ".gml": "GML",
