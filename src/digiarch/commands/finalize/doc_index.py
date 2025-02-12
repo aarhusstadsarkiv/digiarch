@@ -49,7 +49,7 @@ class DocIndexFile(BaseModel):
 @pass_context
 def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, docs_in_media: int | None):
     """
-    Create docIndex from statutory files.
+    Create the docIndex.xml file from statutory files.
 
     To change the number of documents in each docCollection directory, use the --docs-in-collection option, ensuring
     the same number has been used to rearrange statutory files with the finalize doc-collections command.

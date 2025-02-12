@@ -935,7 +935,7 @@ Options:
 ```
 Usage: digiarch finalize doc-index [OPTIONS]
 
-  Create docIndex from statutory files.
+  Create the docIndex.xml file from statutory files.
 
   To change the number of documents in each docCollection directory, use the
   --docs-in-collection option, ensuring the same number has been used to
