@@ -1,6 +1,6 @@
 [project]
 name = "digiarch"
-version = "6.0.0"
+version = "6.1.0"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = [{ name = "Aarhus Stadsarkiv", email = "stadsarkiv@aarhus.dk" }]
 requires-python = ">=3.12"
