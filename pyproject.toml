@@ -15,7 +15,7 @@ dependencies = [
     "acacore",
     "patool>=3.1.0,<4",
     "tnefparse>=1.4.0,<2",
-    "extract-msg>=0.53.0",
+    "extract-msg>=0.53.0,<1",
     "chardet>=5.2.0,<6",
 ]
 
@@ -28,10 +28,10 @@ digiarch = "digiarch.cli:app"
 
 [dependency-groups]
 dev = [
-    "pytest>=8.3.4",
-    "ruff>=0.9.3",
-    "coverage>=7.6.10",
-    "types-click>=7.1.8",
+    "pytest>=8.3.4,<9",
+    "ruff>=0.9.3,<1",
+    "coverage>=7.6.12,<8",
+    "types-click>=7.1.8,<8",
 ]
 
 [build-system]
