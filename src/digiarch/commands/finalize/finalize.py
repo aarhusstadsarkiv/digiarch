@@ -12,7 +12,7 @@ def grp_finalize():
     \b
     The changes should be performed in the following order:
     * doc-collections
-    * doc-index (TBA)
+    * doc-index
     * av-db (TBA)
     """  # noqa: D301
 
