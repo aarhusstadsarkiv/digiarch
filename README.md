@@ -891,7 +891,7 @@ Usage: digiarch finalize [OPTIONS] COMMAND [ARGS]...
 
   The changes should be performed in the following order:
   * doc-collections
-  * doc-index (TBA)
+  * doc-index
   * av-db (TBA)
 
 Options:
