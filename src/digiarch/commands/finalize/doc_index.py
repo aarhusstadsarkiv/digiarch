@@ -113,7 +113,7 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
                     fh.write("<doc>\n")
                     fh.write(f"  <dID>{file.doc_id}</dID>\n")
                     if file.parent_doc_id:
-                        fh.write(f"  <pID>{file.parent_doc_id}</dID>\n")
+                        fh.write(f"  <pID>{file.parent_doc_id}</pID>\n")
                     fh.write(f"  <mID>{escape(media_id)}.{doc_media_id}</mID>\n")
                     fh.write(f"  <dCf>docCollection{doc_collection}</dCf>\n")
                     fh.write(f"  <oFn>{escape(file.original_path.name)}</oFn>\n")
