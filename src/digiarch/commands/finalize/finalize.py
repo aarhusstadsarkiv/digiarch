@@ -1,6 +1,7 @@
 from click import group
 
 from .doc_collections import cmd_doc_collections
+from .doc_index import cmd_doc_index
 
 
 @group("finalize", no_args_is_help=True, short_help="Finalize for delivery.")
@@ -17,5 +18,6 @@ def grp_finalize():
 
 
 grp_finalize.add_command(cmd_doc_collections, cmd_doc_collections.name)
+grp_finalize.add_command(cmd_doc_index, cmd_doc_index.name)
 
 grp_finalize.list_commands = lambda _ctx: list(grp_finalize.commands)
