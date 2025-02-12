@@ -20,15 +20,6 @@ from digiarch.__version__ import __version__
 from digiarch.common import get_avid
 from digiarch.common import open_database
 
-ARCHIVE_FORMAT: dict[str, str] = {
-    ".tiff": "TIFF",
-    ".tif": "TIFF",
-    ".jp2": "JPEG-2000",
-    ".mp3": "MP3",
-    ".wav": "WAV",
-    ".gml": "GML",
-}
-
 
 class DocIndexFile(BaseModel):
     doc_id: int
@@ -117,7 +108,7 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
                     fh.write(f"  <mID>{escape(media_id)}.{doc_media_id}</mID>\n")
                     fh.write(f"  <dCf>docCollection{doc_collection}</dCf>\n")
                     fh.write(f"  <oFn>{escape(file.original_path.name)}</oFn>\n")
-                    fh.write(f"  <aFt>{ARCHIVE_FORMAT[file.relative_path.suffix]}</aFt>\n")
+                    fh.write(f"  <aFt>{file.relative_path.suffix[1:]}</aFt>\n")
                     if file.relative_path.suffix == ".gml":
                         fh.write(f"  <gmlXsd>{escape(file.relative_path.with_suffix('.xsd').name)}</gmlXsd>\n")
                     fh.write("</doc>\n")
