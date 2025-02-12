@@ -36,6 +36,7 @@
         * [convert](#digiarch-manual-convert)
     * [finalize](#digiarch-finalize)
         * [doc-collections](#digiarch-finalize-doc-collections)
+        * [doc-index](#digiarch-finalize-doc-index)
     * [search](#digiarch-search)
         * [original](#digiarch-search-original)
         * [master](#digiarch-search-master)
@@ -898,6 +899,7 @@ Options:
 
 Commands:
   doc-collections  Create docCollections.
+  doc-index        Create docIndex.
 ```
 
 #### digiarch finalize doc-collections
@@ -925,6 +927,31 @@ Options:
   --resume / --no-resume          Resume a previously interrupted
                                   rearrangement.
   --dry-run                       Show changes without committing them.
+  --help                          Show this message and exit.
+```
+
+#### digiarch finalize doc-index
+
+```
+Usage: digiarch finalize doc-index [OPTIONS]
+
+  Create docIndex from statutory files.
+
+  To change the number of documents in each docCollection directory, use the
+  --docs-in-collection option, ensuring the same number has been used to
+  rearrange statutory files with the finalize doc-collections command.
+
+  To change the number of documents in each mediaID collection, use the
+  --docs-in-media option, ensuring that it is a multiple of the --docs-in-
+  collection value to avoid splitting docCollections across multiple mediaIDs.
+
+Options:
+  --media-id TEXT                 The mediaID value.
+  --docs-in-collection INTEGER RANGE
+                                  The maximum number of documents to put in
+                                  each docCollection.  [default: 10000; x>=1]
+  --docs-in-media INTEGER RANGE   The maximum number of documents to put in
+                                  each mediaID collection.  [x>=1]
   --help                          Show this message and exit.
 ```
 
