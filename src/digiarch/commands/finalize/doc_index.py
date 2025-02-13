@@ -93,7 +93,8 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
                        fo.parent        as                                  parent_uuid
                 from files_statutory fs
                     join files_master fm on fm.uuid = fs.original_uuid
-                    join files_original fo on fo.uuid = fm.original_uuid;
+                    join files_original fo on fo.uuid = fm.original_uuid
+                where fs.relative_path not like '%.xsd';
             """)
 
             doc_index = database.create_view(
