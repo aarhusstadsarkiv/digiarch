@@ -25,6 +25,7 @@ from digiarch.common import open_database
 
 class DocIndexFile(BaseModel):
     doc_id: int
+    uuid: UUID4
     relative_path: Path
     original_uuid: UUID4
     original_path: Path
@@ -85,6 +86,7 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
             database.execute(f"""
                 insert into {doc_index_base.name}
                 select row_number() over (order by lower(fs.relative_path)) doc_id,
+                       fs.uuid          as                                  uuid,
                        fs.relative_path as                                  relative_path,
                        fo.uuid          as                                  original_uuid,
                        fo.original_path as                                  original_path,
