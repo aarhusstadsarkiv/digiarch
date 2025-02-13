@@ -121,11 +121,19 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
                     ' xsi:schemaLocation="http://www.sa.dk/xmlns/diark/1.0 ../Schemas/standard/docIndex.xsd">\n'
                 )
 
+                offset: int = 0
+
                 for file in doc_index.select():
-                    doc_collection: int = ceil(file.doc_id / docs_in_collection)
-                    doc_media_id: int = ceil(file.doc_id / docs_in_media) if docs_in_media else 1
+                    if file.relative_path.stem != "1":
+                        offset += 1
+                        continue
+
+                    doc_id: int = file.doc_id - offset
+                    doc_collection: int = ceil(doc_id / docs_in_collection)
+                    doc_media_id: int = ceil(doc_id / docs_in_media) if docs_in_media else 1
+
                     fh.write("<doc>\n")
-                    fh.write(f"  <dID>{file.doc_id}</dID>\n")
+                    fh.write(f"  <dID>{doc_id}</dID>\n")
                     if file.parent_doc_id:
                         fh.write(f"  <pID>{file.parent_doc_id}</pID>\n")
                     fh.write(f"  <mID>{escape(media_id)}.{doc_media_id}</mID>\n")
@@ -135,10 +143,11 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
                     if file.relative_path.suffix == ".gml":
                         fh.write(f"  <gmlXsd>{escape(file.relative_path.with_suffix('.xsd').name)}</gmlXsd>\n")
                     fh.write("</doc>\n")
+
                     Event.from_command(ctx, "document", (file.uuid, "statutory")).log(
                         INFO,
                         log_stdout,
-                        dId=file.doc_id,
+                        dId=doc_id,
                         dCf=doc_collection,
                         mId=doc_media_id,
                     )
