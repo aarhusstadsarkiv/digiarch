@@ -134,6 +134,13 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
                     if file.relative_path.suffix == ".gml":
                         fh.write(f"  <gmlXsd>{escape(file.relative_path.with_suffix('.xsd').name)}</gmlXsd>\n")
                     fh.write("</doc>\n")
+                    Event.from_command(ctx, "document", (file.uuid, "statutory")).log(
+                        INFO,
+                        log_stdout,
+                        dId=file.doc_id,
+                        dCf=doc_collection,
+                        mId=doc_media_id,
+                    )
 
                 fh.write("</docIndex>")
 
