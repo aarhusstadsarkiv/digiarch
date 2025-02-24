@@ -1,5 +1,21 @@
 # Changelog
 
+## v6.1.1
+
+### New Features
+
+* `extract` command does not stop when an unknown exception is raised
+    * A message is printed at the end with the total number of unknown errors
+
+### Changes
+
+* Use acacore 5.0.2
+* `finalize doc-index` uses a temporary table for faster execution
+
+### Fixes
+
+* Fix `edit original remove` running in an endless loop when the `--dry-run` option was used
+
 ## v6.1.0
 
 ### New Features
@@ -9,7 +25,6 @@
 ### Fixes
 
 * Fix `OleFileError` exceptions raised when attempting to extract corrupted MSG files
-
 
 ## v6.0.0
 
@@ -24,7 +39,7 @@
 ### Fixes
 
 * Fix issue with MSG files caused by attachments whose name is an absolute path
-  * Would raise `ValueError` with message "A is not in the subpath of B"
+    * Would raise `ValueError` with message "A is not in the subpath of B"
 
 ## v5.2.4
 
