@@ -219,6 +219,7 @@ def cmd_extract(
 
     with open_database(ctx, avid) as db:
         log_file, log_stdout, _ = start_program(ctx, db, __version__, None, not dry_run, True, dry_run)
+        errors: int = 0
         offset: int = 0
 
         with ExceptionManager(BaseException) as exception:
@@ -276,6 +277,8 @@ def cmd_extract(
                 except ExtractError as err:
                     handle_extract_error(ctx, db, archive_file, err, log_stdout)
                     continue
+                except KeyboardInterrupt:
+                    raise
                 except Exception as err:
                     Event.from_command(
                         ctx,
@@ -284,7 +287,9 @@ def cmd_extract(
                         None,
                         repr(err),
                     ).log(ERROR, log_stdout, show_args=["uuid"], error=repr(err), path=archive_file.relative_path)
-                    raise
+                    offset += 1
+                    errors += 1
+                    continue
                 finally:
                     if (folder := extractor.extract_folder).is_dir() and not next(folder.iterdir(), None):
                         rm_tree(folder)
@@ -312,5 +317,13 @@ def cmd_extract(
 
                 db.original_files.update(archive_file)
                 db.commit()
+
+        if errors:
+            Event.from_command(ctx, "errors").log(
+                ERROR,
+                log_stdout,
+                errors=errors,
+                reason="Uncaught exception found, check log",
+            )
 
         end_program(ctx, db, exception, dry_run, log_file, log_stdout)

@@ -1,8 +1,10 @@
+from logging import INFO
 from math import ceil
 from pathlib import Path
 from re import match
 from xml.sax.saxutils import escape
 
+from acacore.models.event import Event
 from acacore.utils.click import ctx_params
 from acacore.utils.click import end_program
 from acacore.utils.click import start_program
@@ -23,6 +25,7 @@ from digiarch.common import open_database
 
 class DocIndexFile(BaseModel):
     doc_id: int
+    uuid: UUID4
     relative_path: Path
     original_uuid: UUID4
     original_path: Path
@@ -69,33 +72,44 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
         _, log_stdout, _ = start_program(ctx, database, __version__, None, False, True, False)
 
         with ExceptionManager(BaseException) as exception:
-            doc_index_view = database.create_view(
+            Event.from_command(ctx, "compiling").log(INFO, log_stdout)
+
+            doc_index_base = database.create_table(
                 DocIndexFile,
-                "_view_doc_index",
-                """
-                select row_number() over (order by lower(fm.relative_path)) doc_id,
+                "_doc_index_base",
+                indices={"orig": ["original_uuid"], "parent": ["parent_uuid"]},
+                ignore=["parent_doc_id"],
+                temporary=True,
+                exist_ok=True,
+            )
+
+            database.execute(f"""
+                insert into {doc_index_base.name}
+                select row_number() over (order by lower(fs.relative_path)) doc_id,
+                       fs.uuid          as                                  uuid,
                        fs.relative_path as                                  relative_path,
                        fo.uuid          as                                  original_uuid,
                        fo.original_path as                                  original_path,
                        fo.parent        as                                  parent_uuid
                 from files_statutory fs
                     join files_master fm on fm.uuid = fs.original_uuid
-                    join files_original fo on fo.uuid = fm.original_uuid;
-                """,
-                ["parent_doc_id"],
-                temporary=True,
-            )
-            doc_index_parents_view = database.create_view(
+                    join files_original fo on fo.uuid = fm.original_uuid
+                where fs.relative_path not like '%.xsd';
+            """)
+
+            doc_index = database.create_view(
                 DocIndexFile,
-                "_view_doc_index_parents",
+                "_view_doc_index",
                 f"""
                 select di.*, dip.doc_id as parent_doc_id
-                from {doc_index_view.name} di
-                    left join {doc_index_view.name} dip on di.parent_uuid is not null and dip.original_uuid = di.parent_uuid
+                from {doc_index_base.name} di
+                    left join {doc_index_base.name} dip on di.parent_uuid is not null and dip.original_uuid = di.parent_uuid
                 order by di.doc_id
                 """,
                 temporary=True,
             )
+
+            Event.from_command(ctx, "writing").log(INFO, log_stdout)
 
             with avid.dirs.indices.docIndex.open("w", encoding="utf-8") as fh:
                 fh.write('<?xml version="1.0" encoding="utf-8"?>\n')
@@ -107,11 +121,19 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
                     ' xsi:schemaLocation="http://www.sa.dk/xmlns/diark/1.0 ../Schemas/standard/docIndex.xsd">\n'
                 )
 
-                for file in doc_index_parents_view.select():
-                    doc_collection: int = ceil(file.doc_id / docs_in_collection)
-                    doc_media_id: int = ceil(file.doc_id / docs_in_media) if docs_in_media else 1
+                offset: int = 0
+
+                for file in doc_index.select():
+                    if file.relative_path.stem != "1":
+                        offset += 1
+                        continue
+
+                    doc_id: int = file.doc_id - offset
+                    doc_collection: int = ceil(doc_id / docs_in_collection)
+                    doc_media_id: int = ceil(doc_id / docs_in_media) if docs_in_media else 1
+
                     fh.write("<doc>\n")
-                    fh.write(f"  <dID>{file.doc_id}</dID>\n")
+                    fh.write(f"  <dID>{doc_id}</dID>\n")
                     if file.parent_doc_id:
                         fh.write(f"  <pID>{file.parent_doc_id}</pID>\n")
                     fh.write(f"  <mID>{escape(media_id)}.{doc_media_id}</mID>\n")
@@ -122,6 +144,18 @@ def cmd_doc_index(ctx: Context, media_id: str | None, docs_in_collection: int, d
                         fh.write(f"  <gmlXsd>{escape(file.relative_path.with_suffix('.xsd').name)}</gmlXsd>\n")
                     fh.write("</doc>\n")
 
+                    Event.from_command(ctx, "document", (file.uuid, "statutory")).log(
+                        INFO,
+                        log_stdout,
+                        dId=doc_id,
+                        dCf=doc_collection,
+                        mId=doc_media_id,
+                    )
+
                 fh.write("</docIndex>")
+
+            Event.from_command(ctx, "cleanup").log(INFO, log_stdout)
+            doc_index_base.drop(missing_ok=True)
+            doc_index.drop(missing_ok=True)
 
         end_program(ctx, database, exception, exception.exception is None, log_stdout)

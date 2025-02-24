@@ -1,6 +1,6 @@
 [project]
 name = "digiarch"
-version = "6.1.0"
+version = "6.1.1"
 description = "Tools for the Digital Archive Project at Aarhus Stadsarkiv"
 authors = [{ name = "Aarhus Stadsarkiv", email = "stadsarkiv@aarhus.dk" }]
 requires-python = ">=3.12"
@@ -39,7 +39,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.uv.sources]
-acacore = { git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v5.0.1" }
+acacore = { git = "https://github.com/aarhusstadsarkiv/acacore.git", tag = "v5.0.2" }
 
 [tool.ruff]
 line-length = 120

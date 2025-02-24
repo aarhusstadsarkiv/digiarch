@@ -113,7 +113,9 @@ def remove_files(
     dry_run: bool,
     *loggers: Logger,
 ) -> None:
-    while files := list(query_table(table, query, [("lower(relative_path)", "asc")], 100)):
+    offset: int = 0
+
+    while files := list(query_table(table, query, [("lower(relative_path)", "asc")], 100, offset)):
         for file in files:
             event = Event.from_command(
                 ctx,
@@ -126,6 +128,7 @@ def remove_files(
             event.log(INFO, *loggers, show_args=["uuid"], path=file.relative_path)
 
             if dry_run:
+                offset += 1
                 continue
 
             table.delete(file)

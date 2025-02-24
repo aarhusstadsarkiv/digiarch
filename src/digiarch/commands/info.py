@@ -4,6 +4,7 @@ from typing import Any
 from acacore.database import FilesDB
 from acacore.database.table import Table
 from acacore.models.file import BaseFile
+from acacore.utils.io import size_fmt
 from click import command
 from click import Context
 from click import pass_context
@@ -53,16 +54,6 @@ def lazy_print(*msgs: str | Callable[[], Any]):
     print()
 
 
-def si_size(size: int) -> str:
-    if size >= 1e10:
-        return f"{size / 1e9:0.1f}GB"
-    if size >= 1e7:
-        return f"{size / 1e6:0.1f}MB"
-    if size >= 1e4:
-        return f"{size / 1e3:0.1f}KB"
-    return str(size)
-
-
 @command("info", short_help="Database information.")
 @pass_context
 def cmd_info(ctx: Context):
@@ -97,10 +88,10 @@ def cmd_info(ctx: Context):
         lazy_print("    statutory: ", lambda: count_processed_master_statutory(database))
 
         print("\nsize:")
-        lazy_print("  original: ", lambda: si_size(count_size(database.original_files)))
-        lazy_print("  master: ", lambda: si_size(count_size(database.master_files)))
-        lazy_print("  access: ", lambda: si_size(count_size(database.access_files)))
-        lazy_print("  statutory: ", lambda: si_size(count_size(database.statutory_files)))
+        lazy_print("  original: ", lambda: size_fmt(count_size(database.original_files)))
+        lazy_print("  master: ", lambda: size_fmt(count_size(database.master_files)))
+        lazy_print("  access: ", lambda: size_fmt(count_size(database.access_files)))
+        lazy_print("  statutory: ", lambda: size_fmt(count_size(database.statutory_files)))
 
         print("\nevents:")
         lazy_print("  runs: ", lambda: count_runs(database))
