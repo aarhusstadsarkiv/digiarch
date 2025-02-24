@@ -277,14 +277,7 @@ def cmd_extract(
                 except ExtractError as err:
                     handle_extract_error(ctx, db, archive_file, err, log_stdout)
                     continue
-                except KeyboardInterrupt as err:
-                    Event.from_command(
-                        ctx,
-                        "error",
-                        (archive_file.uuid, "original"),
-                        None,
-                        repr(err),
-                    ).log(ERROR, log_stdout, show_args=["uuid"], error=repr(err), path=archive_file.relative_path)
+                except KeyboardInterrupt:
                     raise
                 except Exception as err:
                     Event.from_command(
